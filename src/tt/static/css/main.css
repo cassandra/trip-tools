@@ -1,0 +1,643 @@
+/*  Trip Tools
+    Copyright 2025 by POMDP, Inc.
+    All Rights Reserved.  
+*/
+:root {
+  --white: #fdfdfd;
+  --black: #020204;
+  --primary-color: #177072;
+  --on-primary-color: #ffffff;
+  --primary-highlight-color: #115354;
+  --secondary-color: #F45F36;
+  --on-secondary-color: #ffffff;
+  --secondary-highlight-color: #F8AD98;
+  --tertiary-color: #020204;
+  --on-tertiary-color: #ffffff;
+  --tertiary-highlight-color: #7e7e81;
+  --success-color: #177219;
+  --info-color: #177072;
+  --on-success-color: #ffffff;
+  --success-bg-light: #e8f5e8;
+  --warning-color: #ECA500;
+  --on-warning-color: #ffffff;
+  --error-color: #721817;
+  --on-error-color: #ffffff;
+  --error-highlight-color: #a01111;
+  --muted-color: #7e7e81;
+  --on-muted-color: #ffffff;
+  --line-color: #cccccc;
+
+  --edit-primary-bg-color: #dffeff;
+  --edit-secondary-bg-color: #ffd0c3;
+  --edit-tertiary-bg-color: #f0f0f0;
+
+  /* Add missing semantic background variants */
+  --warning-bg-light: #fef7e6;
+  --info-bg-light: #e8f4f4;
+  --muted-bg-light: #f8f9fa;
+
+  /* Edit Mode Variables (for global edit mode styling) */
+  --edit-mode-primary-bg: #FAD4C8;    /* Side panel background */
+  --edit-mode-secondary-bg: #F5E6E1;  /* Main screen background */
+  --edit-mode-tertiary-bg: #F5E6E1;   /* Top/bottom backgrounds */
+  --edit-mode-border-color: #C65D3C;  /* Border color */
+  --edit-mode-dash-color: #A94A32;    /* Dashed line color */
+  --edit-hr-color: #a0a0a0;
+  
+  --top-buttons-height: 2.5rem;
+  --bottom-buttons-height: 2.5rem;
+
+  --status-highlighted-color: red;
+  --status-hover-color: blue;
+
+  --status-off-color: #aaaaaa;
+  --status-on-color: yellow;
+  --on-status-off-color: black;
+  --on-status-on-color: black;
+  
+  /* These should match those in tt.apps.monitor.StatusStyle */
+  --status-active-color: #DC3545;
+  --status-recent-color: #FD7E14;
+  --status-past-color: #FFD700;
+  --status-ok-color: #177219;
+  --status-bad-color: #a01111;
+  --status-idle-color: #aaaaaa;
+
+  --on-status-active-color: white;
+  --on-status-recent-color: white;
+  --on-status-past-color: black;
+  --on-status-ok-color: white;
+  --on-status-bad-color: white;
+  --on-status-idle-color: black;
+  
+}
+
+html, body {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    color: #222233;
+    background-color: var(--white);
+}
+
+a { color: var(--primary-color); }
+a:hover,
+a:focus,
+a:active {
+    opacity: 0.65;
+    color: var(--primary-color);
+}
+a.plain {
+    text-decoration: none;
+    cursor: pointer;
+    border-bottom: 0;
+}
+a.underline,
+a.underline:visited {
+    text-decoration: none;
+    padding-bottom: 0.075rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+a.clickable-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+a.clickable-card:hover,
+a.clickable-card:focus,
+a.clickable-card:active {
+    text-decoration: none;
+    opacity: 0.75;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+.text-secondary {
+    color: var(--secondary-color) !important;
+}
+.text-on-primary {
+    color: var(--on-primary-color) !important;
+}
+.text-white {
+    color: var(--white) !important;
+}
+.text-black {
+    color: var(--black);
+}
+
+.bg-primary, .bg-info, .btn-primary, .btn-info {
+    color: var(--on-primary-color) !important;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-highlight-color) !important;
+}
+.bg-primary a, .bg-info a, .btn-primary a, .btn-info a {
+    color: var(--on-primary-color);
+}
+.bg-primary a:hover,
+.bg-primary a:focus,
+.bg-primary a:active,
+.bg-info a:hover,
+.bg-info a:focus,
+.bg-info a:active {
+    opacity: 0.65;
+    color: var(--on-primary-color);
+}
+
+.bg-secondary, .btn-secondary {
+    color: var(--on-secondary-color) !important;
+    background-color: var(--secondary-color) !important;
+    border-color: var(--secondary-highlight-color) !important;
+}
+.bg-secondary a {
+    color: var(--on-secondary-color);
+}
+.bg-secondary a:hover,
+.bg-secondary a:focus,
+.bg-secondary a:active {
+    opacity: 0.65;
+    color: var(--on-secondary-color);
+}
+
+.bg-tertiary, .btn-tertiary {
+    color: var(--on-tertiary-color) !important;
+    background-color: var(--tertiary-color) !important;
+    border-color: var(--tertiary-highlight-color) !important;
+}
+.bg-tertiary a {
+    color: var(--on-tertiary-color);
+}
+.bg-tertiary a:hover,
+.bg-tertiary a:focus,
+.bg-tertiary a:active {
+    opacity: 0.65;
+    color: var(--on-tertiary-color);
+}
+
+.bg-danger, .btn-error, .btn-danger {
+    color: var(--on-error-color) !important;
+    background-color: var(--error-color) !important;
+    border-color: var(--error-highlight-color) !important;
+}
+.bg-danger a, .btn-error a, .btn-danger a {
+    color: var(--on-error-color);
+}
+.bg-error a:hover,
+.bg-error a:focus,
+.bg-error a:active,
+.bg-danger a:hover,
+.bg-danger a:focus,
+.bg-danger a:active {
+    opacity: 0.65;
+    color: var(--on-error-color);
+}
+
+.bg-muted, .btn-muted {
+    color: var(--on-muted-color) !important;
+    background-color: var(--muted-color) !important;
+}
+
+/* Outline Button Overrides */
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    background-color: transparent !important;
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active,
+.btn-outline-primary.active {
+    color: var(--on-primary-color) !important;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-highlight-color) !important;
+}
+.btn-outline-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(23, 112, 114, 0.25) !important;
+}
+
+.btn-outline-secondary {
+    color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+    background-color: transparent !important;
+}
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active,
+.btn-outline-secondary.active {
+    color: var(--on-secondary-color) !important;
+    background-color: var(--secondary-color) !important;
+    border-color: var(--secondary-highlight-color) !important;
+}
+.btn-outline-secondary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(244, 95, 54, 0.25) !important;
+}
+
+.btn-outline-tertiary {
+    color: var(--tertiary-color) !important;
+    border-color: var(--tertiary-highlight-color) !important;
+    background-color: var(--muted-bg-light) !important;
+}
+.btn-outline-tertiary:hover,
+.btn-outline-tertiary:focus,
+.btn-outline-tertiary:active,
+.btn-outline-tertiary.active {
+    color: var(--on-tertiary-color) !important;
+    background-color: var(--tertiary-color) !important;
+    border-color: var(--tertiary-highlight-color) !important;
+}
+.btn-outline-tertiary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(244, 95, 54, 0.25) !important;
+}
+
+.btn-outline-danger {
+    color: var(--error-color) !important;
+    border-color: var(--error-color) !important;
+    background-color: transparent !important;
+}
+.btn-outline-danger:hover,
+.btn-outline-danger:focus,
+.btn-outline-danger:active,
+.btn-outline-danger.active {
+    color: var(--on-error-color) !important;
+    background-color: var(--error-color) !important;
+    border-color: var(--error-highlight-color) !important;
+}
+.btn-outline-danger:focus {
+    box-shadow: 0 0 0 0.2rem var(--error-highlight-color) !important;
+}
+
+.interstitial-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100vh;
+    max-width: 1200px;
+    margin: auto;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.interstitial-body {
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid #ccc;
+    background-color: #f4f4f4;
+}
+
+/* Phone Landscape (Side-by-Side) */
+@media (min-aspect-ratio: 16/9) and (max-height: 600px) {
+    .interstitial-page {
+        flex-direction: row;
+        gap: 2rem;
+    }
+    .interstitial-header {
+        flex: 0 0 auto;
+        padding: 0.5rem;
+    }
+    .interstitial-body {
+        flex: 1;
+        display: flex;
+        align-items: center;
+    }
+}
+
+#hi-top-content {
+    height: calc( var(--top-buttons-height) - 1 );
+    border-bottom: 1px solid var(--line-color);
+}
+#hi-bottom-content {
+    height: var(--bottom-buttons-height);
+    border-top: 1px solid var(--line-color);
+}
+#hi-top-content img,
+#hi-bottom-content img {
+    max-height: 2rem;
+    width: auto;
+}
+.hi-side {
+    padding-left: 0;
+    padding-right: 0;
+}
+#hi-side-content {
+    height: calc(100vh - var(--top-buttons-height) - var(--bottom-buttons-height));
+    display: flex;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    flex-direction: column;
+    overflow-y: auto;
+}
+#hi-side-content hr {
+    flex: 0 0 auto; /* Prevent shrinking or growing */
+    width: 100%;
+}
+#hi-top-content,
+#hi-bottom-content,
+.hi-screen {
+    background: var(--white);
+}
+
+/* Edit Mode Styling - Warm color scheme with dashed borders */
+#hi-top-content[hi-edit="True"] {
+    background: var(--edit-mode-tertiary-bg);
+    border-bottom: 4px dashed var(--edit-mode-dash-color);
+    box-shadow: inset 0 -2px 8px rgba(212, 119, 94, 0.1);
+}
+
+#hi-bottom-content[hi-edit="True"] {
+    background: var(--edit-mode-tertiary-bg);
+    border-top: 4px dashed var(--edit-mode-dash-color);
+    box-shadow: inset 0 2px 8px rgba(212, 119, 94, 0.1);
+}
+
+.hi-screen[hi-edit="True"] {
+    background: linear-gradient(135deg, var(--edit-mode-secondary-bg) 0%, var(--white) 50%, var(--edit-mode-secondary-bg) 100%);
+    box-shadow: inset 0 0 0 3px var(--edit-mode-secondary-bg);
+    position: relative;
+}
+
+/* Side panel styling in edit mode */
+.hi-screen[hi-edit="True"] #hi-side-content {
+    background: var(--edit-mode-primary-bg);
+    border-left: 4px dashed var(--edit-mode-dash-color);
+}
+
+.hi-screen {
+    max-height: 100vh;
+}
+.scrollable-column {
+    overflow-y: auto;
+    max-height: 100vh;
+    padding-top: var(--top-buttons-height);
+    padding-bottom: var(--bottom-buttons-height);
+}
+.fixed-column {
+    overflow-y: auto;
+    flex-shrink: 0;
+    height: 100vh;
+    max-height: 100vh;
+    padding-top: var(--top-buttons-height);
+    padding-bottom: var(--bottom-buttons-height);
+    border-left: 1px solid var(--line-color);
+}
+
+.hi-modal-dialog-600 {
+    max-width: 600px;
+}
+.hi-modal-dialog-700 {
+    max-width: 700px;
+}
+.hi-modal-dialog-800 {
+    max-width: 800px;
+}
+
+.modal-title-image img {
+    max-height: 48px;
+}
+.modal-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+
+
+/* General Vertical Tab Styling */
+.hi-vertical-nav {
+    min-width: 200px;
+    border-right: 1px solid var(--line-color);
+    padding: 1rem 0;
+}
+
+.hi-vertical-nav-header {
+    padding: 0 1rem 1rem 1rem;
+    border-bottom: 1px solid var(--line-color);
+    margin-bottom: 0.5rem;
+}
+
+.hi-vertical-nav-link {
+    display: block;
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0;
+    border-radius: 0;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    min-height: 44px; /* Touch-friendly */
+    display: flex;
+    align-items: center;
+}
+
+.hi-vertical-nav-link:hover {
+    background-color: #f8f9fa;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.hi-vertical-nav-link:focus {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.hi-vertical-nav-link.active {
+    background-color: var(--primary-color);
+    color: var(--on-primary-color);
+}
+
+.hi-vertical-nav-link.active:hover {
+    background-color: var(--primary-highlight-color);
+    color: var(--on-primary-color);
+}
+
+/* Responsive adjustments for vertical tabs */
+@media (max-width: 767.98px) {
+    .hi-vertical-nav {
+        min-width: 150px;
+    }
+}
+
+
+/* Pagination styling overrides for app theming */
+.pagination-lg .page-link {
+    color: var(--primary-color) !important;
+    border-color: #dee2e6 !important;
+    /* Force consistent height for all pagination buttons */
+    height: 3rem !important;
+    min-height: 3rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.5rem 0.75rem !important;
+    box-sizing: border-box !important;
+    line-height: 1.2 !important;
+}
+
+/* Ensure spans inside page-links don't affect height and are properly centered */
+.pagination-lg .page-link span {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+}
+
+.pagination-lg .page-link:hover {
+    color: var(--primary-highlight-color) !important;
+    background-color: #e9ecef !important;
+    border-color: #dee2e6 !important;
+}
+
+.pagination-lg .page-item.active .page-link {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--on-primary-color) !important;
+}
+
+.pagination-lg .page-item.disabled .page-link {
+    color: #6c757d !important;
+    background-color: #fff !important;
+    border-color: #dee2e6 !important;
+}
+
+
+.btn-control {
+    width: 100%;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+input[type="number"] {
+    max-width: 8rem;
+}
+.drag-over {
+  border: 2px dashed #888888;
+}
+
+.form-group label {
+    color: #060606 !important;
+}
+.input-group-text {
+    color: var(--black);
+    background-color: #f0f0f0;
+}
+select,
+textarea,
+input[type="text"],
+input[type="password"],
+.dropdown-menu {
+    color: var(--black) !important;
+    background-color: #f8f8f8 !important;
+}
+.hi-custom-select .input-group-text {
+    height: calc(1.5em + 0.75rem + 2px);
+    line-height: 1.5;
+}
+
+/* Monitor Health Status Styles */
+.hi-modal-dialog-800 {
+    max-width: 800px;
+}
+
+.text-success-custom {
+    color: var(--success-color);
+}
+
+.text-warning-custom {
+    color: var(--warning-color);
+}
+
+.text-error-custom {
+    color: var(--error-color);
+}
+
+.text-muted-custom {
+    color: var(--muted-color);
+}
+
+
+/* ================================================
+   PWA-specific styles for full screen mode
+   ================================================ */
+
+/* Fullscreen mode styles when app is installed as PWA */
+@media all and (display-mode: fullscreen) {
+    body {
+        /* Remove any default margins/padding that might appear */
+        margin: 0;
+        padding: 0;
+        /* Ensure content uses full viewport */
+        min-height: 100vh;
+        /* Prevent overscroll bounce on iOS */
+        overscroll-behavior: none;
+    }
+
+    /* Hide browser UI elements that might still be visible */
+    .browser-ui-hint {
+        display: none;
+    }
+}
+
+/* Standalone mode styles (iOS Safari, Chrome mobile) */
+@media all and (display-mode: standalone) {
+    body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        overscroll-behavior: none;
+        /* Add safe area padding for devices with notches */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+
+    /* Adjust main content area for safe areas */
+    .container-fluid {
+        padding-left: max(15px, env(safe-area-inset-left));
+        padding-right: max(15px, env(safe-area-inset-right));
+    }
+}
+
+/* Landscape orientation optimizations (tablet primary use case) */
+@media (orientation: landscape) and ((display-mode: fullscreen) or (display-mode: standalone)) {
+    /* Optimize layout for landscape orientation */
+    .row {
+        /* Ensure full width usage in landscape */
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Tablet-specific touch optimizations */
+    button, .btn, .form-control, select {
+        /* Ensure touch targets are at least 44px (Apple HIG) */
+        min-height: 44px;
+        /* Add more comfortable padding for touch */
+        padding: 10px 16px;
+    }
+
+    /* Optimize modal dialogs for landscape */
+    .modal-dialog {
+        max-width: 80vw;
+        margin: 2vh auto;
+    }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Ensure crisp icons and graphics on retina displays */
+    img, svg {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* PWA installation prompt hiding (when app is already installed) */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+    .pwa-install-prompt {
+        display: none !important;
+    }
+}

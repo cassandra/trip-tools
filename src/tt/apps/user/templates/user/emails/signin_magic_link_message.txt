@@ -1,0 +1,9 @@
+{% extends "notify/emails/base_email_message.txt" %}
+{% load common_tags %}
+{% block content %}Trip Tools Sign In
+
+Your access code is:
+
+    {{ magic_code }}
+
+Note that this code will expire after {{ magic_code_lifetime_minutes }} minutes. The code is not case sensitive.{% endblock %}

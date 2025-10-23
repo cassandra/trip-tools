@@ -1,0 +1,32 @@
+<div class="d-flex flex-column h-100">
+  {% include "console/panes/datetime_header.html" %}
+  {% if show_view_intro_help %}
+  {% include "profiles/panes/view_intro_help_sidebar.html" %}
+  {% else %}
+  
+  {% if weather_alert_list %}
+  {% include "weather/panes/weather_alerts.html" %}
+  {% else %{
+  {% include "console/panes/datetime_header.html" %}
+  {% endif %}
+  {% include "weather/panes/weather_overview.html" %}
+
+  <div class="d-flex justify-content-center border-top my-2 pt-2">
+    {% if camera_control_display_list %}
+    <div class="col-6">
+      {% include "console/panes/camera_controls.html" %}
+    </div>
+    {% endif %}
+    <div class="col-6">
+      {% include "security/panes/security_state_control.html" %}
+    </div>
+  </div>
+  <div class="my-2">
+    <a href="{% url 'event_history' %}"
+       class="btn btn-outline-primary btn-control" role="button"
+       data-async="true" >
+      TRIGGER HISTORY
+    </a>
+  </div>
+  {% endif %}
+</div>

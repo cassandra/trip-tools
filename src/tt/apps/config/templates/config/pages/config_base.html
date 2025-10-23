@@ -1,0 +1,25 @@
+{% extends "pages/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="h3 text-primary m-3">Configuration</div>
+  <div class="tt-administration-content">
+    <ul id="tt-config-tab" class="nav nav-tabs" role="tablist">
+      {% for config_page_type in request.config_page_type_list %}
+      <li class="nav-item">
+        <a id="tt-config-tab-{{ config_page_type }}" role="tab"
+           class="nav-link {% if request.current_config_page_type == config_page_type %}active{% endif %}"
+           href="{% url config_page_type.url_name %}" 
+           >{{ config_page_type.label }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    
+    <div class="tab-content" id="tt-config-tab-content">
+      {% block config_content %}
+      {% endblock %}
+    </div>
+    
+  </div>
+</div>
+{% endblock %}

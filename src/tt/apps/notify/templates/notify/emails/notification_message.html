@@ -1,0 +1,11 @@
+{% extends "notify/emails/base_email_message.html" %}
+{% block title %}Notification{% endblock %}
+{% block content %}
+<p>
+  <ul>
+    {% for item in notification.item_list %}
+    <li>{{ item.title }}</li>
+  {% endfor %}
+  </ul>
+</p>
+{% endblock %}

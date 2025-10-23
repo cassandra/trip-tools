@@ -1,0 +1,11 @@
+{% extends "modals/action_refresh.html" %}
+
+{% block modal_dialog_class %}hi-modal-dialog-600{% endblock %}
+
+{% block title_text %}
+{{ processing_result.title }}
+{% endblock %}
+
+{% block body %}
+{% include "common/panes/processing_result.html" with processing_result=processing_result  %}
+{% endblock %}

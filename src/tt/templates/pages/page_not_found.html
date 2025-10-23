@@ -1,0 +1,11 @@
+{% extends "pages/error_base.html" %}
+
+{% block title %}
+<span id="tt-page-not-found-page" >Page Not Found</span>
+{% endblock %}
+
+{% block interstitial_message %}
+<div class="text-center">
+  <a href="{% url 'home' %}">Go to Home Page</a>
+</div>
+{% endblock %}

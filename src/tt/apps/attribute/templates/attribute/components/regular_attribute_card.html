@@ -1,0 +1,164 @@
+{% load icons %}
+{% load common_tags %}
+{% load attribute_extras %}
+{% comment %}
+V2 Attribute Card Component
+Individual attribute attribute card with value editing and actions
+{% endcomment %}
+
+<div class="{{ DIVID.ATTR_V2_ATTRIBUTE_CARD_CLASS }}{% if not attribute_form.instance.pk %} {{ DIVID.ATTR_V2_NEW_ATTRIBUTE_CLASS }}{% endif %}" 
+     data-attribute-id="{{ attribute_form.instance.pk }}" 
+     data-url-detect="true"
+     data-order-index="{{ forloop.counter }}"
+     data-value-type="{{ attribute_form.instance.value_type.name|default:'text' }}"
+     data-is-secret="{{ attribute_form.instance.value_type.is_secret|yesno:'true,false' }}"
+     data-can-delete="{{ attribute_form.instance.attribute_type.can_delete|yesno:'true,false' }}"
+     {% if not attribute_form.instance.pk and not attribute_form.is_bound %}style="display: none;"{% endif %}
+     {% if attribute_form.instance and not attribute_form.instance.is_editable %}is_editable="false"{% endif %} >
+  
+  <!-- Hidden form fields -->
+  {{ attribute_form.id }}
+  {% if attribute_form.DELETE %}
+    {{ attribute_form.DELETE.as_hidden }}
+  {% endif %}
+
+  {% if attribute_form.instance and not attribute_form.instance.is_editable %}
+  <div class="text-muted text-center"><small>SYSTEM INFO</small></div>
+  {% endif %}
+  
+  <!-- Attribute Header -->
+  <div class="{{ DIVID.ATTR_V2_ATTRIBUTE_HEADER_CLASS }}">
+    {% if attribute_form.instance.pk %}
+    <div class="{{ DIVID.ATTR_V2_ATTRIBUTE_NAME_CLASS }}">
+      {% include "attribute/components/name_field.html" %}
+    </div>
+
+    {% if attribute_form.name.errors %}
+    <div class="attr-v2-field-errors">
+      {% for error in attribute_form.name.errors %}
+      <div class="attr-v2-error-text">{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+      
+    {% else %}
+      <h6 class="{{ DIVID.ATTR_V2_ATTRIBUTE_NAME_CLASS }}">
+        {% icon "plus" size="sm" css_class="hi-icon-left" %}Add New
+      </h6>
+    {% endif %}
+
+    {% if attribute_form.non_field_errors %}
+    <div class="attr-v2-non-field-errors">
+      {% for err in attribute_form.non_field_errors %}
+      <div class="attr-v2-error-item">{{ err }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="{{ DIVID.ATTR_V2_ATTRIBUTE_ACTIONS_CLASS }}">
+      <!-- Reorder Controls (disabled until Issue #80, hidden if allow_reordering is False) -->
+      {% if attribute_form.instance.pk and attribute_form.allow_reordering %}
+      <button type="button" 
+              class="btn btn-sm btn-outline-secondary"
+              disabled
+              title="Reordering available in future update"
+              data-reorder-action="up">
+        {% icon "chevron-up" size="sm" %}
+      </button>
+      <button type="button" 
+              class="btn btn-sm btn-outline-secondary"
+              disabled
+              title="Reordering available in future update"
+              data-reorder-action="down">
+        {% icon "chevron-down" size="sm" %}
+      </button>
+      {% endif %}
+      
+      {% if attribute_form.instance.pk and not attribute_form.suppress_history %}
+        <a href="{% attr_history_url attr_item_context attribute_form.instance.pk %}"
+           class="btn btn-sm btn-outline-secondary {{ DIVID.ATTR_V2_HISTORY_LINK_CLASS }}"
+           title="View history">
+          {% icon "history" size="sm" %}
+        </a>
+      {% endif %}
+      
+      {% if attribute_form.instance.pk and attribute_form.instance.attribute_type.can_delete %}
+        <button type="button" 
+                class="{{ DIVID.ATTR_V2_DELETE_BTN_CLASS }}"
+                title="Delete attribute"
+                onclick="markAttributeForDeletion('{{ attribute_form.instance.pk }}', '#{{ attr_page_context.container_html_id }}')" >
+          {% icon "delete" size="sm" %}
+        </button>
+        <button type="button" 
+                class="btn btn-sm btn-outline-warning {{ DIVID.ATTR_V2_UNDO_BTN_CLASS }}"
+                title="Undo delete"
+                onclick="undoAttributeDeletion('{{ attribute_form.instance.pk }}', '#{{ attr_page_context.container_html_id }}')"
+                style="display: none;">
+          ↶ Undo
+        </button>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Attribute Value -->
+  <div class="{{ DIVID.ATTR_V2_ATTRIBUTE_VALUE_CLASS }}">
+    {% if not attribute_form.instance.pk %}
+      <!-- New attribute form -->
+      <div class="mb-2">
+        {{ attribute_form.name.label_tag }}
+        {{ attribute_form.name }}
+        {% if attribute_form.name.errors %}
+          <div class="attr-v2-field-errors">
+            {% for error in attribute_form.name.errors %}
+            <div class="attr-v2-error-text">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+    
+    {% if attribute_form.instance.pk %}
+      <!-- Existing attribute - route by value_type -->
+      {% if attribute_form.instance.value_type.is_boolean %}
+        {% include "attribute/components/value_types/attribute_value_boolean.html" %}
+      {% elif attribute_form.instance.value_type.is_enum %}
+        {% include "attribute/components/value_types/attribute_value_enum.html" %}
+      {% elif attribute_form.instance.value_type.is_integer %}
+        {% include "attribute/components/value_types/attribute_value_integer.html" %}
+      {% elif attribute_form.instance.value_type.is_float %}
+        {% include "attribute/components/value_types/attribute_value_float.html" %}
+      {% elif attribute_form.instance.value_type.is_secret %}
+        {% include "attribute/components/value_types/attribute_value_secret.html" %}
+      {% else %}
+        <!-- TEXT and other types use textarea -->
+        <div class="{{ DIVID.ATTR_V2_TEXT_VALUE_CLASS }}">
+          {% include "attribute/components/value_types/attribute_value_text.html" %}
+        </div>
+      {% endif %}
+    {% else %}
+      <!-- New attribute - always use textarea (TEXT behavior) -->
+      <div class="{{ DIVID.ATTR_V2_TEXT_VALUE_CLASS }}">
+        {% include "attribute/components/value_types/attribute_value_text.html" %}
+      </div>
+    {% endif %}
+    
+    <!-- Secret checkbox for new properties -->
+    {% if not attribute_form.instance.pk %}
+      <div class="{{ DIVID.ATTR_V2_SECRET_CHECKBOX_CLASS }}">
+        <div class="custom-control custom-checkbox">
+          {{ attribute_form.secret }}
+          <label class="custom-control-label" for="{{ attribute_form.secret.id_for_label }}">
+            Mark as Secret
+          </label>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  
+  <!-- Inline History Target (empty until populated) -->
+  {% if attribute_form.instance.pk %}
+    <div id="{{ attr_item_context|history_target_id:attribute_form.instance.pk }}" 
+         class="{{ DIVID.ATTR_V2_INLINE_HISTORY_CLASS }}">
+    </div>
+  {% endif %}
+</div>

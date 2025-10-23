@@ -1,0 +1,57 @@
+{% load static %}
+<html>
+  <head>
+    <style>
+      body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+     .email-container { border: 4px solid #f45f36; padding: 0; margin: 0; }
+     .email-inner { border: 4px solid white; padding: 0; margin: 0; }
+     .email-header { border: 4px solid #177072; padding: 0; }
+     .email-header tr { background-color: #fefeff; }
+     .email-logo { width: 149px; padding-left: 8px; padding-right: 8px; }
+     .email-title { font-size: 18px; font-weight: 800; color: #177072; padding-left: 8px; padding-right: 8px; }
+     .email-content { margin: 8px; }
+     .email-unsubscribe { margin: 8px; color: #888888; font-size: 0.8rem; text-decoration: none; }
+     img.logo { height: 48px; width: auto; }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="email-inner">
+        <div class="email-header">
+          {% block body %}
+          <table style="width: 100%;" cellpadding="0" cellspacing="0">
+            <tr>
+              <td class="email-logo">
+                {% block logo %}
+                {% if BASE_URL %}
+                <a href="{{ BASE_URL }}" alt="Trip Tools Home">
+                  <img class="logo" src="{{ BASE_URL }}{% static 'img/tt-logo-149x64.png' %}"
+                       alt="Trip Tools Logo"/>
+                </a>
+                {% endif %}
+                {% endblock %}
+              </td>
+              <td>
+                <p class="email-title">
+                  {% block title %}
+                  {% endblock %}
+                </p>
+              </td>
+            </tr>
+          </table>
+          {% endblock %}
+        </div>
+        <div class="email-content">
+          {% block content %}
+          {% endblock %}
+        </div>
+        {% if UNSUBSCRIBE_URL %}
+        <hr />
+        <p class="email-unsubscribe">
+          <a href="{{ UNSUBSCRIBE_URL }}">Unsubscribe</a>
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

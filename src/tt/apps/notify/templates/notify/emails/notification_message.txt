@@ -1,0 +1,7 @@
+{% extends "notify/emails/base_email_message.txt" %}
+{% block content %}Home Information Notification
+
+{{ notification.title }}
+
+{% for item in notification.item_list %}  - {{ item.title }}
+{% endfor %}{% endblock %}

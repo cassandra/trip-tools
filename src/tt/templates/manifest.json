@@ -1,0 +1,59 @@
+{% load static %}{
+  "name": "Trip Tools",
+  "short_name": "TT",
+  "description": "Tools for research, planning, tracking and journaling for trips.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "theme_color": "#177072",
+  "background_color": "#177072",
+  "icons": [
+    {
+      "src": "{% static 'img/tt-icon-16x16.png' %}",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "{% static 'img/tt-icon-32x32.png' %}",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "{% static 'img/tt-icon-96x96.png' %}",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "{% static 'img/tt-icon-120x120.png' %}",
+      "sizes": "120x120",
+      "type": "image/png"
+    },
+    {
+      "src": "{% static 'img/tt-icon-128x128.png' %}",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "{% static 'img/tt-icon-152x152.png' %}",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "{% static 'img/tt-icon-180x180.png' %}",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "{% static 'img/tt-icon-196x196.png' %}",
+      "sizes": "196x196",
+      "type": "image/png"
+    },
+    {
+      "src": "{% static 'img/tt-icon-512x512.png' %}",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
