@@ -13,6 +13,14 @@ class LocationNoteInline(admin.TabularInline):
     readonly_fields = ('created_datetime',)
 
 
+class LocationSubCategoryInline(admin.TabularInline):
+    model = models.LocationSubCategory
+    extra = 0
+    show_change_link = True
+    fields = ('name', 'slug', 'color_code', 'icon_code')
+    prepopulated_fields = {'slug': ('name',)}
+
+
 @admin.register(models.LocationCategory)
 class LocationCategoryAdmin(admin.ModelAdmin):
     show_full_result_count = False
@@ -20,11 +28,13 @@ class LocationCategoryAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'slug',
-        'description',
+        'color_code',
+        'icon_code',
     )
 
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name', 'slug']
+    inlines = [LocationSubCategoryInline]
 
 
 @admin.register(models.LocationSubCategory)
@@ -35,6 +45,8 @@ class LocationSubCategoryAdmin(admin.ModelAdmin):
         'name',
         'category_link',
         'slug',
+        'color_code',
+        'icon_code',
     )
 
     list_filter = ('category',)

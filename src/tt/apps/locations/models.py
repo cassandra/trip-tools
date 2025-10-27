@@ -21,6 +21,16 @@ class LocationCategory(models.Model):
     name = models.CharField( max_length = 100, unique = True )
     slug = models.SlugField( unique = True )
     description = models.TextField( blank = True )
+    color_code = models.CharField(
+        max_length = 50,
+        blank = True,
+        help_text = 'RGB color code, e.g., "RGB (245, 124, 0)"',
+    )
+    icon_code = models.CharField(
+        max_length = 20,
+        blank = True,
+        help_text = 'Google Maps icon code, e.g., "1535"',
+    )
 
     class Meta:
         verbose_name = 'Location Category'
@@ -44,6 +54,16 @@ class LocationSubCategory(models.Model):
     )
     name = models.CharField( max_length = 100 )
     slug = models.SlugField()
+    color_code = models.CharField(
+        max_length = 50,
+        blank = True,
+        help_text = 'RGB color code, e.g., "RGB (9, 113, 56)"',
+    )
+    icon_code = models.CharField(
+        max_length = 20,
+        blank = True,
+        help_text = 'Google Maps icon code, e.g., "1596"',
+    )
 
     class Meta:
         verbose_name = 'Location Sub-category'
