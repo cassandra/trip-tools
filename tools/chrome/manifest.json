@@ -1,0 +1,76 @@
+{
+    "manifest_version": 3,
+    "name": "Vacation Tool",
+    "description": "Vacation planning tool.",
+    "version": "1.0",
+    "permissions": [ "storage", "tabs", "activeTab", "scripting", "contextMenus" ],    
+    "action": {
+	"default_popup": "popup.html",
+	"default_icon": "images/popup-icon.png"
+    },
+    "background": {
+	"service_worker": "background.js",
+	"type": "module"
+    },
+    "content_scripts": [
+	{
+	    "matches": [ "https://www.google.com/maps/d/edit*" ],
+	    "css": [ "styles/shared.css",
+		     "styles/mymap.css"],
+	    "js": [ "scripts/models.js",
+		    "scripts/shared.js",
+		    "scripts/mymap.js" ]
+	},
+	{
+	    "matches": [ "https://www.booking.com/hotel/*" ],
+	    "css": [ "styles/shared.css" ],
+	    "js": [ "scripts/models.js",
+		    "scripts/shared.js",
+		    "scripts/booking-com-detail.js" ]
+	},
+	{
+	    "matches": [ "https://www.booking.com/searchresults.html*" ],
+	    "css": [ "styles/shared.css" ],
+	    "js": [ "scripts/models.js",
+		    "scripts/shared.js",
+		    "scripts/booking-com-search.js" ]
+	},
+	{
+	    "matches": [ "https://www.google.com/travel/search*" ],
+	    "css": [ "styles/shared.css" ],
+	    "js": [ "scripts/models.js",
+		    "scripts/shared.js",
+		    "scripts/google-com-hotel-list.js" ]
+	},
+	{
+	    "matches": [ "https://www.tripadvisor.com/Hotels-*" ],
+	    "css": [ "styles/shared.css" ],
+	    "js": [ "scripts/models.js",
+		    "scripts/shared.js",
+		    "scripts/tripadvisor-com-hotel-list.js" ]
+	},
+	{
+	    "matches": [ "https://www.tripadvisor.com/Hotel_Review-*" ],
+	    "css": [ "styles/shared.css" ],
+	    "js": [ "scripts/models.js",
+		    "scripts/shared.js",
+		    "scripts/tripadvisor-com-hotel-detail.js" ]
+	},
+	{
+	    "matches": [ "<all_urls>" ],
+	    "css": [ "styles/shared.css" ],
+	    "js": [ "scripts/models.js",
+		    "scripts/shared.js",
+		    "scripts/all.js" ]
+	}
+    ],
+    "host_permissions": [
+	"<all_urls>"
+    ],
+    "web_accessible_resources": [
+	{
+            "resources": [ "images/*", "styles/*", "templates/*"],
+            "matches": ["<all_urls>"]
+	}
+    ]
+}

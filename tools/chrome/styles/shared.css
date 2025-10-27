@@ -1,0 +1,166 @@
+:root {
+    --white-fg-color: #fdfdfd;
+    --white-bg-color: #fdfdfd;
+    --black: #000814;
+    --highlight-yellow: #ECEFB6;
+    --primary-color: #3c3b6e;
+    --error-color: #721817;
+    --success-color: #40bf70;
+
+    --gray0: #F8FAFB;
+    --gray1: #F2F4F6;
+    --gray2: #EBEDEF;
+    --gray3: #E0E4E5;
+    --gray4: #D1D6D8;
+    --gray5: #B1B6B9;
+    --gray6: #979B9D;
+    --gray7: #7E8282;
+    --gray8: #666968;
+    --gray9: #50514F;
+    --gray10: #3A3A37;
+    --gray11: #252521;
+    --gray12: #121210;
+
+    --yellow0: #FFF9DB;
+    --yellow1: #FFF3BF;
+    --yellow2: #FFEC99;
+    --yellow3: #FFE066;
+    --yellow4: #FFD43B;
+    --yellow5: #FCC419;
+    --yellow6: #FAB005;
+    --yellow7: #F59F00;
+    --yellow8: #F08C00;
+    --yellow9: #E67700;
+    --yellow10: #B35C00;
+    --yellow11: #804200;
+    --yellow12: #663500;
+			   
+    --cyan0: #E3FAFC;
+    --cyan1: #C5F6FA;
+    --cyan2: #99E9F2;
+    --cyan3: #66D9E8;
+    --cyan4: #3BC9DB;
+    --cyan5: #22B8CF;
+    --cyan6: #15AABF;
+    --cyan7: #1098AD;
+    --cyan8: #0C8599;
+    --cyan9: #0B7285;
+    --cyan10: #095C6B;
+    --cyan11: #074652;
+    --cyan12: #053038;
+    
+    --teal0: #E6FCF5;
+    --teal1: #C3FAE8;
+    --teal2: #96F2D7;
+    --teal3: #63E6BE;
+    --teal4: #38D9A9;
+    --teal5: #20C997;
+    --teal6: #12B886;
+    --teal7: #0CA678;
+    --teal8: #099268;
+    --teal9: #087F5B;
+    --teal10: #066649;
+    --teal11: #054D37;
+    --teal12: #033325;
+
+    --sand0: #F8FAFB;
+    --sand1: #E6E4DC;
+    --sand2: #D5CFBD;
+    --sand3: #C2B9A0;
+    --sand4: #AEA58C;
+    --sand5: #9A9178;
+    --sand6: #867C65;
+    --sand7: #736A53;
+    --sand8: #5F5746;
+    --sand9: #4B4639;
+    --sand10: #38352D;
+    --sand11: #252521;
+    --sand12: #121210;
+    
+}
+
+		       
+body.vt-body {
+  width: 250px;
+  padding: 5px;
+  font-family: Arial, sans-serif;
+  color: var(--sand12);
+  background-color: var(--cyan1);
+}
+
+img.vt-icon {
+  width: 75px;
+  height: auto;
+  margin-right: 10px;
+}
+
+
+div.vt-row.valign-start {
+    display: flex;
+    align-items: start;
+}
+
+div.vt-row.valign-center {
+    display: flex;
+    align-items: center;
+}
+
+.vt-btn {
+  display: inline-block;
+  padding: 5px 10px;
+  margin: 2.5px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  outline: none;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.vt-btn.primary {
+  background-color: var(--cyan8);
+  color: var(--sand0);
+}
+.vt-btn.primary:hover {
+  background-color: var(--cyan10);
+}
+.vt-btn.solicit {
+  background-color: var(--yellow10);
+  color: var(--sand0);
+  width: 100%;
+  margin-bottom: 5px;
+}
+.vt-btn.solicit:hover {
+  background-color: var(--yellow12);
+}
+.vt-btn.external {
+  background-color: var(--yellow10);
+  color: var(--sand0);
+  font-size: 16px;
+}
+.vt-btn.external:hover {
+  background-color: var(--yellow12);
+}
+.vt-btn.remove {
+    background-color: var(--yellow10);
+    color: var(--sand0);
+    margin-left: 10px;
+}
+.vt-btn.remove:hover {
+    background-color: var(--yellow12);
+}
+
+
+.vt-map-list-item {
+    font-size: 16px;
+    
+}
+.vt-map-list-item a {
+    text-decoration: none;
+}
+.vt-map-list-item a:hover {
+
+}

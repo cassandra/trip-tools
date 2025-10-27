@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Vacation Gizmo</title>
+    <link rel="stylesheet" type="text/css" href="styles/shared.css">
+  </head>
+  <body class="vt-body">
+    <div>
+      <button class="vt-btn solicit" id="vtAddMapButton" style="display:none;">
+	Add This Map
+      </button>
+      <button class="vt-btn solicit" id="vtMakeCurrentMapButton" style="display:none;">
+	Make This Map Current
+      </button>
+    </div>
+    <div class="vt-row valign-start">
+      <div>
+	<img class="vt-icon" src="images/popup-icon.png"
+	     alt="Vacation Gizmo Icon">
+	<div>
+	</div>
+	<div>
+	  <button class="vt-btn primary" id="vtRefreshMapsList">Refresh</button>
+	</div>
+	<div>
+	  <button class="vt-btn primary" id="vtMyMapsHomeButton">My Maps</button>
+	</div>
+      </div>
+      <div>
+	<h1>Vacay Gizmo</h1>
+	<div id="vt-current-map-container">
+	  <h3>Current</h3>
+	  <div class="vt-map-list" id="vtMapListCurrent"></div>
+	</div>
+	<div id="vt-other-maps-container" >
+	  <h3>Others</h3>
+	  <div class="vt-map-list" id="vtMapListOther"></div>
+	</div>
+      </div>
+    </div>
+
+    <div>
+      <button class="vt-btn primary" id="vtToggleSelectDecorate">
+	Decorate: <span id="vtSelectDecorateValue">---</span>
+      </button>
+    </div>
+    <div>
+      <button class="vt-btn primary" id="vtKillSticky">
+	Kill Sticky
+      </button>
+    </div>
+    
+    <script src="popup.js"></script>
+  </body>
+</html>
