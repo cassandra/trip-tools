@@ -42,8 +42,8 @@ class SubsystemAttributeAdmin(admin.ModelAdmin):
         'user_link',
         'name',
         'value',
-        'value_type_str',
-        'attribute_type_str',
+        'value_type',
+        'attribute_type',
         'setting_key',
         'created_datetime',
     )

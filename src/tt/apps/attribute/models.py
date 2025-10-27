@@ -5,6 +5,7 @@ from django.core.files.storage import default_storage
 from django.db import models
 
 from tt.apps.common.file_utils import generate_unique_filename
+from tt.apps.common.model_fields import LabeledEnumField
 
 from .enums import AttributeValueType, AttributeType
 from .value_ranges import PredefinedValueRanges
@@ -62,19 +63,21 @@ class AttributeModel(models.Model):
         max_length = 128,
         null = True, blank = True,
     )
-    value_type_str = models.CharField(
+    value_type = LabeledEnumField(
+        AttributeValueType,
         'Value Type',
-        max_length = 32,
-        null = False, blank = False,
+        null = False,
+        blank = False,
     )
     value_range_str = models.TextField(
         'Value Range',
         null = True, blank = True,
     )
-    attribute_type_str = models.CharField(
+    attribute_type = LabeledEnumField(
+        AttributeType,
         'Attribute Type',
-        max_length = 32,
-        null = False, blank = False,
+        null = False,
+        blank = False,
     )
     is_editable = models.BooleanField(
         'Editable?',
@@ -98,29 +101,11 @@ class AttributeModel(models.Model):
         raise NotImplementedError('Subclasses should override this method.' )
 
     def __str__(self):
-        return f'Attr: {self.name}={self.value} [{self.value_type_str}] [{self.attribute_type_str}]'
+        return f'Attr: {self.name}={self.value} [{self.value_type}] [{self.attribute_type}]'
     
     def __repr__(self):
         return self.__str__()
     
-    @property
-    def value_type(self) -> AttributeValueType:
-        return AttributeValueType.from_name_safe( self.value_type_str )
-
-    @value_type.setter
-    def value_type( self, value_type : AttributeValueType ):
-        self.value_type_str = str(value_type)
-        return
-
-    @property
-    def attribute_type(self) -> AttributeType:
-        return AttributeType.from_name_safe( self.attribute_type_str )
-
-    @attribute_type.setter
-    def attribute_type( self, attribute_type : AttributeType ):
-        self.attribute_type_str = str(attribute_type)
-        return
-
     @property
     def is_predefined(self):
         return bool( self.attribute_type == AttributeType.PREDEFINED )

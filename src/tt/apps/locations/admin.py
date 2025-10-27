@@ -1,0 +1,101 @@
+from django.contrib import admin
+
+from tt.apps.common.admin_utils import admin_link
+
+from . import models
+
+
+class LocationNoteInline(admin.TabularInline):
+    model = models.LocationNote
+    extra = 0
+    show_change_link = True
+    fields = ('text', 'source_label', 'source_url', 'created_datetime')
+    readonly_fields = ('created_datetime',)
+
+
+@admin.register(models.LocationCategory)
+class LocationCategoryAdmin(admin.ModelAdmin):
+    show_full_result_count = False
+
+    list_display = (
+        'name',
+        'slug',
+        'description',
+    )
+
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ['name', 'slug']
+
+
+@admin.register(models.LocationSubCategory)
+class LocationSubCategoryAdmin(admin.ModelAdmin):
+    show_full_result_count = False
+
+    list_display = (
+        'name',
+        'category_link',
+        'slug',
+    )
+
+    list_filter = ('category',)
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ['name', 'slug', 'category__name']
+
+    @admin_link('category', 'Category')
+    def category_link(self, category):
+        return category.name
+
+
+@admin.register(models.Location)
+class LocationAdmin(admin.ModelAdmin):
+    show_full_result_count = False
+
+    list_display = (
+        'title',
+        'user_link',
+        'trip_link',
+        'subcategory_link',
+        'rating',
+        'desirability',
+        'created_datetime',
+    )
+
+    list_filter = ('desirability', 'advanced_booking', 'subcategory__category')
+    search_fields = ['title', 'user__username', 'trip__title']
+    readonly_fields = ('created_datetime', 'modified_datetime')
+    inlines = [LocationNoteInline]
+
+    @admin_link('user', 'User')
+    def user_link(self, user):
+        return user.username
+
+    @admin_link('trip', 'Trip')
+    def trip_link(self, trip):
+        return trip.title
+
+    @admin_link('subcategory', 'Subcategory')
+    def subcategory_link(self, subcategory):
+        return subcategory.name if subcategory else '-'
+
+
+@admin.register(models.LocationNote)
+class LocationNoteAdmin(admin.ModelAdmin):
+    show_full_result_count = False
+
+    list_display = (
+        'location_link',
+        'text_preview',
+        'source_label',
+        'created_datetime',
+    )
+
+    search_fields = ['text', 'source_label', 'location__title']
+    readonly_fields = ('created_datetime', 'modified_datetime')
+
+    @admin_link('location', 'Location')
+    def location_link(self, location):
+        return location.title
+
+    def text_preview(self, obj):
+        return obj.text[:100] + '...' if len(obj.text) > 100 else obj.text
+    text_preview.short_description = 'Text'

@@ -124,7 +124,7 @@ class AttributeEditFormHandlerTestMixin(AttributeFrameworkTestMixin, ABC):
             owner=owner,
             name="test_attr",
             value="test_value",
-            attribute_type_str=str(AttributeType.CUSTOM)
+            attribute_type = AttributeType.CUSTOM
         )
         
         context = self.create_item_edit_context(owner)
@@ -226,7 +226,7 @@ class AttributeEditFormHandlerTestMixin(AttributeFrameworkTestMixin, ABC):
             owner=owner,
             name="test_file",
             value="Test File Title",
-            value_type_str=str(AttributeValueType.FILE)
+            value_type = AttributeValueType.FILE
         )
         
         handler = AttributeEditFormHandler()
@@ -266,7 +266,7 @@ class AttributeEditFormHandlerTestMixin(AttributeFrameworkTestMixin, ABC):
             owner=owner,
             name="document",
             value="Original Title",
-            value_type_str=str(AttributeValueType.FILE)
+            value_type = AttributeValueType.FILE
         )
         
         handler = AttributeEditFormHandler()

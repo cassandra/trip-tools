@@ -112,9 +112,9 @@ class SettingsInitializer:
                 setting_key = setting_key,
                 name = setting_definition.label,
                 value = setting_definition.initial_value,
-                value_type_str = str(setting_definition.value_type),
+                value_type = setting_definition.value_type,
                 value_range_str = setting_definition.value_range_str,
-                attribute_type_str = AttributeType.PREDEFINED,
+                attribute_type = AttributeType.PREDEFINED,
                 is_editable = setting_definition.is_editable,
                 is_required = setting_definition.is_required,
             )

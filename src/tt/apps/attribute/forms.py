@@ -18,12 +18,12 @@ class RegularAttributeBaseFormSet(forms.BaseInlineFormSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Apply filtering after parent initialization
-        self.queryset = self.queryset.exclude(value_type_str=str(AttributeValueType.FILE))
+        self.queryset = self.queryset.exclude( value_type = AttributeValueType.FILE )
     
     def get_queryset(self):
         """Override to automatically filter out FILE attributes"""
         queryset = super().get_queryset()
-        return queryset.exclude(value_type_str=str(AttributeValueType.FILE))
+        return queryset.exclude( value_type = AttributeValueType.FILE )
 
 
 class AttributeForm( forms.ModelForm ):
@@ -124,14 +124,14 @@ class AttributeForm( forms.ModelForm ):
         instance = super().save( commit = False )
 
         if not instance.pk:
-            instance.attribute_type_str = str(AttributeType.CUSTOM)
+            instance.attribute_type = AttributeType.CUSTOM
             instance.is_editable = True
             instance.is_required = False
 
             if self.cleaned_data.get('secret'):
-                instance.value_type_str = str( AttributeValueType.SECRET )
+                instance.value_type = AttributeValueType.SECRET
             else:
-                instance.value_type_str = str(AttributeValueType.TEXT)
+                instance.value_type = AttributeValueType.TEXT
 
         elif not instance.is_editable:
             return instance
@@ -164,8 +164,8 @@ class AttributeUploadForm( forms.ModelForm ):
         
         instance.name = instance.file_value.name
         instance.file_mime_type = mime_type_tuple[0]
-        instance.value_type_str = str( AttributeValueType.FILE )
-        instance.attribute_type_str = str(AttributeType.CUSTOM)
+        instance.value_type = AttributeValueType.FILE
+        instance.attribute_type = AttributeType.CUSTOM
         instance.is_editable = True
         instance.is_required = False
 

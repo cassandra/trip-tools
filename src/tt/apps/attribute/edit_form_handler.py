@@ -33,7 +33,7 @@ class AttributeEditFormHandler:
 
         # Get file attributes for display (not a formset, just for template rendering)
         file_attributes: QuerySet[AttributeModel] = attr_item_context.attributes_queryset().filter(
-            value_type_str = str( AttributeValueType.FILE )
+            value_type = AttributeValueType.FILE
         ).order_by('id')
         
         # Regular attributes formset (should exclude FILE attributes)
@@ -94,7 +94,7 @@ class AttributeEditFormHandler:
             try:
                 file_attribute = AttributeModelClass.objects.get(
                     id = attr_id, 
-                    value_type_str = str(AttributeValueType.FILE)
+                    value_type = AttributeValueType.FILE
                 )
                 # Verify permission to delete
                 if file_attribute.attribute_type.can_delete:
@@ -131,7 +131,7 @@ class AttributeEditFormHandler:
                 attribute_id: int = int(attribute_id_str)
                 attribute = AttributeModelClass.objects.get(
                     id = attribute_id,
-                    value_type_str = str(AttributeValueType.FILE)
+                    value_type = AttributeValueType.FILE
                 )
                 # Clean and validate the new title
                 new_title = new_title.strip()
