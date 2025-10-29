@@ -85,7 +85,6 @@ Based on findings, identify which domains are involved:
 - **Django application structure** in `src/tt/apps/`
 - **Static assets organization** in `src/tt/static/`
 - **Template hierarchy** and component patterns
-- **Integration services** in `src/tt/services/`
 - **Documentation structure** in `docs/dev/`
 
 ### Common Cross-Domain Patterns

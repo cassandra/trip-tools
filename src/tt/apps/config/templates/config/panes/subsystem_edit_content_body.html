@@ -39,7 +39,7 @@ This is what gets replaced on form submission
      role="tab" 
      aria-controls="subsystem-{{ multi_edit_form_data.owner.id }}-panel" 
      aria-selected="{% if selected_subsystem_id == multi_edit_form_data.owner.id|stringformat:'s' %}true{% else %}false{% endif %}"
-     onclick="window.Hi.attr.updateFormAction('{% url 'config_settings' subsystem_id=multi_edit_form_data.owner.id %}', '{{ attr_page_context.container_html_id }}', '{{ multi_edit_form_data.owner.name }} Settings')">
+     onclick="window.Tt.attr.updateFormAction('{% url 'config_settings' subsystem_id=multi_edit_form_data.owner.id %}', '{{ attr_page_context.container_html_id }}', '{{ multi_edit_form_data.owner.name }} Settings')">
     {{ multi_edit_form_data.owner.name }}
     {% if multi_edit_form_data.error_count > 0 %}
     <span class="badge badge-danger ml-1">{{ multi_edit_form_data.error_count }}</span>
@@ -62,17 +62,6 @@ This is what gets replaced on form submission
     
     <!-- Subsystem content using existing attribute editing components -->
     <div class="">
-      {% if multi_edit_form_data.owner.subsystem_key == "tt.apps.audio" %}
-      <!-- Audio Test Button - only shown for Audio subsystem -->
-      <div class="mb-3 text-right">
-        <button type="button"
-                class="btn btn-outline-primary btn-xs"
-                onclick="Tt.audio.testAudio();"
-                title="Test audio playback">
-          {% icon "play" size="xs" css_class="hi-icon-left" %}Test Audio
-        </button>
-      </div>
-      {% endif %}
       {% include "attribute/components/regular_attribute_list.html" with regular_attributes_formset=multi_edit_form_data.formset attr_item_context=multi_edit_form_data.context %}
     </div>
     

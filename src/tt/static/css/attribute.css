@@ -675,7 +675,7 @@
 /* Small screens - 2 columns for very narrow widths */
 @media (max-width: 575px) {
     /* Adjust modal for very small screens */
-    .hi-modal-dialog-700 {
+    .tt-modal-dialog-700 {
         max-width: 95%;
         margin: 0.5rem;
     }
@@ -718,7 +718,7 @@
 /* Tablet Landscape (1024px+) - PRIMARY TARGET */
 @media (min-width: 1024px) {
     /* Optimal layout - all features at full capacity */
-    .hi-modal-dialog-700 {
+    .tt-modal-dialog-700 {
         max-width: 700px;
     }
     
@@ -897,16 +897,16 @@
 }
 
 /* Enhanced icon alignment for V2 components */
-.attr-v2-action-buttons .hi-icon-left,
-.attr-v2-file-actions .hi-icon,
-.attr-v2-attribute-actions .hi-icon {
+.attr-v2-action-buttons .tt-icon-left,
+.attr-v2-file-actions .tt-icon,
+.attr-v2-attribute-actions .tt-icon {
     vertical-align: middle;
 }
 
-.attr-v2-action-buttons button .hi-icon-left {
+.attr-v2-action-buttons button .tt-icon-left {
     margin-right: 0.5rem;
 }
-}
+
 /* ====================================================================== */
 /* SECRET FIELD STYLING                                                  */
 /* ====================================================================== */

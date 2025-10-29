@@ -2,7 +2,7 @@
 
 ## Visual Testing Page
 
-Visit: [http://127.0.0.1:8411/testing/ui](http://127.0.0.1:8411/testing/ui)
+Visit: [http://127.0.0.1:6777/testing/ui](http://127.0.0.1:6777/testing/ui)
 
 These tests/ui views are only available in the development environment when `DEBUG=True`. They are conditionally loaded in the root `urls.py`.
 

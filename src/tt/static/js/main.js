@@ -1,6 +1,6 @@
 (function() {
     
-    const Hi = {
+    const Tt = {
 
         // TtClientConfig comes from server-side template injection. This module
         // (main.css) should be the only Javaacript that knows about
@@ -141,7 +141,7 @@
         ENTITY_PICKER_FILTER_ALL: 'all'
     };
     
-    window.Hi = Hi;
+    window.Tt = Tt;
 
     function _generateUniqueId() {
         return 'id-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
@@ -169,13 +169,13 @@
     
     function _submitForm( formElement ) {
         let form = $(formElement).closest('form');
-        if ( Hi.DEBUG ) { console.debug( 'Submitting form:', formElement, form ); }
+        if ( Tt.DEBUG ) { console.debug( 'Submitting form:', formElement, form ); }
         $(form).submit();
     }
     
     function _togglePasswordField( toggleCheckbox ) {
 
-        let passwordField = $(toggleCheckbox).closest(Hi.FORM_FIELD_CONTAINER_SELECTOR).find('input[type="password"], input[type="text"]');
+        let passwordField = $(toggleCheckbox).closest(Tt.FORM_FIELD_CONTAINER_SELECTOR).find('input[type="password"], input[type="text"]');
         if ( toggleCheckbox.checked ) {
             passwordField.attr('type', 'text');
             $('label[for="' +  $(toggleCheckbox).attr('id') + '"]').text('Hide');
@@ -201,7 +201,7 @@
     function _setEntityStateValueSelect( valueFieldId, instanceName, instanceId ) {
         $.ajax({
             type: 'GET',
-            url: `${Hi.ENTITY_STATE_VALUE_CHOICES_URL_PREFIX}/${instanceName}/${instanceId}`,
+            url: `${Tt.ENTITY_STATE_VALUE_CHOICES_URL_PREFIX}/${instanceName}/${instanceId}`,
 
             success: function( data, status, xhr ) {
                 const choices_list = data;
@@ -283,7 +283,7 @@
     }
 
     function _displayEventInfo ( label, event ) {
-        if ( ! Hi.DEBUG ) { return; }
+        if ( ! Tt.DEBUG ) { return; }
         if ( ! event ) {
             console.log( 'No element to display info for.' );
             return;
@@ -296,7 +296,7 @@
     }
 
     function _displayElementInfo( label, element ) {
-        if ( ! Hi.DEBUG ) { return; }
+        if ( ! Tt.DEBUG ) { return; }
         if ( ! element ) {
             console.log( 'No element to display info for.' );
             return;

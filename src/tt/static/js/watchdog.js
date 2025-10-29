@@ -1,19 +1,19 @@
 (function() {
 
-    window.Hi = window.Hi || {};
+    window.Tt = window.Tt || {};
 
     const MODULE_NAME = 'watchdog';    
 
-    const HiWatchdog = {
-	add: function( type, initFunction, normalRefreshMs ) {
-	    watchdogAdd( type, initFunction, normalRefreshMs );
-	},
-	ok: function( type ) {
-	    watchdogOk( type );
-	}
+    const TtWatchdog = {
+        add: function( type, initFunction, normalRefreshMs ) {
+            watchdogAdd( type, initFunction, normalRefreshMs );
+        },
+        ok: function( type ) {
+            watchdogOk( type );
+        }
     };
 
-    window.Hi.watchdog = HiWatchdog;
+    window.Tt.watchdog = TtWatchdog;
 
     /*
       WATCHDOG
@@ -28,32 +28,32 @@
     var watchdogFunctions = {};
 
     function watchdogAdd( type, initFunction, normalRefreshMs ) {
-	watchdogInactive[type] = false;
-	watchdogFunctions[type] = initFunction;
-	WatchdogTimers[type] = setInterval( function() { watchdogCheck( type ); },
-					    2 * normalRefreshMs );
+        watchdogInactive[type] = false;
+        watchdogFunctions[type] = initFunction;
+        WatchdogTimers[type] = setInterval( function() { watchdogCheck( type ); },
+                                            2 * normalRefreshMs );
     }
     
     function watchdogCheck( type ) {
-	if ( ! ( type in watchdogInactive )) {
+        if ( ! ( type in watchdogInactive )) {
             console.error( `No watchdog timer added for "${type}". Cannot check.`);
             return;
-	}
-	
-	if ( Hi.DEBUG && TRACE ) { console.debug( `Watchdog check: ${type}` ); }
-	if ( watchdogInactive[type] ) {
-            if ( Hi.DEBUG ) { console.debug( `Watchdog detected "${type}" stopped. Restarting.` ); }
+        }
+        
+        if ( Tt.DEBUG && TRACE ) { console.debug( `Watchdog check: ${type}` ); }
+        if ( watchdogInactive[type] ) {
+            if ( Tt.DEBUG ) { console.debug( `Watchdog detected "${type}" stopped. Restarting.` ); }
             watchdogFunctions[type]();
             watchdogInactive[type] = false;
 
-	} else {
+        } else {
             watchdogInactive[type] = true;
-	}
+        }
     }
     
     //--------------------
     function watchdogOk( type ) {
-	watchdogInactive[type] = false;
+        watchdogInactive[type] = false;
     }
     
 })();

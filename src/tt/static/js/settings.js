@@ -1,33 +1,33 @@
 (function() {
 
-    window.Hi = window.Hi || {};
+    window.Tt = window.Tt || {};
 
-    const HiSettings = {
+    const TtSettings = {
 
-	enableAudio: function() {
-	    return _enableAudio( );
-	},
-	disableAudio: function() {
-	    return _disableAudio( );
-	},
-	isAudioEnabled: function() {
-	    return _isAudioEnabled( );
-	},
-	hasShownPermissionGuidance: function() {
-	    return _hasShownPermissionGuidance( );
-	},
-	markPermissionGuidanceShown: function() {
-	    return _markPermissionGuidanceShown( );
-	},
-	enableSleepMode: function() {
-	    return _enableSleepMode( );
-	},
-	disableSleepMode: function() {
-	    return _disableSleepMode( );
-	}
+        enableAudio: function() {
+            return _enableAudio( );
+        },
+        disableAudio: function() {
+            return _disableAudio( );
+        },
+        isAudioEnabled: function() {
+            return _isAudioEnabled( );
+        },
+        hasShownPermissionGuidance: function() {
+            return _hasShownPermissionGuidance( );
+        },
+        markPermissionGuidanceShown: function() {
+            return _markPermissionGuidanceShown( );
+        },
+        enableSleepMode: function() {
+            return _enableSleepMode( );
+        },
+        disableSleepMode: function() {
+            return _disableSleepMode( );
+        }
     };
     
-    window.Hi.settings = HiSettings;
+    window.Tt.settings = TtSettings;
 
     /*
       SETTINGS
@@ -43,47 +43,47 @@
     const PermissionGuidanceShownValue = 'true';
 
     function setConsoleSetting( name, value ) {
-	Hi.setCookie( name, value );
+        Tt.setCookie( name, value );
     }
     
     function getConsoleSetting( name ) {
-	return Hi.getCookie( name );
+        return Tt.getCookie( name );
     }
     
     function _enableAudio() {
-	setConsoleSetting( AudioStateSettingName, AudioStateEnabled );
-	return true;
+        setConsoleSetting( AudioStateSettingName, AudioStateEnabled );
+        return true;
     }
 
     function _disableAudio() {
-	setConsoleSetting( AudioStateSettingName, AudioStateDisabled );
-	return true;
+        setConsoleSetting( AudioStateSettingName, AudioStateDisabled );
+        return true;
     }
 
     function _isAudioEnabled() {
-	var audioState = getConsoleSetting( AudioStateSettingName );
-	if ( audioState && ( audioState == AudioStateDisabled ))
-	    return false;
-	return true;
+        var audioState = getConsoleSetting( AudioStateSettingName );
+        if ( audioState && ( audioState == AudioStateDisabled ))
+            return false;
+        return true;
     }
 
     function _enableSleepMode() {
-	let sleepOverlay = $(SleepOverlaySelector);
-	$(sleepOverlay).show();
-	$(sleepOverlay).off( 'click').on('click', Hi.settings.disableSleepMode );
+        let sleepOverlay = $(SleepOverlaySelector);
+        $(sleepOverlay).show();
+        $(sleepOverlay).off( 'click').on('click', Tt.settings.disableSleepMode );
     }
     function _disableSleepMode() {
-	$(SleepOverlaySelector).hide();
+        $(SleepOverlaySelector).hide();
     }
 
     function _hasShownPermissionGuidance() {
-	var guidanceShown = getConsoleSetting( PermissionGuidanceShownSettingName );
-	return guidanceShown === PermissionGuidanceShownValue;
+        var guidanceShown = getConsoleSetting( PermissionGuidanceShownSettingName );
+        return guidanceShown === PermissionGuidanceShownValue;
     }
     
     function _markPermissionGuidanceShown() {
-	setConsoleSetting( PermissionGuidanceShownSettingName, PermissionGuidanceShownValue );
-	return true;
+        setConsoleSetting( PermissionGuidanceShownSettingName, PermissionGuidanceShownValue );
+        return true;
     }
     
 })();

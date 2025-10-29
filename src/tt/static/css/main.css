@@ -384,13 +384,13 @@ a.clickable-card:active {
     border-left: 1px solid var(--line-color);
 }
 
-.hi-modal-dialog-600 {
+.tt-modal-dialog-600 {
     max-width: 600px;
 }
-.hi-modal-dialog-700 {
+.tt-modal-dialog-700 {
     max-width: 700px;
 }
-.hi-modal-dialog-800 {
+.tt-modal-dialog-800 {
     max-width: 800px;
 }
 
@@ -538,7 +538,7 @@ input[type="password"],
 }
 
 /* Monitor Health Status Styles */
-.hi-modal-dialog-800 {
+.tt-modal-dialog-800 {
     max-width: 800px;
 }
 

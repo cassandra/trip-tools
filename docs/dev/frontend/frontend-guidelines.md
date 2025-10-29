@@ -74,7 +74,7 @@ return {
 ## Client-Server Namespace Sharing
 
 - We do not use magic strings as they need to be referenced in multiple places.
-- We gathered strings that need to be shared between client and server in `src/hi/constants.py:DIVID`:
+- We gathered strings that need to be shared between client and server in `src/tt/constants.py:DIVID`:
 - This `DIVID` dict are injected into the template context automatically. 
 - On the Javascript side, we gather all these same ids in a single place at the beginning of the main.css.
 - All other Javascript modules use the Hi.<NAME> namespacing to refer to these.
@@ -90,14 +90,14 @@ In this way, there is at most two places these ids are used as strings, and both
 
 **Prefer Asynchronous Updates**: The application closely mimics a single page application that always tries to avoid full page loads. Dynamic updates are preferred over full pages, especially for frequently use view changes. 
 
-**Javascript in Templates**:  We should never put Javascript in templates, or otherwise have inline `<script>` blocks.  There are rare exceptions for very focused, specialized manipulations, but all Javascript should be put in a file in the `src/hi/static/js` directory.
+**Javascript in Templates**:  We should never put Javascript in templates, or otherwise have inline `<script>` blocks.  There are rare exceptions for very focused, specialized manipulations, but all Javascript should be put in a file in the `src/tt/static/js` directory.
 
 ### Core Technologies
 - jQuery 3.7 for DOM manipulation
 - Bootstrap 4 for UI components
 - Custom SVG manipulation library
 
-**Django Pipeline**: We use the Django pipeline library for injecting minimized, cache-busting Javascript (and CSS) into pages. Any new files must be defined in `src/hi/settings/base.py`.
+**Django Pipeline**: We use the Django pipeline library for injecting minimized, cache-busting Javascript (and CSS) into pages. Any new files must be defined in `src/tt/settings/base.py`.
 
 ### JavaScript Conventions
 
@@ -134,16 +134,16 @@ $(document).ready(function() {
 
 ## CSS Standards
 
-**CSS in Templates**:  We should never put CSS in templates, or otherwise have inline `<style>` blocks.  All CSS should be put in a file in the `src/hi/static/css` directory.
+**CSS in Templates**:  We should never put CSS in templates, or otherwise have inline `<style>` blocks.  All CSS should be put in a file in the `src/tt/static/css` directory.
 
-**Main CSS**: Use `src/hi/static/css/main.css` for most needs.  Some special-purpose, high-volume CSS modules may justify creating a nw CSS file.
+**Main CSS**: Use `src/tt/static/css/main.css` for most needs.  Some special-purpose, high-volume CSS modules may justify creating a nw CSS file.
 
 **No Emojis**: No Emojis anywhere: not in user-facing messaging, not in log messages, not in the comments.
 
 ### Core Technologies
 - Bootstrap 4 for UI components
 
-**Django Pipeline**: We use the Django pipeline library for injecting minimized, cache-busting CSS (and javascript) into pages. Any new files must be defined in `src/hi/settings/base.py`.
+**Django Pipeline**: We use the Django pipeline library for injecting minimized, cache-busting CSS (and javascript) into pages. Any new files must be defined in `src/tt/settings/base.py`.
 
 ### Responsive Design Principles
 

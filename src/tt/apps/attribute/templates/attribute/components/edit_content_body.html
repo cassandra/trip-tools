@@ -50,7 +50,7 @@ by using the AttributeItemEditContext pattern.
                 class="btn btn-outline-primary {{ DIVID.ATTR_V2_UPDATE_BTN_CLASS }}"
                 name="action" 
                 value="update">
-          {% icon "save" size="sm" css_class="hi-icon-left" %}
+          {% icon "save" size="sm" css_class="tt-icon-left" %}
           {{ attr_page_context.update_button_label }}
         </button>
         <!-- Vertically stacked message areas -->
@@ -75,15 +75,15 @@ by using the AttributeItemEditContext pattern.
         {% block file_upload_button %}
         <label for="{{ attr_item_context.file_input_html_id }}" 
                class="btn btn-sm btn-outline-primary mb-0">
-          {% icon "upload" size="sm" css_class="hi-icon-left" %}Add File
+          {% icon "upload" size="sm" css_class="tt-icon-left" %}Add File
         </label>
         {% endblock %}
         {% block add_attribute_button %}
         <button id="{{ attr_item_context.add_attribute_button_html_id }}" 
                 type="button" 
                 class="btn btn-sm btn-outline-primary"
-                onclick="window.Hi.attr.showAddAttribute('#{{ attr_page_context.container_html_id }}');">
-          {% icon "plus" size="sm" css_class="hi-icon-left" %}Add Info
+                onclick="window.Tt.attr.showAddAttribute('#{{ attr_page_context.container_html_id }}');">
+          {% icon "plus" size="sm" css_class="tt-icon-left" %}Add Info
         </button>
         {% endblock %}
       </div>

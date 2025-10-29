@@ -1,12 +1,12 @@
 (function() {
-    window.Hi = window.Hi || {};
-    window.Hi.edit = window.Hi.edit || {};
+    window.Tt = window.Tt || {};
+    window.Tt.edit = window.Tt.edit || {};
 
-    const HiEditDragDrop = {
-	// Externally accessible functions here.
+    const TtEditDragDrop = {
+        // Externally accessible functions here.
     };
 
-    window.Hi.edit.path = HiEditDragDrop;
+    window.Tt.edit.path = TtEditDragDrop;
 
     /*
       DRAG AND DROP EDITING
@@ -27,68 +27,68 @@
     
     $(document).ready(function() {
 
-	$(DRAGGABLE_SELECTOR).on('dragstart', function(event) {
-	    if ( !Hi.isEditMode ) { return; }
-	    handleDragStart( event );
-	});
-	$(DRAGGABLE_SELECTOR).on('dragend', function(event) {
-	    if ( !Hi.isEditMode ) { return; }
-	    handleDragEnd( event );
-	});
-	$(DRAGGABLE_SELECTOR).on('dragover', function(event) {
-	    if ( !Hi.isEditMode ) { return; }
-	    handleDragOver( event );
-	});
-	$(DRAGGABLE_SELECTOR).on('dragenter', function(event) {
-	    if ( !Hi.isEditMode ) { return; }
-	    handleDragEnter( event );
-	});
-	$(DRAGGABLE_SELECTOR).on('dragleave', function(event) {
-	    if ( !Hi.isEditMode ) { return; }
-	    handleDragLeave( event );
-	});
+        $(DRAGGABLE_SELECTOR).on('dragstart', function(event) {
+            if ( !Tt.isEditMode ) { return; }
+            handleDragStart( event );
+        });
+        $(DRAGGABLE_SELECTOR).on('dragend', function(event) {
+            if ( !Tt.isEditMode ) { return; }
+            handleDragEnd( event );
+        });
+        $(DRAGGABLE_SELECTOR).on('dragover', function(event) {
+            if ( !Tt.isEditMode ) { return; }
+            handleDragOver( event );
+        });
+        $(DRAGGABLE_SELECTOR).on('dragenter', function(event) {
+            if ( !Tt.isEditMode ) { return; }
+            handleDragEnter( event );
+        });
+        $(DRAGGABLE_SELECTOR).on('dragleave', function(event) {
+            if ( !Tt.isEditMode ) { return; }
+            handleDragLeave( event );
+        });
     });
 
     function handleDragStart( event ) {
-	if ( Hi.DEBUG ) { console.log('event.currentTarget:', event.currentTarget); }
+        if ( Tt.DEBUG ) { console.log('event.currentTarget:', event.currentTarget); }
 
         gDraggedElement = event.currentTarget;
-	
+        
         // Hide the dragged element during the drag operation for better visuals
         setTimeout(() => {
             $(gDraggedElement).hide();
-	    if ( Hi.DEBUG ) { console.log('Hidden class added'); }
+            if ( Tt.DEBUG ) { console.log('Hidden class added'); }
         }, 0);
     }
     
     function handleDragEnd( event ) {
-	if ( Hi.DEBUG ) { console.log('Drag end:'); }
+        if ( Tt.DEBUG ) { console.log('Drag end:'); }
         $(gDraggedElement).show();
         gDraggedElement = null;
-	$( DRAGGABLE_SELECTOR ).removeClass( DRAG_OVER_CLASS );
-	$( DRAGGABLE_SELECTOR ).css('transform', '');
-	
+        $( DRAGGABLE_SELECTOR ).removeClass( DRAG_OVER_CLASS );
+        $( DRAGGABLE_SELECTOR ).css('transform', '');
+        
         var htmlIdList = [];
-	var parentContainer = $(event.currentTarget).closest( DRAGGABLE_CONTAINER_SELECTOR );
+        var parentContainer = $(event.currentTarget).closest( DRAGGABLE_CONTAINER_SELECTOR );
         parentContainer.find( DRAGGABLE_SELECTOR ).each(function() {
             htmlIdList.push( $(this).attr('id'));
         });
-	
-	if ( Hi.DEBUG ) { console.log(`Drag end ids: ${htmlIdList}`); }
+        
+        if ( Tt.DEBUG ) { console.log(`Drag end ids: ${htmlIdList}`); }
 
-	let data = {
-	    html_id_list: JSON.stringify( htmlIdList ),
-	};
-	AN.post( API_REORDER_ITEMS_URL, data );
+        let data = {
+            html_id_list: JSON.stringify( htmlIdList ),
+        };
+        AN.post( API_REORDER_ITEMS_URL, data );
     }
     
     function handleDragOver( event ) {
-	if ( Hi.DEBUG ) { console.log('Drag over:'); }
+        if ( Tt.DEBUG ) { console.log('Drag over:'); }
         event.preventDefault();
-	
+        
         // Ensure the dragged element is in the same parent container
         if (( gDraggedElement !== event.currentTarget )
-	    && ( $(event.currentTarget).parent()[0] === $(gDraggedElement).parent()[0] )) {
+            && ( $(event.currentTarget).parent()[0] === $(gDraggedElement).parent()[0] )) {
             const bounding = event.currentTarget.getBoundingClientRect();
             const offset = bounding.y + bounding.height / 2;
 
@@ -100,21 +100,21 @@
                 $(event.currentTarget).css('transform', 'translateX(-50px)');
                $(event.currentTarget).before(gDraggedElement);
             }
-        }	
+        }       
     }
     
     function handleDragEnter( event ) {
-	if ( Hi.DEBUG ) { console.log('Drag enter:'); }
-	// Only allow visual feedback if in the same parent container
+        if ( Tt.DEBUG ) { console.log('Drag enter:'); }
+        // Only allow visual feedback if in the same parent container
         if ( $(event.currentTarget).parent()[0] === $(gDraggedElement).parent()[0] ) {
             $(event.currentTarget).addClass( DRAG_OVER_CLASS );
         }
     }
     
     function handleDragLeave( event ) {
-	if ( Hi.DEBUG ) { console.log('Drag leave:'); }
-	$(event.currentTarget).removeClass( DRAG_OVER_CLASS );
-	$(event.currentTarget).css('transform', '');  
+        if ( Tt.DEBUG ) { console.log('Drag leave:'); }
+        $(event.currentTarget).removeClass( DRAG_OVER_CLASS );
+        $(event.currentTarget).css('transform', '');  
     }
     
     

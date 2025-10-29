@@ -63,7 +63,7 @@ Create `settings.py` in any app with `SettingEnum` subclass:
 ## Development Tools
 
 ### Debug Settings
-Modify `src/hi/settings/development.py`:
+Modify `src/tt/settings/development.py`:
 - `SUPPRESS_SELECT_REQUEST_ENPOINTS_LOGGING` - Hide polling requests
 - `SUPPRESS_MONITORS` - Disable background tasks
 - `BASE_URL_FOR_EMAIL_LINKS` - Email link testing
