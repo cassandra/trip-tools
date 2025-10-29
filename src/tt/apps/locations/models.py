@@ -138,7 +138,11 @@ class Location( GeoPointModelMixin, models.Model ):
         null = True,
         blank = True,
     )
-
+    open_days_times = models.TextField(
+        # Opening days/hours, closed days, days to prefer or avoid (e.g., due to events/crowds)
+        # Maybe make this data more structured in the future?
+        blank = True,
+    )
     created_datetime = models.DateTimeField( auto_now_add = True )
     modified_datetime = models.DateTimeField( auto_now = True )
 

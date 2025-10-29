@@ -39,6 +39,7 @@ class CandidateGroup(models.Model):
         'Candidate Type',
     )
     location = models.ForeignKey(
+        # Optionally associate a Location - e.g., a town for lodging options
         Location,
         on_delete = models.SET_NULL,
         null = True,

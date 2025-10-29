@@ -69,6 +69,7 @@ class LocationAdmin(admin.ModelAdmin):
         'subcategory_link',
         'rating',
         'desirability',
+        'open_days_times',
         'created_datetime',
     )
 

@@ -112,16 +112,16 @@ INSTALLED_APPS = [
     'tt.apps.notify',
     'tt.apps.system',
 
-    'tt.apps.bookings',
-    'tt.apps.candidates',
-    'tt.apps.contacts',
     'tt.apps.geo',
-    'tt.apps.itineraries',
+    'tt.apps.routes',
+    'tt.apps.contacts',
+    'tt.apps.trips',
     'tt.apps.locations',
+    'tt.apps.candidates',
+    'tt.apps.itineraries',
+    'tt.apps.bookings',
     'tt.apps.notebook',
     'tt.apps.reviews',
-    'tt.apps.routes',
-    'tt.apps.trips',
 ]
 
 MIDDLEWARE = [
