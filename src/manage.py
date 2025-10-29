@@ -17,7 +17,7 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    set_default_port_if_needed()  # HI Customization
+    set_default_port_if_needed()  # TT Customization
     execute_from_command_line( sys.argv )
 
     
