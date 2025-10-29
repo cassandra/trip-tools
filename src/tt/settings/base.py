@@ -254,7 +254,6 @@ PIPELINE = {
                 'js/antinode.js',
                 'js/autosize.min.js',
                 'js/main.js',
-                'js/settings.js',
                 'js/attr.js',
                 'js/attr-dirty-tracking.js',
             ),

@@ -30,8 +30,6 @@ TIMEZONE_NAME_LIST = [
     
 # HTML div ids (classes and attributes) that app logic depends on.
 DIVID = {
-    'ATTRIBUTE_CONTAINER_CLASS': 'hi-attribute',
-    
     # Attribute Editing
     'ATTR_V2_CONTAINER_ID': 'attr-v2-container',
     'ATTR_V2_CONTAINER_CLASS': 'attr-v2-container',

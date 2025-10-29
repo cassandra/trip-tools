@@ -11,28 +11,6 @@
         //
         DEBUG: window.TtClientConfig?.DEBUG ?? false,
         isEditMode: window.TtClientConfig?.IS_EDIT_MODE ?? false,
-
-        MAIN_AREA_SELECTOR: '#hi-main-content',
-        LOCATION_VIEW_AREA_SELECTOR: '#hi-location-view-main',
-        LOCATION_VIEW_SVG_CLASS: 'hi-location-view-svg',
-        LOCATION_VIEW_SVG_SELECTOR: '.hi-location-view-svg',
-        LOCATION_VIEW_BASE_SELECTOR: '.hi-location-view-base',
-        BASE_SVG_SELECTOR: '#hi-location-view-main > svg',
-        SVG_ICON_CLASS: 'hi-svg-icon',
-        SVG_PATH_CLASS: 'hi-svg-path',
-        HIGHLIGHTED_CLASS: 'highlighted',
-        ATTRIBUTE_CONTAINER_SELECTOR: '.hi-attribute',
-        FORM_FIELD_CONTAINER_SELECTOR: '.input-group',
-        AUDIO_PERMISSION_GUIDANCE_SELECTOR: '#hi-audio-permission-guidance',
-        SVG_ACTION_STATE_ATTR_NAME: 'action-state',
-
-        DATA_TYPE_ATTR: 'data-type',
-        DATA_TYPE_ICON_VALUE: 'svg-icon',
-        DATA_TYPE_PATH_VALUE: 'svg-path',
-        
-        API_LOCATION_ITEM_EDIT_MODE_URL: '/location/edit/item/edit-mode',
-        API_LOCATION_ITEM_STATUS_URL: '/location/item/status',
-        ENTITY_STATE_VALUE_CHOICES_URL_PREFIX: '/edit/entity/state/values',
         
         generateUniqueId: function() {
             return _generateUniqueId();
@@ -51,9 +29,6 @@
         },
         toggleDetails: function( elementId ) {
             return _toggleDetails( elementId );
-        },
-        setEntityStateValueSelect: function( valueFieldId, instanceName, instanceId ) {
-            return _setEntityStateValueSelect( valueFieldId, instanceName, instanceId );
         },
         getScreenCenterPoint: function( element ) {
             return _getScreenCenterPoint( element );
@@ -196,44 +171,6 @@
         } else {
             console.warn('_toggleDetails: Element not found with ID:', elementId);
         }
-    }
-    
-    function _setEntityStateValueSelect( valueFieldId, instanceName, instanceId ) {
-        $.ajax({
-            type: 'GET',
-            url: `${Tt.ENTITY_STATE_VALUE_CHOICES_URL_PREFIX}/${instanceName}/${instanceId}`,
-
-            success: function( data, status, xhr ) {
-                const choices_list = data;
-                const valueElement = $(`#${valueFieldId}`);
-                const valueElementId = $(valueElement).attr('id');
-                const valueElementName = $(valueElement).attr('name');
-
-                if (choices_list.length > 0) {
-                    const selectElement = $('<select>')
-                          .attr( 'id', valueElementId )
-                          .attr( 'name', valueElementName );
-
-                    selectElement.append( $('<option>').val('').text('------'));
-                    choices_list.forEach( choice => {
-                        const [value, label] = choice;
-                        selectElement.append( $('<option>').val(value).text(label) );
-                    });
-                    valueElement.replaceWith(selectElement);
-                } else {
-                    const inputElement = $('<input>')
-                          .attr( 'type', 'text' )
-                          .attr( 'id', valueElementId )
-                          .attr( 'name', valueElementName );
-                    valueElement.replaceWith(inputElement);
-                }
-                return false;
-            },
-            error: function (xhr, ajaxOptions, thrownError) {
-                console.error( `Fetch entity state choices error [${xhr.status}] : ${thrownError}` );
-                return false;
-            } 
-        });
     }
     
     function _getScreenCenterPoint( element ) {
