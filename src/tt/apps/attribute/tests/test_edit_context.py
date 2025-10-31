@@ -5,10 +5,13 @@ Focuses on high-value business logic: property computation, DOM ID generation,
 URL parameter construction, and template context assembly.
 """
 import logging
+from django.contrib.auth import get_user_model
 from tt.apps.attribute.edit_context import AttributeItemEditContext
 from tt.testing.base_test_case import BaseTestCase
 
 logging.disable(logging.CRITICAL)
+
+User = get_user_model()
 
 
 class MockOwner:
@@ -23,8 +26,12 @@ class TestAttributeItemEditContext(BaseTestCase):
 
     def setUp(self):
         super().setUp()
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
         self.mock_owner = MockOwner(id=123, name="Test Owner")
-        self.context = AttributeItemEditContext(self.mock_owner, "entity")
+        self.context = AttributeItemEditContext(self.user, self.mock_owner, "entity")
     
     def test_property_computation_basic_cases(self):
         """Test basic property computation - critical URL and DOM ID generation logic."""
@@ -36,8 +43,8 @@ class TestAttributeItemEditContext(BaseTestCase):
     def test_property_computation_case_normalization(self):
         """Test owner type case normalization - critical for consistent URL patterns."""
         # Test case normalization
-        context_upper = AttributeItemEditContext(self.mock_owner, "ENTITY")
-        context_mixed = AttributeItemEditContext(self.mock_owner, "EnTiTy")
+        context_upper = AttributeItemEditContext(self.user, self.mock_owner, "ENTITY")
+        context_mixed = AttributeItemEditContext(self.user, self.mock_owner, "EnTiTy")
         
         self.assertEqual(context_upper.owner_type, "entity")
         self.assertEqual(context_mixed.owner_type, "entity")
@@ -51,7 +58,7 @@ class TestAttributeItemEditContext(BaseTestCase):
         self.assertEqual(self.context.restore_url_name, "entity_attribute_restore_inline")
         
         # Test with location owner type
-        location_context = AttributeItemEditContext(self.mock_owner, "location")
+        location_context = AttributeItemEditContext(self.user, self.mock_owner, "location")
         self.assertEqual(location_context.history_url_name, "location_attribute_history_inline")
         self.assertEqual(location_context.restore_url_name, "location_attribute_restore_inline")
         
@@ -70,7 +77,7 @@ class TestAttributeItemEditContext(BaseTestCase):
     def test_dom_id_generation_with_different_owner_types(self):
         """Test DOM ID generation varies correctly by owner type."""
         attribute_id = 789
-        location_context = AttributeItemEditContext(self.mock_owner, "location")
+        location_context = AttributeItemEditContext(self.user, self.mock_owner, "location")
         
         # Should include owner type in ID
         history_id = location_context.history_target_id(attribute_id)
@@ -105,7 +112,7 @@ class TestAttributeItemEditContext(BaseTestCase):
         
     def test_template_context_assembly_multiple_owner_types(self):
         """Test template context includes correct owner-specific keys."""
-        location_context = AttributeItemEditContext(self.mock_owner, "location")
+        location_context = AttributeItemEditContext(self.user, self.mock_owner, "location")
         template_context = location_context.to_template_context()
         
         # Should include location-specific key, not entity key
@@ -120,7 +127,7 @@ class TestAttributeItemEditContext(BaseTestCase):
     def test_edge_case_special_characters_in_owner_name(self):
         """Test handling of special characters in owner names - edge case robustness."""
         special_owner = MockOwner(id=999, name="Owner with spaces & symbols!")
-        context = AttributeItemEditContext(special_owner, "entity")
+        context = AttributeItemEditContext(self.user, special_owner, "entity")
         
         # DOM IDs should still be generated (special chars in name shouldn't break ID generation)
         history_id = context.history_target_id(123)
@@ -130,9 +137,9 @@ class TestAttributeItemEditContext(BaseTestCase):
         """Test handling of edge case ID values - robustness testing."""
         zero_owner = MockOwner(id=0, name="Zero ID Owner")
         negative_owner = MockOwner(id=-1, name="Negative ID Owner")
-        
-        zero_context = AttributeItemEditContext(zero_owner, "entity")
-        negative_context = AttributeItemEditContext(negative_owner, "entity")
+
+        zero_context = AttributeItemEditContext(self.user, zero_owner, "entity")
+        negative_context = AttributeItemEditContext(self.user, negative_owner, "entity")
         
         # Should handle zero ID
         self.assertEqual(zero_context.owner_id, 0)
@@ -144,7 +151,7 @@ class TestAttributeItemEditContext(BaseTestCase):
         
     def test_edge_case_empty_owner_type(self):
         """Test handling of empty owner type - error case handling."""
-        empty_context = AttributeItemEditContext(self.mock_owner, "")
+        empty_context = AttributeItemEditContext(self.user, self.mock_owner, "")
         
         # Empty string should be normalized but might cause issues in URL patterns
         self.assertEqual(empty_context.owner_type, "")
@@ -153,7 +160,7 @@ class TestAttributeItemEditContext(BaseTestCase):
         
     def test_edge_case_whitespace_owner_type(self):
         """Test handling of whitespace in owner type - normalization logic."""
-        whitespace_context = AttributeItemEditContext(self.mock_owner, "  entity  ")
+        whitespace_context = AttributeItemEditContext(self.user, self.mock_owner, "  entity  ")
         
         # Should strip whitespace during normalization
         self.assertEqual(whitespace_context.owner_type, "  entity  ")  # Current implementation preserves whitespace

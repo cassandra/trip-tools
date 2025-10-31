@@ -6,16 +6,19 @@ truncation, template filter integration, and URL generation logic.
 """
 import logging
 from unittest.mock import patch
+from django.contrib.auth import get_user_model
 from django.template import Template, Context, TemplateSyntaxError
 from django.test import TestCase
 
 from tt.apps.attribute.templatetags.attribute_extras import (
-    attribute_preview, file_title_field_name, history_target_id, 
+    attribute_preview, file_title_field_name, history_target_id,
     history_toggle_id, attr_history_url, attr_restore_url
 )
 from tt.apps.attribute.edit_context import AttributeItemEditContext
 
 logging.disable(logging.CRITICAL)
+
+User = get_user_model()
 
 
 class MockOwner:
@@ -120,10 +123,14 @@ class TestAttributePreviewFilter(TestCase):
 
 class TestAttributeContextFilters(TestCase):
     """Test filters that work with AttributeItemEditContext objects."""
-    
+
     def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
         self.mock_owner = MockOwner(id=123, name="Test Owner")
-        self.context = AttributeItemEditContext(self.mock_owner, "entity")
+        self.context = AttributeItemEditContext(self.user, self.mock_owner, "entity")
         self.attribute_id = 456
         
     def test_file_title_field_name_filter(self):
@@ -150,10 +157,14 @@ class TestAttributeContextFilters(TestCase):
 
 class TestAttributeUrlTags(TestCase):
     """Test template tags that generate URLs - URL construction logic."""
-    
+
     def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
         self.mock_owner = MockOwner(id=123, name="Test Owner")
-        self.context = AttributeItemEditContext(self.mock_owner, "entity")
+        self.context = AttributeItemEditContext(self.user, self.mock_owner, "entity")
         self.attribute_id = 456
         self.history_id = 789
         
@@ -195,7 +206,7 @@ class TestAttributeUrlTags(TestCase):
     @patch('django.urls.reverse')
     def test_attr_history_url_tag_different_owner_types(self, mock_reverse):
         """Test URL tags work correctly with different owner types."""
-        location_context = AttributeItemEditContext(self.mock_owner, "location")
+        location_context = AttributeItemEditContext(self.user, self.mock_owner, "location")
         mock_reverse.return_value = "/location/123/attribute/456/history/"
         
         result = attr_history_url(location_context, self.attribute_id)
@@ -226,10 +237,14 @@ class TestAttributeUrlTags(TestCase):
 
 class TestTemplateIntegration(TestCase):
     """Test template filters and tags integrated with Django template system."""
-    
+
     def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
         self.mock_owner = MockOwner(id=123, name="Test Owner")
-        self.context = AttributeItemEditContext(self.mock_owner, "entity")
+        self.context = AttributeItemEditContext(self.user, self.mock_owner, "entity")
         
     def test_attribute_preview_filter_in_template(self):
         """Test attribute_preview filter works in actual template rendering."""
