@@ -4,8 +4,7 @@ from unittest.mock import Mock, patch
 from django.contrib.auth.models import AnonymousUser
 from custom.models import CustomUser
 from django.http import HttpResponse
-from django.test import RequestFactory, override_settings
-from django.urls import ResolverMatch
+from django.test import RequestFactory
 
 from tt.apps.user.middleware import AuthenticationMiddleware
 from tt.testing.base_test_case import BaseTestCase
