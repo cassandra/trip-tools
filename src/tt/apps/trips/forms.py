@@ -11,7 +11,6 @@ class TripForm( forms.ModelForm ):
         fields = (
             'title',
             'description',
-            'trip_status',
         )
         widgets = {
             'title': forms.TextInput( attrs = {
@@ -24,15 +23,15 @@ class TripForm( forms.ModelForm ):
                 'placeholder': 'Enter optional description',
                 'rows': 3,
             }),
-            'trip_status': forms.Select( attrs = {
-                'class': 'form-control',
-            }),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def save(self, commit = True):
+        trip = super().save( commit = False )
 
-        if not self.instance.pk:
-            self.initial['trip_status'] = TripStatus.UPCOMING
+        if not trip.pk:
+            trip.trip_status = TripStatus.UPCOMING
 
-        return
+        if commit:
+            trip.save()
+
+        return trip

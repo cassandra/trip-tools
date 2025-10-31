@@ -26,13 +26,13 @@ class ReviewAdmin(admin.ModelAdmin):
     )
 
     list_filter = ('rating', 'created_datetime')
-    search_fields = ['title', 'text', 'user__username', 'location__title', 'posted_to']
+    search_fields = ['title', 'text', 'user__email', 'location__title', 'posted_to']
     readonly_fields = ('created_datetime', 'modified_datetime')
     inlines = [ReviewAttributeInline]
 
     @admin_link('user', 'User')
     def user_link(self, user):
-        return user.username
+        return user.email
 
     @admin_link('trip', 'Trip')
     def trip_link(self, trip):

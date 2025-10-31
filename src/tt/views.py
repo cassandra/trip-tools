@@ -16,6 +16,7 @@ import tt.apps.common.antinode as antinode
 from tt.apps.common.healthcheck import do_healthcheck
 from tt.apps.common.utils import is_ajax
 from tt.apps.trips.forms import TripForm
+from tt.apps.trips.models import Trip
 
 
 def error_response( request             : HttpRequest,
@@ -166,8 +167,19 @@ class HealthView( View ):
 class HomeView( View ):
 
     def get(self, request, *args, **kwargs):
-        redirect_url = reverse( 'start' )
-        return HttpResponseRedirect( redirect_url )
+        if not request.user.is_authenticated:
+            return not_authorized_response( request, message = 'You must be logged in.' )
+
+        user_trips = Trip.objects.for_user( request.user )
+
+        if not user_trips.exists():
+            redirect_url = reverse( 'start' )
+            return HttpResponseRedirect( redirect_url )
+
+        context = {
+            'trips': user_trips,
+        }
+        return render( request, 'pages/dashboard.html', context )
         
         
 class StartView( View ):
@@ -175,6 +187,12 @@ class StartView( View ):
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return not_authorized_response( request, message = 'You must be logged in to create a trip.' )
+
+        user_trips = Trip.objects.for_user( request.user )
+
+        if user_trips.exists():
+            redirect_url = reverse( 'home' )
+            return HttpResponseRedirect( redirect_url )
 
         form = TripForm()
         context = {

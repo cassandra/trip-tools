@@ -1,0 +1,30 @@
+{% extends "pages/interstitial_page.html" %}
+{% load static %}
+
+{% block interstitial_content %}
+<div class="w-100 start-form-container">
+  <div class="display-4 mb-3" style="font-size: clamp(2rem, 5vw, 3.5rem);">Dashboard</div>
+  <p class="lead mb-4" style="font-size: clamp(1rem, 2.5vw, 1.25rem);">
+    Welcome back! You have {{ trips.count }} trip{{ trips.count|pluralize }}.
+  </p>
+
+  <div class="alert alert-info" role="alert">
+    <strong>Dashboard Coming Soon!</strong> This is a placeholder page. Full dashboard functionality will be implemented in a future update.
+  </div>
+
+  <div class="mt-4">
+    <h5>Your Trips:</h5>
+    <ul class="list-group">
+      {% for trip in trips %}
+      <li class="list-group-item">
+        <strong>{{ trip.title }}</strong>
+        {% if trip.description %}
+        <br><small class="text-muted">{{ trip.description }}</small>
+        {% endif %}
+        <br><small class="text-muted">Status: {{ trip.trip_status.label }}</small>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
