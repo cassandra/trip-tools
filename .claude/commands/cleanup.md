@@ -16,10 +16,10 @@ Execute safe branch cleanup after PR merge:
 2. **MANDATORY Safety Checks** - Execute verification steps before any cleanup:
 
    ```bash
-   # 1. Verify current branch is the feature branch (not staging/master)
+   # 1. Verify current branch is the feature branch (not main/release)
    git branch --show-current
    # Must show: $1 (or other feature branch pattern)
-   # STOP if output shows: staging, master, main
+   # STOP if output shows: main, release
    ```
 
    ```bash
@@ -32,7 +32,7 @@ Execute safe branch cleanup after PR merge:
      echo "These changes were made after PR merge (workflow violation)"
      echo ""
      echo "Recovery options:"
-     echo "1. Commit to staging: git add . && git commit -m 'Post-merge fix'"
+     echo "1. Commit to main: git add . && git commit -m 'Post-merge fix'"
      echo "2. Create new branch: git switch -c fix/post-merge-changes"
      echo "3. Discard changes: git restore ."
      echo "4. Stash for later: git stash push -m 'Post-merge changes'"
@@ -52,13 +52,13 @@ Execute safe branch cleanup after PR merge:
 3. **Cleanup Actions** - Only proceed if all safety checks pass:
 
    ```bash
-   # 4. Switch to staging branch
-   git checkout staging
+   # 4. Switch to main branch
+   git checkout main
    ```
 
    ```bash
    # 5. Sync with latest remote changes
-   git pull origin staging
+   git pull origin main
    ```
 
    ```bash
@@ -69,11 +69,11 @@ Execute safe branch cleanup after PR merge:
    ```bash
    # 7. Verify clean final state
    git status
-   # Should show: "On branch staging" and "nothing to commit, working tree clean"
+   # Should show: "On branch main" and "nothing to commit, working tree clean"
    ```
 
 4. **Final verification** - Confirm environment is ready for next work:
-   - On staging branch with latest changes
+   - On main branch with latest changes
    - Working directory clean
    - Feature branch successfully deleted
    - Ready for next `/pickup` command

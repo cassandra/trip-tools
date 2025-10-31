@@ -50,7 +50,7 @@ cd src
 
 - Sign into your GitHub account (required).
 - Go to the main repository on GitHub: https://github.com/cassandra/trip-tools
-- Click the "Fork" button in the upper-right corner. (You will be forking from the `staging` branch.)
+- Click the "Fork" button in the upper-right corner. (You will be forking from the `main` branch.)
 - This creates a copy of the repository in the your GitHub account (keep same name if you can for simplicity).
 - The forked repo will be located at https://github.com/${YOURUSERNAME}/trip-tools.git (if you kept the same repo name).
 

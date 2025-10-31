@@ -46,10 +46,10 @@ Execute the complete issue pickup workflow:
      - Atomic task suitable for single agent
      - No coordination between technical specialties needed
 
-4. **Ensure on latest staging branch** - MANDATORY safety step:
+4. **Ensure on latest main branch** - MANDATORY safety step:
    - Verify current branch and working directory status
-   - Switch to staging: `git checkout staging`
-   - Pull latest: `git pull origin staging`
+   - Switch to main: `git checkout main`
+   - Pull latest: `git pull origin main`
    - Verify clean state: `git status`
 
 5. **Assign issue to yourself** - Use: `gh issue edit $1 --add-assignee @me`

@@ -97,7 +97,7 @@ jobs:
               
               Please use version ${rollback_to_version} instead or run:
               \`\`\`bash
-              curl -fsSL https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/master/update.sh | bash
+              curl -fsSL https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/release/update.sh | bash
               \`\`\`
               
               ---
@@ -141,7 +141,7 @@ jobs:
             ## Actions Taken
             - ✅ Docker \`latest\` tag updated to point to ${rollback_to_version}
             - ✅ Release ${bad_version} marked as "DO NOT USE"
-            - ✅ Users can update with: \`curl -fsSL https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/master/update.sh | bash\`
+            - ✅ Users can update with: \`curl -fsSL https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/release/update.sh | bash\`
             
             ## Next Steps
             - [ ] Investigate root cause of issue in ${bad_version}
@@ -169,4 +169,4 @@ jobs:
           echo "📋 Tracking issue created for follow-up"
           echo ""
           echo "Users can update immediately with:"
-          echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/master/update.sh | bash"
+          echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/release/update.sh | bash"
