@@ -5,8 +5,8 @@ from . import views
 
 urlpatterns = [
 
-    re_path( r'^signin$', 
-             views.UserSigninView.as_view(), 
+    re_path( r'^signin$',
+             views.UserSigninView.as_view(),
              name='user_signin'),
 
     re_path( r"^signin/magic/code$",
@@ -16,4 +16,12 @@ urlpatterns = [
     re_path( r"^signin/magic/link/(?P<token>[\w\-]+)/(?P<email>.+)$",
              views.SigninMagicLinkView.as_view(),
              name="user_signin_magic_link"),
+
+    re_path( r'^signout$',
+             views.UserSignoutView.as_view(),
+             name='user_signout'),
+
+    re_path( r'^account$',
+             views.AccountView.as_view(),
+             name='user_account'),
 ]

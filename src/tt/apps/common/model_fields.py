@@ -9,41 +9,37 @@ from .enums import LabeledEnum
 
 class LabeledEnumDescriptor:
     """
-    A descriptor that automatically converts values to enum instances.
-    
-    This handles the automatic conversion when setting/getting field values
-    on model instances.
+    Descriptor that converts database strings to enum instances automatically.
+    Returns the field object when accessed from the class (for Django admin).
     """
-    
+
     def __init__(self, field):
         self.field = field
-    
+
     def __get__(self, instance, owner):
         if instance is None:
+            # Class access - return field for admin/meta access
             return self.field
-        
-        # Get the raw value from the instance's __dict__
+
+        # Get raw value
         value = instance.__dict__.get(self.field.attname)
-        
+
         if value is None:
             return None
-        
-        # Convert to enum if it's a string
+
+        # If already an enum, return it
+        if isinstance(value, self.field.enum_class):
+            return value
+
+        # Convert string to enum
         if isinstance(value, str):
             try:
                 return self.field._convert_from_string(value)
             except (ValueError, ValidationError):
-                # If conversion fails with safe mode, it returns default
-                # If conversion fails with strict mode, return the string
-                # (will fail on validation)
                 if self.field.use_safe_conversion:
                     return self.field.enum_class.default()
                 return value
-        
-        # If it's already an enum, return it
-        if isinstance(value, self.field.enum_class):
-            return value
-        
+
         # Try to convert other types
         try:
             return self.field.to_python(value)
@@ -51,10 +47,8 @@ class LabeledEnumDescriptor:
             if self.field.use_safe_conversion:
                 return self.field.enum_class.default()
             return value
-    
+
     def __set__(self, instance, value):
-        # Store the raw value for now, conversion happens on get
-        # This matches Django's behavior for other fields
         instance.__dict__[self.field.attname] = value
 
 
@@ -94,7 +88,7 @@ class LabeledEnumField(models.CharField):
     def __init__(self, enum_class, *args, use_safe_conversion=True, **kwargs):
         """
         Initialize the field.
-        
+
         Args:
             enum_class: The LabeledEnum subclass this field stores
             use_safe_conversion: If True, use from_name_safe() which returns default for invalid values.
@@ -103,23 +97,23 @@ class LabeledEnumField(models.CharField):
         """
         if not issubclass(enum_class, LabeledEnum):
             raise TypeError(f"{enum_class} must be a subclass of LabeledEnum")
-        
+
         self.enum_class = enum_class
         self.use_safe_conversion = use_safe_conversion
-        
+
         # Set default max_length if not provided
         if 'max_length' not in kwargs:
             # Calculate max length from enum values
             max_len = max(len(str(e)) for e in enum_class)
             kwargs['max_length'] = max(32, max_len + 10)  # Add buffer, min 32
-        
-        # Set choices for Django admin
-        kwargs['choices'] = enum_class.choices()
-        
+
+        # DO NOT set choices on the field - we want dynamic choices without migrations
+        # Choices will be provided via formfield() for admin forms
+
         # Set default if the enum has one and no default was provided
         if 'default' not in kwargs and hasattr(enum_class, 'default'):
             kwargs['default'] = str(enum_class.default())
-        
+
         super().__init__(*args, **kwargs)
     
     def _convert_from_string(self, value):
@@ -242,29 +236,68 @@ class LabeledEnumField(models.CharField):
         """
         Validate that the value is a valid enum member.
         Called during model validation.
+
+        Note: We do custom validation against the enum class, not CharField's choices.
+        This allows enums to change without requiring migrations.
         """
-        super().validate(value, model_instance)
-        
-        if value is None and not self.null:
-            raise ValidationError("This field cannot be null.")
-        
-        if value is not None:
-            # Ensure it's a valid enum value
-            if not isinstance(value, self.enum_class):
-                try:
-                    # Try to convert it
-                    self.to_python(value)
-                except ValidationError as e:
-                    raise ValidationError(
-                        f"Invalid value for {self.enum_class.__name__}: {e}"
-                    )
-    
+        if value is None:
+            if not self.null:
+                raise ValidationError("This field cannot be null.")
+            return
+
+        # Convert enum to string for parent validation (max_length, etc.)
+        string_value = str(value) if isinstance(value, self.enum_class) else value
+
+        # Call parent's validate with string value to check max_length, etc.
+        # Skip CharField's choice validation by calling Field.validate directly
+        super(models.CharField, self).validate(string_value, model_instance)
+
+        # Now validate that it's a valid enum member
+        if isinstance(value, self.enum_class):
+            # Already a valid enum
+            return
+
+        # Try to convert string to enum to validate
+        try:
+            self.to_python(value)
+        except ValidationError:
+            # Re-raise with clearer message
+            valid_values = [str(e) for e in self.enum_class]
+            raise ValidationError(
+                f"'{value}' is not a valid {self.enum_class.__name__}. "
+                f"Valid values are: {', '.join(valid_values)}"
+            )
+
+    def formfield(self, **kwargs):
+        """
+        Return a form field for this model field.
+
+        Provides choices dynamically for admin forms without storing them on the model.
+        This allows enum values to change without requiring migrations.
+        """
+        from django import forms
+
+        # Get choices dynamically from the enum
+        choices = self.enum_class.choices()
+
+        # Set up the form field with choices
+        defaults = {
+            'form_class': forms.TypedChoiceField,
+            'choices': choices,
+            'coerce': lambda val: self.to_python(val) if val else None,
+        }
+        defaults.update(kwargs)
+
+        # Skip CharField's formfield to avoid its choice handling
+        return super(models.CharField, self).formfield(**defaults)
+
     def contribute_to_class(self, cls, name, **kwargs):
         """
-        Add field to model class with custom descriptor for automatic conversion.
+        Hook for adding the field to the model class.
+        Installs a descriptor for automatic string-to-enum conversion.
         """
         super().contribute_to_class(cls, name, **kwargs)
-        # Set up the descriptor for this field
+        # Install descriptor for automatic conversion
         setattr(cls, name, LabeledEnumDescriptor(self))
 
 

@@ -96,10 +96,14 @@ class LabeledEnum(Enum):
     
     def __str__(self):
         return self.name.lower()
-    
+
     def __int__(self):
         return self.value
-    
+
+    def __len__(self):
+        """Return length of string representation for CharField validators."""
+        return len(str(self))
+
     def url_name(self):
         return str(self)
     

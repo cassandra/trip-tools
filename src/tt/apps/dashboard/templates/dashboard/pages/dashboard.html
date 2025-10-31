@@ -1,0 +1,42 @@
+{% extends "pages/base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block content %}
+{% include "dashboard/panes/menu-bar.html" %}
+
+<!-- Sidebar -->
+<nav class="app-sidebar collapse d-md-block" id="appSidebar">
+  <ul class="app-sidebar-nav">
+    <li>
+      <a href="{% url 'home' %}" class="active">
+        {% icon "home" size="sm" %}
+        <span>Trips</span>
+      </a>
+    </li>
+  </ul>
+</nav>
+
+<!-- Main Content -->
+<main class="app-main">
+
+  <!-- Upcoming Trips Section -->
+  <section class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h3 mb-0">Upcoming Trips</h2>
+      <a href="{% url 'trip_create' %}" class="btn btn-primary" data-async="modal">+ Add New Trip</a>
+    </div>
+
+    {% include "trips/panes/trip-cards-grid.html" with trips=upcoming_trips icon_type="upcoming" %}
+  </section>
+
+  <!-- Past Trips Section -->
+  {% if past_trips %}
+  <section class="mt-5">
+    <h2 class="h3 mb-3">Past Trips</h2>
+    {% include "trips/panes/trip-cards-grid.html" with trips=past_trips icon_type="past" %}
+  </section>
+  {% endif %}
+
+</main>
+{% endblock %}

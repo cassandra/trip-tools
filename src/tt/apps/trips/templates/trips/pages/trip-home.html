@@ -1,0 +1,47 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Header Section -->
+    <div class="col-12 py-3 bg-light border-bottom">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary mr-2">
+            &larr; Back to Dashboard
+          </a>
+          <h2 class="d-inline mb-0">{{ trip.title }}</h2>
+        </div>
+        <div>
+          <span class="badge badge-info">{{ trip.trip_status.label }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12">
+      {% if trip.description %}
+      <div class="mb-4">
+        <h5>Description</h5>
+        <p>{{ trip.description }}</p>
+      </div>
+      {% endif %}
+
+      <div class="alert alert-info" role="alert">
+        <h4>Trip Home Coming Soon!</h4>
+        <p>This is a placeholder page. Full trip management functionality will be implemented soon.</p>
+        <p class="mb-0">Planned features include:</p>
+        <ul>
+          <li>Itinerary planning</li>
+          <li>Location management</li>
+          <li>Booking tracking</li>
+          <li>Notes and reviews</li>
+          <li>Route planning</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

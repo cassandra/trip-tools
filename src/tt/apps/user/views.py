@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User as UserType
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import BadRequest, ValidationError
@@ -140,7 +141,7 @@ class SigninMagicCodeView( View ):
     
 class SigninMagicLinkView( View ):
     """ This is the view for the links we include in emails for logging in. """
-    
+
     def get( self, request, *args, **kwargs ):
 
         token = kwargs.get('token')
@@ -160,13 +161,39 @@ class SigninMagicLinkView( View ):
         is_valid = token_generator.check_token( user = existing_user, token = token )
 
         logger.debug( f'Signin Magic: EMAIL = {email_address}, TOKEN = {token}, VALID = {is_valid}' )
-        
+
         if not is_valid:
             return render( request, 'user/pages/signin_magic_bad_link.html' )
-        
+
         request.user = existing_user
         SigninManager().do_login( request = request, verified_email = True )
 
         url = reverse( 'home' )
         return HttpResponseRedirect( url )
+
+
+class UserSignoutView(View):
+    """
+    Sign out the current user and redirect to signin page.
+    """
+
+    def get(self, request, *args, **kwargs):
+        from django.contrib.auth import logout
+        logout(request)
+        return HttpResponseRedirect(reverse('user_signin'))
+
+
+class AccountView(LoginRequiredMixin, View):
+    """
+    Account management page placeholder.
+    Will be expanded with profile editing, preferences, etc.
+    """
+
+    login_url = '/user/signin'
+
+    def get(self, request, *args, **kwargs):
+        context = {
+            'user': request.user,
+        }
+        return render(request, 'user/pages/account.html', context)
 
