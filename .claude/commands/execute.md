@@ -59,7 +59,7 @@ Execute complete strategic-to-delivery workflow with intelligent coordination:
    - **CHECKPOINT**: Pause if design phase recommended - wait for approval
 
 5. **Phase 3: Development Preparation** - Setup and initial analysis:
-   - Ensure on latest staging branch: `git checkout staging && git pull origin staging`
+   - Ensure on latest main branch: `git checkout main && git pull origin main`
    - Assign issue: `gh issue edit $1 --add-assignee @me`
    - Create feature branch with proper naming (bugfix/feature/docs/ops/refactor)
    - Push branch: `git push -u origin [branch-name]`

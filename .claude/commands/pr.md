@@ -125,7 +125,7 @@ Execute the complete PR creation workflow:
 **Requirements:**
 - Follow exact workflow from `docs/dev/workflow/workflow-guidelines.md`
 - Use exact template from `.github/PULL_REQUEST_TEMPLATE.md`
-- **Automatically detect base branch** - Never assume 'main' or 'master', always detect from remote HEAD
+- **Automatically detect base branch** - Never assume `main`, always detect from remote HEAD
 - Must pass all pre-PR checks before creation
 - Use HEREDOC syntax to prevent formatting issues
 - No Claude attribution in PR description

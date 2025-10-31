@@ -2,8 +2,8 @@
 
 ## Branching Strategy
 
-- **Main Branch** (`master`): Stable, production-ready code (*do not touch*)
-- **Development Branch** (`staging`): Active development, PR target
+- **Release Branch** (`release`): Stable, production-ready code (*do not touch*)
+- **Development Branch** (`main`): Active development, PR target
 - **Feature Branches**: Individual development work
 
 ## Branch Naming Conventions
@@ -20,10 +20,10 @@
 
 ## Development Workflow
 
-### 1. Ensure Latest Staging
+### 1. Ensure Latest Main Branch is Up-to-date
 ```bash
-git checkout staging
-git pull origin staging
+git checkout main
+git pull origin main
 ```
 
 ### 2. Create Feature Branch
@@ -141,8 +141,8 @@ Both checks must pass before PR creation. Fix all issues first. Run `make lint` 
 **After PR is merged**, clean up local environment:
 
 1. **Verify PR merged**: `gh pr view --json state,mergedAt`
-2. **Switch to staging**: `git checkout staging`  
-3. **Pull latest changes**: `git pull origin staging`
+2. **Switch to main**: `git checkout main`  
+3. **Pull latest changes**: `git pull origin main`
 4. **Delete feature branch**: `git branch -d feature/42-entity-icons`
 5. **Verify clean state**: `git status`
 

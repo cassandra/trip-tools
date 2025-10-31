@@ -18,9 +18,9 @@ class TripAdmin(admin.ModelAdmin):
     )
 
     list_filter = ('trip_status', 'created_datetime')
-    search_fields = ['title', 'description', 'user__username']
+    search_fields = ['title', 'description', 'user__email']
     readonly_fields = ('created_datetime', 'modified_datetime')
 
     @admin_link('user', 'User')
     def user_link(self, user):
-        return user.username
+        return user.email

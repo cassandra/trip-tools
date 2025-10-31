@@ -7,22 +7,22 @@
 
 ## Branching Strategy
 
-- **Main Branch** (`master`): Stable, production-ready code. Only updated by the project maintainers.
-- **Development Branch** (`staging`): Active development happens here. Pull requests target this branch, with maintainers controlling merges.
-- **Feature Branches**: Contributors will fork the repo and branch off `staging` branch for their work.  Anyone can fork the repository, create a feature branch and submit PRs against the `staging` branch.
+- **Release Branch** (`release`): Stable, production-ready code. Only updated by the project maintainers.
+- **Development Branch** (`main`): Active development happens here. Pull requests target this branch, with maintainers controlling merges.
+- **Feature Branches**: Contributors will fork the repo and branch off `main` branch for their work.  Anyone can fork the repository, create a feature branch and submit PRs against the `main` branch.
 
 ## Making Changes - Overview
 
-- Always work off the latest `staging` branch to avoid merge conflicts.
+- Always work off the latest `main` branch to avoid merge conflicts.
 - Create an issue and a branch (issues highly encouraged for most PRs).
 - Do your thing and add to and/or change the code: use clear commit messages.
 - Create a PR: should be focused on a single feature or fix.
 
 ## Ensure Your Fork is in Sync
 
-Switch to your local copy of staging branch:
+Switch to your local copy of main branch:
 ``` shell
-git checkout staging
+git checkout main
 ```
 
 Fetch the latest changes from upstream:
@@ -32,12 +32,12 @@ git fetch upstream
 
 Merge upstream changes into your fork's dev branch:
 ``` shell
-git merge upstream/staging
+git merge upstream/main
 ```
 
 Push the updated dev branch to your fork:
 ``` shell
-git push origin staging
+git push origin main
 ```
 
 ### Ensure New Dependencies in Sync
@@ -68,9 +68,9 @@ Issues (and hence branches) come in a few flavors with associated conventions.  
 
 If you are contributing something new, without an existing issue, please create an issue first using the appropriate template: feature, bugfix, etc.. It is generally always better to think about what you are about to do before doing it. Creating an issue is a forcing function for thinking through and communicating your plans.
 
-Once your code is up-to-date, an issue number exists and a mnemonic chosen, you can create your local branch off the current staging branch:
+Once your code is up-to-date, an issue number exists and a mnemonic chosen, you can create your local branch off the current main branch:
 ``` shell
-git checkout -b feature/$(ISSUE_NUM}-${MNEMONIC} upstream/staging
+git checkout -b feature/$(ISSUE_NUM}-${MNEMONIC} upstream/main
 ```
 
 ## Do Your Thing
@@ -85,7 +85,7 @@ git checkout -b feature/$(ISSUE_NUM}-${MNEMONIC} upstream/staging
 
 - Go to your fork on GitHub: https://github.com/${YOURUSERNAME}/trip-tools
 - Click the "Compare & pull request" button that appears after your push.
-- Ensure the base repository is set to `cassandra/trip-tools -> staging`
+- Ensure the base repository is set to `cassandra/trip-tools -> main`
 - Ensure the compare branch is set to: `${YOURUSERNAME}/trip-tools -> feature/${YOUR_FEATURE_NAME}`
 - Fill out the PR template (describe what your change does).
 - If applicable, add a line that says which ticket it closes. i.e., "Closes #39"
@@ -100,4 +100,4 @@ During PR review, a decision will be made on whether to squash or rebase:
 ## Post-PR Cleanup
 
 - After merging, you should consider deleting the branch to keep your forked repository clean.
-- Get your local and forked `staging` branch up to date with the upstream changes (see above).
+- Get your local and forked `main` branch up to date with the upstream changes (see above).

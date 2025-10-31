@@ -2,10 +2,22 @@
 {% load static %}
 
 {% block interstitial_content %}
-<div>
-  <div class="display-4" style="font-size: clamp(2rem, 5vw, 3.5rem);">Welcome!</div>
-  <p class="lead mt-2 mb-4" style="font-size: clamp(1rem, 2.5vw, 1.25rem);">
-    Create a new trip to get started.
+<div class="w-100 start-form-container">
+  <div class="display-4 mb-3" style="font-size: clamp(2rem, 5vw, 3.5rem);">Welcome!</div>
+  <p class="lead mb-4" style="font-size: clamp(1rem, 2.5vw, 1.25rem);">
+    Let's get started by creating your first trip.
   </p>
+
+  <form method="post" action="{% url 'start' %}" class="text-left">
+    {% csrf_token %}
+
+    {% include "trips/panes/trip-form.html" with show_help_text=True %}
+
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-lg btn-primary px-5">
+        <b>Create Trip</b>
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %}

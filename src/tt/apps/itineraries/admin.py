@@ -24,13 +24,13 @@ class ItineraryAdmin(admin.ModelAdmin):
         'created_datetime',
     )
 
-    search_fields = ['title', 'description', 'user__username', 'trip__title']
+    search_fields = ['title', 'description', 'user__email', 'trip__title']
     readonly_fields = ('created_datetime', 'modified_datetime')
     inlines = [ItineraryItemInline]
 
     @admin_link('user', 'User')
     def user_link(self, user):
-        return user.username
+        return user.email
 
     @admin_link('trip', 'Trip')
     def trip_link(self, trip):

@@ -31,3 +31,7 @@ __pycache__/
 !.gitignore
 !.dockerignore
 !.claude/
+!.flake8
+!src/.flake8
+!src/.flake8-ci
+/CLAUDE.md

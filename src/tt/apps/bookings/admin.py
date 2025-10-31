@@ -29,7 +29,7 @@ class BookingDataAdmin(admin.ModelAdmin):
 
     list_filter = ('booking_status', 'payment_status', 'confirmed', 'booking_date')
     search_fields = [
-        'user__username',
+        'user__email',
         'trip__title',
         'booking_site',
         'booking_reference',
@@ -40,7 +40,7 @@ class BookingDataAdmin(admin.ModelAdmin):
 
     @admin_link('user', 'User')
     def user_link(self, user):
-        return user.username
+        return user.email
 
     @admin_link('trip', 'Trip')
     def trip_link(self, trip):

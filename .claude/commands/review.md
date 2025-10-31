@@ -31,11 +31,11 @@ Execute comprehensive review preparation:
    # Show recent commits on current branch
    git log --oneline --graph -10
 
-   # Show diff against staging branch
-   git diff staging...HEAD
+   # Show diff against main branch
+   git diff main...HEAD
 
    # Show changed files
-   git diff --name-only staging...HEAD
+   git diff --name-only main...HEAD
    ```
 
 4. **Use specialized review agents** - Get expert analysis:

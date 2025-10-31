@@ -4,29 +4,29 @@
 
 Releases follow structured branch workflow:
 - Development work in feature branches
-- Feature branches merged to `staging` via PRs
-- `master` branch serves as release branch
-- Releases merge accumulated changes from `staging` to `master`
+- Feature branches merged to `main` via PRs
+- `release` branch serves as release branch
+- Releases merge accumulated changes from `main` to `release`
 
 ## Prerequisites
 
 - Direct repository access (core maintainers only)
 - Local development environment configured
-- All target changes merged into `staging` branch
+- All target changes merged into `main` branch
 
 ## Pre-Release Verification
 
-1. **Confirm CI Status**: Ensure GitHub Actions pass on `staging`
+1. **Confirm CI Status**: Ensure GitHub Actions pass on `main`
 2. **Run Local Validation**: `make check`
 3. **Review Recent Changes**: Check commits and merged PRs
 
 ## Release Steps
 
-### 1. Prepare Staging Branch
+### 1. Prepare Main Branch
 
 ```bash
-git checkout staging
-git pull origin staging
+git checkout main
+git pull origin main
 ```
 
 ### 2. Update Version Number and CHANGELOG.ms
@@ -36,24 +36,24 @@ git pull origin staging
 # Add line to CHANGELOG.md file with short description
 git add TT_VERSION  CHANGELOG.md
 git commit -m "Bump version number to vX.X.X"
-git push origin staging
+git push origin main
 ```
 
-### 3. Merge to Master
+### 3. Merge to Release Branch
 
 ```bash
-git checkout master
-git pull origin master
-git merge staging
-git push origin master
+git checkout release
+git pull origin release
+git merge main
+git push origin release
 ```
 
-After changing to local master, it may be behind origin/master and should defintiely be behing both local staging and origin/staging. That is fine. When pulling in origin/master, it too will be behind staging. That is normal as the release process is all about merging staging into origin/master. 
+After changing to local `release`, it may be behind `origin/release` and should defintiely be behing both local `main` and `origin/main`. That is fine. When pulling in `origin/release`, it too will be behind `main`. That is normal as the release process is all about merging `main` into `origin/release`. 
 
 Common Mistakes to Avoid:
-  - NEVER make version changes directly on master
-  - NEVER edit files after the merge to master
-  - All changes on master must come from staging via the merge
+  - NEVER make version changes directly on `release`
+  - NEVER edit files after the merge to `release`
+  - All changes on `release` must come from `main` via the merge
 
 ### 4. Create GitHub Release
 
@@ -67,7 +67,7 @@ Or via GitHub web interface:
 1. Navigate to repository releases page
 2. Click "Create a new release"
 3. **Tag**: `vX.X.X` (create new)
-4. **Target**: `master` branch
+4. **Target**: `release` branch
 5. **Title**: Use tag name
 6. **Description**: Use "Generate release notes"
 7. **Settings**: Check "Set as latest release"
@@ -89,15 +89,15 @@ curl -L https://github.com/cassandra/home-information/releases/latest/download/h
 
 ## 6. Cleanup
 
-For safety, move back to staging branch and get latest tags.
+For safety, move back to `main` branch and get latest tags.
 ```bash
-git checkout staging
+git checkout main
 git fetch --tags
 
 # Bump TT_VERSION file with next anticipatd version and a "-dev" suffix
 git add TT_VERSION 
 git commit -m "Bump version number to vX.X.X-dev"
-git push origin staging
+git push origin main
 ```
 
 This is where the automated release process ends.
@@ -120,7 +120,7 @@ mkdir ~/testing
 cd ~/testing
 mv ~/.hi ~/.hi-$DATE
 
-curl -fsSL https://raw.githubusercontent.com/cassandra/home-information/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/cassandra/home-information/release/install.sh | bash
 ```
 
 Best to try this on multiple types of machines.

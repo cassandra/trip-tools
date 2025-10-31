@@ -25,13 +25,13 @@ class RouteAdmin(admin.ModelAdmin):
         'created_datetime',
     )
 
-    search_fields = ['user__username', 'trip__title', 'notes']
+    search_fields = ['user__email', 'trip__title', 'notes']
     readonly_fields = ('created_datetime', 'modified_datetime')
     inlines = [RouteWaypointInline]
 
     @admin_link('user', 'User')
     def user_link(self, user):
-        return user.username
+        return user.email
 
     @admin_link('trip', 'Trip')
     def trip_link(self, trip):
