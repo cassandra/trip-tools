@@ -42,6 +42,8 @@ class TestHealthView(SyncViewTestCase):
     @patch('tt.views.do_healthcheck')
     def test_health_check_healthy(self, mock_healthcheck):
         """Test health check when system is healthy."""
+        self.client.force_login(self.user)
+
         mock_healthcheck.return_value = {
             'is_healthy': True,
             'database': 'ok',
@@ -62,6 +64,8 @@ class TestHealthView(SyncViewTestCase):
     @patch('tt.views.do_healthcheck')
     def test_health_check_unhealthy(self, mock_healthcheck):
         """Test health check when system is unhealthy."""
+        self.client.force_login(self.user)
+
         mock_healthcheck.return_value = {
             'is_healthy': False,
             'database': 'error',
@@ -82,6 +86,8 @@ class TestHealthView(SyncViewTestCase):
 
     def test_health_post_not_allowed(self):
         """Test that POST requests are not allowed."""
+        self.client.force_login(self.user)
+
         url = reverse('health')
         response = self.client.post(url)
 

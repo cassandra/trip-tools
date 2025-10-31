@@ -15,6 +15,7 @@ class TestEnvironmentHomeView(SyncViewTestCase):
     """
     def test_get_config_data(self):
         """Test getting internal configuration data."""
+        self.client.force_login(self.user)
         url = reverse('env_home')
         response = self.client.get(url)
         self.assertSuccessResponse(response)
@@ -53,6 +54,7 @@ class TestEnvironmentHomeView(SyncViewTestCase):
 
     def test_post_not_allowed(self):
         """Test that POST requests are not allowed."""
+        self.client.force_login(self.user)
         url = reverse('env_home')
         response = self.client.post(url)
         # Should return 405 Method Not Allowed
@@ -61,6 +63,8 @@ class TestEnvironmentHomeView(SyncViewTestCase):
     @patch('tt.environment.views.settings')
     def test_config_values_from_settings(self, mock_settings):
         """Test that config values are pulled from Django settings."""
+        self.client.force_login(self.user)
+
         # Set mock values
         mock_settings.ENV.environment_name = 'test'
         mock_settings.ENV.VERSION = '1.0.0'

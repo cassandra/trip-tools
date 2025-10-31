@@ -36,6 +36,7 @@ class TestAuthenticationMiddleware(BaseTestCase):
         expected_exempt_urls = {
             'admin',
             'manifest',
+            'notify_email_unsubscribe',
             'user_signin',
             'user_signin_magic_code',
             'user_signin_magic_link',
