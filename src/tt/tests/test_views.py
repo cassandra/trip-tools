@@ -14,13 +14,23 @@ class TestStartView(SyncViewTestCase):
     This view renders a template for first-time users when no locations exist.
     """
 
-    def test_start_view_renders_template_when_no_locations(self):        
+    def test_start_view_renders_template_when_no_locations(self):
+        self.client.force_login(self.user)
+
         url = reverse('start')
         response = self.client.get(url)
-        
+
         self.assertSuccessResponse(response)
         self.assertHtmlResponse(response)
         self.assertTemplateRendered(response, 'pages/start.html')
+
+    def test_start_view_requires_authentication(self):
+        url = reverse('start')
+        response = self.client.get(url)
+
+        # The not_authorized_response may be intercepted by middleware
+        # and converted to a redirect - check for either 403 or 302
+        self.assertIn(response.status_code, [302, 403])
 
 
 class TestHealthView(SyncViewTestCase):

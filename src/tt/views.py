@@ -15,6 +15,7 @@ from django.views.generic import View
 import tt.apps.common.antinode as antinode
 from tt.apps.common.healthcheck import do_healthcheck
 from tt.apps.common.utils import is_ajax
+from tt.apps.trips.forms import TripForm
 
 
 def error_response( request             : HttpRequest,
@@ -172,7 +173,31 @@ class HomeView( View ):
 class StartView( View ):
 
     def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return not_authorized_response( request, message = 'You must be logged in to create a trip.' )
+
+        form = TripForm()
         context = {
+            'form': form,
+        }
+        return render( request, 'pages/start.html', context )
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return not_authorized_response( request, message = 'You must be logged in to create a trip.' )
+
+        form = TripForm( request.POST )
+
+        if form.is_valid():
+            trip = form.save( commit = False )
+            trip.user = request.user
+            trip.save()
+
+            redirect_url = reverse( 'home' )
+            return HttpResponseRedirect( redirect_url )
+
+        context = {
+            'form': form,
         }
         return render( request, 'pages/start.html', context )
 

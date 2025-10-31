@@ -288,6 +288,10 @@ a.clickable-card:active {
     background-color: #f4f4f4;
 }
 
+.start-form-container {
+    max-width: 600px;
+}
+
 /* Phone Landscape (Side-by-Side) */
 @media (min-aspect-ratio: 16/9) and (max-height: 600px) {
     .interstitial-page {

@@ -2,10 +2,59 @@
 {% load static %}
 
 {% block interstitial_content %}
-<div>
-  <div class="display-4" style="font-size: clamp(2rem, 5vw, 3.5rem);">Welcome!</div>
-  <p class="lead mt-2 mb-4" style="font-size: clamp(1rem, 2.5vw, 1.25rem);">
-    Create a new trip to get started.
+<div class="w-100 start-form-container">
+  <div class="display-4 mb-3" style="font-size: clamp(2rem, 5vw, 3.5rem);">Welcome!</div>
+  <p class="lead mb-4" style="font-size: clamp(1rem, 2.5vw, 1.25rem);">
+    Let's get started by creating your first trip.
   </p>
+
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger" role="alert">
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'start' %}" class="text-left">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="{{ form.title.id_for_label }}" class="font-weight-bold">Trip Title <span class="text-danger">*</span></label>
+      {{ form.title }}
+      {% if form.title.errors %}
+      <div class="text-danger small mt-1">
+        {{ form.title.errors }}
+      </div>
+      {% endif %}
+      <small class="form-text text-muted">Give your trip a memorable name</small>
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.description.id_for_label }}" class="font-weight-bold">Description</label>
+      {{ form.description }}
+      {% if form.description.errors %}
+      <div class="text-danger small mt-1">
+        {{ form.description.errors }}
+      </div>
+      {% endif %}
+      <small class="form-text text-muted">Optional: Add any notes or details about your trip</small>
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.trip_status.id_for_label }}" class="font-weight-bold">Trip Status <span class="text-danger">*</span></label>
+      {{ form.trip_status }}
+      {% if form.trip_status.errors %}
+      <div class="text-danger small mt-1">
+        {{ form.trip_status.errors }}
+      </div>
+      {% endif %}
+      <small class="form-text text-muted">Set the current status of your trip</small>
+    </div>
+
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-lg btn-primary px-5">
+        <b>Create Trip</b>
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %}
