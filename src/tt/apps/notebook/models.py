@@ -31,6 +31,9 @@ class NotebookEntry(models.Model):
     created_datetime = models.DateTimeField(auto_now_add = True)
     modified_datetime = models.DateTimeField(auto_now = True)
 
+    def __str__(self):
+        return f"{self.trip.title} - {self.date}"
+
     class Meta:
         verbose_name = 'Notebook Entry'
         verbose_name_plural = 'Notebook Entries'

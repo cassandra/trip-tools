@@ -1,0 +1,35 @@
+{% extends "trips/pages/trip_base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block trip_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h2 mb-1">Trip Notes</h1>
+  </div>
+</div>
+
+{% if entries %}
+<div class="list-group">
+  {% for entry in entries %}
+  <a href="{% url 'notebook_edit' trip_id=trip.pk entry_pk=entry.pk %}" class="list-group-item list-group-item-action">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">{{ entry.date|date:'F j, Y' }}</h5>
+      <small class="text-muted">Modified {{ entry.modified_datetime|timesince }} ago</small>
+    </div>
+    {% if entry.text %}
+    <p class="mb-1 text-truncate">{{ entry.text|truncatewords:20 }}</p>
+    {% else %}
+    <p class="mb-1 text-muted"><em>Empty note</em></p>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+  <h4>No notes yet</h4>
+  <p>Start documenting your trip by creating your first note!</p>
+  <a href="{% url 'notebook_new' trip_id=trip.pk %}" class="btn btn-primary">Create Note</a>
+</div>
+{% endif %}
+{% endblock %}
