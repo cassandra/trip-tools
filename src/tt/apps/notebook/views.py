@@ -1,9 +1,10 @@
 import json
 import logging
-from datetime import date as date_class, datetime
+from datetime import date as date_class, datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError, transaction
+from django.db.models import Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
@@ -55,10 +56,19 @@ class NotebookEditView(LoginRequiredMixin, View):
             )
         else:
             # Creating new entry - create it immediately so auto-save works
+            # Determine the default date:
+            # - If entries exist, use max(date) + 1 day
+            # - If no entries exist, use current date
+            max_date = trip.notebook_entries.aggregate(Max('date'))['date__max']
+            if max_date:
+                default_date = max_date + timedelta(days=1)
+            else:
+                default_date = date_class.today()
+
             entry = NotebookEntry.objects.create(
                 user=request.user,
                 trip=trip,
-                date=date_class.today(),
+                date=default_date,
                 text=''
             )
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)

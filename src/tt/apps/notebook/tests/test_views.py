@@ -713,6 +713,63 @@ class NotebookEditViewTests(TestCase):
         self.assertEqual(len(notebook_entries), 1)
         self.assertEqual(notebook_entries[0].pk, my_entry.pk)
 
+    def test_new_entry_uses_current_date_when_no_entries_exist(self):
+        """Test that new entry defaults to current date when no entries exist."""
+        from datetime import date as date_class
+
+        self.client.force_login(self.user)
+        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+
+        # Verify no entries exist
+        self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 0)
+
+        response = self.client.get(new_url)
+        self.assertEqual(response.status_code, 302)
+
+        # Verify entry was created with today's date
+        entry = NotebookEntry.objects.get(trip=self.trip)
+        self.assertEqual(entry.date, date_class.today())
+
+    def test_new_entry_uses_max_date_plus_one_when_entries_exist(self):
+        """Test that new entry defaults to max(date) + 1 day when entries exist."""
+        from datetime import timedelta
+
+        # Create existing entries
+        NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 10),
+            text='First entry'
+        )
+        NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Second entry'
+        )
+        max_existing_date = date(2024, 1, 20)
+        NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=max_existing_date,
+            text='Third entry'
+        )
+
+        self.client.force_login(self.user)
+        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+
+        # Verify 3 entries exist
+        self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 3)
+
+        response = self.client.get(new_url)
+        self.assertEqual(response.status_code, 302)
+
+        # Verify entry was created with max date + 1 day
+        self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 4)
+        new_entry = NotebookEntry.objects.filter(trip=self.trip).order_by('-date').first()
+        expected_date = max_existing_date + timedelta(days=1)
+        self.assertEqual(new_entry.date, expected_date)
+
 
 class NotebookAutoSaveViewTests(TestCase):
     """Tests for the notebook auto-save AJAX endpoint."""
