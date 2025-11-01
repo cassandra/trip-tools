@@ -1,0 +1,23 @@
+{% extends "pages/main_base.html" %}
+
+{% block main_content %}
+
+<!-- Horizontal Secondary Navigation -->
+<div class="secondary-nav-horizontal">
+  <div class="container-fluid px-3">
+    <ul class="nav nav-tabs h-100">
+      {% block horizontal_nav_items %}
+      <li class="nav-item">
+        <a class="nav-link active" href="#">Default</a>
+      </li>
+      {% endblock %}
+    </ul>
+  </div>
+</div>
+
+<!-- Main Content -->
+<main class="app-main-horizontal-nav">
+  {% block secondary_content %}
+  {% endblock %}
+</main>
+{% endblock %}

@@ -1,0 +1,10 @@
+<div class="dropdown">
+  <button class="btn btn-outline-light dropdown-toggle" type="button" id="accountDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Account
+  </button>
+  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="accountDropdown">
+    <a class="dropdown-item" href="{% url 'user_account' %}">Account Settings</a>
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="{% url 'user_signout' %}">Sign Out</a>
+  </div>
+</div>

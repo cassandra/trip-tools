@@ -1,0 +1,11 @@
+{% extends "pages/main_base.html" %}
+
+{% block main_content_preamble %}
+<nav id="appSidebar"
+     class="app-sidebar collapse d-md-block {% block sidebar_class %}{% endblock %}">
+{% block sidebar_content %}
+{% endblock %}
+</nav>
+{% endblock %}
+
+{% block main_content_class %}app-main-sidebar{% endblock %}

@@ -10,13 +10,13 @@
   <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-4">
     <a href="{% url 'trips_home' trip_id=trip.id %}" class="text-decoration-none">
       <div class="card card-hover h-100" data-trip-id="{{ trip.id }}">
-        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px; {% if icon_type == 'past' %}opacity: 0.7;{% endif %}">
-          <img src="{% static 'img/tt-icon-196x196.png' %}" alt="Trip icon" style="max-width: 120px; max-height: 120px; opacity: 0.6; {% if icon_type == 'past' %}filter: grayscale(50%);{% endif %}">
+        <div class="card-img-top bg-light d-flex align-items-center justify-content-center trip-card-image{% if icon_type == 'past' %} trip-card-image--past{% endif %}">
+          <img src="{% static 'img/tt-icon-196x196.png' %}" alt="Trip icon" class="trip-card-icon{% if icon_type == 'past' %} trip-card-icon--past{% endif %}">
         </div>
         <div class="card-body">
           <h5 class="card-title">{{ trip.title }}</h5>
           {% if trip.description %}
-          <p class="card-text text-muted small" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ trip.description }}</p>
+          <p class="card-text text-muted small trip-card-description">{{ trip.description }}</p>
           {% endif %}
         </div>
       </div>
@@ -26,7 +26,7 @@
 </div>
 {% else %}
 {# Empty state using Bootstrap utilities #}
-<div class="text-center p-5 bg-light border border-secondary rounded" style="border-style: dashed !important;">
+<div class="text-center p-5 bg-light border border-secondary rounded empty-state-dashed">
   <div class="text-muted mb-3">
     {% icon "map-pin" size="lg" %}
   </div>

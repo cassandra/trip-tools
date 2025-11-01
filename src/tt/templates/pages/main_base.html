@@ -1,0 +1,38 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="app-topbar d-flex align-items-center px-3">
+  <button class="hamburger-menu mr-3" type="button" data-toggle="collapse" data-target="#appSidebar" aria-controls="appSidebar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <a href="{% url 'dashboard_home' %}" class="d-flex align-items-center mr-auto text-decoration-none logo-link" aria-label="Go to Dashboard">
+    <img src="{% static 'img/tt-on-primary-icon-196x196.png' %}" alt="Trip Tools Logo" height="40" class="mr-2">
+    <span class="h5 mb-0 font-weight-semibold d-none d-sm-inline logo-text">Trip Tools</span>
+  </a>
+
+  <div class="d-flex align-items-center">
+    <div class="mr-2">
+    {% block main_extra_actions %}
+    {% endblock %}
+    </div>
+    
+    {% include "user/panes/account_menu.html" %}
+  </div>
+</div>
+
+{% block main_content_preamble %}
+{% endblock %}
+
+<main class="app-main {% block main_content_class %}{% endblock %}">
+  {% block main_content %}
+  {% endblock %}
+</main>
+
+{% endblock %}
+
+{% block main_content_postamble %}
+{% endblock %}

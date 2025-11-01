@@ -673,6 +673,16 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.app-topbar .logo-link {
+  color: var(--on-primary-color);
+}
+
+.app-topbar .logo-link:hover {
+  opacity: 0.85;
+  color: var(--on-primary-color);
+  text-decoration: none;
+}
+
 /* Hamburger Menu Button */
 .hamburger-menu {
   background: none;
@@ -721,11 +731,13 @@ body {
 
 /* Main Content Area */
 .app-main {
-  margin-left: var(--app-sidebar-width);
-  margin-top: var(--app-topbar-height);
   padding: 2rem;
+  margin-top: var(--app-topbar-height);
   min-height: calc(100vh - var(--app-topbar-height));
   transition: margin-left 0.3s ease;
+}
+.app-main-sidebar {
+  margin-left: var(--app-sidebar-width);
 }
 
 /* Sidebar Navigation */
@@ -798,5 +810,150 @@ body {
 
   .app-main {
     margin-left: 0;
+  }
+}
+
+/* ====================
+   Secondary Page Extensions
+   Light variant backgrounds for secondary navigation
+   ==================== */
+
+:root {
+  --secondary-nav-height: 50px;
+}
+
+/* Logo and branding in topbar */
+.app-topbar .logo-text {
+  color: var(--on-primary-color);
+}
+
+.app-topbar .logo-link:focus {
+  outline: 2px solid var(--on-primary-color);
+  outline-offset: 2px;
+}
+
+/* Trip card styling */
+.trip-card-image {
+  height: 180px;
+}
+
+.trip-card-image--past {
+  opacity: 0.7;
+}
+
+.trip-card-icon {
+  max-width: 120px;
+  max-height: 120px;
+  opacity: 0.6;
+}
+
+.trip-card-icon--past {
+  filter: grayscale(50%);
+}
+
+.trip-card-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.empty-state-dashed {
+  border-style: dashed !important;
+}
+
+/* Hamburger menu touch targets */
+.hamburger-menu {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Secondary Sidebar (Light Variant) */
+.app-sidebar-secondary {
+  background-color: #f8f9fa;
+  border-right: 1px solid var(--line-color);
+}
+
+.app-sidebar-secondary .app-sidebar-nav a {
+  color: var(--tertiary-color);
+}
+
+.app-sidebar-secondary .app-sidebar-nav a:hover {
+  background-color: #e9ecef;
+  color: var(--tertiary-color);
+}
+
+.app-sidebar-secondary .app-sidebar-nav a.active {
+  background-color: #dee2e6;
+  font-weight: 600;
+}
+
+/* Horizontal Secondary Navigation */
+.secondary-nav-horizontal {
+  position: fixed;
+  top: var(--app-topbar-height);
+  left: 0;
+  right: 0;
+  height: var(--secondary-nav-height);
+  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--line-color);
+  z-index: 1010;
+}
+
+.secondary-nav-horizontal .nav-tabs {
+  border-bottom: none;
+  height: 100%;
+}
+
+.secondary-nav-horizontal .nav-tabs .nav-item {
+  height: 100%;
+}
+
+.secondary-nav-horizontal .nav-tabs .nav-link {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border: none;
+  border-radius: 0;
+  color: var(--tertiary-color);
+  border-bottom: 3px solid transparent;
+  padding: 0 1.5rem;
+  min-height: 44px;
+}
+
+.secondary-nav-horizontal .nav-tabs .nav-link.active {
+  background-color: transparent;
+  border-bottom-color: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.secondary-nav-horizontal .nav-tabs .nav-link:hover {
+  border-color: transparent;
+  border-bottom-color: var(--primary-highlight-color);
+}
+
+/* Main Content Areas for Secondary Pages */
+.app-main-horizontal-nav {
+  margin-top: var(--secondary-nav-height));
+  padding: 2rem;
+  min-height: calc(100vh - var(--secondary-nav-height));
+}
+
+.app-main-simple {
+  margin-top: var(--app-topbar-height);
+  padding: 2rem;
+  min-height: calc(100vh - var(--app-topbar-height));
+}
+
+/* Mobile Responsive for Secondary Pages */
+@media (max-width: 768px) {
+  .app-main-horizontal-nav {
+    margin-top: var(--secondary-nav-height);
+  }
+
+  .secondary-nav-horizontal .nav-tabs .nav-link {
+    padding: 0 1rem;
+    font-size: 0.9rem;
   }
 }
