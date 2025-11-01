@@ -1,24 +1,25 @@
-{% extends "pages/base.html" %}
+{% extends "pages/secondary-page-horizontal-nav.html" %}
 {% load static %}
 
-{% block content %}
-<div class="container-fluid">
-  <div class="row">
-    <!-- Header Section -->
-    <div class="col-12 py-3 bg-light border-bottom">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <a href="{% url 'dashboard_home' %}" class="btn btn-sm btn-outline-secondary mr-2">
-            &larr; Back to Dashboard
-          </a>
-          <h2 class="d-inline mb-0">Account Settings</h2>
-        </div>
-      </div>
-    </div>
-  </div>
+{% block extra_actions %}
+{# Hide New button on account pages #}
+{% endblock %}
 
-  <div class="row mt-4">
-    <div class="col-lg-8 col-md-10 mx-auto">
+{% block horizontal_nav_items %}
+<li class="nav-item">
+  <a class="nav-link active" href="{% url 'user_account' %}">Profile</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="#">Preferences</a>
+</li>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-0">
+  <h1 class="h2 mb-4">Account Settings</h1>
+
+  <div class="row">
+    <div class="col-lg-8 col-md-10">
       <div class="card">
         <div class="card-header">
           <h5 class="mb-0">Your Account</h5>

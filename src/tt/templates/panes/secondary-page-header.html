@@ -1,0 +1,41 @@
+{% load static %}
+
+<!-- App Top Bar -->
+<div class="app-topbar d-flex align-items-center px-3">
+  <button class="hamburger-menu mr-3" type="button" data-toggle="collapse" data-target="#appSidebar" aria-controls="appSidebar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <a href="{% url 'dashboard_home' %}" class="d-flex align-items-center mr-auto text-decoration-none logo-link" aria-label="Go to Dashboard">
+    <img src="{% static 'img/tt-on-primary-icon-196x196.png' %}" alt="Trip Tools Logo" height="40" class="mr-2">
+    <span class="h5 mb-0 font-weight-semibold d-none d-sm-inline logo-text">Trip Tools</span>
+  </a>
+
+  <div class="d-flex align-items-center">
+    <!-- Extra Actions Block (varies by page) -->
+    {% block extra_actions %}
+    <div class="dropdown mr-2">
+      <button class="btn btn-outline-light dropdown-toggle" type="button" id="newDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        + New
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="newDropdown">
+        <a class="dropdown-item" href="{% url 'trips_create' %}" data-async="modal">New Trip</a>
+      </div>
+    </div>
+    {% endblock %}
+
+    <!-- Account Dropdown -->
+    <div class="dropdown">
+      <button class="btn btn-outline-light dropdown-toggle" type="button" id="accountDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Account
+      </button>
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="accountDropdown">
+        <a class="dropdown-item" href="{% url 'user_account' %}">Account Settings</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="{% url 'user_signout' %}">Sign Out</a>
+      </div>
+    </div>
+  </div>
+</div>
