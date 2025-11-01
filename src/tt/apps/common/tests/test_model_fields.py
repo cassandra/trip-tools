@@ -124,12 +124,17 @@ class TestLabeledEnumField(TestCase):
         self.assertTrue(field.blank)
     
     def test_field_choices_are_set(self):
-        """Test that field choices are properly set for admin."""
+        """Test that field provides choices via formfield for admin."""
         field = TestModel._meta.get_field('safe_field')
-        
-        choices = field.choices
+
+        # Choices are NOT stored on the model field (to avoid migration requirement)
+        self.assertIsNone(field.choices)
+
+        # But choices ARE provided via formfield for admin forms
+        form_field = field.formfield()
+        choices = form_field.choices
         self.assertEqual(len(choices), 3)
-        
+
         # Choices should be lowercase tuples
         self.assertIn(('first', 'First Option'), choices)
         self.assertIn(('second', 'Second Option'), choices)

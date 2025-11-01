@@ -176,10 +176,9 @@ class HomeView( View ):
             redirect_url = reverse( 'start' )
             return HttpResponseRedirect( redirect_url )
 
-        context = {
-            'trips': user_trips,
-        }
-        return render( request, 'pages/dashboard.html', context )
+        # Redirect to dashboard
+        redirect_url = reverse( 'dashboard_home' )
+        return HttpResponseRedirect( redirect_url )
         
         
 class StartView( View ):

@@ -96,10 +96,13 @@ class LabeledEnum(Enum):
     
     def __str__(self):
         return self.name.lower()
-    
+
     def __int__(self):
         return self.value
-    
+
+    def __len__(self):
+        return len(str(self))
+
     def url_name(self):
         return str(self)
     

@@ -645,3 +645,158 @@ input[type="password"],
         display: none !important;
     }
 }
+
+/* ====================
+   App Chrome Pattern
+   Reusable layout for application sections with fixed topbar + sidebar
+   ==================== */
+
+:root {
+  --app-sidebar-width: 250px;
+  --app-topbar-height: 60px;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Fixed Top Bar */
+.app-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--app-topbar-height);
+  background-color: var(--primary-color);
+  color: var(--on-primary-color);
+  z-index: 1030;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Hamburger Menu Button */
+.hamburger-menu {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger-line {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background-color: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Fixed Sidebar */
+.app-sidebar {
+  position: fixed;
+  top: var(--app-topbar-height);
+  left: 0;
+  bottom: 0;
+  width: var(--app-sidebar-width);
+  background-color: var(--primary-color);
+  color: var(--on-primary-color);
+  padding: 1rem 0;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+  z-index: 1020;
+}
+
+/* Override Bootstrap collapse to use transform */
+.app-sidebar.collapse {
+  display: block;
+  visibility: visible;
+}
+
+.app-sidebar.collapsing {
+  height: auto;
+}
+
+/* Main Content Area */
+.app-main {
+  margin-left: var(--app-sidebar-width);
+  margin-top: var(--app-topbar-height);
+  padding: 2rem;
+  min-height: calc(100vh - var(--app-topbar-height));
+  transition: margin-left 0.3s ease;
+}
+
+/* Sidebar Navigation */
+.app-sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.app-sidebar-nav li {
+  padding: 0;
+}
+
+.app-sidebar-nav a {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  color: var(--on-primary-color);
+  text-decoration: none;
+  transition: background-color 0.2s;
+  gap: 0.75rem;
+}
+
+.app-sidebar-nav a:hover {
+  background-color: var(--primary-highlight-color);
+  color: var(--on-primary-color);
+  text-decoration: none;
+}
+
+.app-sidebar-nav a.active {
+  background-color: var(--primary-highlight-color);
+  font-weight: 600;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.card-hover:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .hamburger-menu {
+    display: flex;
+  }
+
+  .app-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .app-sidebar.show {
+    transform: translateX(0);
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+  }
+
+  .app-sidebar.show::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: -1;
+  }
+
+  .app-main {
+    margin-left: 0;
+  }
+}

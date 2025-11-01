@@ -35,6 +35,8 @@ urlpatterns = [
     re_path( r'^config/', include('tt.apps.config.urls' )),
     re_path( r'^notify/', include('tt.apps.notify.urls' )),
     re_path( r'^system/', include('tt.apps.system.urls' )),
+    re_path( r'^dashboard/', include('tt.apps.dashboard.urls' )),
+    re_path( r'^trips/', include('tt.apps.trips.urls' )),
 
     # Custom error pages
     re_path( r'^400.html$', views.bad_request_response, name='bad_request' ),

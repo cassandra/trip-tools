@@ -1,0 +1,23 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load static %}
+
+{% block modal_dialog_id %}trip-create-modal{% endblock %}
+
+{% block title_text %}Create New Trip{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'trips_create' %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+  {% include "trips/panes/trip-form.html" with show_help_text=True %}
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-primary">CREATE TRIP</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}
