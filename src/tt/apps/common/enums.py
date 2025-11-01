@@ -101,7 +101,6 @@ class LabeledEnum(Enum):
         return self.value
 
     def __len__(self):
-        """Return length of string representation for CharField validators."""
         return len(str(self))
 
     def url_name(self):

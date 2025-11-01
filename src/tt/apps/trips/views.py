@@ -1,10 +1,8 @@
 import logging
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import render
-from django.urls import reverse_lazy
 
 from tt.async_view import ModalView
 
@@ -14,10 +12,7 @@ from .models import Trip
 logger = logging.getLogger(__name__)
 
 
-class TripCreateModalView(LoginRequiredMixin, ModalView):
-    """Modal view for creating a new trip from the dashboard."""
-
-    login_url = reverse_lazy('user_signin')
+class TripCreateModalView(ModalView):
 
     def get_template_name(self) -> str:
         return 'trips/modals/trip-create.html'
@@ -46,10 +41,7 @@ class TripCreateModalView(LoginRequiredMixin, ModalView):
         return self.modal_response(request, context=context, status=400)
 
 
-class TripHomeView(LoginRequiredMixin, ModalView):
-    """Trip home page placeholder. Sets selected trip in session."""
-
-    login_url = reverse_lazy('user_signin')
+class TripHomeView(ModalView):
 
     def get_template_name(self) -> str:
         return 'trips/pages/trip-home.html'

@@ -3,7 +3,6 @@ import logging
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.urls import reverse_lazy
 from django.views.generic import View
 
 from tt.apps.trips.enums import TripStatus
@@ -14,8 +13,6 @@ logger = logging.getLogger(__name__)
 
 class DashboardView(LoginRequiredMixin, View):
     """Dashboard combines UPCOMING and CURRENT trips in main section per business requirement."""
-
-    login_url = reverse_lazy('user_signin')
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         # Single query with evaluation to avoid N+1 queries
@@ -29,8 +26,7 @@ class DashboardView(LoginRequiredMixin, View):
         past_trips = [
             trip for trip in all_trips
             if trip.trip_status == TripStatus.PAST
-        ]
-
+        ]        
         context = {
             'upcoming_trips': upcoming_trips,
             'past_trips': past_trips,

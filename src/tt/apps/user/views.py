@@ -173,23 +173,14 @@ class SigninMagicLinkView( View ):
 
 
 class UserSignoutView(View):
-    """
-    Sign out the current user and redirect to signin page.
-    """
 
     def get(self, request, *args, **kwargs):
         from django.contrib.auth import logout
         logout(request)
-        return HttpResponseRedirect(reverse('user_signin'))
+        return HttpResponseRedirect( reverse('user_signin') )
 
 
 class AccountView(LoginRequiredMixin, View):
-    """
-    Account management page placeholder.
-    Will be expanded with profile editing, preferences, etc.
-    """
-
-    login_url = '/user/signin'
 
     def get(self, request, *args, **kwargs):
         context = {

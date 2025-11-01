@@ -177,7 +177,7 @@ class HomeView( View ):
             return HttpResponseRedirect( redirect_url )
 
         # Redirect to dashboard
-        redirect_url = reverse( 'dashboard' )
+        redirect_url = reverse( 'dashboard_home' )
         return HttpResponseRedirect( redirect_url )
         
         
