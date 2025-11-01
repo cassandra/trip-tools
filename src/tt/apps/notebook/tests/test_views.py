@@ -41,7 +41,7 @@ class NotebookListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'notebook/pages/list.html')
-        self.assertIn('sidebar', response.context)
+        self.assertIn('trip_page', response.context)
         self.assertIn('notebook_entries', response.context)
 
     def test_list_only_shows_user_trips(self):
@@ -94,15 +94,15 @@ class NotebookListViewTests(TestCase):
         self.assertEqual(entries[1].pk, entry2.pk)
         self.assertEqual(entries[2].pk, entry3.pk)
 
-    def test_list_includes_sidebar_context(self):
-        """Test that notebook list includes sidebar context with active_page=NOTES."""
+    def test_list_includes_trip_page_context(self):
+        """Test that notebook list includes trip_page context with active_page=NOTES."""
         self.client.force_login(self.user)
         response = self.client.get(self.list_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('sidebar', response.context)
-        sidebar = response.context['sidebar']
-        self.assertEqual(sidebar.active_page, TripPage.NOTES)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(trip_page.active_page, TripPage.NOTES)
 
     def test_list_includes_notebook_entries_context(self):
         """Test that notebook list includes notebook_entries in context."""
@@ -291,7 +291,7 @@ class NotebookEditViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'notebook/pages/editor.html')
-        self.assertIn('sidebar', response.context)
+        self.assertIn('trip_page', response.context)
         self.assertIn('form', response.context)
         self.assertEqual(response.context['entry'], entry)
 
@@ -551,8 +551,8 @@ class NotebookEditViewTests(TestCase):
         self.assertEqual(entry.text, 'Updated content')
         self.assertEqual(entry.date, date(2024, 1, 15))
 
-    def test_edit_includes_sidebar_context(self):
-        """Test that notebook edit includes sidebar context with active_page=NOTES."""
+    def test_edit_includes_trip_page_context(self):
+        """Test that notebook edit includes trip_page context with active_page=NOTES."""
         entry = NotebookEntry.objects.create(
             user=self.user,
             trip=self.trip,
@@ -567,12 +567,12 @@ class NotebookEditViewTests(TestCase):
         response = self.client.get(edit_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('sidebar', response.context)
-        sidebar = response.context['sidebar']
-        self.assertEqual(sidebar.active_page, TripPage.NOTES)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(trip_page.active_page, TripPage.NOTES)
 
-    def test_edit_includes_notebook_entries_in_sidebar(self):
-        """Test that notebook edit includes notebook_entries in sidebar context."""
+    def test_edit_includes_notebook_entries_in_trip_page(self):
+        """Test that notebook edit includes notebook_entries in trip_page context."""
         entry1 = NotebookEntry.objects.create(
             user=self.user,
             trip=self.trip,
@@ -594,16 +594,16 @@ class NotebookEditViewTests(TestCase):
         response = self.client.get(edit_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('sidebar', response.context)
-        sidebar = response.context['sidebar']
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
 
-        notebook_entries = list(sidebar.notebook_entries)
+        notebook_entries = list(trip_page.notebook_entries)
         self.assertEqual(len(notebook_entries), 2)
         self.assertEqual(notebook_entries[0].pk, entry1.pk)
         self.assertEqual(notebook_entries[1].pk, entry2.pk)
 
-    def test_edit_includes_current_entry_pk_in_sidebar(self):
-        """Test that notebook edit includes current_entry_pk in sidebar context."""
+    def test_edit_includes_notebook_entry_pk_in_trip_page(self):
+        """Test that notebook edit includes notebook_entry_pk in trip_page context."""
         entry = NotebookEntry.objects.create(
             user=self.user,
             trip=self.trip,
@@ -619,9 +619,9 @@ class NotebookEditViewTests(TestCase):
         response = self.client.get(edit_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('sidebar', response.context)
-        sidebar = response.context['sidebar']
-        self.assertEqual(int(sidebar.current_entry_pk), entry.pk)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(int(trip_page.notebook_entry_pk), entry.pk)
 
     def test_edit_notebook_entries_ordered_by_date(self):
         """Test that notebook_entries in edit view are ordered by date."""
@@ -652,8 +652,8 @@ class NotebookEditViewTests(TestCase):
         })
         response = self.client.get(edit_url)
 
-        sidebar = response.context['sidebar']
-        notebook_entries = list(sidebar.notebook_entries)
+        trip_page = response.context['trip_page']
+        notebook_entries = list(trip_page.notebook_entries)
         self.assertEqual(len(notebook_entries), 3)
         # Verify chronological order
         self.assertEqual(notebook_entries[0].pk, entry1.pk)
@@ -707,8 +707,8 @@ class NotebookEditViewTests(TestCase):
         })
         response = self.client.get(edit_url)
 
-        sidebar = response.context['sidebar']
-        notebook_entries = list(sidebar.notebook_entries)
+        trip_page = response.context['trip_page']
+        notebook_entries = list(trip_page.notebook_entries)
         # Should only have the entry for the current trip and user
         self.assertEqual(len(notebook_entries), 1)
         self.assertEqual(notebook_entries[0].pk, my_entry.pk)

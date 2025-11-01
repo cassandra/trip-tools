@@ -6,7 +6,7 @@
 
 {% block trip_content %}
 <div class="notebook-editor-container"
-     data-autosave-url="{% url 'notebook_autosave' trip_id=sidebar.trip.pk entry_pk=entry.pk %}"
+     data-autosave-url="{% url 'notebook_autosave' trip_id=trip_page.trip.pk entry_pk=entry.pk %}"
      data-csrf-token="{{ csrf_token }}">
 
   <form class="notebook-form" method="post">

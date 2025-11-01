@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
 
-from tt.apps.trips.context import TripSidebarContext
+from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.models import Trip
 
@@ -25,14 +25,14 @@ class NotebookListView(LoginRequiredMixin, View):
         trip = get_object_or_404(Trip, pk=trip_id, user=request.user)
         notebook_entries = trip.notebook_entries.all()
 
-        sidebar_context = TripSidebarContext(
+        trip_page_context = TripPageContext(
             trip=trip,
             active_page=TripPage.NOTES,
             notebook_entries=notebook_entries
         )
 
         context = {
-            'sidebar': sidebar_context,
+            'trip_page': trip_page_context,
             'notebook_entries': notebook_entries,
         }
 
@@ -66,15 +66,15 @@ class NotebookEditView(LoginRequiredMixin, View):
         form = NotebookEntryForm(instance=entry, trip=trip)
         notebook_entries = trip.notebook_entries.all()
 
-        sidebar_context = TripSidebarContext(
+        trip_page_context = TripPageContext(
             trip=trip,
             active_page=TripPage.NOTES,
             notebook_entries=notebook_entries,
-            current_entry_pk=entry_pk
+            notebook_entry_pk=entry_pk
         )
 
         context = {
-            'sidebar': sidebar_context,
+            'trip_page': trip_page_context,
             'form': form,
             'entry': entry,
         }
@@ -100,15 +100,15 @@ class NotebookEditView(LoginRequiredMixin, View):
 
         notebook_entries = trip.notebook_entries.all()
 
-        sidebar_context = TripSidebarContext(
+        trip_page_context = TripPageContext(
             trip=trip,
             active_page=TripPage.NOTES,
             notebook_entries=notebook_entries,
-            current_entry_pk=entry_pk
+            notebook_entry_pk=entry_pk
         )
 
         context = {
-            'sidebar': sidebar_context,
+            'trip_page': trip_page_context,
             'form': form,
             'entry': entry,
         }

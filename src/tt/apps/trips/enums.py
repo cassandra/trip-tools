@@ -4,13 +4,13 @@ from tt.apps.common.enums import LabeledEnum
 
 
 class TripPage(str, Enum):
-    """Enum for trip-related pages in the sidebar navigation."""
+    """Enum for trip-related pages."""
 
-    OVERVIEW = 'trip_overview'
-    ITINERARY = 'itinerary'
-    LOCATIONS = 'locations'
-    BOOKINGS = 'bookings'
-    NOTES = 'notes'
+    OVERVIEW   = 'trip_overview'
+    ITINERARY  = 'itinerary'
+    LOCATIONS  = 'locations'
+    BOOKINGS   = 'bookings'
+    NOTES      = 'notes'
 
 
 class TripStatus( LabeledEnum ):

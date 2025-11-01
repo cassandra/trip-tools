@@ -2,8 +2,8 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-from .models import Trip
-from .enums import TripPage, TripStatus
+from tt.apps.trips.models import Trip
+from tt.apps.trips.enums import TripPage, TripStatus
 
 
 User = get_user_model()
@@ -128,13 +128,13 @@ class TripHomeViewTests(TestCase):
         # Should return a 404 since user doesn't own the trip
         self.assertEqual(response.status_code, 404)
 
-    def test_trips_home_includes_sidebar_context(self):
-        """Test that trip home includes sidebar context with proper active_page."""
+    def test_trips_home_includes_trip_page_context(self):
+        """Test that trip home includes trip_page context with proper active_page."""
         self.client.force_login(self.user)
         response = self.client.get(self.trips_home_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('sidebar', response.context)
-        sidebar = response.context['sidebar']
-        self.assertEqual(sidebar.trip, self.trip)
-        self.assertEqual(sidebar.active_page, TripPage.OVERVIEW)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(trip_page.trip, self.trip)
+        self.assertEqual(trip_page.active_page, TripPage.OVERVIEW)

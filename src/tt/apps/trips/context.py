@@ -10,18 +10,18 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class TripSidebarContext:
+class TripPageContext:
     """
-    Encapsulates all data needed for trip sidebar navigation.
+    Encapsulates all data needed for trip trip_page navigation.
 
     Attributes:
         trip: The Trip instance being viewed
         active_page: Which page in the sidebar should be highlighted
         notebook_entries: QuerySet of notebook entries for sidebar list (Notes pages only)
-        current_entry_pk: PK of currently viewed notebook entry for highlighting (Notes editor only)
+        notebook_entry_pk: PK of currently viewed notebook entry for highlighting (Notes editor only)
     """
 
-    trip: 'Trip'
-    active_page: TripPage
-    notebook_entries: Optional[QuerySet] = None
-    current_entry_pk: Optional[int] = None
+    trip              : 'Trip'
+    active_page       : TripPage
+    notebook_entries  : Optional[QuerySet] = None
+    notebook_entry_pk  : Optional[int] = None

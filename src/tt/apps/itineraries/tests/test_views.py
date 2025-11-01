@@ -38,8 +38,8 @@ class ItineraryHomeViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'itineraries/pages/itinerary-home.html')
-        self.assertIn('sidebar', response.context)
-        self.assertEqual(response.context['sidebar'].trip, self.trip)
+        self.assertIn('trip_page', response.context)
+        self.assertEqual(response.context['trip_page'].trip, self.trip)
         self.assertContains(response, 'Test Trip')
 
     def test_itinerary_home_only_shows_user_trips(self):
@@ -81,13 +81,13 @@ class ItineraryHomeViewTests(TestCase):
         self.assertIn('trips/pages/trip_base.html', template_names)
         self.assertIn('pages/base.html', template_names)
 
-    def test_itinerary_home_includes_sidebar_context(self):
-        """Test that itinerary home includes sidebar context with proper active_page."""
+    def test_itinerary_home_includes_trip_page_context(self):
+        """Test that itinerary home includes trip_page context with proper active_page."""
         self.client.force_login(self.user)
         response = self.client.get(self.itinerary_home_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('sidebar', response.context)
-        sidebar = response.context['sidebar']
-        self.assertEqual(sidebar.trip, self.trip)
-        self.assertEqual(sidebar.active_page, TripPage.ITINERARY)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(trip_page.trip, self.trip)
+        self.assertEqual(trip_page.active_page, TripPage.ITINERARY)
