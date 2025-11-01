@@ -888,6 +888,41 @@ body {
   font-weight: 600;
 }
 
+/* Nested Sidebar Navigation */
+.app-sidebar-nav-nested {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.app-sidebar-nav-nested li {
+  padding: 0;
+}
+
+.app-sidebar-nav-nested a {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 1.5rem 0.65rem 3rem;
+  min-height: 44px;
+  color: var(--tertiary-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+  gap: 0.5rem;
+}
+
+.app-sidebar-nav-nested a:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--tertiary-color);
+  text-decoration: none;
+}
+
+.app-sidebar-nav-nested a.active {
+  background-color: rgba(0, 0, 0, 0.12);
+  font-weight: 600;
+}
+
 /* Horizontal Secondary Navigation */
 .secondary-nav-horizontal {
   position: fixed;

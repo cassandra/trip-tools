@@ -6,6 +6,8 @@ from django.shortcuts import render
 
 from tt.async_view import ModalView
 
+from .context import TripSidebarContext
+from .enums import TripPage
 from .forms import TripForm
 from .models import Trip
 
@@ -56,7 +58,12 @@ class TripHomeView(ModalView):
         request.view_parameters.trip_id = trip.pk
         request.view_parameters.to_session(request)
 
+        sidebar_context = TripSidebarContext(
+            trip=trip,
+            active_page=TripPage.OVERVIEW
+        )
+
         context = {
-            'trip': trip,
+            'sidebar': sidebar_context,
         }
         return render(request, 'trips/pages/trip-home.html', context)

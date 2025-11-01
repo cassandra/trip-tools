@@ -8,6 +8,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
 
+from tt.apps.trips.context import TripSidebarContext
+from tt.apps.trips.enums import TripPage
 from tt.apps.trips.models import Trip
 
 from .forms import NotebookEntryForm
@@ -21,11 +23,17 @@ class NotebookListView(LoginRequiredMixin, View):
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
         trip = get_object_or_404(Trip, pk=trip_id, user=request.user)
-        entries = trip.notebook_entries.all()
+        notebook_entries = trip.notebook_entries.all()
+
+        sidebar_context = TripSidebarContext(
+            trip=trip,
+            active_page=TripPage.NOTES,
+            notebook_entries=notebook_entries
+        )
 
         context = {
-            'trip': trip,
-            'entries': entries,
+            'sidebar': sidebar_context,
+            'notebook_entries': notebook_entries,
         }
 
         return render(request, 'notebook/pages/list.html', context)
@@ -56,9 +64,17 @@ class NotebookEditView(LoginRequiredMixin, View):
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
 
         form = NotebookEntryForm(instance=entry, trip=trip)
+        notebook_entries = trip.notebook_entries.all()
+
+        sidebar_context = TripSidebarContext(
+            trip=trip,
+            active_page=TripPage.NOTES,
+            notebook_entries=notebook_entries,
+            current_entry_pk=entry_pk
+        )
 
         context = {
-            'trip': trip,
+            'sidebar': sidebar_context,
             'form': form,
             'entry': entry,
         }
@@ -82,8 +98,17 @@ class NotebookEditView(LoginRequiredMixin, View):
 
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
 
+        notebook_entries = trip.notebook_entries.all()
+
+        sidebar_context = TripSidebarContext(
+            trip=trip,
+            active_page=TripPage.NOTES,
+            notebook_entries=notebook_entries,
+            current_entry_pk=entry_pk
+        )
+
         context = {
-            'trip': trip,
+            'sidebar': sidebar_context,
             'form': form,
             'entry': entry,
         }
