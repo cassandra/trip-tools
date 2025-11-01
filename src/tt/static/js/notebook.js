@@ -90,7 +90,23 @@
       }.bind(this),
       error: function(xhr, status, error) {
         console.error('Auto-save error:', error);
-        this.updateStatus('error', 'Network error');
+        var errorMessage = 'Network error';
+
+        // Try to parse error response from backend
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errorMessage = xhr.responseJSON.message;
+        } else if (xhr.responseText) {
+          try {
+            var response = JSON.parse(xhr.responseText);
+            if (response.message) {
+              errorMessage = response.message;
+            }
+          } catch (e) {
+            // Keep default 'Network error' message
+          }
+        }
+
+        this.updateStatus('error', errorMessage);
       }.bind(this),
       complete: function() {
         this.isSaving = false;
@@ -101,6 +117,14 @@
   NotebookEditor.prototype.updateStatus = function(status, message) {
     var statusText = '';
     var statusClass = 'text-light';
+
+    // Hide error alert for non-error statuses
+    if (status !== 'error') {
+      var $errorAlert = this.$container.find('.notebook-error-alert');
+      if ($errorAlert.is(':visible')) {
+        $errorAlert.slideUp();
+      }
+    }
 
     switch(status) {
       case 'unsaved':
@@ -123,6 +147,22 @@
       case 'error':
         statusText = 'Save failed: ' + (message || 'Unknown error');
         statusClass = 'text-danger';
+
+        // Show error in prominent alert banner
+        var $errorAlert = this.$container.find('.notebook-error-alert');
+        var $errorMessage = this.$container.find('.notebook-error-message');
+        if ($errorAlert.length && message) {
+          $errorMessage.text(message);
+          $errorAlert.slideDown();
+
+          // Auto-hide after 10 seconds for non-critical errors
+          // Keep visible for duplicate date errors (user must resolve)
+          if (!message.toLowerCase().includes('already exists')) {
+            setTimeout(function() {
+              $errorAlert.slideUp();
+            }, 10000);
+          }
+        }
         break;
     }
 

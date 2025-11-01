@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from tt.apps.trips.enums import TripStatus
+from tt.apps.trips.enums import TripPage, TripStatus
 from tt.apps.trips.models import Trip
 
 User = get_user_model()
@@ -38,8 +38,8 @@ class ItineraryHomeViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'itineraries/pages/itinerary-home.html')
-        self.assertIn('trip', response.context)
-        self.assertEqual(response.context['trip'], self.trip)
+        self.assertIn('trip_page', response.context)
+        self.assertEqual(response.context['trip_page'].trip, self.trip)
         self.assertContains(response, 'Test Trip')
 
     def test_itinerary_home_only_shows_user_trips(self):
@@ -80,3 +80,14 @@ class ItineraryHomeViewTests(TestCase):
         template_names = [t.name for t in response.templates]
         self.assertIn('trips/pages/trip_base.html', template_names)
         self.assertIn('pages/base.html', template_names)
+
+    def test_itinerary_home_includes_trip_page_context(self):
+        """Test that itinerary home includes trip_page context with proper active_page."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.itinerary_home_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(trip_page.trip, self.trip)
+        self.assertEqual(trip_page.active_page, TripPage.ITINERARY)

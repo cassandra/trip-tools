@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from tt.apps.trips.enums import TripStatus
+from tt.apps.trips.enums import TripPage, TripStatus
 from tt.apps.trips.models import Trip
 from tt.apps.notebook.models import NotebookEntry
 
@@ -41,8 +41,8 @@ class NotebookListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'notebook/pages/list.html')
-        self.assertIn('trip', response.context)
-        self.assertIn('entries', response.context)
+        self.assertIn('trip_page', response.context)
+        self.assertIn('notebook_entries', response.context)
 
     def test_list_only_shows_user_trips(self):
         """Test that users can only see notes for their own trips."""
@@ -87,11 +87,129 @@ class NotebookListViewTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.list_url)
 
-        entries = response.context['entries']
+        notebook_entries = response.context['notebook_entries']
+        entries = list(notebook_entries)
         self.assertEqual(len(entries), 3)
         self.assertEqual(entries[0].pk, entry1.pk)
         self.assertEqual(entries[1].pk, entry2.pk)
         self.assertEqual(entries[2].pk, entry3.pk)
+
+    def test_list_includes_trip_page_context(self):
+        """Test that notebook list includes trip_page context with active_page=NOTES."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(trip_page.active_page, TripPage.NOTES)
+
+    def test_list_includes_notebook_entries_context(self):
+        """Test that notebook list includes notebook_entries in context."""
+        # Create some entries
+        entry1 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 10),
+            text='First entry'
+        )
+        entry2 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Second entry'
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('notebook_entries', response.context)
+
+        notebook_entries = list(response.context['notebook_entries'])
+        self.assertEqual(len(notebook_entries), 2)
+        self.assertEqual(notebook_entries[0].pk, entry1.pk)
+        self.assertEqual(notebook_entries[1].pk, entry2.pk)
+
+    def test_list_notebook_entries_ordered_by_date(self):
+        """Test that notebook_entries are ordered by date."""
+        # Create entries out of order
+        entry2 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Second entry'
+        )
+        entry1 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 10),
+            text='First entry'
+        )
+        entry3 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 20),
+            text='Third entry'
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(self.list_url)
+
+        notebook_entries = list(response.context['notebook_entries'])
+        self.assertEqual(len(notebook_entries), 3)
+        # Verify chronological order
+        self.assertEqual(notebook_entries[0].pk, entry1.pk)
+        self.assertEqual(notebook_entries[1].pk, entry2.pk)
+        self.assertEqual(notebook_entries[2].pk, entry3.pk)
+
+    def test_list_notebook_entries_filtered_by_trip_and_user(self):
+        """Test that notebook_entries only include entries for the current trip and user."""
+        # Create entry for current trip
+        my_entry = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 10),
+            text='My entry'
+        )
+
+        # Create another user and their trip
+        other_user = User.objects.create_user(
+            email='other@example.com',
+            password='testpass123'
+        )
+        other_trip = Trip.objects.create(
+            user=other_user,
+            title='Other Trip',
+            trip_status=TripStatus.UPCOMING
+        )
+        NotebookEntry.objects.create(
+            user=other_user,
+            trip=other_trip,
+            date=date(2024, 1, 10),
+            text='Other entry'
+        )
+
+        # Create another trip for same user
+        my_other_trip = Trip.objects.create(
+            user=self.user,
+            title='My Other Trip',
+            trip_status=TripStatus.UPCOMING
+        )
+        NotebookEntry.objects.create(
+            user=self.user,
+            trip=my_other_trip,
+            date=date(2024, 1, 10),
+            text='My other trip entry'
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(self.list_url)
+
+        notebook_entries = list(response.context['notebook_entries'])
+        # Should only have the entry for the current trip and user
+        self.assertEqual(len(notebook_entries), 1)
+        self.assertEqual(notebook_entries[0].pk, my_entry.pk)
 
 
 class NotebookEditViewTests(TestCase):
@@ -173,7 +291,7 @@ class NotebookEditViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'notebook/pages/editor.html')
-        self.assertIn('trip', response.context)
+        self.assertIn('trip_page', response.context)
         self.assertIn('form', response.context)
         self.assertEqual(response.context['entry'], entry)
 
@@ -432,6 +550,225 @@ class NotebookEditViewTests(TestCase):
         entry.refresh_from_db()
         self.assertEqual(entry.text, 'Updated content')
         self.assertEqual(entry.date, date(2024, 1, 15))
+
+    def test_edit_includes_trip_page_context(self):
+        """Test that notebook edit includes trip_page context with active_page=NOTES."""
+        entry = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Test content'
+        )
+        self.client.force_login(self.user)
+        edit_url = reverse('notebook_edit', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+        response = self.client.get(edit_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(trip_page.active_page, TripPage.NOTES)
+
+    def test_edit_includes_notebook_entries_in_trip_page(self):
+        """Test that notebook edit includes notebook_entries in trip_page context."""
+        entry1 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 10),
+            text='First entry'
+        )
+        entry2 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Second entry'
+        )
+
+        self.client.force_login(self.user)
+        edit_url = reverse('notebook_edit', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry1.pk
+        })
+        response = self.client.get(edit_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+
+        notebook_entries = list(trip_page.notebook_entries)
+        self.assertEqual(len(notebook_entries), 2)
+        self.assertEqual(notebook_entries[0].pk, entry1.pk)
+        self.assertEqual(notebook_entries[1].pk, entry2.pk)
+
+    def test_edit_includes_notebook_entry_pk_in_trip_page(self):
+        """Test that notebook edit includes notebook_entry_pk in trip_page context."""
+        entry = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Test content'
+        )
+
+        self.client.force_login(self.user)
+        edit_url = reverse('notebook_edit', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+        response = self.client.get(edit_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('trip_page', response.context)
+        trip_page = response.context['trip_page']
+        self.assertEqual(int(trip_page.notebook_entry_pk), entry.pk)
+
+    def test_edit_notebook_entries_ordered_by_date(self):
+        """Test that notebook_entries in edit view are ordered by date."""
+        # Create entries out of order
+        entry2 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Second entry'
+        )
+        entry1 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 10),
+            text='First entry'
+        )
+        entry3 = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 20),
+            text='Third entry'
+        )
+
+        self.client.force_login(self.user)
+        edit_url = reverse('notebook_edit', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry2.pk
+        })
+        response = self.client.get(edit_url)
+
+        trip_page = response.context['trip_page']
+        notebook_entries = list(trip_page.notebook_entries)
+        self.assertEqual(len(notebook_entries), 3)
+        # Verify chronological order
+        self.assertEqual(notebook_entries[0].pk, entry1.pk)
+        self.assertEqual(notebook_entries[1].pk, entry2.pk)
+        self.assertEqual(notebook_entries[2].pk, entry3.pk)
+
+    def test_edit_notebook_entries_filtered_by_trip_and_user(self):
+        """Test that notebook_entries in edit view only include entries for the current trip and user."""
+        # Create entry for current trip
+        my_entry = NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 10),
+            text='My entry'
+        )
+
+        # Create another user and their trip
+        other_user = User.objects.create_user(
+            email='other@example.com',
+            password='testpass123'
+        )
+        other_trip = Trip.objects.create(
+            user=other_user,
+            title='Other Trip',
+            trip_status=TripStatus.UPCOMING
+        )
+        NotebookEntry.objects.create(
+            user=other_user,
+            trip=other_trip,
+            date=date(2024, 1, 10),
+            text='Other entry'
+        )
+
+        # Create another trip for same user
+        my_other_trip = Trip.objects.create(
+            user=self.user,
+            title='My Other Trip',
+            trip_status=TripStatus.UPCOMING
+        )
+        NotebookEntry.objects.create(
+            user=self.user,
+            trip=my_other_trip,
+            date=date(2024, 1, 10),
+            text='My other trip entry'
+        )
+
+        self.client.force_login(self.user)
+        edit_url = reverse('notebook_edit', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': my_entry.pk
+        })
+        response = self.client.get(edit_url)
+
+        trip_page = response.context['trip_page']
+        notebook_entries = list(trip_page.notebook_entries)
+        # Should only have the entry for the current trip and user
+        self.assertEqual(len(notebook_entries), 1)
+        self.assertEqual(notebook_entries[0].pk, my_entry.pk)
+
+    def test_new_entry_uses_current_date_when_no_entries_exist(self):
+        """Test that new entry defaults to current date when no entries exist."""
+        from datetime import date as date_class
+
+        self.client.force_login(self.user)
+        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+
+        # Verify no entries exist
+        self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 0)
+
+        response = self.client.get(new_url)
+        self.assertEqual(response.status_code, 302)
+
+        # Verify entry was created with today's date
+        entry = NotebookEntry.objects.get(trip=self.trip)
+        self.assertEqual(entry.date, date_class.today())
+
+    def test_new_entry_uses_max_date_plus_one_when_entries_exist(self):
+        """Test that new entry defaults to max(date) + 1 day when entries exist."""
+        from datetime import timedelta
+
+        # Create existing entries
+        NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 10),
+            text='First entry'
+        )
+        NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Second entry'
+        )
+        max_existing_date = date(2024, 1, 20)
+        NotebookEntry.objects.create(
+            user=self.user,
+            trip=self.trip,
+            date=max_existing_date,
+            text='Third entry'
+        )
+
+        self.client.force_login(self.user)
+        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+
+        # Verify 3 entries exist
+        self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 3)
+
+        response = self.client.get(new_url)
+        self.assertEqual(response.status_code, 302)
+
+        # Verify entry was created with max date + 1 day
+        self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 4)
+        new_entry = NotebookEntry.objects.filter(trip=self.trip).order_by('-date').first()
+        expected_date = max_existing_date + timedelta(days=1)
+        self.assertEqual(new_entry.date, expected_date)
 
 
 class NotebookAutoSaveViewTests(TestCase):

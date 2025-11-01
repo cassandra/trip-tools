@@ -1,13 +1,16 @@
 import json
 import logging
-from datetime import date as date_class, datetime
+from datetime import date as date_class, datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError, transaction
+from django.db.models import Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
 
+from tt.apps.trips.context import TripPageContext
+from tt.apps.trips.enums import TripPage
 from tt.apps.trips.models import Trip
 
 from .forms import NotebookEntryForm
@@ -21,11 +24,17 @@ class NotebookListView(LoginRequiredMixin, View):
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
         trip = get_object_or_404(Trip, pk=trip_id, user=request.user)
-        entries = trip.notebook_entries.all()
+        notebook_entries = trip.notebook_entries.all()
+
+        trip_page_context = TripPageContext(
+            trip=trip,
+            active_page=TripPage.NOTES,
+            notebook_entries=notebook_entries
+        )
 
         context = {
-            'trip': trip,
-            'entries': entries,
+            'trip_page': trip_page_context,
+            'notebook_entries': notebook_entries,
         }
 
         return render(request, 'notebook/pages/list.html', context)
@@ -47,18 +56,35 @@ class NotebookEditView(LoginRequiredMixin, View):
             )
         else:
             # Creating new entry - create it immediately so auto-save works
+            # Determine the default date:
+            # - If entries exist, use max(date) + 1 day
+            # - If no entries exist, use current date
+            max_date = trip.notebook_entries.aggregate(Max('date'))['date__max']
+            if max_date:
+                default_date = max_date + timedelta(days=1)
+            else:
+                default_date = date_class.today()
+
             entry = NotebookEntry.objects.create(
                 user=request.user,
                 trip=trip,
-                date=date_class.today(),
+                date=default_date,
                 text=''
             )
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
 
         form = NotebookEntryForm(instance=entry, trip=trip)
+        notebook_entries = trip.notebook_entries.all()
+
+        trip_page_context = TripPageContext(
+            trip=trip,
+            active_page=TripPage.NOTES,
+            notebook_entries=notebook_entries,
+            notebook_entry_pk=entry_pk
+        )
 
         context = {
-            'trip': trip,
+            'trip_page': trip_page_context,
             'form': form,
             'entry': entry,
         }
@@ -82,8 +108,17 @@ class NotebookEditView(LoginRequiredMixin, View):
 
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
 
+        notebook_entries = trip.notebook_entries.all()
+
+        trip_page_context = TripPageContext(
+            trip=trip,
+            active_page=TripPage.NOTES,
+            notebook_entries=notebook_entries,
+            notebook_entry_pk=entry_pk
+        )
+
         context = {
-            'trip': trip,
+            'trip_page': trip_page_context,
             'form': form,
             'entry': entry,
         }
