@@ -1,25 +1,8 @@
-{% extends "pages/base.html" %}
-{% load static %}
+{% extends "pages/main_base_sidebar.html" %}
 
-{% block content %}
-{% include "panes/secondary-page-header.html" %}
+{% block sidebar_class %}app-sidebar-secondary{% endblock %}
 
-<!-- Sidebar Navigation -->
-<nav class="app-sidebar app-sidebar-secondary collapse d-md-block" id="appSidebar">
-  {% block sidebar_content %}
-  <ul class="app-sidebar-nav">
-    <li>
-      <a href="#" class="active">
-        <span>Default</span>
-      </a>
-    </li>
-  </ul>
-  {% endblock %}
-</nav>
-
-<!-- Main Content -->
-<main class="app-main">
-  {% block main_content %}
-  {% endblock %}
-</main>
+{% block main_content %}
+{% block secondary_content %}
+{% endblock %}
 {% endblock %}

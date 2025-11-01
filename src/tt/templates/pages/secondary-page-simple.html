@@ -1,12 +1,6 @@
-{% extends "pages/base.html" %}
-{% load static %}
+{% extends "pages/main_base.html" %}
 
-{% block content %}
-{% include "panes/secondary-page-header.html" %}
-
-<!-- Main Content -->
-<main class="app-main-simple">
-  {% block main_content %}
-  {% endblock %}
-</main>
+{% block main_content %}
+{% block secondary_content %}
+{% endblock %}
 {% endblock %}

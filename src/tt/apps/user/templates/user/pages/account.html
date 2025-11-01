@@ -1,20 +1,16 @@
 {% extends "pages/secondary-page-horizontal-nav.html" %}
 {% load static %}
 
-{% block extra_actions %}
-{# Hide New button on account pages #}
-{% endblock %}
-
 {% block horizontal_nav_items %}
 <li class="nav-item">
   <a class="nav-link active" href="{% url 'user_account' %}">Profile</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link" href="#">Preferences</a>
+  <a class="nav-link" href="#">Preferyences</a>
 </li>
 {% endblock %}
 
-{% block main_content %}
+{% block secondary_content %}
 <div class="container-fluid px-0">
   <h1 class="h2 mb-4">Account Settings</h1>
 

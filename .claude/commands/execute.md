@@ -17,6 +17,7 @@ Execute complete strategic-to-delivery workflow with intelligent coordination:
 
 2. **Phase 1: Strategic Planning** - Execute planning workflow:
    - Read GitHub issue #$1 completely using `gh issue view $1`
+   - Make sure to read all existing issue comments
    - Identify information gaps and clarification needs
    - Analyze work complexity and breakdown strategy
    - Determine if multi-phase or multi-issue approach needed

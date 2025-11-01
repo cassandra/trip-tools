@@ -731,11 +731,13 @@ body {
 
 /* Main Content Area */
 .app-main {
-  margin-left: var(--app-sidebar-width);
-  margin-top: var(--app-topbar-height);
   padding: 2rem;
+  margin-top: var(--app-topbar-height);
   min-height: calc(100vh - var(--app-topbar-height));
   transition: margin-left 0.3s ease;
+}
+.app-main-sidebar {
+  margin-left: var(--app-sidebar-width);
 }
 
 /* Sidebar Navigation */
@@ -933,9 +935,9 @@ body {
 
 /* Main Content Areas for Secondary Pages */
 .app-main-horizontal-nav {
-  margin-top: calc(var(--app-topbar-height) + var(--secondary-nav-height));
+  margin-top: var(--secondary-nav-height));
   padding: 2rem;
-  min-height: calc(100vh - var(--app-topbar-height) - var(--secondary-nav-height));
+  min-height: calc(100vh - var(--secondary-nav-height));
 }
 
 .app-main-simple {
@@ -947,7 +949,7 @@ body {
 /* Mobile Responsive for Secondary Pages */
 @media (max-width: 768px) {
   .app-main-horizontal-nav {
-    margin-top: calc(var(--app-topbar-height) + var(--secondary-nav-height));
+    margin-top: var(--secondary-nav-height);
   }
 
   .secondary-nav-horizontal .nav-tabs .nav-link {

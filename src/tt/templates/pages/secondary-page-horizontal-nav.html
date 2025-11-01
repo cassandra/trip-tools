@@ -1,8 +1,6 @@
-{% extends "pages/base.html" %}
-{% load static %}
+{% extends "pages/main_base.html" %}
 
-{% block content %}
-{% include "panes/secondary-page-header.html" %}
+{% block main_content %}
 
 <!-- Horizontal Secondary Navigation -->
 <div class="secondary-nav-horizontal">
@@ -19,7 +17,7 @@
 
 <!-- Main Content -->
 <main class="app-main-horizontal-nav">
-  {% block main_content %}
+  {% block secondary_content %}
   {% endblock %}
 </main>
 {% endblock %}
