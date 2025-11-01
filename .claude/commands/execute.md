@@ -139,10 +139,10 @@ Execute complete strategic-to-delivery workflow with intelligent coordination:
    - Only proceed to Phase 7 after user approval
 
 9. **Phase 7: PR Creation** - Automated pull request generation (only after user approval):
-   - Use `/commit` command to create a properly formatted commit with issue context
-   - Use `/pr` command to create pull request with standard template
+   - **Mandatory**: Use `/commit` command to create a properly formatted commit with issue context
+   - **Mandatory**: Use `/pr` command to create pull request with standard template
    - This ensures consistent formatting and automatic issue linking
-   - The `/pr` command handles `Closes #$1` automatically
+   - The `/pr` command handles `Closes #$1` automatically via the template content
    - Example: `/pr bugfix/205-monitoring 205`
 
 10. **Phase 8: Post-Creation Validation** - Verify successful completion:

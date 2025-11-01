@@ -1,64 +1,8 @@
-{% extends "pages/secondary-page-sidebar.html" %}
+{% extends "trips/pages/trip_base.html" %}
 {% load static %}
 {% load icons %}
 
-{% block main_extra_actions %}
-<div class="dropdown mr-2">
-  <button class="btn btn-outline-light dropdown-toggle" type="button" id="newDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    + New
-  </button>
-  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="newDropdown">
-    <a class="dropdown-item" href="#">New Location</a>
-    <a class="dropdown-item" href="#">New Booking</a>
-    <a class="dropdown-item" href="#">New Note</a>
-    <div class="dropdown-divider"></div>
-    <a class="dropdown-item" href="{% url 'trips_create' %}" data-async="modal">New Trip</a>
-  </div>
-</div>
-{% endblock %}
-
-{% block sidebar_content %}
-<ul class="app-sidebar-nav">
-  <li>
-    <a href="{% url 'trips_home' trip_id=trip.pk %}" class="active" aria-current="page">
-      {% icon "home" size="sm" %}
-      <span>Trip Overview</span>
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'itineraries_home' trip_pk=trip.pk %}">
-      {% icon "clock" size="sm" %}
-      <span>Itinerary</span>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      {% icon "map-pin" size="sm" %}
-      <span>Locations</span>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      {% icon "layers" size="sm" %}
-      <span>Bookings</span>
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'notebook_list' trip_id=trip.pk %}">
-      {% icon "edit" size="sm" %}
-      <span>Notes</span>
-    </a>
-  </li>
-</ul>
-{% endblock %}
-
-{% block secondary_content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <h1 class="h2 mb-1">{{ trip.title }}</h1>
-    <span class="badge badge-info">{{ trip.trip_status.label }}</span>
-  </div>
-</div>
+{% block trip_content %}
 
 {% if trip.description %}
 <div class="mb-4">

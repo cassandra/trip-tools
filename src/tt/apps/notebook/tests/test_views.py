@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from tt.apps.trips.enums import TripStatus
 from tt.apps.trips.models import Trip
-from .models import NotebookEntry
+from tt.apps.notebook.models import NotebookEntry
 
 User = get_user_model()
 

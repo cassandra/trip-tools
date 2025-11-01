@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 
 
 class NotebookEntryManager(models.Manager):
-    """Manager for NotebookEntry model."""
 
     def for_user(self, user) -> models.QuerySet:
         return self.filter(user=user)

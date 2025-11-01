@@ -1,7 +1,3 @@
-"""
-Views for the notebook app.
-"""
-
 import json
 import logging
 from datetime import date as date_class, datetime
@@ -57,7 +53,6 @@ class NotebookEditView(LoginRequiredMixin, View):
                 date=date_class.today(),
                 text=''
             )
-            # Redirect to edit URL with the new entry's PK
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
 
         form = NotebookEntryForm(instance=entry, trip=trip)
@@ -85,7 +80,6 @@ class NotebookEditView(LoginRequiredMixin, View):
             with transaction.atomic():
                 form.save()
 
-            # Redirect to the same edit view
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
 
         context = {
@@ -116,7 +110,6 @@ class NotebookAutoSaveView(LoginRequiredMixin, View):
             user=request.user
         )
 
-        # Parse JSON body
         try:
             data = json.loads(request.body)
             text = data.get('text', '')
@@ -128,7 +121,6 @@ class NotebookAutoSaveView(LoginRequiredMixin, View):
                 status=400
             )
 
-        # Validate and parse date if provided
         if date_str:
             try:
                 new_date = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -139,7 +131,6 @@ class NotebookAutoSaveView(LoginRequiredMixin, View):
                     status=400
                 )
 
-            # Check for date conflicts
             if new_date != entry.date:
                 existing = NotebookEntry.objects.filter(
                     trip=trip,
@@ -154,8 +145,6 @@ class NotebookAutoSaveView(LoginRequiredMixin, View):
                         },
                         status=400
                     )
-
-        # Save entry
         try:
             with transaction.atomic():
                 entry.text = text

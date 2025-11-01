@@ -1,7 +1,3 @@
-"""
-Forms for the notebook app.
-"""
-
 from django import forms
 
 from .models import NotebookEntry
@@ -18,13 +14,11 @@ class NotebookEntryForm(forms.ModelForm):
         if not date or not self.trip:
             return date
 
-        # Check for existing entry with this date for this trip
         existing = NotebookEntry.objects.filter(
             trip=self.trip,
             date=date
         )
 
-        # Exclude current instance if editing
         if self.instance.pk:
             existing = existing.exclude(pk=self.instance.pk)
 
@@ -41,11 +35,12 @@ class NotebookEntryForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(attrs={
                 'type': 'date',
-                'class': 'form-control',
+                'class': 'form-control notebook-date',
+                'style': 'max-width: 200px;',
             }),
             'text': forms.Textarea(attrs={
                 'rows': 20,
-                'class': 'form-control',
+                'class': 'form-control notebook-textarea',
                 'placeholder': 'Enter your notes here...',
             }),
         }
