@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 
 from tt.apps.common.model_fields import LabeledEnumField
 from tt.apps.locations.models import Location
@@ -14,12 +13,6 @@ class Itinerary(models.Model):
     A day-by-day itinerary for a trip.
     """
     objects = managers.ItineraryManager()
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete = models.CASCADE,
-        related_name = 'itineraries',
-    )
 
     trip = models.ForeignKey(
         'trips.Trip',

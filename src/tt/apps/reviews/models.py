@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 
 from tt.apps.locations.models import Location
 from tt.apps.trips.models import Trip
@@ -14,11 +13,6 @@ class Review(models.Model):
     """
     objects = managers.ReviewManager()
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete = models.CASCADE,
-        related_name = 'reviews',
-    )
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,

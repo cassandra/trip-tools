@@ -5,12 +5,12 @@ class ItineraryManager(models.Manager):
     """Manager for Itinerary model."""
 
     def for_user(self, user):
-        """Get all itineraries for a specific user."""
-        return self.filter(user=user)
+        """Get all itineraries for trips where user is a member."""
+        return self.filter( trip__members__user = user ).distinct()
 
     def for_trip(self, trip):
         """Get all itineraries for a specific trip."""
-        return self.filter(trip=trip)
+        return self.filter( trip = trip )
 
 
 class ItineraryItemManager(models.Manager):

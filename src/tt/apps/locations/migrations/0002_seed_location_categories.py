@@ -113,7 +113,7 @@ def reverse_seed(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("locations", "0002_locationcategory_color_code_and_more"),
+        ("locations", "0001_initial"),
     ]
 
     operations = [

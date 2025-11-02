@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 
 from tt.apps.trips.models import Trip
 
@@ -12,12 +11,6 @@ class NotebookEntry(models.Model):
     Internal-facing scratchpad for capturing experiences in the moment.
     """
     objects = managers.NotebookEntryManager()
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete = models.CASCADE,
-        related_name = 'notebook_entries',
-    )
 
     trip = models.ForeignKey(
         Trip,

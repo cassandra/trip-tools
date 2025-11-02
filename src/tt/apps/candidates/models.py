@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 
 from tt.apps.attribute.models import AttributeModel
@@ -24,11 +23,6 @@ class CandidateGroup(models.Model):
     """
     objects = managers.CandidateGroupManager()
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete = models.CASCADE,
-        related_name = 'candidate_groups',
-    )
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,

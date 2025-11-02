@@ -53,7 +53,3 @@ class ContactInfo(models.Model):
         verbose_name = 'Contact Info'
         verbose_name_plural = 'Contact Info'
         ordering = ['-is_primary', 'contact_type', 'created_datetime']
-        indexes = [
-            models.Index( fields=['content_type', 'object_id'] ),
-            models.Index( fields=['contact_type']),
-        ]

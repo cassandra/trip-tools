@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 
 from tt.apps.common.model_fields import LabeledEnumField
@@ -85,11 +84,6 @@ class Location( GeoPointModelMixin, models.Model ):
     """
     objects = managers.LocationManager()
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete = models.CASCADE,
-        related_name = 'locations',
-    )
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,
@@ -150,9 +144,6 @@ class Location( GeoPointModelMixin, models.Model ):
         verbose_name = 'Location'
         verbose_name_plural = 'Locations'
         ordering = ['title']
-        indexes = [
-            models.Index( fields = ['user', 'trip'] ),
-        ]
 
 
 class LocationNote(models.Model):

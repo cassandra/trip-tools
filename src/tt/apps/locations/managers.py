@@ -16,13 +16,14 @@ class LocationSubCategoryManager(models.Manager):
 class LocationManager(models.Manager):
 
     def for_user(self, user):
-        return self.filter(user=user)
+        """Get all locations for trips where user is a member."""
+        return self.filter( trip__members__user = user ).distinct()
 
     def for_trip(self, trip):
-        return self.filter(trip=trip)
+        return self.filter( trip = trip )
 
     def by_category(self, category):
-        return self.filter(category=category)
+        return self.filter( category = category )
 
 
 class LocationNoteManager(models.Manager):
