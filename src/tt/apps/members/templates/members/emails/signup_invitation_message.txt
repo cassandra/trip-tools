@@ -1,0 +1,16 @@
+{% extends "notify/emails/base_email_message.txt" %}
+{% load common_tags %}
+{% block content %}Welcome to Trip Tools!
+
+{{ invited_by_name }} has invited you to collaborate on a trip:
+
+Trip: {{ trip_title }}
+{% if trip_description %}
+Description: {{ trip_description }}
+{% endif %}
+
+To create your account and access the trip, click the link below:
+
+{{ signup_url }}
+
+This link will remain valid and can be used to sign in anytime.{% endblock %}

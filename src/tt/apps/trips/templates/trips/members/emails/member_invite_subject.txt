@@ -1,0 +1,1 @@
+You've been invited to {{ trip_title }} on Trip Tools

@@ -1,0 +1,172 @@
+{% extends "trips/pages/trip_base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block trip_content %}
+<!-- Members Section Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0">Trip Members</h2>
+  {% if member_list_data.can_invite %}
+  <a href="{% url 'members_invite' trip_id=trip_page.trip.pk %}" class="btn btn-primary" data-async="modal">
+    {% icon "plus" size="sm" css_class="tt-icon-left" %}
+    Invite Member
+  </a>
+  {% endif %}
+</div>
+
+{% if member_list_data.has_members %}
+<!-- Members List -->
+<div class="bg-white border rounded p-3">
+  {% for member_data in member_list_data.members %}
+  <div class="member-item{% if not forloop.last %} border-bottom pb-3 mb-3{% endif %}">
+    <div class="d-flex align-items-start justify-content-between">
+      <div class="flex-grow-1">
+        <div class="font-weight-bold">
+          {{ member_data.user_display_name }}
+          {% if member_data.is_current_user %}
+          <span class="badge badge-light badge-sm ml-1">You</span>
+          {% endif %}
+        </div>
+        <div class="text-muted small">{{ member_data.user_email }}</div>
+      </div>
+      <div class="d-flex align-items-center">
+        <span class="badge badge-{{ member_data.permission_badge_class }} badge-pill px-3 py-2 mr-2">
+          {{ member_data.permission_label }}
+        </span>
+        {% if member_data.show_actions_dropdown %}
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                  data-toggle="dropdown" aria-label="Actions for {{ member_data.user_display_name }}"
+                  {% if member_data.actions_disabled %}disabled{% endif %}>
+            Actions
+          </button>
+          <div class="dropdown-menu dropdown-menu-right">
+            {% if member_data.available_permission_changes %}
+            <h6 class="dropdown-header">Change Permission To:</h6>
+            {% for change_option in member_data.available_permission_changes %}
+            <a class="dropdown-item"
+               href="{% url 'members_change_permission' trip_id=trip_page.trip.pk member_id=member_data.member_id %}"
+               data-async="action"
+               data-permission="{{ change_option.permission_value }}">
+              {{ change_option.permission_label }}
+            </a>
+            {% endfor %}
+            <div class="dropdown-divider"></div>
+            {% endif %}
+            {% if member_data.can_remove %}
+            <a class="dropdown-item text-danger"
+               href="{% url 'members_remove' trip_id=trip_page.trip.pk member_id=member_data.member_id %}"
+               data-async="modal">
+              Remove from Trip
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% elif member_data.is_current_user and member_list_data.can_modify %}
+        <button class="btn btn-sm btn-outline-secondary" disabled
+                title="Cannot modify your own permissions">
+          Actions
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if member_data.show_details_section %}
+    <!-- Secondary Details Section -->
+    {% if member_data.is_current_user %}
+    <!-- Always expanded for current user if they're owner -->
+    <div class="mt-3 p-3 bg-light border-left border-primary rounded">
+      <dl class="row mb-0 small">
+        <dt class="col-sm-3">Added By</dt>
+        <dd class="col-sm-9">{{ member_data.added_by_display }}</dd>
+        <dt class="col-sm-3">Date Added</dt>
+        <dd class="col-sm-9">{{ member_data.added_datetime_display }}</dd>
+      </dl>
+    </div>
+    {% else %}
+    <!-- Collapsible for other members -->
+    <button class="btn btn-link btn-sm p-0 mt-2 text-muted" type="button"
+            data-toggle="collapse" data-target="#details-member-{{ member_data.member_id }}"
+            aria-expanded="false" aria-controls="details-member-{{ member_data.member_id }}">
+      <small>Show Details</small>
+    </button>
+    <div class="collapse mt-2" id="details-member-{{ member_data.member_id }}">
+      <div class="p-3 bg-light border-left border-primary rounded">
+        <dl class="row mb-0 small">
+          <dt class="col-sm-3">Added By</dt>
+          <dd class="col-sm-9">{{ member_data.added_by_display }}</dd>
+          <dt class="col-sm-3">Date Added</dt>
+          <dd class="col-sm-9">{{ member_data.added_datetime_display }}</dd>
+        </dl>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Permission Level Information -->
+<div class="mt-4">
+  <h3 class="h6 mb-3">Permission Levels</h3>
+  <div class="row">
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">
+            <span class="badge badge-primary badge-pill px-3 py-2">Owner</span>
+          </h6>
+          <p class="card-text small text-muted">Full control including deletion and sharing</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">
+            <span class="badge badge-secondary badge-pill px-3 py-2">Admin</span>
+          </h6>
+          <p class="card-text small text-muted">Can edit and manage most aspects</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">
+            <span class="badge badge-info badge-pill px-3 py-2">Editor</span>
+          </h6>
+          <p class="card-text small text-muted">Can edit trip content</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">
+            <span class="badge badge-secondary badge-pill px-3 py-2">Viewer</span>
+          </h6>
+          <p class="card-text small text-muted">Can view trip content</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+  {% icon "layers" size="xl" color="muted" aria_label="No members icon" %}
+  <h3 class="h5 mt-3">No Members Yet</h3>
+  <p class="text-muted mb-3">Invite people to collaborate on this trip!</p>
+  {% if member_list_data.can_invite %}
+  <a href="{% url 'members_invite' trip_id=trip_page.trip.pk %}"
+     class="btn btn-primary btn-lg" data-async="modal">
+    {% icon "plus" size="sm" css_class="tt-icon-left" %}
+    Invite Your First Member
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "notify/emails/base_email_message.txt" %}
+{% load common_tags %}
+{% block content %}Trip Invitation
+
+{{ invited_by_name }} has invited you to collaborate on a trip:
+
+Trip: {{ trip_title }}
+{% if trip_description %}
+Description: {{ trip_description }}
+{% endif %}
+
+To accept this invitation and view the trip, click the link below:
+
+{{ acceptance_url }}
+
+This invitation link will remain valid until you accept it.{% endblock %}

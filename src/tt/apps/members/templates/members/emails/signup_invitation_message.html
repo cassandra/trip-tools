@@ -1,0 +1,22 @@
+{% extends "notify/emails/base_email_message.html" %}
+{% load common_tags %}
+{% block title %}Welcome to Trip Tools!{% endblock %}
+{% block content %}
+<p>
+  <strong>{{ invited_by_name }}</strong> has invited you to collaborate on a trip:
+</p>
+<p>
+  <strong>Trip:</strong> {{ trip_title }}<br>
+  {% if trip_description %}
+  <strong>Description:</strong> {{ trip_description }}
+  {% endif %}
+</p>
+<p>
+  <a href="{{ signup_url }}" style="display: inline-block; padding: 10px 20px; background-color: #177072; color: white; text-decoration: none; border-radius: 5px;">
+    Create Account & Join Trip
+  </a>
+</p>
+<p>
+  This link will remain valid and can be used to sign in anytime.
+</p>
+{% endblock %}

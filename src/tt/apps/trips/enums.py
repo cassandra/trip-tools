@@ -11,6 +11,7 @@ class TripPage(str, Enum):
     LOCATIONS  = 'locations'
     BOOKINGS   = 'bookings'
     NOTES      = 'notes'
+    MEMBERS    = 'members'
 
 
 class TripPermissionLevel( LabeledEnum ):

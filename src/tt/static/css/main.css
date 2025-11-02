@@ -992,3 +992,24 @@ body {
     font-size: 0.9rem;
   }
 }
+
+/* Trip Permission Level Background Colors - Reusable across all trip contexts */
+.bg-owner {
+    background-color: var(--primary-color) !important;
+    color: var(--on-primary-color) !important;
+}
+
+.bg-admin {
+    background-color: var(--secondary-color) !important;
+    color: var(--on-secondary-color) !important;
+}
+
+.bg-editor {
+    background-color: var(--info-color) !important;
+    color: var(--on-primary-color) !important;
+}
+
+.bg-viewer {
+    background-color: #6c757d !important;
+    color: #ffffff !important;
+}

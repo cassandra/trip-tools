@@ -1,0 +1,23 @@
+{% extends "notify/emails/base_email_message.txt" %}
+{% load common_tags %}
+{% block content %}Trip Invitation
+
+{{ inviter_name }} has invited you to collaborate on their trip:
+
+Trip: {{ trip_title }}
+Your Permission Level: {{ permission_label }}
+
+{% if is_existing_user %}To view the trip, click here:
+
+{{ trip_url }}
+
+You can access this trip anytime from your Trip Tools dashboard.{% else %}To get started, please sign up for Trip Tools:
+
+{{ signup_url }}
+
+Once you sign up, you'll have {{ permission_label }} access to this trip.{% endif %}
+
+Questions? Reply to this email and we'll be happy to help.
+
+Best,
+The Trip Tools Team{% endblock %}
