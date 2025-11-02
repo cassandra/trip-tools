@@ -6,7 +6,9 @@
       "Bash(python manage.py test:*)",
       "Bash(make lint:*)",
       "Bash(grep:*)",
-      "Bash(python src/manage.py test:*)"
+      "Bash(python src/manage.py test:*)",
+      "Bash(gh issue view:*)",
+      "Bash(python -m py_compile:*)"
     ],
     "deny": [],
     "ask": []
