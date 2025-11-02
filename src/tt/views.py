@@ -206,9 +206,10 @@ class StartView( View ):
         form = TripForm( request.POST )
 
         if form.is_valid():
-            trip = form.save( commit = False )
-            trip.user = request.user
-            trip.save()
+            Trip.objects.create_with_owner(
+                owner = request.user,
+                **form.cleaned_data
+            )
 
             redirect_url = reverse( 'home' )
             return HttpResponseRedirect( redirect_url )

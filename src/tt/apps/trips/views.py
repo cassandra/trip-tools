@@ -1,6 +1,5 @@
 import logging
 
-from django.db import transaction
 from django.http import Http404
 from django.shortcuts import render
 
@@ -10,7 +9,7 @@ from .context import TripPageContext
 from .enums import TripPage, TripPermissionLevel
 from .forms import TripForm
 from .mixins import TripPermissionMixin
-from .models import Trip, TripMember
+from .models import Trip
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +30,10 @@ class TripCreateModalView(ModalView):
         form = TripForm( request.POST )
 
         if form.is_valid():
-            with transaction.atomic():
-                trip = form.save( commit = False )
-                trip.save()
-
-                TripMember.objects.create(
-                    trip = trip,
-                    user = request.user,
-                    permission_level = TripPermissionLevel.OWNER,
-                    added_by = request.user,
-                )
+            Trip.objects.create_with_owner(
+                owner = request.user,
+                **form.cleaned_data
+            )
 
             return self.refresh_response( request )
 
