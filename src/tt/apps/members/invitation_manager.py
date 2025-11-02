@@ -41,9 +41,13 @@ class MemberInvitationManager( Singleton ):
                        trip              : Trip,
                        email             : str,
                        permission_level  : TripPermissionLevel,
-                       invited_by_user   : User ) -> tuple[TripMember, bool]:
+                       invited_by_user   : User,
+                       send_email        : bool = True ) -> tuple[TripMember, bool]:
         """
-        Invite a member to a trip. Creates user if needed and sends invitation email.
+        Invite a member to a trip. Creates user if needed and optionally sends invitation email.
+
+        Args:
+            send_email: If True, sends invitation email. Default is True.
 
         Returns:
             tuple: (TripMember, bool) - The member and whether user was created
@@ -82,20 +86,21 @@ class MemberInvitationManager( Singleton ):
                 member.added_by = invited_by_user
                 member.save()
 
-        if user_created or not user.email_verified:
-            self._send_signup_invitation_email(
-                request = request,
-                trip = trip,
-                user = user,
-                invited_by_user = invited_by_user,
-            )
-        else:
-            self._send_invitation_email(
-                request = request,
-                trip = trip,
-                user = user,
-                invited_by_user = invited_by_user,
-            )
+        if send_email:
+            if user_created or not user.email_verified:
+                self._send_signup_invitation_email(
+                    request = request,
+                    trip = trip,
+                    user = user,
+                    invited_by_user = invited_by_user,
+                )
+            else:
+                self._send_invitation_email(
+                    request = request,
+                    trip = trip,
+                    user = user,
+                    invited_by_user = invited_by_user,
+                )
 
         return member, user_created
 

@@ -26,6 +26,14 @@ class MemberInviteForm( forms.Form ):
             'class': 'form-control',
         })
     )
+    send_email = forms.BooleanField(
+        required = False,
+        initial = True,
+        widget = forms.CheckboxInput( attrs = {
+            'class': 'form-check-input',
+            'checked': 'checked',
+        })
+    )
 
     def __init__( self, *args, trip = None, **kwargs ):
         super().__init__( *args, **kwargs )
@@ -86,13 +94,6 @@ class MemberPermissionForm( forms.Form ):
 
 
 class MemberRemoveForm( forms.Form ):
-    confirm = forms.BooleanField(
-        required = True,
-        widget = forms.CheckboxInput( attrs = {
-            'class': 'form-check-input',
-        })
-    )
-
     def __init__( self, *args, member = None, is_self_removal = False, **kwargs ):
         super().__init__( *args, **kwargs )
         self.member = member

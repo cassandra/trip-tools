@@ -32,12 +32,25 @@
       {{ form.permission_level.errors.0 }}
     </div>
   {% endif %}
-  <div class="form-text">
-    <strong>Owner:</strong> Full control including deletion<br>
-    <strong>Admin:</strong> Can manage members and edit content<br>
-    <strong>Editor:</strong> Can edit trip content<br>
-    <strong>Viewer:</strong> Can view trip content only
+</div>
+
+<div class="mb-3">
+  <div class="form-check">
+    {{ form.send_email }}
+    <label class="form-check-label" for="{{ form.send_email.id_for_label }}">
+      Send email invitation
+    </label>
   </div>
+  {% if form.send_email.errors %}
+    <div class="invalid-feedback d-block">
+      {{ form.send_email.errors.0 }}
+    </div>
+  {% endif %}
+</div>
+
+<div class="mb-3">
+  <h6 class="small text-muted mb-2">Permission Levels:</h6>
+  {% include "members/snippets/permission_levels_explanation.html" %}
 </div>
 
 {% if form.non_field_errors %}
@@ -48,7 +61,7 @@
 {% endblock %}
 
 {% block action_right %}
-<button type="submit" class="btn btn-primary">SEND INVITATION</button>
+<button type="submit" class="btn btn-primary">INVITE MEMBER</button>
 {% endblock %}
 
 {% block postamble %}

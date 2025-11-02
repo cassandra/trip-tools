@@ -1,0 +1,68 @@
+{% load static %}
+{% load icons %}
+
+<div class="list-group-item" id="member-{{ member.pk }}">
+  <div class="d-flex w-100 justify-content-between align-items-start">
+    <div class="flex-grow-1">
+      <div class="d-flex align-items-center mb-2">
+        <h5 class="mb-0 me-3">
+          {% if member.user.get_full_name %}
+            {{ member.user.get_full_name }}
+          {% else %}
+            {{ member.user.email }}
+          {% endif %}
+        </h5>
+        <span class="badge bg-{{ member.permission_level.name|lower }}">
+          {{ member.permission_level.label }}
+        </span>
+        {% if member.user == request.user %}
+        <span class="badge bg-light text-dark ms-2">You</span>
+        {% endif %}
+      </div>
+
+      {% if member.user.email != member.user.get_full_name %}
+      <p class="mb-1 text-muted">{{ member.user.email }}</p>
+      {% endif %}
+
+      {% if is_owner and member.added_by %}
+      <button class="btn btn-sm btn-link p-0 text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ member.pk }}" aria-expanded="false" aria-controls="details-{{ member.pk }}">
+        Show Details
+      </button>
+      <div class="collapse mt-2" id="details-{{ member.pk }}">
+        <div class="small text-muted">
+          <strong>Added by:</strong> {{ member.added_by.email }}<br>
+          <strong>Date Added:</strong> {{ member.added_datetime|date:"F j, Y \a\t g:i A" }}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="d-flex align-items-start">
+      {% if member.can_modify %}
+      <form method="post" action="{% url 'members_change_permission' trip_id=trip_page.trip.pk member_id=member.pk %}" class="me-2" data-async="swap" data-async-target="#member-{{ member.pk }}">
+        {% csrf_token %}
+        <select name="permission_level" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Change permission level">
+          <option value="{{ member.permission_level.name|lower }}" selected>{{ member.permission_level.label }}</option>
+          {% for level_name, level_label in permission_levels %}
+            {% if level_name != member.permission_level.name|lower %}
+            <option value="{{ level_name }}">{{ level_label }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </form>
+      <a href="{% url 'members_remove' trip_id=trip_page.trip.pk member_id=member.pk %}"
+         class="btn btn-sm btn-outline-danger"
+         data-async="modal"
+         title="Remove Member">
+        {% icon "delete" %}
+      </a>
+      {% elif member.user == request.user %}
+      <a href="{% url 'members_remove' trip_id=trip_page.trip.pk member_id=member.pk %}"
+         class="btn btn-sm btn-outline-secondary"
+         data-async="modal">
+        Leave Trip
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>

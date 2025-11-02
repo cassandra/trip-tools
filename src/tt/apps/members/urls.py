@@ -16,7 +16,7 @@ urlpatterns = [
     ),
     re_path(
         r'^trip/(?P<trip_id>\d+)/members/(?P<member_id>\d+)/permission$',
-        views.MemberPermissionModalView.as_view(),
+        views.MemberPermissionChangeView.as_view(),
         name = 'members_change_permission'
     ),
     re_path(
