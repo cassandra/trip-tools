@@ -3,7 +3,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from tt.apps.trips.enums import TripPage, TripStatus
-from tt.apps.trips.models import Trip
+from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
 User = get_user_model()
 
@@ -17,7 +17,7 @@ class ItineraryHomeViewTests(TestCase):
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = Trip.objects.create(
+        self.trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip',
             description='Test Description',
@@ -48,7 +48,7 @@ class ItineraryHomeViewTests(TestCase):
             email='other@example.com',
             password='testpass123'
         )
-        other_trip = Trip.objects.create(
+        other_trip = TripSyntheticData.create_test_trip(
             user=other_user,
             title='Other User Trip',
             trip_status=TripStatus.UPCOMING

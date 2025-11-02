@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 
 from tt.apps.trips.models import Trip
 from tt.apps.trips.enums import TripPage, TripStatus
+from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
 
 User = get_user_model()
@@ -46,7 +47,7 @@ class TripCreateModalViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Verify trip was created
-        trip = Trip.objects.get(user=self.user)
+        trip = Trip.objects.owned_by(self.user).get()
         self.assertEqual(trip.title, 'New Test Trip')
         self.assertEqual(trip.description, 'A test trip description')
         self.assertEqual(trip.trip_status, TripStatus.UPCOMING)
@@ -76,7 +77,7 @@ class TripHomeViewTests(TestCase):
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = Trip.objects.create(
+        self.trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip',
             description='Test Description',
@@ -115,7 +116,7 @@ class TripHomeViewTests(TestCase):
             email='other@example.com',
             password='testpass123'
         )
-        other_trip = Trip.objects.create(
+        other_trip = TripSyntheticData.create_test_trip(
             user=other_user,
             title='Other User Trip',
             trip_status=TripStatus.UPCOMING
@@ -138,3 +139,79 @@ class TripHomeViewTests(TestCase):
         trip_page = response.context['trip_page']
         self.assertEqual(trip_page.trip, self.trip)
         self.assertEqual(trip_page.active_page, TripPage.OVERVIEW)
+
+    def test_non_member_gets_404_not_403(self):
+        """Non-members get 404 (not 403) to avoid information disclosure."""
+        other_user = User.objects.create_user(
+            email='other@test.com',
+            password='testpass123'
+        )
+        self.client.force_login(other_user)
+
+        response = self.client.get(self.trips_home_url)
+
+        # Should be 404, not 403, to avoid revealing trip existence
+        self.assertEqual(response.status_code, 404)
+
+    def test_admin_can_view_trip(self):
+        """User with ADMIN permission can view trip."""
+        from tt.apps.trips.models import TripMember
+        from tt.apps.trips.enums import TripPermissionLevel
+
+        admin_user = User.objects.create_user(
+            email='admin@test.com',
+            password='testpass123'
+        )
+        TripMember.objects.create(
+            trip=self.trip,
+            user=admin_user,
+            permission_level=TripPermissionLevel.ADMIN,
+            added_by=self.user
+        )
+
+        self.client.force_login(admin_user)
+        response = self.client.get(self.trips_home_url)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_editor_can_view_trip(self):
+        """User with EDITOR permission can view trip."""
+        from tt.apps.trips.models import TripMember
+        from tt.apps.trips.enums import TripPermissionLevel
+
+        editor_user = User.objects.create_user(
+            email='editor@test.com',
+            password='testpass123'
+        )
+        TripMember.objects.create(
+            trip=self.trip,
+            user=editor_user,
+            permission_level=TripPermissionLevel.EDITOR,
+            added_by=self.user
+        )
+
+        self.client.force_login(editor_user)
+        response = self.client.get(self.trips_home_url)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_viewer_can_view_trip(self):
+        """User with VIEWER permission can view trip."""
+        from tt.apps.trips.models import TripMember
+        from tt.apps.trips.enums import TripPermissionLevel
+
+        viewer_user = User.objects.create_user(
+            email='viewer@test.com',
+            password='testpass123'
+        )
+        TripMember.objects.create(
+            trip=self.trip,
+            user=viewer_user,
+            permission_level=TripPermissionLevel.VIEWER,
+            added_by=self.user
+        )
+
+        self.client.force_login(viewer_user)
+        response = self.client.get(self.trips_home_url)
+
+        self.assertEqual(response.status_code, 200)

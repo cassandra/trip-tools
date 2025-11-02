@@ -2,8 +2,8 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-from tt.apps.trips.models import Trip
 from tt.apps.trips.enums import TripStatus
+from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
 
 User = get_user_model()
@@ -38,7 +38,7 @@ class DashboardViewTests(TestCase):
         self.client.force_login(self.user)
 
         # Create an upcoming trip
-        Trip.objects.create(
+        TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip',
             description='Test Description',
@@ -56,12 +56,12 @@ class DashboardViewTests(TestCase):
         self.client.force_login(self.user)
 
         # Create trips with different statuses
-        Trip.objects.create(
+        TripSyntheticData.create_test_trip(
             user=self.user,
             title='Upcoming Trip',
             trip_status=TripStatus.UPCOMING
         )
-        Trip.objects.create(
+        TripSyntheticData.create_test_trip(
             user=self.user,
             title='Past Trip',
             trip_status=TripStatus.PAST
@@ -80,14 +80,14 @@ class DashboardViewTests(TestCase):
             email='other@example.com',
             password='testpass123'
         )
-        Trip.objects.create(
+        TripSyntheticData.create_test_trip(
             user=other_user,
             title='Other User Trip',
             trip_status=TripStatus.UPCOMING
         )
 
         # Create trip for test user
-        Trip.objects.create(
+        TripSyntheticData.create_test_trip(
             user=self.user,
             title='My Trip',
             trip_status=TripStatus.UPCOMING

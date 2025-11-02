@@ -10,13 +10,14 @@ if TYPE_CHECKING:
 class NotebookEntryManager(models.Manager):
 
     def for_user(self, user) -> models.QuerySet:
-        return self.filter(user=user)
+        """Get all notebook entries for trips where user is a member."""
+        return self.filter( trip__members__user = user ).distinct()
 
     def for_trip(self, trip) -> models.QuerySet:
-        return self.filter(trip=trip)
+        return self.filter( trip = trip )
 
     def for_date(self, trip, date: date_type) -> Optional['NotebookEntry']:
         try:
-            return self.get(trip=trip, date=date)
+            return self.get( trip = trip, date = date )
         except self.model.DoesNotExist:
             return None

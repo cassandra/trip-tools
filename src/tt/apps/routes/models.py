@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 
 from tt.apps.geo.models import GeoPointModelMixin
 
@@ -12,12 +11,6 @@ class Route(models.Model):
     """
     objects = managers.RouteManager()
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete = models.CASCADE,
-        related_name = 'routes',
-    )
-
     trip = models.ForeignKey(
         'trips.Trip',
         on_delete = models.CASCADE,
@@ -25,7 +18,7 @@ class Route(models.Model):
     )
 
     notes = models.TextField( blank = True )
-    
+
     created_datetime = models.DateTimeField( auto_now_add = True )
     modified_datetime = models.DateTimeField( auto_now = True )
 

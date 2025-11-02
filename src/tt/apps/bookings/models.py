@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 
 from tt.apps.attribute.models import AttributeModel
 from tt.apps.common.model_fields import LabeledEnumField
@@ -14,11 +13,6 @@ class BookingData(models.Model):
     """
     objects = managers.BookingManager()
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete = models.CASCADE,
-        related_name = 'bookings',
-    )
     trip = models.ForeignKey(
         'trips.Trip',
         on_delete = models.CASCADE,

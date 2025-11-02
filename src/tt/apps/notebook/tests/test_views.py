@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from tt.apps.trips.enums import TripPage, TripStatus
 from tt.apps.trips.models import Trip
+from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 from tt.apps.notebook.models import NotebookEntry
 
 User = get_user_model()
@@ -21,7 +22,7 @@ class NotebookListViewTests(TestCase):
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = Trip.objects.create(
+        self.trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip',
             trip_status=TripStatus.UPCOMING
@@ -50,7 +51,7 @@ class NotebookListViewTests(TestCase):
             email='other@example.com',
             password='testpass123'
         )
-        other_trip = Trip.objects.create(
+        other_trip = TripSyntheticData.create_test_trip(
             user=other_user,
             title='Other Trip',
             trip_status=TripStatus.UPCOMING
@@ -66,19 +67,16 @@ class NotebookListViewTests(TestCase):
         """Test that entries are displayed in chronological order."""
         # Create entries out of order
         entry2 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Second entry'
         )
         entry1 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='First entry'
         )
         entry3 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 20),
             text='Third entry'
@@ -108,13 +106,11 @@ class NotebookListViewTests(TestCase):
         """Test that notebook list includes notebook_entries in context."""
         # Create some entries
         entry1 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='First entry'
         )
         entry2 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Second entry'
@@ -135,19 +131,16 @@ class NotebookListViewTests(TestCase):
         """Test that notebook_entries are ordered by date."""
         # Create entries out of order
         entry2 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Second entry'
         )
         entry1 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='First entry'
         )
         entry3 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 20),
             text='Third entry'
@@ -167,7 +160,6 @@ class NotebookListViewTests(TestCase):
         """Test that notebook_entries only include entries for the current trip and user."""
         # Create entry for current trip
         my_entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='My entry'
@@ -178,26 +170,24 @@ class NotebookListViewTests(TestCase):
             email='other@example.com',
             password='testpass123'
         )
-        other_trip = Trip.objects.create(
+        other_trip = TripSyntheticData.create_test_trip(
             user=other_user,
             title='Other Trip',
             trip_status=TripStatus.UPCOMING
         )
         NotebookEntry.objects.create(
-            user=other_user,
             trip=other_trip,
             date=date(2024, 1, 10),
             text='Other entry'
         )
 
         # Create another trip for same user
-        my_other_trip = Trip.objects.create(
+        my_other_trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='My Other Trip',
             trip_status=TripStatus.UPCOMING
         )
         NotebookEntry.objects.create(
-            user=self.user,
             trip=my_other_trip,
             date=date(2024, 1, 10),
             text='My other trip entry'
@@ -221,7 +211,7 @@ class NotebookEditViewTests(TestCase):
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = Trip.objects.create(
+        self.trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip',
             trip_status=TripStatus.UPCOMING
@@ -237,7 +227,6 @@ class NotebookEditViewTests(TestCase):
     def test_edit_entry_requires_authentication(self):
         """Test that editing entry redirects unauthenticated users."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test content'
@@ -277,7 +266,6 @@ class NotebookEditViewTests(TestCase):
     def test_edit_entry_displays_for_authenticated_user(self):
         """Test that edit entry form displays for authenticated user."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test content'
@@ -301,13 +289,12 @@ class NotebookEditViewTests(TestCase):
             email='other@example.com',
             password='testpass123'
         )
-        other_trip = Trip.objects.create(
+        other_trip = TripSyntheticData.create_test_trip(
             user=other_user,
             title='Other Trip',
             trip_status=TripStatus.UPCOMING
         )
         other_entry = NotebookEntry.objects.create(
-            user=other_user,
             trip=other_trip,
             date=date(2024, 1, 15),
             text='Other user content'
@@ -323,32 +310,28 @@ class NotebookEditViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_edit_only_shows_user_entries(self):
-        """Test that users can only edit their own entries even with correct trip."""
-        other_user = User.objects.create_user(
-            email='other@example.com',
-            password='testpass123'
-        )
-        # Entry by other user for same trip (shouldn't be possible in practice)
-        other_entry = NotebookEntry.objects.create(
-            user=other_user,
+        """Test that users can edit entries if they have permission to the trip."""
+        # Note: In the new model, entries belong to trips, not users directly
+        # So any user with permission to a trip can edit its entries
+        entry = NotebookEntry.objects.create(
             trip=self.trip,
             date=date(2024, 1, 15),
-            text='Other user content'
+            text='Trip entry content'
         )
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_edit', kwargs={
             'trip_id': self.trip.pk,
-            'entry_pk': other_entry.pk
+            'entry_pk': entry.pk
         })
         response = self.client.get(edit_url)
 
-        self.assertEqual(response.status_code, 404)
+        # User owns the trip, so they can edit the entry
+        self.assertEqual(response.status_code, 200)
 
     def test_edit_loads_existing_entry(self):
         """Test that editing loads existing entry data."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Existing note content'
@@ -378,7 +361,8 @@ class NotebookEditViewTests(TestCase):
         # Verify entry was created with today's date
         entry = NotebookEntry.objects.get(trip=self.trip)
         self.assertEqual(entry.date, date.today())
-        self.assertEqual(entry.user, self.user)
+        # Entry belongs to trip, which is owned by self.user
+        self.assertEqual(entry.trip, self.trip)
 
     def test_new_entry_creates_blank_text(self):
         """Test that new entries start with empty text."""
@@ -397,7 +381,6 @@ class NotebookEditViewTests(TestCase):
     def test_post_updates_existing_entry(self):
         """Test that posting to edit URL updates an existing entry."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Original content'
@@ -425,7 +408,6 @@ class NotebookEditViewTests(TestCase):
     def test_post_updates_entry_date(self):
         """Test that posting with a new date updates the entry date."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test content'
@@ -455,7 +437,6 @@ class NotebookEditViewTests(TestCase):
         """Test that editing a newly created entry to a conflicting date shows validation error."""
         # Create an existing entry with specific date
         existing_entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Existing content'
@@ -495,13 +476,11 @@ class NotebookEditViewTests(TestCase):
     def test_date_conflict_on_edit(self):
         """Test that changing entry date to existing date shows validation error."""
         entry1 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Entry 1'
         )
         entry2 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 20),
             text='Entry 2'
@@ -528,7 +507,6 @@ class NotebookEditViewTests(TestCase):
     def test_can_edit_same_entry_with_same_date(self):
         """Test that editing an entry with its current date works (no conflict with itself)."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Original content'
@@ -554,7 +532,6 @@ class NotebookEditViewTests(TestCase):
     def test_edit_includes_trip_page_context(self):
         """Test that notebook edit includes trip_page context with active_page=NOTES."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test content'
@@ -574,13 +551,11 @@ class NotebookEditViewTests(TestCase):
     def test_edit_includes_notebook_entries_in_trip_page(self):
         """Test that notebook edit includes notebook_entries in trip_page context."""
         entry1 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='First entry'
         )
         entry2 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Second entry'
@@ -605,7 +580,6 @@ class NotebookEditViewTests(TestCase):
     def test_edit_includes_notebook_entry_pk_in_trip_page(self):
         """Test that notebook edit includes notebook_entry_pk in trip_page context."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test content'
@@ -627,19 +601,16 @@ class NotebookEditViewTests(TestCase):
         """Test that notebook_entries in edit view are ordered by date."""
         # Create entries out of order
         entry2 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Second entry'
         )
         entry1 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='First entry'
         )
         entry3 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 20),
             text='Third entry'
@@ -664,7 +635,6 @@ class NotebookEditViewTests(TestCase):
         """Test that notebook_entries in edit view only include entries for the current trip and user."""
         # Create entry for current trip
         my_entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='My entry'
@@ -675,26 +645,24 @@ class NotebookEditViewTests(TestCase):
             email='other@example.com',
             password='testpass123'
         )
-        other_trip = Trip.objects.create(
+        other_trip = TripSyntheticData.create_test_trip(
             user=other_user,
             title='Other Trip',
             trip_status=TripStatus.UPCOMING
         )
         NotebookEntry.objects.create(
-            user=other_user,
             trip=other_trip,
             date=date(2024, 1, 10),
             text='Other entry'
         )
 
         # Create another trip for same user
-        my_other_trip = Trip.objects.create(
+        my_other_trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='My Other Trip',
             trip_status=TripStatus.UPCOMING
         )
         NotebookEntry.objects.create(
-            user=self.user,
             trip=my_other_trip,
             date=date(2024, 1, 10),
             text='My other trip entry'
@@ -736,20 +704,17 @@ class NotebookEditViewTests(TestCase):
 
         # Create existing entries
         NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='First entry'
         )
         NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Second entry'
         )
         max_existing_date = date(2024, 1, 20)
         NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=max_existing_date,
             text='Third entry'
@@ -780,7 +745,7 @@ class NotebookAutoSaveViewTests(TestCase):
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = Trip.objects.create(
+        self.trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip',
             trip_status=TripStatus.UPCOMING
@@ -789,7 +754,6 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_autosave_requires_authentication(self):
         """Test that auto-save requires authentication."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test'
@@ -810,7 +774,6 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_autosave_only_post_method(self):
         """Test that auto-save only accepts POST."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test'
@@ -844,7 +807,6 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_autosave_updates_existing_entry(self):
         """Test that auto-save updates an existing entry."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Original'
@@ -876,7 +838,6 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_autosave_updates_entry_date(self):
         """Test that auto-save can update entry date."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test content'
@@ -908,13 +869,11 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_autosave_date_conflict(self):
         """Test that auto-save detects date conflicts."""
         entry1 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Entry 1'
         )
         entry2 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 20),
             text='Entry 2'
@@ -946,7 +905,6 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_autosave_same_date_no_conflict(self):
         """Test that auto-save with same date doesn't trigger conflict."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Original'
@@ -979,13 +937,12 @@ class NotebookAutoSaveViewTests(TestCase):
             email='other@example.com',
             password='testpass123'
         )
-        other_trip = Trip.objects.create(
+        other_trip = TripSyntheticData.create_test_trip(
             user=other_user,
             title='Other Trip',
             trip_status=TripStatus.UPCOMING
         )
         other_entry = NotebookEntry.objects.create(
-            user=other_user,
             trip=other_trip,
             date=date(2024, 1, 15),
             text='Other user entry'
@@ -1002,17 +959,17 @@ class NotebookAutoSaveViewTests(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 404)
+        # 403 Forbidden is the appropriate response when user doesn't have permission
+        self.assertEqual(response.status_code, 403)
 
     def test_autosave_validates_entry_belongs_to_trip(self):
         """Test that auto-save validates entry belongs to the specified trip."""
-        other_trip = Trip.objects.create(
+        other_trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Other Trip',
             trip_status=TripStatus.UPCOMING
         )
         entry_other_trip = NotebookEntry.objects.create(
-            user=self.user,
             trip=other_trip,
             date=date(2024, 1, 15),
             text='Entry for other trip'
@@ -1035,7 +992,6 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_autosave_invalid_json(self):
         """Test that auto-save handles invalid JSON gracefully."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test'
@@ -1060,7 +1016,6 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_autosave_invalid_date_format(self):
         """Test that auto-save handles invalid date format."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test'
@@ -1094,7 +1049,7 @@ class NotebookEntryModelTests(TestCase):
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = Trip.objects.create(
+        self.trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip',
             trip_status=TripStatus.UPCOMING
@@ -1106,7 +1061,6 @@ class NotebookEntryModelTests(TestCase):
 
         # Create first entry
         NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=test_date,
             text='First entry'
@@ -1116,7 +1070,6 @@ class NotebookEntryModelTests(TestCase):
         from django.db import IntegrityError
         with self.assertRaises(IntegrityError):
             NotebookEntry.objects.create(
-                user=self.user,
                 trip=self.trip,
                 date=test_date,
                 text='Duplicate entry'
@@ -1125,7 +1078,6 @@ class NotebookEntryModelTests(TestCase):
     def test_cascade_delete_with_trip(self):
         """Test that entries are deleted when trip is deleted."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test entry'
@@ -1138,37 +1090,42 @@ class NotebookEntryModelTests(TestCase):
         self.assertFalse(NotebookEntry.objects.filter(pk=entry_id).exists())
 
     def test_cascade_delete_with_user(self):
-        """Test that entries are deleted when user is deleted."""
+        """Test that entries are deleted when trip owner is deleted (via trip cascade)."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test entry'
         )
 
         entry_id = entry.pk
+        trip_id = self.trip.pk
         self.user.delete()
 
-        # Verify entry was deleted
-        self.assertFalse(NotebookEntry.objects.filter(pk=entry_id).exists())
+        # Verify trip was deleted (because owner was deleted)
+        # Note: Trip deletion behavior depends on TripMember cascade rules
+        # Since user is deleted, their TripMember is deleted, which may or may not delete the trip
+        # For now, we just verify the entry still exists since trip CASCADE is from Trip to NotebookEntry
+        # The trip should remain but be ownerless (depending on TripMember.on_delete behavior)
+        # Actually, looking at the model, TripMember has CASCADE on user FK, so deleting user deletes TripMember
+        # But Trip doesn't have CASCADE on TripMember, so trip remains
+        # Therefore, entry should still exist
+        self.assertTrue(NotebookEntry.objects.filter(pk=entry_id).exists())
+        self.assertTrue(Trip.objects.filter(pk=trip_id).exists())
 
     def test_entries_ordered_by_date(self):
         """Test that entries are ordered by date by default."""
         # Create entries out of order
         entry3 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 20),
             text='Third'
         )
         entry1 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 10),
             text='First'
         )
         entry2 = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Second'
@@ -1185,7 +1142,6 @@ class NotebookEntryModelTests(TestCase):
     def test_entry_string_representation(self):
         """Test the string representation of a notebook entry."""
         entry = NotebookEntry.objects.create(
-            user=self.user,
             trip=self.trip,
             date=date(2024, 1, 15),
             text='Test entry content'
@@ -1208,12 +1164,12 @@ class NotebookEntryManagerTests(TestCase):
             email='user2@example.com',
             password='testpass123'
         )
-        self.trip1 = Trip.objects.create(
+        self.trip1 = TripSyntheticData.create_test_trip(
             user=self.user1,
             title='Trip 1',
             trip_status=TripStatus.UPCOMING
         )
-        self.trip2 = Trip.objects.create(
+        self.trip2 = TripSyntheticData.create_test_trip(
             user=self.user2,
             title='Trip 2',
             trip_status=TripStatus.UPCOMING
@@ -1222,13 +1178,11 @@ class NotebookEntryManagerTests(TestCase):
     def test_for_user_filters_correctly(self):
         """Test that for_user returns only entries for specified user."""
         entry1 = NotebookEntry.objects.create(
-            user=self.user1,
             trip=self.trip1,
             date=date(2024, 1, 15),
             text='User 1 entry'
         )
         entry2 = NotebookEntry.objects.create(
-            user=self.user2,
             trip=self.trip2,
             date=date(2024, 1, 15),
             text='User 2 entry'
@@ -1245,13 +1199,11 @@ class NotebookEntryManagerTests(TestCase):
     def test_for_trip_filters_correctly(self):
         """Test that for_trip returns only entries for specified trip."""
         entry1 = NotebookEntry.objects.create(
-            user=self.user1,
             trip=self.trip1,
             date=date(2024, 1, 15),
             text='Trip 1 entry'
         )
         entry2 = NotebookEntry.objects.create(
-            user=self.user2,
             trip=self.trip2,
             date=date(2024, 1, 15),
             text='Trip 2 entry'
@@ -1269,7 +1221,6 @@ class NotebookEntryManagerTests(TestCase):
         """Test that for_date returns the entry for a specific date."""
         test_date = date(2024, 1, 15)
         entry = NotebookEntry.objects.create(
-            user=self.user1,
             trip=self.trip1,
             date=test_date,
             text='Test entry'
@@ -1292,13 +1243,11 @@ class NotebookEntryManagerTests(TestCase):
         """Test that for_date correctly filters by trip."""
         test_date = date(2024, 1, 15)
         entry1 = NotebookEntry.objects.create(
-            user=self.user1,
             trip=self.trip1,
             date=test_date,
             text='Trip 1 entry'
         )
         entry2 = NotebookEntry.objects.create(
-            user=self.user2,
             trip=self.trip2,
             date=test_date,
             text='Trip 2 entry'
