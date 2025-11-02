@@ -144,9 +144,6 @@ class Location( GeoPointModelMixin, models.Model ):
         verbose_name = 'Location'
         verbose_name_plural = 'Locations'
         ordering = ['title']
-        indexes = [
-            models.Index( fields = ['trip'] ),
-        ]
 
 
 class LocationNote(models.Model):

@@ -101,15 +101,6 @@ class Migration(migrations.Migration):
             options={
                 "verbose_name": "Trip Member",
                 "verbose_name_plural": "Trip Members",
-                "indexes": [
-                    models.Index(
-                        fields=["user", "trip"], name="trips_tripm_user_id_aee072_idx"
-                    ),
-                    models.Index(
-                        fields=["trip", "permission_level"],
-                        name="trips_tripm_trip_id_e1162e_idx",
-                    ),
-                ],
                 "unique_together": {("trip", "user")},
             },
         ),

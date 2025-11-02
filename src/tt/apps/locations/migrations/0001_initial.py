@@ -236,8 +236,4 @@ class Migration(migrations.Migration):
                 to="locations.locationsubcategory",
             ),
         ),
-        migrations.AddIndex(
-            model_name="location",
-            index=models.Index(fields=["trip"], name="locations_l_trip_id_73e97a_idx"),
-        ),
     ]

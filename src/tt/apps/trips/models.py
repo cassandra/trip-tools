@@ -90,10 +90,6 @@ class TripMember(models.Model):
         verbose_name = 'Trip Member'
         verbose_name_plural = 'Trip Members'
         unique_together = [ ('trip', 'user') ]
-        indexes = [
-            models.Index( fields = ['user', 'trip'] ),
-            models.Index( fields = ['trip', 'permission_level'] ),
-        ]
 
     def __str__(self):
         return f'{self.user.email} - {self.trip.title} ({self.permission_level})'
