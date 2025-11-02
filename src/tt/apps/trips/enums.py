@@ -16,7 +16,9 @@ class TripPage(str, Enum):
 class TripPermissionLevel( LabeledEnum ):
     """
     Permission levels for trip sharing.
-    Ordered from highest to lowest permission.
+
+    Ordered from highest to lowest permission, though enforcement
+    is defined by TripPermissionMixin:PERMISSION_HIERARCHY.
     """
     OWNER   = ( 'Owner', 'Full control including deletion and sharing' )
     ADMIN   = ( 'Admin', 'Can edit and manage most aspects' )
