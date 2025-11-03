@@ -1,0 +1,43 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load static %}
+
+{% block modal_dialog_id %}member-remove-modal{% endblock %}
+
+{% block title_text %}{% if is_self_removal %}Leave Trip{% else %}Remove Member{% endif %}{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'members_remove' trip_id=trip.pk member_id=member.pk %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+{% if is_self_removal %}
+<div class="alert alert-warning">
+  <strong>You will lose access to this trip and cannot undo this action.</strong>
+</div>
+<p>
+  If you want to rejoin later, the trip owner or an admin will need to invite you again.
+</p>
+{% else %}
+<div class="alert alert-warning">
+  <strong>Are you sure you want to remove {{ member.user.email }}?</strong>
+</div>
+<p>
+  This member will immediately lose access to the trip. They can be re-invited later if needed.
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {{ form.non_field_errors.0 }}
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-danger">{% if is_self_removal %}LEAVE TRIP{% else %}REMOVE MEMBER{% endif %}</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

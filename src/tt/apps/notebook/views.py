@@ -5,14 +5,13 @@ from datetime import date as date_class, datetime, timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Max
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
 
 from tt.apps.trips.context import TripPageContext
-from tt.apps.trips.enums import TripPage, TripPermissionLevel
-from tt.apps.trips.mixins import TripPermissionMixin
-from tt.apps.trips.models import Trip
+from tt.apps.trips.enums import TripPage
+from tt.apps.trips.mixins import TripViewMixin
 
 from .forms import NotebookEntryForm
 from .models import NotebookEntry
@@ -20,14 +19,14 @@ from .models import NotebookEntry
 logger = logging.getLogger(__name__)
 
 
-class NotebookListView( LoginRequiredMixin, TripPermissionMixin, View ):
+class NotebookListView( LoginRequiredMixin, TripViewMixin, View ):
     """Show all notebook entries for a trip (chronological order)."""
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_viewer( request_member )
+        trip = request_member.trip
 
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.VIEWER ):
-            raise Http404( 'Trip not found' )
         notebook_entries = trip.notebook_entries.all()
 
         trip_page_context = TripPageContext(
@@ -35,23 +34,20 @@ class NotebookListView( LoginRequiredMixin, TripPermissionMixin, View ):
             active_page=TripPage.NOTES,
             notebook_entries=notebook_entries
         )
-
         context = {
             'trip_page': trip_page_context,
             'notebook_entries': notebook_entries,
         }
-
         return render(request, 'notebook/pages/list.html', context)
 
 
-class NotebookEditView( LoginRequiredMixin, TripPermissionMixin, View ):
+class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
     """Edit or create a notebook entry."""
 
     def get(self, request, trip_id: int, entry_pk: int = None, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.EDITOR ):
-            raise Http404( 'Trip not found' )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_editor( request_member )
+        trip = request_member.trip
 
         if entry_pk:
             entry = get_object_or_404(
@@ -92,10 +88,9 @@ class NotebookEditView( LoginRequiredMixin, TripPermissionMixin, View ):
         return render(request, 'notebook/pages/editor.html', context)
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.EDITOR ):
-            raise Http404( 'Trip not found' )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_editor( request_member )
+        trip = request_member.trip
 
         entry = get_object_or_404(
             NotebookEntry,
@@ -129,7 +124,7 @@ class NotebookEditView( LoginRequiredMixin, TripPermissionMixin, View ):
         return render(request, 'notebook/pages/editor.html', context, status=400)
 
 
-class NotebookAutoSaveView( LoginRequiredMixin, TripPermissionMixin, View ):
+class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
     """AJAX endpoint for auto-saving notebook entries."""
 
     def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
@@ -139,13 +134,9 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripPermissionMixin, View ):
         )
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.EDITOR ):
-            return JsonResponse(
-                { 'status': 'error', 'message': 'Permission denied' },
-                status = 403,
-            )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_editor( request_member )
+        trip = request_member.trip
 
         entry = get_object_or_404(
             NotebookEntry,

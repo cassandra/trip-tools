@@ -1,0 +1,69 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load static %}
+
+{% block modal_dialog_id %}member-invite-modal{% endblock %}
+
+{% block title_text %}Invite Member{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'members_invite' trip_id=trip.pk %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+<div class="mb-3">
+  <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+  {{ form.email }}
+  {% if form.email.errors %}
+    <div class="invalid-feedback d-block">
+      {{ form.email.errors.0 }}
+    </div>
+  {% endif %}
+  <div class="form-text">
+    Enter the email address of the person you want to invite. If they don't have an account, one will be created for them.
+  </div>
+</div>
+
+<div class="mb-3">
+  <label for="{{ form.permission_level.id_for_label }}" class="form-label">Permission Level</label>
+  {{ form.permission_level }}
+  {% if form.permission_level.errors %}
+    <div class="invalid-feedback d-block">
+      {{ form.permission_level.errors.0 }}
+    </div>
+  {% endif %}
+</div>
+
+<div class="mb-3">
+  <div class="form-check">
+    {{ form.send_email }}
+    <label class="form-check-label" for="{{ form.send_email.id_for_label }}">
+      Send email invitation
+    </label>
+  </div>
+  {% if form.send_email.errors %}
+    <div class="invalid-feedback d-block">
+      {{ form.send_email.errors.0 }}
+    </div>
+  {% endif %}
+</div>
+
+<div class="mb-3">
+  <h6 class="small text-muted mb-2">Permission Levels:</h6>
+  {% include "members/snippets/permission_levels_explanation.html" %}
+</div>
+
+{% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {{ form.non_field_errors.0 }}
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-primary">ADD MEMBER</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

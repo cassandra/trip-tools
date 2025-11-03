@@ -1,0 +1,1 @@
+Trip Tools: You've been added to {{ trip_title }}

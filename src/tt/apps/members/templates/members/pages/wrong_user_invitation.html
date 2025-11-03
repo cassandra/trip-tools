@@ -1,0 +1,36 @@
+{% extends "pages/interstitial_page.html" %}
+
+{% block title %}Wrong Account{% endblock %}
+
+{% block interstitial_content %}
+<div class="text-center">
+  <h1 class="text-danger mb-4">Wrong Account</h1>
+  <p class="lead">This invitation is for a different account.</p>
+  <div class="alert alert-warning text-left mb-4" style="max-width: 500px; margin: 0 auto;">
+    <p class="mb-2">
+      <strong>Invitation sent to:</strong><br>
+      {{ invited_email }}
+    </p>
+    <p class="mb-0">
+      <strong>You are currently logged in as:</strong><br>
+      {{ current_email }}
+    </p>
+  </div>
+  <p>
+    {% if trip %}
+    This invitation is for <strong>{{ trip.title }}</strong>.
+    {% endif %}
+  </p>
+  <p class="text-muted">
+    To accept this invitation, you need to sign out and sign in with the account that received the invitation.
+  </p>
+  <div class="mt-4">
+    <a href="{% url 'user_signout' %}" class="btn btn-primary btn-lg">
+      Sign Out
+    </a>
+    <a href="{% url 'home' %}" class="btn btn-secondary btn-lg ml-2">
+      Go to Home
+    </a>
+  </div>
+</div>
+{% endblock %}

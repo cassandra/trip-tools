@@ -1,0 +1,16 @@
+{% extends "notify/emails/base_email_message.txt" %}
+{% load common_tags %}
+{% block content %}Added to Trip
+
+{{ invited_by_name }} has added you to a trip:
+
+Trip: {{ trip_title }}
+{% if trip_description %}
+Description: {{ trip_description }}
+{% endif %}
+
+To view the trip, click the link below:
+
+{{ acceptance_url }}
+
+This link is valid for 3 days and can only be used once.{% endblock %}

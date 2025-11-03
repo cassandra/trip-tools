@@ -116,6 +116,7 @@ INSTALLED_APPS = [
     'tt.apps.routes',
     'tt.apps.contacts',
     'tt.apps.trips',
+    'tt.apps.members',
     'tt.apps.dashboard',
     'tt.apps.locations',
     'tt.apps.candidates',

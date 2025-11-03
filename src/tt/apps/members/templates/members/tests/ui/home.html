@@ -1,0 +1,54 @@
+{% extends "pages/base.html" %}
+{% block head_title %}HI: Members Visual Testing!{% endblock %}
+
+{% block content %}
+<div class="container-fluid m-4">
+
+  <h2 class="text-info">Members: UI Tests</h2>
+
+  <div class="row">
+    <div class="col-xl-4 col-lg-4 col-md-6 col-12">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h3 class="panel-title text-primary">Invitation Emails</h3>
+	</div>
+	<div class="panel-body">
+	  <ul>
+	    <li>
+	      <a href="{% url 'members_tests_ui_view_invitation_email' email_type='invitation' %}" data-async="modal">View Invitation Email (Existing Users)
+	      </a>
+	    </li>
+	    <li>
+	      <a href="{% url 'members_tests_ui_view_invitation_email' email_type='signup_invitation' %}" data-async="modal">View Invitation Email (New Users)
+	      </a>
+	    </li>
+	  </ul>
+	</div>
+      </div>
+
+    </div>
+
+    <div class="col-xl-4 col-lg-4 col-md-6 col-12">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h3 class="panel-title text-primary">Pages</h3>
+	</div>
+	<div class="panel-body">
+	  <ul>
+	    <li>
+	      <a href="{% url 'members_tests_ui_view_welcome_page' %}" target="_blank">Welcome Page
+	      </a>
+	    </li>
+	    <li>
+	      <a href="{% url 'members_tests_ui_view_wrong_user_invitation_page' %}" target="_blank">Wrong User Invitation Error
+	      </a>
+	    </li>
+	  </ul>
+	</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

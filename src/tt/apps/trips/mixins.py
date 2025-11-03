@@ -1,41 +1,62 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import BadRequest
+from django.http import Http404, HttpRequest
 
 from .enums import TripPermissionLevel
-from .models import Trip
+from .models import Trip, TripMember
 
 User = get_user_model()
 
 
-class TripPermissionMixin:
-    """
-    Mixin providing trip permission checking functionality.
-    """
+class TripViewMixin:
 
-    PERMISSION_HIERARCHY = {
-        TripPermissionLevel.OWNER: 4,
-        TripPermissionLevel.ADMIN: 3,
-        TripPermissionLevel.EDITOR: 2,
-        TripPermissionLevel.VIEWER: 1,
-    }
+    def get_trip_member( self,
+                         request  : HttpRequest,
+                         trip_id  : int = None,
+                         *args, **kwargs ) -> TripMember:
+        if not trip_id:
+            for arg_name in [ 'trip_id', 'trip_pk', 'trip' ]:
+                try:
+                    trip_id = int( request.kwargs.get( arg_name ))
+                    break
+                except ( TypeError, ValueError):
+                    pass
+                continue
 
-    def has_trip_permission(
-        self,
-        user: User,
-        trip: Trip,
-        required_level: TripPermissionLevel,
-    ) -> bool:
-        """
-        Check if user has at least the required permission level for the trip.
+        if not trip_id:
+            raise BadRequest()
+        try:
+            trip = Trip.objects.get( pk = trip_id )
+            return TripMember.objects.get( trip = trip, user = request.user )
+        except Trip.DoesNotExist:
+            raise Http404()
+        except TripMember.DoesNotExist:
+            raise Http404()
 
-        Returns True if user's permission level is >= required_level.
-        Permission hierarchy: Owner > Admin > Editor > Viewer
-        """
-        user_permission = trip.get_user_permission( user )
-
-        if user_permission is None:
-            return False
-
-        user_level = self.PERMISSION_HIERARCHY.get( user_permission, 0 )
-        required_level_value = self.PERMISSION_HIERARCHY.get( required_level, 0 )
-
-        return bool( user_level >= required_level_value )
+    def assert_has_permission( self, 
+                               trip_member     : TripMember,
+                               required_level  : TripPermissionLevel ):
+        if not trip_member.has_trip_permission( required_level ):
+            raise Http404( 'Trip not found' )
+        return
+        
+    def assert_is_viewer( self, trip_member : TripMember ):
+        self.assert_has_permission( 
+            trip_member = trip_member,
+            required_level = TripPermissionLevel.VIEWER,
+        )
+        return    
+        
+    def assert_is_editor( self, trip_member : TripMember ):
+        self.assert_has_permission( 
+            trip_member = trip_member,
+            required_level = TripPermissionLevel.EDITOR,
+        )
+        return    
+        
+    def assert_is_admin( self, trip_member : TripMember ):
+        self.assert_has_permission( 
+            trip_member = trip_member,
+            required_level = TripPermissionLevel.ADMIN,
+        )
+        return    

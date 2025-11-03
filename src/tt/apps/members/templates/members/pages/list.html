@@ -1,0 +1,38 @@
+{% extends "trips/pages/trip_base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block trip_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h2 mb-1">Trip Members</h1>
+    <p class="text-muted">Manage who has access to this trip</p>
+  </div>
+  {% if request_member.can_manage_members %}
+  <div>
+    <a href="{% url 'members_invite' trip_id=trip_page.trip.pk %}" class="btn btn-primary" data-async="modal">
+      {% icon "plus" %}
+      Invite Member
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+{% if member_data_list %}
+<div class="list-group">
+  {% for member_data in member_data_list %}
+    {% include "members/snippets/member_card.html" with member_data=member_data %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+  <h4>No members yet</h4>
+  <p>This trip has no members.</p>
+</div>
+{% endif %}
+
+<div class="mt-4">
+  <h3 class="h5 mb-3">Permission Levels</h3>
+  {% include "members/snippets/permission_levels_explanation.html" %}
+</div>
+{% endblock %}

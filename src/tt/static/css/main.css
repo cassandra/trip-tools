@@ -992,3 +992,70 @@ body {
     font-size: 0.9rem;
   }
 }
+
+/* Trip Permission Level Background Colors - Reusable across all trip contexts */
+.bg-owner {
+    background-color: var(--primary-color) !important;
+    color: var(--on-primary-color) !important;
+}
+
+.bg-admin {
+    background-color: var(--secondary-color) !important;
+    color: var(--on-secondary-color) !important;
+}
+
+.bg-editor {
+    background-color: var(--warning-color) !important;
+    color: var(--on-warning-color) !important;
+}
+
+.bg-viewer {
+    background-color: var(--muted-color) !important;
+    color: var(--on-muted-color) !important;
+}
+
+/* Permission Levels Explanation Grid - Responsive flexbox layout */
+.permission-levels-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.permission-levels-grid > div {
+    flex: 1 1 180px;
+    max-width: 250px;
+    min-width: 180px;
+}
+
+/* Permission Change Dropdown Styling */
+.dropdown-item-form {
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-item-form .dropdown-item {
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    padding: 0.25rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.dropdown-item-form .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item-form .dropdown-item:focus {
+    outline: none;
+    background-color: #e9ecef;
+}
+
+.dropdown-item-form .dropdown-item .badge {
+    min-width: 4rem;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+

@@ -1,0 +1,14 @@
+{% load trip_tags %}
+{% get_permission_levels as permission_levels %}
+<div class="permission-levels-grid">
+  {% for permission_level in permission_levels %}
+  <div>
+    <div class="card">
+      <div class="card-body text-center">
+        <span class="badge bg-{{ permission_level.name|lower }} mb-2 px-3 py-2">{{ permission_level.label }}</span>
+        <p class="small mb-0">{{ permission_level.description }}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>

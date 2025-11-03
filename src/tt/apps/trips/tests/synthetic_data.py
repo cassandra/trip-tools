@@ -78,7 +78,7 @@ class TripSyntheticData:
             )
         """
         if added_by is None:
-            added_by = trip.owner
+            added_by = user
 
         return TripMember.objects.create(
             trip=trip,

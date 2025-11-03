@@ -39,6 +39,7 @@ urlpatterns = [
     re_path( r'^trips/', include('tt.apps.trips.urls' )),
     re_path( r'^itineraries/', include('tt.apps.itineraries.urls' )),
     re_path( r'^notebook/', include('tt.apps.notebook.urls' )),
+    re_path( r'^', include('tt.apps.members.urls' )),
 
     # Custom error pages
     re_path( r'^400.html$', views.bad_request_response, name='bad_request' ),

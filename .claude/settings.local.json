@@ -8,7 +8,8 @@
       "Bash(grep:*)",
       "Bash(python src/manage.py test:*)",
       "Bash(gh issue view:*)",
-      "Bash(python -m py_compile:*)"
+      "Bash(python -m py_compile:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

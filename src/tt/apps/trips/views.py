@@ -1,14 +1,13 @@
 import logging
 
-from django.http import Http404
 from django.shortcuts import render
 
 from tt.async_view import ModalView
 
 from .context import TripPageContext
-from .enums import TripPage, TripPermissionLevel
+from .enums import TripPage
 from .forms import TripForm
-from .mixins import TripPermissionMixin
+from .mixins import TripViewMixin
 from .models import Trip
 
 logger = logging.getLogger(__name__)
@@ -43,19 +42,15 @@ class TripCreateModalView(ModalView):
         return self.modal_response( request, context = context, status = 400 )
 
 
-class TripHomeView( TripPermissionMixin, ModalView ):
+class TripHomeView( TripViewMixin, ModalView ):
 
     def get_template_name(self) -> str:
         return 'trips/pages/trip-home.html'
 
     def get(self, request, trip_id, *args, **kwargs):
-        try:
-            trip = Trip.objects.get( pk = trip_id )
-        except Trip.DoesNotExist:
-            raise Http404( 'Trip not found' )
-
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.VIEWER ):
-            raise Http404( 'Trip not found' )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_viewer( request_member )
+        trip = request_member.trip
 
         request.view_parameters.trip_id = trip.pk
         request.view_parameters.to_session( request )
