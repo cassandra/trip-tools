@@ -159,7 +159,7 @@
     switch(status) {
       case 'unsaved':
         statusText = 'Unsaved changes';
-        statusClass = 'text-warning';
+        statusClass = 'text-danger';
         break;
       case 'saving':
         statusText = 'Saving...';

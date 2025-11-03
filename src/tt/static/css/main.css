@@ -70,6 +70,7 @@
   --top-buttons-height: 2.5rem;
   --bottom-buttons-height: 2.5rem;
   --secondary-nav-height: 50px;
+  --secondary-page-header-height: 1.5rem;
 }
 
 html, body {
@@ -974,6 +975,28 @@ body {
   padding: 2rem;
   min-height: calc(100vh - var(--app-topbar-height));
 }
+
+.secondary-page-header {
+  position: sticky;
+  top: var(--app-topbar-height);
+  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--line-color);
+  z-index: 1010;
+  margin: -1rem -1rem 1rem -1rem; /* Extend beyond .m-3 wrapper to edges */
+  padding: 1rem;  /* Add padding inside header for spacing */
+}
+
+/* Notebook Editor Sticky Header */
+.notebook-editor-header {
+  position: sticky;
+  top: calc(var(--app-topbar-height) + 4rem); /* Below topbar and secondary-page-header */
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--line-color);
+  z-index: 1005;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+}
+
 
 /* Mobile Responsive for Secondary Pages */
 @media (max-width: 768px) {
