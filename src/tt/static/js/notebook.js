@@ -121,57 +121,27 @@
     });
   };
 
-  NotebookEditor.prototype.handleVersionConflict = function(conflictData) {
-    this.updateStatus('conflict', conflictData.message);
-    this.showConflictDetails(conflictData);
-  };
+  NotebookEditor.prototype.handleVersionConflict = function(responseData) {
+    this.updateStatus('conflict', 'Version conflict detected');
 
-  NotebookEditor.prototype.showConflictDetails = function(conflictData) {
-    var serverDate = new Date(conflictData.server_modified_at);
-    var timeStr = serverDate.toLocaleString();
+    // The response contains a 'modal' key with backend-rendered HTML
+    if (responseData && responseData.modal) {
+      // Generate unique modal ID
+      var modalId = 'notebook-conflict-modal-' + Date.now();
+      var $modal = $('<div id="' + modalId + '" class="modal fade" tabindex="-1" role="dialog"></div>');
 
-    var modalHtml = [
-      '<div class="modal fade" id="conflictModal" tabindex="-1" role="dialog">',
-      '  <div class="modal-dialog modal-lg" role="document">',
-      '    <div class="modal-content">',
-      '      <div class="modal-header">',
-      '        <h5 class="modal-title">Version Conflict Detected</h5>',
-      '        <button type="button" class="close" data-dismiss="modal">',
-      '          <span>&times;</span>',
-      '        </button>',
-      '      </div>',
-      '      <div class="modal-body">',
-      '        <div class="alert alert-warning">',
-      '          <strong>⚠️ Another user has modified this entry</strong><br>',
-      '          This notebook entry was modified by <strong>' + conflictData.modified_by_name + '</strong> ',
-      '          at <strong>' + timeStr + '</strong>.<br><br>',
-      '          <em>Your unsaved changes may be lost if you refresh. Consider copying your changes before refreshing.</em>',
-      '        </div>',
-      '        <h6>Changes Comparison:</h6>',
-      '        <p class="text-muted small">Review what changed on the server before deciding to refresh:</p>',
-      '        <div class="diff-container">' + conflictData.diff_html + '</div>',
-      '      </div>',
-      '      <div class="modal-footer">',
-      '        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close (Keep Editing)</button>',
-      '        <button type="button" class="btn btn-primary" id="refreshFromModal">Refresh to See Latest</button>',
-      '      </div>',
-      '    </div>',
-      '  </div>',
-      '</div>'
-    ].join('');
+      // Insert modal content from backend
+      $modal.html(responseData.modal);
 
-    var $modal = $(modalHtml);
-    $('body').append($modal);
-    $modal.modal('show');
+      // Append to body and show
+      $('body').append($modal);
+      $modal.modal('show');
 
-    $modal.find('#refreshFromModal').on('click', function() {
-      // Force full page reload with cache-busting to get latest server content
-      window.location.href = window.location.pathname + '?_=' + Date.now();
-    });
-
-    $modal.on('hidden.bs.modal', function() {
-      $modal.remove();
-    });
+      // Remove modal from DOM after it's hidden
+      $modal.on('hidden.bs.modal', function() {
+        $modal.remove();
+      });
+    }
   };
 
   NotebookEditor.prototype.updateStatus = function(status, message) {

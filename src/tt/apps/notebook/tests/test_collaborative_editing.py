@@ -250,10 +250,13 @@ class CollaborativeEditingConflictDetectionTests(TestCase):
         # Verify conflict response
         self.assertEqual(response_b.status_code, 409)
         conflict_data = response_b.json()
-        self.assertEqual(conflict_data['status'], 'conflict')
-        self.assertEqual(conflict_data['server_version'], 2)
-        self.assertIn('server_modified_at', conflict_data)
-        self.assertIn('message', conflict_data)
+        # Response now contains rendered modal HTML
+        self.assertIn('modal', conflict_data)
+        self.assertIsInstance(conflict_data['modal'], str)
+        # Verify modal contains conflict information
+        modal_html = conflict_data['modal']
+        self.assertIn('Version Conflict Detected', modal_html)
+        self.assertIn('Another user has modified this entry', modal_html)
 
         # Verify database state (User A's changes preserved)
         entry.refresh_from_db()
@@ -323,12 +326,13 @@ class CollaborativeEditingConflictDetectionTests(TestCase):
         self.assertEqual(response.status_code, 409)
         data = response.json()
 
-        # Verify all required fields for conflict resolution
-        self.assertEqual(data['status'], 'conflict')
-        self.assertEqual(data['server_version'], 3)
-        self.assertIn('server_modified_at', data)
-        self.assertIn('message', data)
-        self.assertIsInstance(data['server_modified_at'], str)
+        # Verify modal HTML is returned
+        self.assertIn('modal', data)
+        self.assertIsInstance(data['modal'], str)
+        # Verify modal contains conflict information
+        modal_html = data['modal']
+        self.assertIn('Version Conflict Detected', modal_html)
+        self.assertIn('Another user has modified this entry', modal_html)
 
     def test_version_mismatch_by_one_triggers_conflict(self):
         """Test that even a version mismatch by 1 triggers conflict."""
@@ -1218,8 +1222,8 @@ class CollaborativeEditingEndToEndTests(TestCase):
         self.assertEqual(entry.text, 'User C resolved')
 
 
-class UnifiedDiffGenerationTests(TestCase):
-    """Tests for unified diff HTML generation in conflict responses."""
+class ConflictModalTests(TestCase):
+    """Tests for backend-rendered conflict modal responses."""
 
     def setUp(self):
         self.user_a = User.objects.create_user(
@@ -1242,12 +1246,12 @@ class UnifiedDiffGenerationTests(TestCase):
             added_by=self.user_a
         )
 
-    def test_conflict_response_includes_diff_html(self):
-        """Test that conflict response includes diff_html field."""
+    def test_conflict_returns_modal_html(self):
+        """Test that version conflicts return rendered modal HTML."""
         entry = NotebookEntry.objects.create(
             trip=self.trip,
             date=date(2024, 1, 15),
-            text='Server version text',
+            text='Original text',
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
@@ -1267,23 +1271,30 @@ class UnifiedDiffGenerationTests(TestCase):
             content_type='application/json'
         )
 
-        # User B gets conflict
+        # User B gets conflict with modal
         response = client_b.post(
             autosave_url,
             json.dumps({'text': 'User B changes', 'version': 1}),
             content_type='application/json'
         )
 
+        # Verify conflict response
         self.assertEqual(response.status_code, 409)
         data = response.json()
+        
+        # Should contain modal HTML
+        self.assertIn('modal', data)
+        self.assertIsInstance(data['modal'], str)
+        
+        # Modal should contain conflict information
+        modal_html = data['modal']
+        self.assertIn('Version Conflict Detected', modal_html)
+        self.assertIn('Another user has modified this entry', modal_html)
+        self.assertIn('Refresh to See Latest', modal_html)
+        self.assertIn('Close (Copy Changes)', modal_html)
 
-        # Verify diff_html field exists
-        self.assertIn('diff_html', data)
-        self.assertIsInstance(data['diff_html'], str)
-        self.assertGreater(len(data['diff_html']), 0)
-
-    def test_diff_html_contains_proper_structure(self):
-        """Test that diff_html contains expected HTML structure."""
+    def test_modal_contains_diff_visualization(self):
+        """Test that modal includes visual diff of changes."""
         entry = NotebookEntry.objects.create(
             trip=self.trip,
             date=date(2024, 1, 15),
@@ -1298,184 +1309,60 @@ class UnifiedDiffGenerationTests(TestCase):
         client = Client()
         client.force_login(self.user_a)
 
-        # Create conflict with version 1
+        # Create conflict
         response = client.post(
             autosave_url,
-            json.dumps({'text': 'Line 1\nModified Line 2\nLine 3', 'version': 1}),
+            json.dumps({'text': 'Line 1\nModified\nLine 3', 'version': 1}),
             content_type='application/json'
         )
 
         self.assertEqual(response.status_code, 409)
-        diff_html = response.json()['diff_html']
+        modal_html = response.json()['modal']
+        
+        # Should contain diff visualization
+        self.assertIn('diff-container', modal_html)
+        self.assertIn('unified-diff', modal_html)
+        self.assertIn('Changes Comparison', modal_html)
 
-        # Verify HTML structure
-        self.assertIn('class="unified-diff"', diff_html)
-        self.assertIn('class="diff-', diff_html)  # Contains diff styling classes
-        self.assertIn('<div', diff_html)  # Contains div elements
-        self.assertNotIn('<script', diff_html.lower())  # No script injection
+    def test_modal_shows_modifier_information(self):
+        """Test that modal shows who modified the entry."""
+        self.user_a.first_name = 'Alice'
+        self.user_a.last_name = 'Smith'
+        self.user_a.save()
 
-    def test_diff_html_escapes_special_characters(self):
-        """Test that diff HTML properly escapes special characters to prevent XSS."""
         entry = NotebookEntry.objects.create(
             trip=self.trip,
             date=date(2024, 1, 15),
-            text='Normal text',
-            edit_version=2
+            text='Original',
+            edit_version=1,
+            modified_by=self.user_a
         )
         autosave_url = reverse('notebook_autosave', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
 
-        client = Client()
-        client.force_login(self.user_a)
+        client_a = Client()
+        client_b = Client()
+        client_a.force_login(self.user_a)
+        client_b.force_login(self.user_b)
 
-        # Try to save with HTML/JS in text
-        malicious_text = '<script>alert("xss")</script>\n<b>Bold</b>'
-        response = client.post(
+        # User A modifies
+        client_a.post(
             autosave_url,
-            json.dumps({'text': malicious_text, 'version': 1}),
+            json.dumps({'text': 'Alice changes', 'version': 1}),
+            content_type='application/json'
+        )
+
+        # User B gets conflict
+        response = client_b.post(
+            autosave_url,
+            json.dumps({'text': 'Bob changes', 'version': 1}),
             content_type='application/json'
         )
 
         self.assertEqual(response.status_code, 409)
-        diff_html = response.json()['diff_html']
-
-        # Verify escaping
-        self.assertIn('&lt;script&gt;', diff_html)
-        self.assertIn('&lt;b&gt;', diff_html)
-        self.assertNotIn('<script>', diff_html)
-        self.assertNotIn('<b>Bold</b>', diff_html)
-
-    def test_diff_html_with_unicode_characters(self):
-        """Test that diff HTML handles Unicode characters correctly."""
-        entry = NotebookEntry.objects.create(
-            trip=self.trip,
-            date=date(2024, 1, 15),
-            text='Café ☕ 日本語',
-            edit_version=2
-        )
-        autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
-        })
-
-        client = Client()
-        client.force_login(self.user_a)
-
-        response = client.post(
-            autosave_url,
-            json.dumps({'text': 'Café ☕ 中文', 'version': 1}),
-            content_type='application/json'
-        )
-
-        self.assertEqual(response.status_code, 409)
-        diff_html = response.json()['diff_html']
-
-        # Verify Unicode handling
-        self.assertIn('Café', diff_html)
-        self.assertIn('☕', diff_html)
-
-    def test_diff_html_with_empty_text(self):
-        """Test diff generation when one side is empty."""
-        entry = NotebookEntry.objects.create(
-            trip=self.trip,
-            date=date(2024, 1, 15),
-            text='Some content',
-            edit_version=2
-        )
-        autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
-        })
-
-        client = Client()
-        client.force_login(self.user_a)
-
-        # Try to save empty text
-        response = client.post(
-            autosave_url,
-            json.dumps({'text': '', 'version': 1}),
-            content_type='application/json'
-        )
-
-        self.assertEqual(response.status_code, 409)
-        diff_html = response.json()['diff_html']
-
-        # Should contain valid HTML
-        self.assertIn('class="unified-diff"', diff_html)
-        self.assertIsInstance(diff_html, str)
-
-    def test_diff_html_with_long_text(self):
-        """Test diff generation with long text (performance check)."""
-        import time
-
-        # Create entry with 1000 lines
-        long_text = '\n'.join([f'Line {i}' for i in range(1000)])
-        entry = NotebookEntry.objects.create(
-            trip=self.trip,
-            date=date(2024, 1, 15),
-            text=long_text,
-            edit_version=2
-        )
-        autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
-        })
-
-        client = Client()
-        client.force_login(self.user_a)
-
-        # Modify one line in the middle
-        modified_lines = long_text.split('\n')
-        modified_lines[500] = 'Modified Line 500'
-        modified_text = '\n'.join(modified_lines)
-
-        start_time = time.time()
-        response = client.post(
-            autosave_url,
-            json.dumps({'text': modified_text, 'version': 1}),
-            content_type='application/json'
-        )
-        elapsed_time = time.time() - start_time
-
-        self.assertEqual(response.status_code, 409)
-        diff_html = response.json()['diff_html']
-
-        # Verify diff was generated
-        self.assertIn('class="unified-diff"', diff_html)
-
-        # Performance check: should complete in under 50ms
-        self.assertLess(
-            elapsed_time, 0.05,
-            f'Diff generation took {elapsed_time*1000:.1f}ms, expected <50ms'
-        )
-
-    def test_diff_html_identical_text(self):
-        """Test diff generation when texts are identical (edge case)."""
-        entry = NotebookEntry.objects.create(
-            trip=self.trip,
-            date=date(2024, 1, 15),
-            text='Same text',
-            edit_version=2
-        )
-        autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
-        })
-
-        client = Client()
-        client.force_login(self.user_a)
-
-        # Try to save identical text with wrong version
-        response = client.post(
-            autosave_url,
-            json.dumps({'text': 'Same text', 'version': 1}),
-            content_type='application/json'
-        )
-
-        self.assertEqual(response.status_code, 409)
-        diff_html = response.json()['diff_html']
-
-        # Should indicate no changes
-        self.assertIn('No differences detected', diff_html)
+        modal_html = response.json()['modal']
+        
+        # Should show modifier's name
+        self.assertIn('Alice Smith', modal_html)

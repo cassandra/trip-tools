@@ -1059,12 +1059,12 @@ body {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 4px;
-    padding: 12px;
-    margin: 12px 0;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
     max-height: 400px;
     overflow-y: auto;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 13px;
+    font-size: 1rem;
     line-height: 1.4;
 }
 
@@ -1099,15 +1099,17 @@ body {
 /* Deleted lines (present in server, removed in client) */
 .diff-delete {
     background-color: #ffebe9;
-    color: #d73a49;
+    color: #040410;
     border-left-color: #d73a49;
+    font-weight: 500;
 }
 
 /* Added lines (not in server, added in client) */
 .diff-add {
     background-color: #e6ffed;
-    color: #28a745;
+    color: #040410;
     border-left-color: #28a745;
+    font-weight: 500;
 }
 
 /* Context lines (unchanged) */

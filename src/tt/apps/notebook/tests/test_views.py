@@ -1131,10 +1131,13 @@ class NotebookAutoSaveViewTests(TestCase):
 
         self.assertEqual(response.status_code, 409)
         data = response.json()
-        self.assertEqual(data['status'], 'conflict')
+        # Verify modal HTML is returned
+        self.assertIn('modal', data)
         self.assertEqual(data['server_version'], 2)
-        self.assertIn('server_modified_at', data)
-        self.assertIn('modified by another user', data['message'].lower())
+        # Verify modal contains conflict information
+        modal_html = data['modal']
+        self.assertIn('Version Conflict Detected', modal_html)
+        self.assertIn('another user', modal_html)
 
         # Verify entry wasn't updated
         entry.refresh_from_db()
@@ -1251,7 +1254,8 @@ class NotebookAutoSaveViewTests(TestCase):
         )
         self.assertEqual(response_b.status_code, 409)
         conflict_data = response_b.json()
-        self.assertEqual(conflict_data['status'], 'conflict')
+        # Verify modal HTML is returned
+        self.assertIn('modal', conflict_data)
         self.assertEqual(conflict_data['server_version'], 2)
 
         # User B resolves conflict and saves with correct version

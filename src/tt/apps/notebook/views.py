@@ -11,6 +11,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
 
+from tt.apps.common import antinode
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
@@ -252,20 +253,30 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
                             f'modified_by={modified_by_name}'
                         )
 
-                        # Generate unified diff HTML for client-side display
+                        # Generate unified diff HTML for modal display
                         diff_html = generate_unified_diff_html(
                             server_text=locked_entry.text,
                             client_text=text
                         )
 
-                        return JsonResponse(
+                        # Render modal template
+                        from django.template.loader import render_to_string
+                        modal_html = render_to_string(
+                            'notebook/modals/edit_conflict.html',
                             {
-                                'status': 'conflict',
-                                'server_version': locked_entry.edit_version,
-                                'server_modified_at': locked_entry.modified_datetime.isoformat(),
                                 'modified_by_name': modified_by_name,
-                                'message': f'Entry was modified by {modified_by_name}',
-                                'diff_html': diff_html
+                                'modified_at_datetime': locked_entry.modified_datetime,
+                                'diff_html': diff_html,
+                            },
+                            request=request
+                        )
+
+                        # Return modal HTML for frontend display
+                        # Include server_version for programmatic conflict resolution
+                        return antinode.http_response(
+                            {
+                                'modal': modal_html,
+                                'server_version': locked_entry.edit_version,
                             },
                             status=409
                         )
