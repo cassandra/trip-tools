@@ -1133,7 +1133,6 @@ class NotebookAutoSaveViewTests(TestCase):
         data = response.json()
         self.assertEqual(data['status'], 'conflict')
         self.assertEqual(data['server_version'], 2)
-        self.assertEqual(data['server_text'], 'Changed by another user')
         self.assertIn('server_modified_at', data)
         self.assertIn('modified by another user', data['message'].lower())
 
@@ -1254,7 +1253,6 @@ class NotebookAutoSaveViewTests(TestCase):
         conflict_data = response_b.json()
         self.assertEqual(conflict_data['status'], 'conflict')
         self.assertEqual(conflict_data['server_version'], 2)
-        self.assertEqual(conflict_data['server_text'], 'User A changes')
 
         # User B resolves conflict and saves with correct version
         response_b_resolved = self.client.post(

@@ -252,7 +252,6 @@ class CollaborativeEditingConflictDetectionTests(TestCase):
         conflict_data = response_b.json()
         self.assertEqual(conflict_data['status'], 'conflict')
         self.assertEqual(conflict_data['server_version'], 2)
-        self.assertEqual(conflict_data['server_text'], 'User A changes')
         self.assertIn('server_modified_at', conflict_data)
         self.assertIn('message', conflict_data)
 
@@ -327,7 +326,6 @@ class CollaborativeEditingConflictDetectionTests(TestCase):
         # Verify all required fields for conflict resolution
         self.assertEqual(data['status'], 'conflict')
         self.assertEqual(data['server_version'], 3)
-        self.assertEqual(data['server_text'], 'Server version')
         self.assertIn('server_modified_at', data)
         self.assertIn('message', data)
         self.assertIsInstance(data['server_modified_at'], str)
@@ -827,7 +825,6 @@ class CollaborativeEditingPermissionIntegrationTests(TestCase):
             content_type='application/json'
         )
         self.assertEqual(response_editor.status_code, 409)
-        self.assertEqual(response_editor.json()['server_text'], 'Owner changes')
 
     def test_viewer_cannot_autosave(self):
         """Test that viewer cannot access auto-save endpoint."""
@@ -1097,7 +1094,6 @@ class CollaborativeEditingEndToEndTests(TestCase):
         self.assertEqual(response_b_conflict.status_code, 409)
         conflict_data = response_b_conflict.json()
         self.assertEqual(conflict_data['server_version'], 2)
-        self.assertEqual(conflict_data['server_text'], 'Alice: Day 1 notes')
 
         # Bob resolves conflict with server version
         response_b_resolved = client_bob.post(
@@ -1220,3 +1216,266 @@ class CollaborativeEditingEndToEndTests(TestCase):
         entry.refresh_from_db()
         self.assertEqual(entry.edit_version, 4)
         self.assertEqual(entry.text, 'User C resolved')
+
+
+class UnifiedDiffGenerationTests(TestCase):
+    """Tests for unified diff HTML generation in conflict responses."""
+
+    def setUp(self):
+        self.user_a = User.objects.create_user(
+            email='user_a@example.com',
+            password='testpass123'
+        )
+        self.user_b = User.objects.create_user(
+            email='user_b@example.com',
+            password='testpass123'
+        )
+        self.trip = TripSyntheticData.create_test_trip(
+            user=self.user_a,
+            title='Test Trip',
+            trip_status=TripStatus.UPCOMING
+        )
+        TripSyntheticData.add_trip_member(
+            trip=self.trip,
+            user=self.user_b,
+            permission_level=TripPermissionLevel.EDITOR,
+            added_by=self.user_a
+        )
+
+    def test_conflict_response_includes_diff_html(self):
+        """Test that conflict response includes diff_html field."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Server version text',
+            edit_version=1
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        client_a = Client()
+        client_b = Client()
+        client_a.force_login(self.user_a)
+        client_b.force_login(self.user_b)
+
+        # User A saves successfully
+        client_a.post(
+            autosave_url,
+            json.dumps({'text': 'User A changes', 'version': 1}),
+            content_type='application/json'
+        )
+
+        # User B gets conflict
+        response = client_b.post(
+            autosave_url,
+            json.dumps({'text': 'User B changes', 'version': 1}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 409)
+        data = response.json()
+
+        # Verify diff_html field exists
+        self.assertIn('diff_html', data)
+        self.assertIsInstance(data['diff_html'], str)
+        self.assertGreater(len(data['diff_html']), 0)
+
+    def test_diff_html_contains_proper_structure(self):
+        """Test that diff_html contains expected HTML structure."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Line 1\nLine 2\nLine 3',
+            edit_version=2
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        client = Client()
+        client.force_login(self.user_a)
+
+        # Create conflict with version 1
+        response = client.post(
+            autosave_url,
+            json.dumps({'text': 'Line 1\nModified Line 2\nLine 3', 'version': 1}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 409)
+        diff_html = response.json()['diff_html']
+
+        # Verify HTML structure
+        self.assertIn('class="unified-diff"', diff_html)
+        self.assertIn('class="diff-', diff_html)  # Contains diff styling classes
+        self.assertIn('<div', diff_html)  # Contains div elements
+        self.assertNotIn('<script', diff_html.lower())  # No script injection
+
+    def test_diff_html_escapes_special_characters(self):
+        """Test that diff HTML properly escapes special characters to prevent XSS."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Normal text',
+            edit_version=2
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        client = Client()
+        client.force_login(self.user_a)
+
+        # Try to save with HTML/JS in text
+        malicious_text = '<script>alert("xss")</script>\n<b>Bold</b>'
+        response = client.post(
+            autosave_url,
+            json.dumps({'text': malicious_text, 'version': 1}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 409)
+        diff_html = response.json()['diff_html']
+
+        # Verify escaping
+        self.assertIn('&lt;script&gt;', diff_html)
+        self.assertIn('&lt;b&gt;', diff_html)
+        self.assertNotIn('<script>', diff_html)
+        self.assertNotIn('<b>Bold</b>', diff_html)
+
+    def test_diff_html_with_unicode_characters(self):
+        """Test that diff HTML handles Unicode characters correctly."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Café ☕ 日本語',
+            edit_version=2
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        client = Client()
+        client.force_login(self.user_a)
+
+        response = client.post(
+            autosave_url,
+            json.dumps({'text': 'Café ☕ 中文', 'version': 1}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 409)
+        diff_html = response.json()['diff_html']
+
+        # Verify Unicode handling
+        self.assertIn('Café', diff_html)
+        self.assertIn('☕', diff_html)
+
+    def test_diff_html_with_empty_text(self):
+        """Test diff generation when one side is empty."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Some content',
+            edit_version=2
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        client = Client()
+        client.force_login(self.user_a)
+
+        # Try to save empty text
+        response = client.post(
+            autosave_url,
+            json.dumps({'text': '', 'version': 1}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 409)
+        diff_html = response.json()['diff_html']
+
+        # Should contain valid HTML
+        self.assertIn('class="unified-diff"', diff_html)
+        self.assertIsInstance(diff_html, str)
+
+    def test_diff_html_with_long_text(self):
+        """Test diff generation with long text (performance check)."""
+        import time
+
+        # Create entry with 1000 lines
+        long_text = '\n'.join([f'Line {i}' for i in range(1000)])
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text=long_text,
+            edit_version=2
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        client = Client()
+        client.force_login(self.user_a)
+
+        # Modify one line in the middle
+        modified_lines = long_text.split('\n')
+        modified_lines[500] = 'Modified Line 500'
+        modified_text = '\n'.join(modified_lines)
+
+        start_time = time.time()
+        response = client.post(
+            autosave_url,
+            json.dumps({'text': modified_text, 'version': 1}),
+            content_type='application/json'
+        )
+        elapsed_time = time.time() - start_time
+
+        self.assertEqual(response.status_code, 409)
+        diff_html = response.json()['diff_html']
+
+        # Verify diff was generated
+        self.assertIn('class="unified-diff"', diff_html)
+
+        # Performance check: should complete in under 50ms
+        self.assertLess(
+            elapsed_time, 0.05,
+            f'Diff generation took {elapsed_time*1000:.1f}ms, expected <50ms'
+        )
+
+    def test_diff_html_identical_text(self):
+        """Test diff generation when texts are identical (edge case)."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Same text',
+            edit_version=2
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        client = Client()
+        client.force_login(self.user_a)
+
+        # Try to save identical text with wrong version
+        response = client.post(
+            autosave_url,
+            json.dumps({'text': 'Same text', 'version': 1}),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 409)
+        diff_html = response.json()['diff_html']
+
+        # Should indicate no changes
+        self.assertIn('No differences detected', diff_html)

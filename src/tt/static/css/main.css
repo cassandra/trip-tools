@@ -1050,3 +1050,85 @@ body {
     padding: 0.35em 0.65em;
 }
 
+/* ========================================
+   Unified Diff Display Styles
+   For notebook conflict resolution
+   ======================================== */
+
+.diff-container {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 12px 0;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.unified-diff {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.unified-diff > div {
+    padding: 2px 8px;
+    margin: 0;
+    border-left: 3px solid transparent;
+}
+
+/* File headers (--- +++) */
+.diff-header {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: bold;
+    border-left-color: #6c757d;
+}
+
+/* Hunk headers (@@ -line,count +line,count @@) */
+.diff-hunk {
+    background-color: #d6ebff;
+    color: #004085;
+    font-weight: bold;
+    border-left-color: #007bff;
+    margin-top: 8px;
+}
+
+/* Deleted lines (present in server, removed in client) */
+.diff-delete {
+    background-color: #ffebe9;
+    color: #d73a49;
+    border-left-color: #d73a49;
+}
+
+/* Added lines (not in server, added in client) */
+.diff-add {
+    background-color: #e6ffed;
+    color: #28a745;
+    border-left-color: #28a745;
+}
+
+/* Context lines (unchanged) */
+.diff-context {
+    background-color: #ffffff;
+    color: #333333;
+}
+
+/* Empty diff message */
+.diff-no-changes {
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Raw text comparison section */
+.raw-text-comparison {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #dee2e6;
+}
+
+

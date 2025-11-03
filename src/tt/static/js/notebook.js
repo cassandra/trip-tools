@@ -123,61 +123,37 @@
 
   NotebookEditor.prototype.handleVersionConflict = function(conflictData) {
     this.updateStatus('conflict', conflictData.message);
-
-    var serverDate = new Date(conflictData.server_modified_at);
-    var timeStr = serverDate.toLocaleString();
-
-    var conflictMessage = conflictData.message + ' at ' + timeStr + '. ' +
-                          'Your unsaved changes may be lost if you refresh.';
-
-    var $errorAlert = this.$container.find('.notebook-error-alert');
-    var $errorMessage = this.$container.find('.notebook-error-message');
-
-    if ($errorAlert.length) {
-      $errorMessage.html(
-        conflictMessage + '<br><br>' +
-        '<button class="btn btn-sm btn-primary notebook-refresh-btn">Refresh to see latest</button> ' +
-        '<button class="btn btn-sm btn-secondary notebook-view-changes-btn">View changes</button>'
-      );
-      $errorAlert.slideDown();
-
-      this.$container.find('.notebook-refresh-btn').on('click', function() {
-        // Force full page reload with cache-busting to get latest server content
-        window.location.href = window.location.pathname + '?_=' + Date.now();
-      });
-
-      this.$container.find('.notebook-view-changes-btn').on('click', function() {
-        this.showConflictDetails(conflictData);
-      }.bind(this));
-    }
+    this.showConflictDetails(conflictData);
   };
 
   NotebookEditor.prototype.showConflictDetails = function(conflictData) {
+    var serverDate = new Date(conflictData.server_modified_at);
+    var timeStr = serverDate.toLocaleString();
+
     var modalHtml = [
       '<div class="modal fade" id="conflictModal" tabindex="-1" role="dialog">',
       '  <div class="modal-dialog modal-lg" role="document">',
       '    <div class="modal-content">',
       '      <div class="modal-header">',
-      '        <h5 class="modal-title">Version Conflict Details</h5>',
+      '        <h5 class="modal-title">Version Conflict Detected</h5>',
       '        <button type="button" class="close" data-dismiss="modal">',
       '          <span>&times;</span>',
       '        </button>',
       '      </div>',
       '      <div class="modal-body">',
       '        <div class="alert alert-warning">',
-      '          <strong>Modified By:</strong> ' + conflictData.modified_by_name + '<br>',
-      '          <strong>Last Modified:</strong> ' + new Date(conflictData.server_modified_at).toLocaleString(),
+      '          <strong>⚠️ Another user has modified this entry</strong><br>',
+      '          This notebook entry was modified by <strong>' + conflictData.modified_by_name + '</strong> ',
+      '          at <strong>' + timeStr + '</strong>.<br><br>',
+      '          <em>Your unsaved changes may be lost if you refresh. Consider copying your changes before refreshing.</em>',
       '        </div>',
-      '        <h6>Your Current Text:</h6>',
-      '        <pre class="border p-2 bg-light" style="max-height: 200px; overflow-y: auto;">' +
-              this.$textarea.val() + '</pre>',
-      '        <h6 class="mt-3">Server Text (by ' + conflictData.modified_by_name + '):</h6>',
-      '        <pre class="border p-2 bg-light" style="max-height: 200px; overflow-y: auto;">' +
-              conflictData.server_text + '</pre>',
+      '        <h6>Changes Comparison:</h6>',
+      '        <p class="text-muted small">Review what changed on the server before deciding to refresh:</p>',
+      '        <div class="diff-container">' + conflictData.diff_html + '</div>',
       '      </div>',
       '      <div class="modal-footer">',
-      '        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
-      '        <button type="button" class="btn btn-primary" id="refreshFromModal">Refresh Page</button>',
+      '        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close (Keep Editing)</button>',
+      '        <button type="button" class="btn btn-primary" id="refreshFromModal">Refresh to See Latest</button>',
       '      </div>',
       '    </div>',
       '  </div>',
@@ -202,8 +178,8 @@
     var statusText = '';
     var statusClass = 'text-light';
 
-    // Hide error alert for non-error and non-conflict statuses
-    if (status !== 'error' && status !== 'conflict') {
+    // Hide error alert for non-error statuses (conflicts now use modal only)
+    if (status !== 'error') {
       var $errorAlert = this.$container.find('.notebook-error-alert');
       if ($errorAlert.is(':visible')) {
         $errorAlert.slideUp();

@@ -1,3 +1,5 @@
+import difflib
+import html
 import json
 import logging
 from datetime import date as date_class, datetime, timedelta
@@ -17,6 +19,67 @@ from .forms import NotebookEntryForm
 from .models import NotebookEntry
 
 logger = logging.getLogger(__name__)
+
+
+def generate_unified_diff_html(server_text: str, client_text: str) -> str:
+    """
+    Generate HTML-formatted unified diff comparing server text to client text.
+
+    Shows changes from server version (what's on server) to client version
+    (what user was trying to save). Uses standard unified diff format.
+
+    Args:
+        server_text: Current text on server (latest version)
+        client_text: Text from client that caused conflict
+
+    Returns:
+        HTML string with styled unified diff, ready for display
+    """
+    # Split texts into lines for difflib (preserving line endings)
+    server_lines = server_text.splitlines(keepends=True)
+    client_lines = client_text.splitlines(keepends=True)
+
+    # Generate unified diff
+    diff_lines = difflib.unified_diff(
+        server_lines,
+        client_lines,
+        fromfile='Server Version (Latest)',
+        tofile='Your Changes',
+        lineterm='',
+        n=3  # 3 lines of context (standard)
+    )
+
+    # Convert to list and check if there are any differences
+    diff_list = list(diff_lines)
+    if not diff_list:
+        return '<div class="diff-no-changes">No differences detected</div>'
+
+    # Build HTML with proper styling
+    html_parts = ['<div class="unified-diff">']
+
+    for line in diff_list:
+        # Escape HTML to prevent XSS
+        escaped_line = html.escape(line)
+
+        # Apply styling based on line prefix
+        if line.startswith('---') or line.startswith('+++'):
+            # File headers
+            html_parts.append(f'<div class="diff-header">{escaped_line}</div>')
+        elif line.startswith('@@'):
+            # Hunk headers (line number ranges)
+            html_parts.append(f'<div class="diff-hunk">{escaped_line}</div>')
+        elif line.startswith('-'):
+            # Deleted lines (in server version, not in client)
+            html_parts.append(f'<div class="diff-delete">{escaped_line}</div>')
+        elif line.startswith('+'):
+            # Added lines (in client, not in server)
+            html_parts.append(f'<div class="diff-add">{escaped_line}</div>')
+        else:
+            # Context lines (unchanged)
+            html_parts.append(f'<div class="diff-context">{escaped_line}</div>')
+
+    html_parts.append('</div>')
+    return ''.join(html_parts)
 
 
 class NotebookListView( LoginRequiredMixin, TripViewMixin, View ):
@@ -179,20 +242,30 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
                 if client_version is not None:
                     if locked_entry.edit_version != client_version:
                         # Version conflict detected
-                        modified_by_name = locked_entry.modified_by.get_full_name() if locked_entry.modified_by else 'another user'
+                        if locked_entry.modified_by:
+                            modified_by_name = locked_entry.modified_by.get_full_name()
+                        else:
+                            modified_by_name = 'another user'
                         logger.info(
                             f'Version conflict for entry {entry.pk} (trip {trip_id}): '
                             f'client={client_version}, server={locked_entry.edit_version}, '
                             f'modified_by={modified_by_name}'
                         )
+
+                        # Generate unified diff HTML for client-side display
+                        diff_html = generate_unified_diff_html(
+                            server_text=locked_entry.text,
+                            client_text=text
+                        )
+
                         return JsonResponse(
                             {
                                 'status': 'conflict',
                                 'server_version': locked_entry.edit_version,
-                                'server_text': locked_entry.text,
                                 'server_modified_at': locked_entry.modified_datetime.isoformat(),
                                 'modified_by_name': modified_by_name,
-                                'message': f'Entry was modified by {modified_by_name}'
+                                'message': f'Entry was modified by {modified_by_name}',
+                                'diff_html': diff_html
                             },
                             status=409
                         )
