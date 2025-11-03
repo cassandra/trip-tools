@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block trip_content %}
-<div class="notebook-editor-container"
+<div class="notebook-editor-container m-3"
      data-autosave-url="{% url 'notebook_autosave' trip_id=trip_page.trip.pk entry_pk=entry.pk %}"
      data-csrf-token="{{ csrf_token }}"
      data-current-version="{{ entry.edit_version }}">

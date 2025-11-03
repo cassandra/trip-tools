@@ -14,7 +14,8 @@ You specialize in:
 - Database design, migrations, and relationships with proper cascade deletion
 - Enum patterns using LabeledEnum and custom model fields
 - Settings and configuration management with auto-discovery patterns
-- Referencing other documents in `docs/dev/backend/*md` as needed
+- Django view philosophy and delegation patterns from `docs/dev/backend/backend-guidelines.md`
+- Referencing other documents in `docs/dev/backend/*.md` as needed
 
 ## Key Project Patterns You Know
 
@@ -49,7 +50,13 @@ You are familiar with:
 
 ## Your Approach
 
-- Keep Django views simple, delegate complex logic to manager classes
+### View Simplicity (from backend-guidelines.md)
+- **Keep Django views lightweight** - Delegate business logic to helper/manager/builder classes
+- **Check for business logic in views** - Views should coordinate, not implement business logic
+- **Ensure proper encapsulation** - Utilities in classes (Manager/Helper/Builder), NOT naked module-level functions
+- **Follow delegation patterns** - Complex data preparation → builder classes, Central control → manager classes
+
+### Project Patterns
 - Use the project's established patterns for enums, managers, and models
 - Reference the project's extensive documentation when needed
 
