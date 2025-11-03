@@ -1,28 +1,19 @@
-{% extends "pages/base.html" %}
-{% load static %}
+{% extends "pages/interstitial_page.html" %}
 
 {% block title %}Welcome to {{ trip.title }}{% endblock %}
 
-{% block content %}
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-body text-center">
-          <h1 class="card-title text-success mb-4">Welcome to Trip Tools!</h1>
-          <p class="lead">Your account has been created successfully.</p>
-          <p class="card-text">
-            You have been added to <strong>{{ trip.title }}</strong> and can now start collaborating.
-          </p>
-          {% if trip.description %}
-          <p class="card-text text-muted">{{ trip.description }}</p>
-          {% endif %}
-          <a href="{% url 'trips_home' trip_id=trip.pk %}" class="btn btn-primary btn-lg mt-4">
-            View Trip
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
+{% block interstitial_content %}
+<div class="text-center">
+  <h1 class="text-primary mb-4">Welcome to Trip Tools!</h1>
+  <p class="lead">Your account has been created successfully.</p>
+  <p>
+    You have been added to <strong>{{ trip.title }}</strong> and can now start collaborating.
+  </p>
+  {% if trip.description %}
+  <p class="text-muted">{{ trip.description }}</p>
+  {% endif %}
+  <a href="{% url 'trips_home' trip_id=trip.pk %}" class="btn btn-primary btn-lg mt-4">
+    View Trip
+  </a>
 </div>
 {% endblock %}

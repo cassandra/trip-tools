@@ -33,3 +33,23 @@ class TestUiViewInvitationEmailView( EmailTestViewView ):
             context['signup_url'] = 'https://example.com/members/signup/123/user@example.com/abc123token'
 
         return context
+
+
+class TestUiWelcomePageView( View ):
+    """Visual testing for the welcome page shown to new users after accepting invitation."""
+
+    def get(self, request, *args, **kwargs):
+        # Mock trip and user data for visual testing
+        class MockTrip:
+            pk = 123
+            title = 'Summer Road Trip 2025'
+            description = 'A two-week adventure through the Pacific Northwest, visiting national parks and scenic coastal towns.'
+
+        class MockUser:
+            email = 'user@example.com'
+
+        context = {
+            'trip': MockTrip(),
+            'user': MockUser(),
+        }
+        return render(request, 'members/pages/welcome.html', context)
