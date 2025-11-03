@@ -1291,7 +1291,7 @@ class ConflictModalTests(TestCase):
         self.assertIn('Version Conflict Detected', modal_html)
         self.assertIn('Another user has modified this entry', modal_html)
         self.assertIn('Refresh to See Latest', modal_html)
-        self.assertIn('Close (Copy Changes)', modal_html)
+        self.assertIn('Close (To Copy Changes)', modal_html)
 
     def test_modal_contains_diff_visualization(self):
         """Test that modal includes visual diff of changes."""

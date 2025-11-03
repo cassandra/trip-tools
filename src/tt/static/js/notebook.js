@@ -10,7 +10,9 @@
     this.$statusElement = $container.find('.notebook-status');
 
     this.saveTimeout = null;
+    this.maxTimeout = null;
     this.isSaving = false;
+    this.retryCount = 0;
     this.hasUnsavedChanges = false;
     this.lastSavedText = '';
     this.lastSavedDate = '';
@@ -38,7 +40,7 @@
 
     // Setup auto-save using event delegation on container
     this.$container.on('input', '.notebook-textarea', this.handleInput.bind(this));
-    this.$container.on('change', '.notebook-date', this.handleInput.bind(this));
+    this.$container.on('input', '.notebook-date', this.handleInput.bind(this));
   };
 
   NotebookEditor.prototype.handleInput = function() {
@@ -56,8 +58,23 @@
       clearTimeout(this.saveTimeout);
     }
 
+    // Set maximum timeout on first change (30 seconds)
+    if (!this.maxTimeout) {
+      this.maxTimeout = setTimeout(function() {
+        this.autoSave();
+        this.maxTimeout = null;
+      }.bind(this), 30000);
+    }
+
     // Set new timeout (2 seconds)
-    this.saveTimeout = setTimeout(this.autoSave.bind(this), 2000);
+    this.saveTimeout = setTimeout(function() {
+      this.autoSave();
+      // Clear max timeout since we saved via regular timeout
+      if (this.maxTimeout) {
+        clearTimeout(this.maxTimeout);
+        this.maxTimeout = null;
+      }
+    }.bind(this), 2000);
   };
 
   NotebookEditor.prototype.autoSave = function() {
@@ -87,6 +104,12 @@
           this.hasUnsavedChanges = false;
           this.currentVersion = data.version;
           this.$container.data('current-version', data.version);
+          this.retryCount = 0;
+          // Clear max timeout since we saved successfully
+          if (this.maxTimeout) {
+            clearTimeout(this.maxTimeout);
+            this.maxTimeout = null;
+          }
           this.updateStatus('saved', data.modified_datetime);
         } else {
           this.updateStatus('error', data.message);
@@ -112,7 +135,23 @@
             }
           }
 
-          this.updateStatus('error', errorMessage);
+          // Retry logic for server errors (5xx) and network errors (status 0)
+          var shouldRetry = (xhr.status >= 500 || xhr.status === 0) && this.retryCount < 3;
+
+          if (shouldRetry) {
+            this.retryCount++;
+            var delay = Math.pow(2, this.retryCount) * 1000; // 2s, 4s, 8s
+            this.updateStatus('error', 'Save failed - retrying (' + this.retryCount + '/3)...');
+
+            setTimeout(function() {
+              this.isSaving = false; // Reset flag before retry
+              this.autoSave();
+            }.bind(this), delay);
+          } else {
+            // Final failure - reset retry count and show error
+            this.retryCount = 0;
+            this.updateStatus('error', errorMessage);
+          }
         }
       }.bind(this),
       complete: function() {
