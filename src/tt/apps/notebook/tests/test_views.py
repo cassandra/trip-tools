@@ -959,8 +959,8 @@ class NotebookAutoSaveViewTests(TestCase):
             content_type='application/json'
         )
 
-        # 403 Forbidden is the appropriate response when user doesn't have permission
-        self.assertEqual(response.status_code, 403)
+        # 404 (not 403) to avoid information disclosure about trip existence
+        self.assertEqual(response.status_code, 404)
 
     def test_autosave_validates_entry_belongs_to_trip(self):
         """Test that auto-save validates entry belongs to the specified trip."""

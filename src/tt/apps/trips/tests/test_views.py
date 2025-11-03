@@ -215,3 +215,10 @@ class TripHomeViewTests(TestCase):
         response = self.client.get(self.trips_home_url)
 
         self.assertEqual(response.status_code, 200)
+
+    def test_trips_home_nonexistent_trip(self):
+        """Test that requesting nonexistent trip returns 404."""
+        self.client.force_login(self.user)
+        url = reverse('trips_home', kwargs={'trip_id': 99999})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)

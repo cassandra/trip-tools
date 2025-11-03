@@ -39,6 +39,8 @@ class TestAuthenticationMiddleware(BaseTestCase):
             'user_signin',
             'user_signin_magic_code',
             'user_signin_magic_link',
+            'members_accept_invitation',
+            'members_signup_and_accept',
         }
         self.assertEqual(middleware.EXEMPT_VIEW_URL_NAMES, expected_exempt_urls)
 

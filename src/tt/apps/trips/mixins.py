@@ -22,12 +22,14 @@ class TripViewMixin:
                 except ( TypeError, ValueError):
                     pass
                 continue
-            
+
         if not trip_id:
             raise BadRequest()
         try:
             trip = Trip.objects.get( pk = trip_id )
             return TripMember.objects.get( trip = trip, user = request.user )
+        except Trip.DoesNotExist:
+            raise Http404()
         except TripMember.DoesNotExist:
             raise Http404()
 
