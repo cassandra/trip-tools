@@ -34,7 +34,6 @@ urlpatterns = [
     re_path( r'^user/', include('tt.apps.user.urls' )),
     re_path( r'^config/', include('tt.apps.config.urls' )),
     re_path( r'^notify/', include('tt.apps.notify.urls' )),
-    re_path( r'^system/', include('tt.apps.system.urls' )),
     re_path( r'^dashboard/', include('tt.apps.dashboard.urls' )),
     re_path( r'^trips/', include('tt.apps.trips.urls' )),
     re_path( r'^itineraries/', include('tt.apps.itineraries.urls' )),

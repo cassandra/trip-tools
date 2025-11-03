@@ -83,12 +83,6 @@ CSP_WORKER_SRC = (
     "'self'",
 ) + ENV.EXTRA_CSP_URLS
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
-
 
 # Application definition
 
@@ -110,7 +104,6 @@ INSTALLED_APPS = [
     'tt.apps.config',
     'tt.apps.console',
     'tt.apps.notify',
-    'tt.apps.system',
 
     'tt.apps.geo',
     'tt.apps.routes',
@@ -200,11 +193,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
 
 

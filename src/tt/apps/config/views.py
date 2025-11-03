@@ -1,15 +1,15 @@
 import logging
 
-from django.http import HttpResponseRedirect
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
-from django.urls import reverse
 from django.views.generic import View
 
 from tt.views import page_not_found_response
 
 from tt.apps.attribute.view_mixins import AttributeMultiEditViewMixin
+from tt.apps.user.context import AccountPageContext
+from tt.apps.user.enums import AccountPage
 
-from .enums import ConfigPageType
 from .models import SubsystemAttribute
 from .settings_mixins import SubsystemAttributeMixin
 from .signals import SettingsInitializer
@@ -21,75 +21,12 @@ from .subsystem_attribute_edit_context import (
 logger = logging.getLogger('__name__')
 
 
-class ConfigHomeView( View ):
-
-    def get( self, request, *args, **kwargs ):
-        redirect_url = reverse( ConfigPageType.default().url_name )
-        return HttpResponseRedirect( redirect_url )        
-
-    
-class ConfigPageView( View ):
-    """
-    The app's config/admin page is shown in the main area of the HiGridView
-    layout. It is a tabbed pane with one tab for each separate
-    configuration concern.  We want them to share some standard state
-    tracking and consistent page rendering for each individual
-    configuration concern.  However, we also want the different config
-    areas to remain somewhat independent.
-
-    We do this with these:
-
-      - ConfigPageType (enum) - An entry for each configuration concern,
-        coupled only by the URL name for its main/entry page.
-
-      - ConfigPageView (this view) - Each enum or section (tab) of the
-        configuration/admin view should subclass this. It contains some state
-        management and common needs for rendering itself in the overall
-        HiGridView view paradigm.
-
-      - config/pages/config_base.html (template) - The companion template
-        for the main/entry view that ensure the config pages are visually
-        consistent (appearing as a tabbed pane) with navigation between
-        config concerns.
-
-    """
-    def dispatch( self, request, *args, **kwargs ):
-        """
-        Override Django dispatch() method to handle dispatching to ensure
-        states and views are consistent for all config tab/pages. 
-        """
-        request.config_page_type_list = list( ConfigPageType )
-        request.current_config_page_type = self.config_page_type
-
-        return super().dispatch( request, *args, **kwargs )
- 
-    @property
-    def config_page_type(self) -> ConfigPageType:
-        raise NotImplementedError('Subclasses must override this method.')
-
-    def get_template_name( self ) -> str:
-        raise NotImplementedError('Subclasses must override this method.')
-
-    def get_template_context( self, request, *args, **kwargs ):
-        raise NotImplementedError('Subclasses must override this method.')
+class ConfigSettingsView( LoginRequiredMixin,
+                          AttributeMultiEditViewMixin,
+                          SubsystemAttributeMixin,
+                          View ):
 
     def get(self, request, *args, **kwargs):
-        context = self.get_template_context( request, *args, **kwargs )
-        return render( request, self.get_template_name(), context )
-
-    
-class ConfigSettingsView( ConfigPageView,
-                          SubsystemAttributeMixin,
-                          AttributeMultiEditViewMixin ):
-
-    @property
-    def config_page_type(self) -> ConfigPageType:
-        return ConfigPageType.SETTINGS
-    
-    def get_template_name( self ) -> str:
-        return 'config/pages/settings.html'
-
-    def get_template_context( self, request, *args, **kwargs ):
 
         # Setting attributes for a user are lazily created on visiting this
         # config page.
@@ -106,10 +43,15 @@ class ConfigSettingsView( ConfigPageView,
             user = request.user,
             selected_subsystem_id = selected_subsystem_id,
         )
-        return self.create_initial_template_context(
+        context = self.create_initial_template_context(
             attr_page_context = attr_page_context,
             attr_item_context_list = attr_item_context_list,
         )
+        context['account_page_context'] = AccountPageContext(
+            active_page = AccountPage.SETTINGS,
+            user = request.user,
+        )
+        return render( request, 'config/pages/settings.html', context )
         
     def post( self, request, *args, **kwargs ):
 

@@ -14,7 +14,8 @@ from django.views.generic import View
 from tt.apps.notify.email_sender import EmailSender
 
 from . import forms
-from .enums import SigninErrorType
+from .context import AccountPageContext
+from .enums import AccountPage, SigninErrorType
 from .magic_code_generator import MagicCodeStatus, MagicCodeGenerator
 from .signin_manager import SigninManager
 from .transient_models import UserAuthenticationData
@@ -196,7 +197,12 @@ class UserSignoutView(View):
 class AccountView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
+        account_page_context = AccountPageContext(
+            active_page = AccountPage.PROFILE,
+            user = request.user,
+        )
         context = {
+            'account_page_context': account_page_context,
             'user': request.user,
         }
         return render(request, 'user/pages/account.html', context)
