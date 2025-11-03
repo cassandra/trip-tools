@@ -16,4 +16,8 @@ urlpatterns = [
     re_path( r'^page/welcome$',
              views.TestUiWelcomePageView.as_view(),
              name='members_tests_ui_view_welcome_page'),
+
+    re_path( r'^page/wrong-user-invitation$',
+             views.TestUiWrongUserInvitationPageView.as_view(),
+             name='members_tests_ui_view_wrong_user_invitation_page'),
 ]

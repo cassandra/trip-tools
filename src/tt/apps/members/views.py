@@ -260,11 +260,35 @@ class MemberAcceptInvitationView( View ):
         except User.DoesNotExist:
             raise Http404( 'Invalid invitation link' )
 
+        # Check if user is logged in as different user (security check)
+        if request.user.is_authenticated and request.user.email != email:
+            logger.warning(
+                f'User {request.user.email} attempted to accept invitation for {email} '
+                f'on trip {trip.pk}'
+            )
+            context = {
+                'invited_email': email,
+                'current_email': request.user.email,
+                'trip': trip,
+            }
+            return render( request, 'members/pages/wrong_user_invitation.html', context, status = 403 )
+
         # Verify token with one-time use check
         invitation_manager = MemberInvitationManager()
         is_valid = invitation_manager.verify_invitation_token( user = user, token = token, trip = trip )
 
         if not is_valid:
+            # If logged in as correct user and already accepted, just go to trip
+            if request.user.is_authenticated and request.user.email == email:
+                try:
+                    member = TripMember.objects.get( trip = trip, user = user )
+                    if member.invitation_accepted_datetime is not None:
+                        # Already accepted - redirect to trip
+                        logger.info( f'User {user.email} revisited expired invitation link for trip {trip.pk} (already accepted)' )
+                        return HttpResponseRedirect( reverse( 'trips_home', kwargs = { 'trip_id': trip.pk } ) )
+                except TripMember.DoesNotExist:
+                    pass
+
             # Redirect to signin with error message for expired/used tokens
             signin_url = reverse( 'user_signin' ) + f'?error={SigninErrorType.INVITATION_EXPIRED.name.lower()}'
             return HttpResponseRedirect( signin_url )
@@ -307,11 +331,35 @@ class MemberSignupAndAcceptView( View ):
         except User.DoesNotExist:
             raise Http404( 'Invalid invitation link' )
 
+        # Check if user is logged in as different user (security check)
+        if request.user.is_authenticated and request.user.email != email:
+            logger.warning(
+                f'User {request.user.email} attempted to accept invitation for {email} '
+                f'on trip {trip.pk}'
+            )
+            context = {
+                'invited_email': email,
+                'current_email': request.user.email,
+                'trip': trip,
+            }
+            return render( request, 'members/pages/wrong_user_invitation.html', context, status = 403 )
+
         # Verify token with one-time use check
         invitation_manager = MemberInvitationManager()
         is_valid = invitation_manager.verify_invitation_token( user = user, token = token, trip = trip )
 
         if not is_valid:
+            # If logged in as correct user and already accepted, just go to trip
+            if request.user.is_authenticated and request.user.email == email:
+                try:
+                    member = TripMember.objects.get( trip = trip, user = user )
+                    if member.invitation_accepted_datetime is not None:
+                        # Already accepted - redirect to trip
+                        logger.info( f'User {user.email} revisited expired invitation link for trip {trip.pk} (already accepted)' )
+                        return HttpResponseRedirect( reverse( 'trips_home', kwargs = { 'trip_id': trip.pk } ) )
+                except TripMember.DoesNotExist:
+                    pass
+
             # Redirect to signin with error message for expired/used tokens
             signin_url = reverse( 'user_signin' ) + f'?error={SigninErrorType.INVITATION_EXPIRED.name.lower()}'
             return HttpResponseRedirect( signin_url )

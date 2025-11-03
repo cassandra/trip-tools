@@ -53,3 +53,20 @@ class TestUiWelcomePageView( View ):
             'user': MockUser(),
         }
         return render(request, 'members/pages/welcome.html', context)
+
+
+class TestUiWrongUserInvitationPageView( View ):
+    """Visual testing for the wrong user invitation error page."""
+
+    def get(self, request, *args, **kwargs):
+        # Mock trip data for visual testing
+        class MockTrip:
+            pk = 123
+            title = 'Summer Road Trip 2025'
+
+        context = {
+            'invited_email': 'john.doe@example.com',
+            'current_email': 'jane.smith@example.com',
+            'trip': MockTrip(),
+        }
+        return render(request, 'members/pages/wrong_user_invitation.html', context)
