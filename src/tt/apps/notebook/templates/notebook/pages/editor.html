@@ -7,7 +7,8 @@
 {% block trip_content %}
 <div class="notebook-editor-container"
      data-autosave-url="{% url 'notebook_autosave' trip_id=trip_page.trip.pk entry_pk=entry.pk %}"
-     data-csrf-token="{{ csrf_token }}">
+     data-csrf-token="{{ csrf_token }}"
+     data-current-version="{{ entry.edit_version }}">
 
   <div class="alert alert-danger notebook-error-alert" style="display: none;" role="alert">
     <strong>Error:</strong> <span class="notebook-error-message"></span>

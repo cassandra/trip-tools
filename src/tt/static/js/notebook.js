@@ -16,6 +16,7 @@
     this.lastSavedDate = '';
     this.autosaveUrl = $container.data('autosave-url');
     this.csrfToken = $container.data('csrf-token');
+    this.currentVersion = $container.data('current-version') || 1;
 
     this.init();
   }
@@ -67,7 +68,8 @@
 
     var data = {
       date: this.$dateInput.val(),
-      text: this.$textarea.val()
+      text: this.$textarea.val(),
+      version: this.currentVersion
     };
 
     $.ajax({
@@ -83,30 +85,35 @@
           this.lastSavedText = this.$textarea.val();
           this.lastSavedDate = this.$dateInput.val();
           this.hasUnsavedChanges = false;
+          this.currentVersion = data.version;
+          this.$container.data('current-version', data.version);
           this.updateStatus('saved', data.modified_datetime);
         } else {
           this.updateStatus('error', data.message);
         }
       }.bind(this),
       error: function(xhr, status, error) {
-        console.error('Auto-save error:', error);
-        var errorMessage = 'Network error';
+        if (xhr.status === 409) {
+          this.handleVersionConflict(xhr.responseJSON);
+        } else {
+          console.error('Auto-save error:', error);
+          var errorMessage = 'Network error';
 
-        // Try to parse error response from backend
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-          errorMessage = xhr.responseJSON.message;
-        } else if (xhr.responseText) {
-          try {
-            var response = JSON.parse(xhr.responseText);
-            if (response.message) {
-              errorMessage = response.message;
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMessage = xhr.responseJSON.message;
+          } else if (xhr.responseText) {
+            try {
+              var response = JSON.parse(xhr.responseText);
+              if (response.message) {
+                errorMessage = response.message;
+              }
+            } catch (e) {
+              // Keep default 'Network error' message
             }
-          } catch (e) {
-            // Keep default 'Network error' message
           }
-        }
 
-        this.updateStatus('error', errorMessage);
+          this.updateStatus('error', errorMessage);
+        }
       }.bind(this),
       complete: function() {
         this.isSaving = false;
@@ -114,12 +121,89 @@
     });
   };
 
+  NotebookEditor.prototype.handleVersionConflict = function(conflictData) {
+    this.updateStatus('conflict', conflictData.message);
+
+    var serverDate = new Date(conflictData.server_modified_at);
+    var timeStr = serverDate.toLocaleString();
+
+    var conflictMessage = conflictData.message + ' at ' + timeStr + '. ' +
+                          'Your unsaved changes may be lost if you refresh.';
+
+    var $errorAlert = this.$container.find('.notebook-error-alert');
+    var $errorMessage = this.$container.find('.notebook-error-message');
+
+    if ($errorAlert.length) {
+      $errorMessage.html(
+        conflictMessage + '<br><br>' +
+        '<button class="btn btn-sm btn-primary notebook-refresh-btn">Refresh to see latest</button> ' +
+        '<button class="btn btn-sm btn-secondary notebook-view-changes-btn">View changes</button>'
+      );
+      $errorAlert.slideDown();
+
+      this.$container.find('.notebook-refresh-btn').on('click', function() {
+        // Force full page reload with cache-busting to get latest server content
+        window.location.href = window.location.pathname + '?_=' + Date.now();
+      });
+
+      this.$container.find('.notebook-view-changes-btn').on('click', function() {
+        this.showConflictDetails(conflictData);
+      }.bind(this));
+    }
+  };
+
+  NotebookEditor.prototype.showConflictDetails = function(conflictData) {
+    var modalHtml = [
+      '<div class="modal fade" id="conflictModal" tabindex="-1" role="dialog">',
+      '  <div class="modal-dialog modal-lg" role="document">',
+      '    <div class="modal-content">',
+      '      <div class="modal-header">',
+      '        <h5 class="modal-title">Version Conflict Details</h5>',
+      '        <button type="button" class="close" data-dismiss="modal">',
+      '          <span>&times;</span>',
+      '        </button>',
+      '      </div>',
+      '      <div class="modal-body">',
+      '        <div class="alert alert-warning">',
+      '          <strong>Modified By:</strong> ' + conflictData.modified_by_name + '<br>',
+      '          <strong>Last Modified:</strong> ' + new Date(conflictData.server_modified_at).toLocaleString(),
+      '        </div>',
+      '        <h6>Your Current Text:</h6>',
+      '        <pre class="border p-2 bg-light" style="max-height: 200px; overflow-y: auto;">' +
+              this.$textarea.val() + '</pre>',
+      '        <h6 class="mt-3">Server Text (by ' + conflictData.modified_by_name + '):</h6>',
+      '        <pre class="border p-2 bg-light" style="max-height: 200px; overflow-y: auto;">' +
+              conflictData.server_text + '</pre>',
+      '      </div>',
+      '      <div class="modal-footer">',
+      '        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+      '        <button type="button" class="btn btn-primary" id="refreshFromModal">Refresh Page</button>',
+      '      </div>',
+      '    </div>',
+      '  </div>',
+      '</div>'
+    ].join('');
+
+    var $modal = $(modalHtml);
+    $('body').append($modal);
+    $modal.modal('show');
+
+    $modal.find('#refreshFromModal').on('click', function() {
+      // Force full page reload with cache-busting to get latest server content
+      window.location.href = window.location.pathname + '?_=' + Date.now();
+    });
+
+    $modal.on('hidden.bs.modal', function() {
+      $modal.remove();
+    });
+  };
+
   NotebookEditor.prototype.updateStatus = function(status, message) {
     var statusText = '';
     var statusClass = 'text-light';
 
-    // Hide error alert for non-error statuses
-    if (status !== 'error') {
+    // Hide error alert for non-error and non-conflict statuses
+    if (status !== 'error' && status !== 'conflict') {
       var $errorAlert = this.$container.find('.notebook-error-alert');
       if ($errorAlert.is(':visible')) {
         $errorAlert.slideUp();
@@ -143,6 +227,10 @@
           statusText = 'Saved';
         }
         statusClass = 'text-success';
+        break;
+      case 'conflict':
+        statusText = 'Version conflict detected';
+        statusClass = 'text-danger';
         break;
       case 'error':
         statusText = 'Save failed: ' + (message || 'Unknown error');

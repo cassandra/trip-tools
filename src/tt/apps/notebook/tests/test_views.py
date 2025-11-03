@@ -1040,6 +1040,246 @@ class NotebookAutoSaveViewTests(TestCase):
         self.assertEqual(data['status'], 'error')
         self.assertIn('Invalid date format', data['message'])
 
+    def test_autosave_increments_version(self):
+        """Test that auto-save increments the edit_version."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Original text'
+        )
+        original_version = entry.edit_version
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        self.client.force_login(self.user)
+        response = self.client.post(
+            autosave_url,
+            json.dumps({
+                'text': 'Updated text',
+                'version': original_version
+            }),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'success')
+        self.assertEqual(data['version'], original_version + 1)
+
+        entry.refresh_from_db()
+        self.assertEqual(entry.edit_version, original_version + 1)
+        self.assertEqual(entry.text, 'Updated text')
+
+    def test_autosave_returns_version_in_response(self):
+        """Test that successful auto-save returns the new version."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Test'
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        self.client.force_login(self.user)
+        response = self.client.post(
+            autosave_url,
+            json.dumps({
+                'text': 'Updated',
+                'version': 1
+            }),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('version', data)
+        self.assertIn('modified_datetime', data)
+        self.assertEqual(data['version'], 2)
+
+    def test_autosave_version_conflict(self):
+        """Test that auto-save detects version conflicts."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Original text'
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        self.client.force_login(self.user)
+
+        # Simulate another user's update by manually incrementing version
+        entry.text = 'Changed by another user'
+        entry.edit_version = 2
+        entry.save()
+
+        # Try to save with stale version
+        response = self.client.post(
+            autosave_url,
+            json.dumps({
+                'text': 'My conflicting update',
+                'version': 1  # Stale version
+            }),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 409)
+        data = response.json()
+        self.assertEqual(data['status'], 'conflict')
+        self.assertEqual(data['server_version'], 2)
+        self.assertEqual(data['server_text'], 'Changed by another user')
+        self.assertIn('server_modified_at', data)
+        self.assertIn('modified by another user', data['message'].lower())
+
+        # Verify entry wasn't updated
+        entry.refresh_from_db()
+        self.assertEqual(entry.text, 'Changed by another user')
+        self.assertEqual(entry.edit_version, 2)
+
+    def test_autosave_backward_compatible_no_version(self):
+        """Test that auto-save works without version (backward compatibility)."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Original'
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        self.client.force_login(self.user)
+        response = self.client.post(
+            autosave_url,
+            json.dumps({
+                'text': 'Updated without version'
+                # No version field
+            }),
+            content_type='application/json'
+        )
+
+        # Should succeed without version check
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'success')
+        self.assertIn('version', data)
+
+        entry.refresh_from_db()
+        self.assertEqual(entry.text, 'Updated without version')
+
+    def test_autosave_multiple_sequential_updates(self):
+        """Test that multiple sequential auto-saves increment version correctly."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Version 1'
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        self.client.force_login(self.user)
+
+        # First update
+        response1 = self.client.post(
+            autosave_url,
+            json.dumps({'text': 'Version 2', 'version': 1}),
+            content_type='application/json'
+        )
+        self.assertEqual(response1.status_code, 200)
+        self.assertEqual(response1.json()['version'], 2)
+
+        # Second update
+        response2 = self.client.post(
+            autosave_url,
+            json.dumps({'text': 'Version 3', 'version': 2}),
+            content_type='application/json'
+        )
+        self.assertEqual(response2.status_code, 200)
+        self.assertEqual(response2.json()['version'], 3)
+
+        # Third update
+        response3 = self.client.post(
+            autosave_url,
+            json.dumps({'text': 'Version 4', 'version': 3}),
+            content_type='application/json'
+        )
+        self.assertEqual(response3.status_code, 200)
+        self.assertEqual(response3.json()['version'], 4)
+
+        entry.refresh_from_db()
+        self.assertEqual(entry.edit_version, 4)
+        self.assertEqual(entry.text, 'Version 4')
+
+    def test_autosave_concurrent_conflict_scenario(self):
+        """Test realistic concurrent editing conflict scenario."""
+        entry = NotebookEntry.objects.create(
+            trip=self.trip,
+            date=date(2024, 1, 15),
+            text='Original'
+        )
+        autosave_url = reverse('notebook_autosave', kwargs={
+            'trip_id': self.trip.pk,
+            'entry_pk': entry.pk
+        })
+
+        self.client.force_login(self.user)
+
+        # User A reads entry (version 1)
+        # User B reads entry (version 1)
+
+        # User A saves successfully
+        response_a = self.client.post(
+            autosave_url,
+            json.dumps({'text': 'User A changes', 'version': 1}),
+            content_type='application/json'
+        )
+        self.assertEqual(response_a.status_code, 200)
+        self.assertEqual(response_a.json()['version'], 2)
+
+        # User B tries to save with stale version (conflict)
+        response_b = self.client.post(
+            autosave_url,
+            json.dumps({'text': 'User B changes', 'version': 1}),
+            content_type='application/json'
+        )
+        self.assertEqual(response_b.status_code, 409)
+        conflict_data = response_b.json()
+        self.assertEqual(conflict_data['status'], 'conflict')
+        self.assertEqual(conflict_data['server_version'], 2)
+        self.assertEqual(conflict_data['server_text'], 'User A changes')
+
+        # User B resolves conflict and saves with correct version
+        response_b_resolved = self.client.post(
+            autosave_url,
+            json.dumps({'text': 'User B resolved changes', 'version': 2}),
+            content_type='application/json'
+        )
+        self.assertEqual(response_b_resolved.status_code, 200)
+        self.assertEqual(response_b_resolved.json()['version'], 3)
+
+        entry.refresh_from_db()
+        self.assertEqual(entry.edit_version, 3)
+        self.assertEqual(entry.text, 'User B resolved changes')
+
+    def test_new_entry_has_version_one(self):
+        """Test that newly created entries start with version 1."""
+        self.client.force_login(self.user)
+        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+
+        response = self.client.get(new_url)
+        self.assertEqual(response.status_code, 302)
+
+        entry = NotebookEntry.objects.get(trip=self.trip)
+        self.assertEqual(entry.edit_version, 1)
+
 
 class NotebookEntryModelTests(TestCase):
     """Tests for NotebookEntry model constraints."""

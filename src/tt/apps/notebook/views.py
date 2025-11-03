@@ -4,7 +4,7 @@ from datetime import date as date_class, datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError, transaction
-from django.db.models import Max
+from django.db.models import F, Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
@@ -102,7 +102,9 @@ class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
 
         if form.is_valid():
             with transaction.atomic():
-                form.save()
+                entry = form.save(commit=False)
+                entry.modified_by = request.user
+                entry.save()
 
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
 
@@ -148,6 +150,7 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
             data = json.loads(request.body)
             text = data.get('text', '')
             date_str = data.get('date')
+            client_version = data.get('version')
         except json.JSONDecodeError:
             logger.warning('Invalid JSON in auto-save request')
             return JsonResponse(
@@ -155,6 +158,8 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
                 status=400
             )
 
+        # Parse date if provided
+        new_date = None
         if date_str:
             try:
                 new_date = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -165,35 +170,85 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
                     status=400
                 )
 
-            if new_date != entry.date:
-                existing = NotebookEntry.objects.filter(
-                    trip=trip,
-                    date=new_date
-                ).exclude(pk=entry.pk)
-
-                if existing.exists():
-                    return JsonResponse(
-                        {
-                            'status': 'error',
-                            'message': f'An entry for {new_date.strftime("%B %d, %Y")} already exists.'
-                        },
-                        status=400
-                    )
         try:
             with transaction.atomic():
-                entry.text = text
-                if date_str:
-                    entry.date = new_date
-                entry.save()
+                # Use select_for_update to lock the row for the duration of the transaction
+                locked_entry = NotebookEntry.objects.select_for_update().get(pk=entry.pk)
+
+                # Check version conflict - backward compatible (treat missing version as no check)
+                if client_version is not None:
+                    if locked_entry.edit_version != client_version:
+                        # Version conflict detected
+                        modified_by_name = locked_entry.modified_by.get_full_name() if locked_entry.modified_by else 'another user'
+                        logger.info(
+                            f'Version conflict for entry {entry.pk} (trip {trip_id}): '
+                            f'client={client_version}, server={locked_entry.edit_version}, '
+                            f'modified_by={modified_by_name}'
+                        )
+                        return JsonResponse(
+                            {
+                                'status': 'conflict',
+                                'server_version': locked_entry.edit_version,
+                                'server_text': locked_entry.text,
+                                'server_modified_at': locked_entry.modified_datetime.isoformat(),
+                                'modified_by_name': modified_by_name,
+                                'message': f'Entry was modified by {modified_by_name}'
+                            },
+                            status=409
+                        )
+
+                # Check for date conflicts if date is changing (inside transaction for atomicity)
+                if new_date and new_date != locked_entry.date:
+                    existing = NotebookEntry.objects.filter(
+                        trip=trip,
+                        date=new_date
+                    ).exclude(pk=locked_entry.pk).exists()
+
+                    if existing:
+                        return JsonResponse(
+                            {
+                                'status': 'error',
+                                'message': f'An entry for {new_date.strftime("%B %d, %Y")} already exists.'
+                            },
+                            status=400
+                        )
+
+                # Update fields and increment version atomically
+                locked_entry.text = text
+                locked_entry.modified_by = request.user
+                update_fields = ['text', 'edit_version', 'modified_by', 'modified_datetime']
+                if new_date:
+                    locked_entry.date = new_date
+                    update_fields.append('date')
+
+                # Use F() expression for atomic increment to prevent race conditions
+                locked_entry.edit_version = F('edit_version') + 1
+                locked_entry.save(update_fields=update_fields)
+
+                # Refresh to get the actual version value (F() expressions don't update in-memory)
+                locked_entry.refresh_from_db(fields=['edit_version', 'modified_datetime'])
 
             return JsonResponse({
                 'status': 'success',
-                'modified_datetime': entry.modified_datetime.isoformat(),
+                'version': locked_entry.edit_version,
+                'modified_datetime': locked_entry.modified_datetime.isoformat(),
             })
 
-        except (IntegrityError, DatabaseError) as e:
-            logger.error(f'Error auto-saving notebook entry: {e}')
+        except NotebookEntry.DoesNotExist:
+            logger.error(f'Entry {entry_pk} not found during atomic update')
             return JsonResponse(
-                {'status': 'error', 'message': 'Failed to save entry'},
+                {'status': 'error', 'message': 'Entry not found'},
+                status=404
+            )
+        except IntegrityError as e:
+            logger.warning(f'Integrity constraint violation for entry {entry_pk}: {e}')
+            return JsonResponse(
+                {'status': 'error', 'message': 'Unable to save - entry date conflicts with another entry'},
+                status=409
+            )
+        except DatabaseError as e:
+            logger.error(f'Database error auto-saving notebook entry {entry_pk}: {e}')
+            return JsonResponse(
+                {'status': 'error', 'message': 'Database error occurred'},
                 status=500
             )
