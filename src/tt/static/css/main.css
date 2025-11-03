@@ -1014,6 +1014,19 @@ body {
     color: var(--on-muted-color) !important;
 }
 
+/* Permission Levels Explanation Grid - Responsive flexbox layout */
+.permission-levels-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.permission-levels-grid > div {
+    flex: 1 1 180px;
+    max-width: 250px;
+    min-width: 180px;
+}
+
 /* Permission Change Dropdown Styling */
 .dropdown-item-form {
     margin: 0;

@@ -120,7 +120,7 @@ class MemberPermissionChangeView( LoginRequiredMixin, TripViewMixin, View ):
         request_member = self.get_trip_member( request, trip_id = trip_id )
         self.assert_is_admin( request_member )
         trip = request_member.trip
-        
+    
         target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
         
         if target_member.permission_level > request_member.permission_level:
