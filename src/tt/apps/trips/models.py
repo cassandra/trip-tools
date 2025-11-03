@@ -46,16 +46,6 @@ class Trip(models.Model):
             self._owner_cache = owner_member.user if owner_member else None
         return self._owner_cache
 
-    def get_user_permission(self, user):
-        """Returns the permission level for a user, or None if not a member."""
-        try:
-            member = self.members.get( user = user )
-            if isinstance( member.permission_level, TripPermissionLevel ):
-                return member.permission_level
-            return TripPermissionLevel.from_name( member.permission_level )
-        except TripMember.DoesNotExist:
-            return None
-
 
 class TripMember(models.Model):
     """
@@ -93,3 +83,17 @@ class TripMember(models.Model):
 
     def __str__(self):
         return f'{self.user.email} - {self.trip.title} ({self.permission_level})'
+    
+    def has_trip_permission( self, required_level: TripPermissionLevel ) -> bool:
+        """
+        Check if user has at least the required permission level for the trip.
+        """
+        return bool( self.permission_level >= required_level )
+
+    @property
+    def can_manage_members( self ):
+        return self.has_trip_permission( required_level = TripPermissionLevel.ADMIN )
+
+    def can_modify_member( self, other_member : 'TripMember' ):
+        return bool( self.can_manage_members
+                     and ( self.permission_level >= other_member.permission_level ))

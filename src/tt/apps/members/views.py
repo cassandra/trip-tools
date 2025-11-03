@@ -12,7 +12,8 @@ from django.views.generic import View
 from tt.async_view import ModalView
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage, TripPermissionLevel
-from tt.apps.trips.mixins import TripPermissionMixin
+from tt.apps.trips.helpers import TripHelpers
+from tt.apps.trips.mixins import TripViewMixin
 from tt.apps.trips.models import Trip, TripMember
 
 from .forms import MemberInviteForm, MemberPermissionForm, MemberRemoveForm
@@ -25,81 +26,55 @@ logger = logging.getLogger(__name__)
 INVALID_INVITATION_MESSAGE = 'This invitation link is invalid or has expired.'
 
 
-class MemberListView( LoginRequiredMixin, TripPermissionMixin, View ):
+class MemberListView( LoginRequiredMixin, TripViewMixin, View ):
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.VIEWER ):
-            raise Http404( 'Trip not found' )
-
-        user_permission = trip.get_user_permission( request.user )
-        can_manage_members = self.has_trip_permission(
-            request.user,
-            trip,
-            TripPermissionLevel.ADMIN
-        )
-
-        members = trip.members.select_related( 'user', 'added_by' ).all()
-
-        user_permission_rank = self.PERMISSION_HIERARCHY.get( user_permission, 0 )
-        for member in members:
-            member.can_modify = bool(
-                can_manage_members
-                and self.PERMISSION_HIERARCHY.get( member.permission_level, 0 ) < user_permission_rank
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_viewer( request_member )
+        trip = request_member.trip
+        
+        all_members = trip.members.select_related( 'user', 'added_by' ).all()
+        member_data_list = list()
+        for target_member in all_members:
+            member_data = TripHelpers.create_trip_member_data( 
+                request_member = request_member ,
+                target_member = target_member,
             )
+            member_data_list.append( member_data )
             continue
-
-        is_owner = bool( user_permission == TripPermissionLevel.OWNER )
 
         trip_page_context = TripPageContext(
             trip = trip,
             active_page = TripPage.MEMBERS,
         )
-
-        # Get permission levels for dropdown (all levels user can assign)
-        permission_levels = []
-        for level in TripPermissionLevel:
-            level_rank = self.PERMISSION_HIERARCHY.get( level, 0 )
-            if level_rank < user_permission_rank:
-                permission_levels.append( (level.name.lower(), level.label) )
-            continue
-
         context = {
             'trip_page': trip_page_context,
-            'members': members,
-            'can_manage_members': can_manage_members,
-            'is_owner': is_owner,
-            'user_permission': user_permission,
-            'permission_levels': permission_levels,
+            'request_member': request_member,
+            'member_data_list': member_data_list,
         }
 
         return render( request, 'members/pages/list.html', context )
 
 
-class MemberInviteModalView( LoginRequiredMixin, TripPermissionMixin, ModalView ):
+class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
     def get_template_name(self) -> str:
         return 'members/modals/invite.html'
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.ADMIN ):
-            raise Http404( 'Trip not found' )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_admin( request_member )
+        trip = request_member.trip
 
         form = MemberInviteForm( trip = trip )
-
         context = {
             'form': form,
             'trip': trip,
         }
-
         return self.modal_response( request, context = context )
 
     def post(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.ADMIN ):
-            raise Http404( 'Trip not found' )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_admin( request_member )
+        trip = request_member.trip
 
         form = MemberInviteForm( request.POST, trip = trip )
 
@@ -108,14 +83,10 @@ class MemberInviteModalView( LoginRequiredMixin, TripPermissionMixin, ModalView 
             permission_level = form.cleaned_data['permission_level']
             send_email = form.cleaned_data.get( 'send_email', True )
 
-            user_permission = trip.get_user_permission( request.user )
-            user_permission_rank = self.PERMISSION_HIERARCHY.get( user_permission, 0 )
-            new_member_rank = self.PERMISSION_HIERARCHY.get( permission_level, 0 )
-
-            if new_member_rank >= user_permission_rank:
+            if permission_level > request_member.permission_level:
                 form.add_error(
                     'permission_level',
-                    'You cannot grant a permission level equal to or higher than your own.'
+                    'You cannot grant a permission level higher than your own.'
                 )
             else:
                 try:
@@ -139,158 +110,124 @@ class MemberInviteModalView( LoginRequiredMixin, TripPermissionMixin, ModalView 
             'form': form,
             'trip': trip,
         }
-
         return self.modal_response( request, context = context, status = 400 )
 
 
-class MemberPermissionChangeView( LoginRequiredMixin, TripPermissionMixin, View ):
+class MemberPermissionChangeView( LoginRequiredMixin, TripViewMixin, View ):
+
     def post(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-        member = get_object_or_404( TripMember, pk = member_id, trip = trip )
-
-        if not self.has_trip_permission( request.user, trip, TripPermissionLevel.ADMIN ):
-            raise Http404( 'Trip not found' )
-
-        user_permission = trip.get_user_permission( request.user )
-        user_permission_rank = self.PERMISSION_HIERARCHY.get( user_permission, 0 )
-        member_permission_rank = self.PERMISSION_HIERARCHY.get( member.permission_level, 0 )
-
-        if member_permission_rank >= user_permission_rank:
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_admin( request_member )
+        trip = request_member.trip
+        
+        target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
+        
+        if target_member.permission_level > request_member.permission_level:
             raise Http404( 'Cannot modify this member' )
 
-        form = MemberPermissionForm( request.POST, member = member )
+        form = MemberPermissionForm( request.POST, member = target_member )
+        if not form.is_valid():
+            raise BadRequest( 'Invalid permission level selected.' )
+            
+        new_permission_level = form.cleaned_data['permission_level']
+        if new_permission_level > request_member.permission_level:
+            raise BadRequest( 'You cannot grant a permission level higher than your own.' )
 
-        if form.is_valid():
-            new_permission_level = form.cleaned_data['permission_level']
-            new_permission_rank = self.PERMISSION_HIERARCHY.get( new_permission_level, 0 )
+        with transaction.atomic():
+            # If demoting from OWNER, verify another owner exists
+            if (( target_member.permission_level == TripPermissionLevel.OWNER )
+                and ( new_permission_level != TripPermissionLevel.OWNER )):
+                owner_count = trip.members.select_for_update().filter(
+                    permission_level = TripPermissionLevel.OWNER
+                ).exclude( pk = target_member.pk ).count()
+                if owner_count < 1:
+                    raise BadRequest( 'Cannot demote the last owner. Promote another owner first.' )
 
-            if new_permission_rank >= user_permission_rank:
-                raise BadRequest( 'You cannot grant a permission level equal to or higher than your own.' )
+            target_member.permission_level = new_permission_level
+            target_member.save()
 
-            with transaction.atomic():
-                # If demoting from OWNER, verify another owner exists
-                if member.permission_level == TripPermissionLevel.OWNER and \
-                   new_permission_level != TripPermissionLevel.OWNER:
-                    owner_count = trip.members.select_for_update().filter(
-                        permission_level = TripPermissionLevel.OWNER
-                    ).exclude( pk = member.pk ).count()
-                    if owner_count < 1:
-                        raise BadRequest( 'Cannot demote the last owner. Promote another member to owner first.' )
+        logger.debug(
+            f'User {request.user.email} changed permission for {target_member.user.email} '
+            f'to {new_permission_level.label} on trip {trip.pk}'
+        )
 
-                member.permission_level = new_permission_level
-                member.save()
-
-            logger.info(
-                f'User {request.user.email} changed permission for {member.user.email} '
-                f'to {new_permission_level.label} on trip {trip.pk}'
-            )
-
-            # Return updated member card HTML for async replacement
-            is_owner = bool( user_permission == TripPermissionLevel.OWNER )
-            can_manage_members = self.has_trip_permission( request.user, trip, TripPermissionLevel.ADMIN )
-            member.can_modify = bool(
-                can_manage_members
-                and self.PERMISSION_HIERARCHY.get( member.permission_level, 0 ) < user_permission_rank
-            )
-
-            context = {
-                'member': member,
-                'trip_page': { 'trip': trip },
-                'is_owner': is_owner,
-                'request': request,
-            }
-
-            return render( request, 'members/snippets/member_card.html', context )
-
-        raise BadRequest( 'Invalid permission level selected.' )
+        member_data = TripHelpers.create_trip_member_data( 
+            request_member = request_member ,
+            target_member = target_member,
+        )
+        context = {
+            'request_member': request_member,
+            'member_data': member_data,
+        }
+        return render( request, 'members/snippets/member_card.html', context )
 
 
-class MemberRemoveModalView( LoginRequiredMixin, TripPermissionMixin, ModalView ):
+class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
+
     def get_template_name(self) -> str:
         return 'members/modals/remove.html'
 
     def get(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-        member = get_object_or_404( TripMember, pk = member_id, trip = trip )
-
-        is_self_removal = bool( member.user == request.user )
-
-        if is_self_removal:
-            required_permission = TripPermissionLevel.VIEWER
-        else:
-            required_permission = TripPermissionLevel.ADMIN
-
-        if not self.has_trip_permission( request.user, trip, required_permission ):
-            raise Http404( 'Trip not found' )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        trip = request_member.trip
+        
+        target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
+        is_self_removal = bool( request_member.user == target_member.user )
 
         if not is_self_removal:
-            user_permission = trip.get_user_permission( request.user )
-            user_permission_rank = self.PERMISSION_HIERARCHY.get( user_permission, 0 )
-            member_permission_rank = self.PERMISSION_HIERARCHY.get( member.permission_level, 0 )
-
-            if member_permission_rank >= user_permission_rank:
+            self.assert_is_admin( trip_member = request_member )
+            if target_member.permission_level > request_member.permission_level:
                 raise Http404( 'Cannot remove this member' )
 
-        if member.permission_level == TripPermissionLevel.OWNER:
+        if target_member.permission_level == TripPermissionLevel.OWNER:
             owner_count = trip.members.filter(
                 permission_level = TripPermissionLevel.OWNER
             ).count()
             if owner_count <= 1:
                 raise BadRequest(
-                    'Cannot remove the last owner. Transfer ownership to another member first.'
+                    'Cannot remove the last owner. Add another owner first.'
                 )
 
-        form = MemberRemoveForm( member = member, is_self_removal = is_self_removal )
+        form = MemberRemoveForm( member = target_member, is_self_removal = is_self_removal )
 
         context = {
             'form': form,
             'trip': trip,
-            'member': member,
+            'member': target_member,
             'is_self_removal': is_self_removal,
         }
-
         return self.modal_response( request, context = context )
 
     def post(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        trip = get_object_or_404( Trip, pk = trip_id )
-        member = get_object_or_404( TripMember, pk = member_id, trip = trip )
-
-        is_self_removal = bool( member.user == request.user )
-
-        if is_self_removal:
-            required_permission = TripPermissionLevel.VIEWER
-        else:
-            required_permission = TripPermissionLevel.ADMIN
-
-        if not self.has_trip_permission( request.user, trip, required_permission ):
-            raise Http404( 'Trip not found' )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        trip = request_member.trip
+        
+        target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
+        is_self_removal = bool( request_member.user == target_member.user )
 
         if not is_self_removal:
-            user_permission = trip.get_user_permission( request.user )
-            user_permission_rank = self.PERMISSION_HIERARCHY.get( user_permission, 0 )
-            member_permission_rank = self.PERMISSION_HIERARCHY.get( member.permission_level, 0 )
-
-            if member_permission_rank >= user_permission_rank:
+            self.assert_is_admin( trip_member = request_member )
+            if target_member.permission_level > request_member.permission_level:
                 raise Http404( 'Cannot remove this member' )
 
-        form = MemberRemoveForm( request.POST, member = member, is_self_removal = is_self_removal )
+        form = MemberRemoveForm( request.POST, member = target_member, is_self_removal = is_self_removal )
 
         if form.is_valid():
             with transaction.atomic():
                 # Re-check owner count inside transaction with row locking to prevent race conditions
-                if member.permission_level == TripPermissionLevel.OWNER:
+                if target_member.permission_level == TripPermissionLevel.OWNER:
                     owner_count = trip.members.select_for_update().filter(
                         permission_level = TripPermissionLevel.OWNER
                     ).count()
                     if owner_count <= 1:
                         raise BadRequest(
-                            'Cannot remove the last owner. Transfer ownership to another member first.'
+                            'Cannot remove the last owner. Add another owner first.'
                         )
 
-                member.delete()
+                target_member.delete()
 
             logger.info(
-                f'User {request.user.email} removed {member.user.email} '
+                f'User {request.user.email} removed {target_member.user.email} '
                 f'from trip {trip.pk} (self_removal={is_self_removal})'
             )
 
@@ -302,7 +239,7 @@ class MemberRemoveModalView( LoginRequiredMixin, TripPermissionMixin, ModalView 
         context = {
             'form': form,
             'trip': trip,
-            'member': member,
+            'member': target_member,
             'is_self_removal': is_self_removal,
         }
 

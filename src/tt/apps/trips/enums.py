@@ -17,14 +17,41 @@ class TripPage(str, Enum):
 class TripPermissionLevel( LabeledEnum ):
     """
     Permission levels for trip sharing.
-
-    Ordered from highest to lowest permission, though enforcement
-    is defined by TripPermissionMixin:PERMISSION_HIERARCHY.
     """
-    OWNER   = ( 'Owner', 'Full control including deletion and sharing' )
-    ADMIN   = ( 'Admin', 'Can edit and manage most aspects' )
-    EDITOR  = ( 'Editor', 'Can edit trip content' )
-    VIEWER  = ( 'Viewer', 'Can view trip content' )
+    OWNER   = ( 'Owner', 'Full control including deletion and sharing' , 4 )
+    ADMIN   = ( 'Admin', 'Can edit and manage most aspects'            , 3 )
+    EDITOR  = ( 'Editor', 'Can edit trip content'                      , 2 )
+    VIEWER  = ( 'Viewer', 'Can view trip content'                      , 1 )
+
+    def __init__( self, label, description, priority ):
+        super().__init__( label, description )
+        self.priority = priority
+        return
+
+    def __lt__( self, other ):
+        if not isinstance( other, TripPermissionLevel ):
+            raise NotImplementedError()
+        return bool( self.priority < other.priority )
+
+    def __le__( self, other ):
+        if not isinstance( other, TripPermissionLevel ):
+            raise NotImplementedError()
+        return bool( self.priority <= other.priority )
+
+    def __gt__( self, other ):
+        if not isinstance( other, TripPermissionLevel ):
+            raise NotImplementedError()
+        return bool( self.priority > other.priority )
+
+    def __ge__( self, other ):
+        if not isinstance( other, TripPermissionLevel ):
+            raise NotImplementedError()
+        return bool( self.priority >= other.priority )
+
+    def __eq__( self, other ):
+        if not isinstance( other, TripPermissionLevel ):
+            raise NotImplementedError()
+        return bool( self.priority == other.priority )
 
 
 class TripStatus( LabeledEnum ):

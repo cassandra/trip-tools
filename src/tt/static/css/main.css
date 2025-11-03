@@ -1013,3 +1013,36 @@ body {
     background-color: #6c757d !important;
     color: #ffffff !important;
 }
+
+/* Permission Change Dropdown Styling */
+.dropdown-item-form {
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-item-form .dropdown-item {
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    padding: 0.25rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.dropdown-item-form .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item-form .dropdown-item:focus {
+    outline: none;
+    background-color: #e9ecef;
+}
+
+.dropdown-item-form .dropdown-item .badge {
+    min-width: 4rem;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+

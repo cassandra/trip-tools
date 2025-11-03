@@ -8,7 +8,7 @@
     <h1 class="h2 mb-1">Trip Members</h1>
     <p class="text-muted">Manage who has access to this trip</p>
   </div>
-  {% if can_manage_members %}
+  {% if request_member.can_manage_members %}
   <div>
     <a href="{% url 'members_invite' trip_id=trip_page.trip.pk %}" class="btn btn-primary" data-async="modal">
       {% icon "plus" %}
@@ -18,10 +18,10 @@
   {% endif %}
 </div>
 
-{% if members %}
+{% if member_data_list %}
 <div class="list-group">
-  {% for member in members %}
-    {% include "members/snippets/member_card.html" with member=member trip_page=trip_page is_owner=is_owner permission_levels=permission_levels %}
+  {% for member_data in member_data_list %}
+    {% include "members/snippets/member_card.html" with member_data=member_data %}
   {% endfor %}
 </div>
 {% else %}
