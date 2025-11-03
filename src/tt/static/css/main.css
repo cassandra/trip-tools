@@ -985,6 +985,9 @@ body {
   display: flex;
   align-items: center;
 }
+.secondary-page-content {
+  padding-top: 1rem; /* Compensate for -1rem top margin on secondary-page-header */
+}
 
 /* Notebook Editor Sticky Header */
 .notebook-editor-header {

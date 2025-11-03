@@ -6,7 +6,7 @@ particularly focusing on XSS prevention and edge cases.
 """
 from django.test import TestCase
 
-from tt.apps.notebook.views import generate_unified_diff_html
+from tt.apps.notebook.autosave_helpers import NotebookDiffHelper
 
 
 class GenerateUnifiedDiffHtmlTests(TestCase):
@@ -17,7 +17,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Hello, world!"
         client_text = "Hello, world!"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         self.assertIn('diff-no-changes', result)
         self.assertIn('No differences detected', result)
@@ -27,7 +27,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Line 1\nLine 2"
         client_text = "Line 1\nLine 2\nLine 3"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         self.assertIn('diff-add', result)
         self.assertIn('Line 3', result)
@@ -37,7 +37,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Line 1\nLine 2\nLine 3"
         client_text = "Line 1\nLine 2"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         self.assertIn('diff-delete', result)
         self.assertIn('Line 3', result)
@@ -47,7 +47,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Hello, world!"
         client_text = "Hello, universe!"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         self.assertIn('diff-delete', result)
         self.assertIn('diff-add', result)
@@ -59,7 +59,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Safe content"
         client_text = "<script>alert('XSS')</script>"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Script tags should be escaped
         self.assertNotIn('<script>', result)
@@ -71,7 +71,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Normal text"
         client_text = "<img src=x onerror=alert('XSS')>"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # HTML should be escaped
         self.assertNotIn('<img', result)
@@ -83,7 +83,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "A & B"
         client_text = "A & B & C"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Ampersands should be escaped (unless part of existing entity)
         self.assertIn('&amp;', result)
@@ -93,7 +93,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = 'Normal text'
         client_text = 'Text with "quotes" and \'apostrophes\''
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Quotes should be escaped or handled safely
         # (html.escape converts " to &quot; and ' to &#x27;)
@@ -106,7 +106,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
         client_text = "Line 1\nModified Line 2\nLine 3\nLine 4\nNew Line 5"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Should contain header, hunk, delete, and add divs
         self.assertIn('diff-header', result)
@@ -120,7 +120,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7"
         client_text = "Line 1\nLine 2\nLine 3\nModified 4\nLine 5\nLine 6\nLine 7"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Should contain context lines (unchanged lines around the change)
         self.assertIn('diff-context', result)
@@ -130,7 +130,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = ""
         client_text = "New line 1\nNew line 2"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         self.assertIn('diff-add', result)
         self.assertIn('New line 1', result)
@@ -141,7 +141,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Old line 1\nOld line 2"
         client_text = ""
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         self.assertIn('diff-delete', result)
         self.assertIn('Old line 1', result)
@@ -152,7 +152,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = ""
         client_text = ""
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         self.assertIn('diff-no-changes', result)
         self.assertIn('No differences detected', result)
@@ -162,7 +162,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Old content"
         client_text = "New content"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Should contain file headers with descriptive labels
         self.assertIn('Server Version (Latest)', result)
@@ -174,7 +174,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Line 1\nLine 2\nLine 3"
         client_text = "Line 1\nModified\nLine 3"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Should contain hunk header with @@ markers
         self.assertIn('diff-hunk', result)
@@ -185,7 +185,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Special: @#$%^&*()"
         client_text = "Special: @#$%^&*()!+"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Special chars should be present (escaped if needed)
         self.assertIn('@#$%', result)
@@ -195,7 +195,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Hello 世界"
         client_text = "Hello 世界! 🌍"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Unicode should be preserved
         self.assertIn('世界', result)
@@ -206,7 +206,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Line with spaces"
         client_text = "Line  with  spaces"  # Extra spaces
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Should detect the difference
         self.assertNotIn('diff-no-changes', result)
@@ -218,7 +218,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "Line 1\nLine 2\nLine 3"
         client_text = "Line 1\nLine 2\nLine 3\nLine 4"
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Should properly detect the added line
         self.assertIn('diff-add', result)
@@ -233,7 +233,7 @@ class GenerateUnifiedDiffHtmlTests(TestCase):
         server_text = "\n".join(server_lines)
         client_text = "\n".join(client_lines)
 
-        result = generate_unified_diff_html(server_text, client_text)
+        result = NotebookDiffHelper.generate_unified_diff_html(server_text, client_text)
 
         # Should handle large diffs without error
         self.assertIn('diff-delete', result)

@@ -1,86 +1,22 @@
-import difflib
-import html
-import json
 import logging
-from datetime import date as date_class, datetime, timedelta
+from datetime import date as date_class, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError, transaction
-from django.db.models import F, Max
+from django.db.models import Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
 
-from tt.apps.common import antinode
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
 
+from .autosave_helpers import NotebookAutoSaveHelper, NotebookConflictHelper
 from .forms import NotebookEntryForm
 from .models import NotebookEntry
 
 logger = logging.getLogger(__name__)
-
-
-def generate_unified_diff_html(server_text: str, client_text: str) -> str:
-    """
-    Generate HTML-formatted unified diff comparing server text to client text.
-
-    Shows changes from server version (what's on server) to client version
-    (what user was trying to save). Uses standard unified diff format.
-
-    Args:
-        server_text: Current text on server (latest version)
-        client_text: Text from client that caused conflict
-
-    Returns:
-        HTML string with styled unified diff, ready for display
-    """
-    # Split texts into lines for difflib (preserving line endings)
-    server_lines = server_text.splitlines(keepends=True)
-    client_lines = client_text.splitlines(keepends=True)
-
-    # Generate unified diff
-    diff_lines = difflib.unified_diff(
-        server_lines,
-        client_lines,
-        fromfile='Server Version (Latest)',
-        tofile='Your Changes',
-        lineterm='',
-        n=3  # 3 lines of context (standard)
-    )
-
-    # Convert to list and check if there are any differences
-    diff_list = list(diff_lines)
-    if not diff_list:
-        return '<div class="diff-no-changes">No differences detected</div>'
-
-    # Build HTML with proper styling
-    html_parts = ['<div class="unified-diff">']
-
-    for line in diff_list:
-        # Escape HTML to prevent XSS
-        escaped_line = html.escape(line)
-
-        # Apply styling based on line prefix
-        if line.startswith('---') or line.startswith('+++'):
-            # File headers
-            html_parts.append(f'<div class="diff-header">{escaped_line}</div>')
-        elif line.startswith('@@'):
-            # Hunk headers (line number ranges)
-            html_parts.append(f'<div class="diff-hunk">{escaped_line}</div>')
-        elif line.startswith('-'):
-            # Deleted lines (in server version, not in client)
-            html_parts.append(f'<div class="diff-delete">{escaped_line}</div>')
-        elif line.startswith('+'):
-            # Added lines (in client, not in server)
-            html_parts.append(f'<div class="diff-add">{escaped_line}</div>')
-        else:
-            # Context lines (unchanged)
-            html_parts.append(f'<div class="diff-context">{escaped_line}</div>')
-
-    html_parts.append('</div>')
-    return ''.join(html_parts)
 
 
 class NotebookListView( LoginRequiredMixin, TripViewMixin, View ):
@@ -221,29 +157,12 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
             trip = trip,
         )
 
-        try:
-            data = json.loads(request.body)
-            text = data.get('text', '')
-            date_str = data.get('date')
-            client_version = data.get('version')
-        except json.JSONDecodeError:
-            logger.warning('Invalid JSON in auto-save request')
-            return JsonResponse(
-                {'status': 'error', 'message': 'Invalid JSON'},
-                status=400
-            )
-
-        # Parse date if provided
-        new_date = None
-        if date_str:
-            try:
-                new_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            except ValueError:
-                logger.warning(f'Invalid date format: {date_str}')
-                return JsonResponse(
-                    {'status': 'error', 'message': 'Invalid date format'},
-                    status=400
-                )
+        # Parse and validate request
+        autosave_request, error_response = NotebookAutoSaveHelper.parse_autosave_request(
+            request_body = request.body
+        )
+        if error_response:
+            return error_response
 
         try:
             with transaction.atomic():
@@ -251,82 +170,34 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
                 locked_entry = NotebookEntry.objects.select_for_update().get(pk=entry.pk)
 
                 # Check version conflict - backward compatible (treat missing version as no check)
-                if client_version is not None:
-                    if locked_entry.edit_version != client_version:
-                        # Version conflict detected
-                        if locked_entry.modified_by:
-                            modified_by_name = locked_entry.modified_by.get_full_name()
-                        else:
-                            modified_by_name = 'another user'
-                        logger.info(
-                            f'Version conflict for entry {entry.pk} (trip {trip_id}): '
-                            f'client={client_version}, server={locked_entry.edit_version}, '
-                            f'modified_by={modified_by_name}'
-                        )
-
-                        # Generate unified diff HTML for modal display
-                        diff_html = generate_unified_diff_html(
-                            server_text=locked_entry.text,
-                            client_text=text
-                        )
-
-                        # Render modal template
-                        from django.template.loader import render_to_string
-                        modal_html = render_to_string(
-                            'notebook/modals/edit_conflict.html',
-                            {
-                                'modified_by_name': modified_by_name,
-                                'modified_at_datetime': locked_entry.modified_datetime,
-                                'diff_html': diff_html,
-                            },
-                            request=request
-                        )
-
-                        # Return modal HTML for frontend display
-                        # Include server_version for programmatic conflict resolution
-                        return antinode.http_response(
-                            {
-                                'modal': modal_html,
-                                'server_version': locked_entry.edit_version,
-                            },
-                            status=409
+                if autosave_request.client_version is not None:
+                    if locked_entry.edit_version != autosave_request.client_version:
+                        return NotebookConflictHelper.build_conflict_response(
+                            request = request,
+                            entry = locked_entry,
+                            client_text = autosave_request.text
                         )
 
                 # Check for date conflicts if date is changing (inside transaction for atomicity)
-                if new_date and new_date != locked_entry.date:
-                    existing = NotebookEntry.objects.filter(
-                        trip=trip,
-                        date=new_date
-                    ).exclude(pk=locked_entry.pk).exists()
-
-                    if existing:
-                        return JsonResponse(
-                            {
-                                'status': 'error',
-                                'message': f'An entry for {new_date.strftime("%B %d, %Y")} already exists.'
-                            },
-                            status=400
-                        )
+                date_error = NotebookAutoSaveHelper.validate_date_uniqueness(
+                    entry = locked_entry,
+                    new_date = autosave_request.new_date
+                )
+                if date_error:
+                    return date_error
 
                 # Update fields and increment version atomically
-                locked_entry.text = text
-                locked_entry.modified_by = request.user
-                update_fields = ['text', 'edit_version', 'modified_by', 'modified_datetime']
-                if new_date:
-                    locked_entry.date = new_date
-                    update_fields.append('date')
-
-                # Use F() expression for atomic increment to prevent race conditions
-                locked_entry.edit_version = F('edit_version') + 1
-                locked_entry.save(update_fields=update_fields)
-
-                # Refresh to get the actual version value (F() expressions don't update in-memory)
-                locked_entry.refresh_from_db(fields=['edit_version', 'modified_datetime'])
+                updated_entry = NotebookAutoSaveHelper.update_entry_atomically(
+                    entry = locked_entry,
+                    text = autosave_request.text,
+                    user = request.user,
+                    new_date = autosave_request.new_date
+                )
 
             return JsonResponse({
                 'status': 'success',
-                'version': locked_entry.edit_version,
-                'modified_datetime': locked_entry.modified_datetime.isoformat(),
+                'version': updated_entry.edit_version,
+                'modified_datetime': updated_entry.modified_datetime.isoformat(),
             })
 
         except NotebookEntry.DoesNotExist:

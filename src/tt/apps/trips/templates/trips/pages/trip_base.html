@@ -83,11 +83,13 @@
       <span class="badge badge-info">{{ trip_page.trip.trip_status.label }}</span>
     </div>
     {% block trip_extra_actions %}
-      {% endblock %}
+    {% endblock %}
   </div>
 </div>
 
-{% block trip_content %}
-{% endblock %}
+<div class="secondary-page-content">
+  {% block trip_content %}
+  {% endblock %}
+</div>
 
 {% endblock %}
