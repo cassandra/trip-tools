@@ -15,6 +15,7 @@ from tt.apps.trips.enums import TripPage, TripPermissionLevel
 from tt.apps.trips.helpers import TripHelpers
 from tt.apps.trips.mixins import TripViewMixin
 from tt.apps.trips.models import Trip, TripMember
+from tt.apps.user.enums import SigninErrorType
 
 from .forms import MemberInviteForm, MemberPermissionForm, MemberRemoveForm
 from .invitation_manager import MemberInvitationManager
@@ -250,6 +251,8 @@ class MemberAcceptInvitationView( View ):
     """Accept invitation link for existing verified users."""
 
     def get(self, request, trip_id: int, email: str, token: str, *args, **kwargs) -> HttpResponse:
+        from django.utils import timezone
+
         trip = get_object_or_404( Trip, pk = trip_id )
 
         try:
@@ -257,29 +260,36 @@ class MemberAcceptInvitationView( View ):
         except User.DoesNotExist:
             raise Http404( 'Invalid invitation link' )
 
+        # Verify token with one-time use check
         invitation_manager = MemberInvitationManager()
-        is_valid = invitation_manager.verify_invitation_token( user = user, token = token )
+        is_valid = invitation_manager.verify_invitation_token( user = user, token = token, trip = trip )
 
         if not is_valid:
-            context = {
-                'trip': trip,
-                'error_message': INVALID_INVITATION_MESSAGE,
-            }
-            return render( request, 'members/pages/invitation_invalid.html', context )
+            # Redirect to signin with error message for expired/used tokens
+            signin_url = reverse( 'user_signin' ) + f'?error={SigninErrorType.INVITATION_EXPIRED.name.lower()}'
+            return HttpResponseRedirect( signin_url )
 
+        # Log user in if not authenticated
         if not request.user.is_authenticated:
             request.user = user
             django_login( request, user )
 
-        if not user.email_verified:
-            user.email_verified = True
-            user.save()
+        # Mark email as verified and invitation as accepted in single transaction
+        with transaction.atomic():
+            # Mark email as verified (clicking email link proves they have access to the email)
+            if not user.email_verified:
+                user.email_verified = True
+                user.save()
+                logger.info( f'Verified email for {user.email} via invitation link' )
 
-        try:
-            TripMember.objects.get( trip = trip, user = user )
-            logger.info( f'User {user.email} accepted invitation to trip {trip.pk}' )
-        except TripMember.DoesNotExist:
-            logger.warning( f'User {user.email} has no membership for trip {trip.pk}' )
+            # Mark invitation as accepted (one-time use)
+            try:
+                member = TripMember.objects.get( trip = trip, user = user )
+                member.invitation_accepted_datetime = timezone.now()
+                member.save()
+                logger.info( f'User {user.email} accepted invitation to trip {trip.pk}' )
+            except TripMember.DoesNotExist:
+                logger.warning( f'User {user.email} has no membership for trip {trip.pk}' )
 
         return HttpResponseRedirect( reverse( 'trips_home', kwargs = { 'trip_id': trip.pk } ) )
 
@@ -288,6 +298,8 @@ class MemberSignupAndAcceptView( View ):
     """Signup and accept invitation link for new/unverified users."""
 
     def get(self, request, trip_id: int, email: str, token: str, *args, **kwargs) -> HttpResponse:
+        from django.utils import timezone
+
         trip = get_object_or_404( Trip, pk = trip_id )
 
         try:
@@ -295,29 +307,36 @@ class MemberSignupAndAcceptView( View ):
         except User.DoesNotExist:
             raise Http404( 'Invalid invitation link' )
 
+        # Verify token with one-time use check
         invitation_manager = MemberInvitationManager()
-        is_valid = invitation_manager.verify_invitation_token( user = user, token = token )
+        is_valid = invitation_manager.verify_invitation_token( user = user, token = token, trip = trip )
 
         if not is_valid:
-            context = {
-                'trip': trip,
-                'error_message': INVALID_INVITATION_MESSAGE,
-            }
-            return render( request, 'members/pages/invitation_invalid.html', context )
+            # Redirect to signin with error message for expired/used tokens
+            signin_url = reverse( 'user_signin' ) + f'?error={SigninErrorType.INVITATION_EXPIRED.name.lower()}'
+            return HttpResponseRedirect( signin_url )
 
+        # Log user in if not authenticated
         if not request.user.is_authenticated:
             request.user = user
             django_login( request, user )
 
-        if not user.email_verified:
-            user.email_verified = True
-            user.save()
+        # Mark email as verified and invitation as accepted in single transaction
+        with transaction.atomic():
+            # Mark email as verified (clicking email link proves they have access to the email)
+            if not user.email_verified:
+                user.email_verified = True
+                user.save()
+                logger.info( f'Verified email for {user.email} via invitation link' )
 
-        try:
-            TripMember.objects.get( trip = trip, user = user )
-            logger.info( f'New user {user.email} signed up and accepted invitation to trip {trip.pk}' )
-        except TripMember.DoesNotExist:
-            logger.warning( f'User {user.email} has no membership for trip {trip.pk}' )
+            # Mark invitation as accepted (one-time use)
+            try:
+                member = TripMember.objects.get( trip = trip, user = user )
+                member.invitation_accepted_datetime = timezone.now()
+                member.save()
+                logger.info( f'New user {user.email} signed up and accepted invitation to trip {trip.pk}' )
+            except TripMember.DoesNotExist:
+                logger.warning( f'User {user.email} has no membership for trip {trip.pk}' )
 
         context = {
             'trip': trip,

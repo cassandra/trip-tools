@@ -14,6 +14,7 @@ from django.views.generic import View
 from tt.apps.notify.email_sender import EmailSender
 
 from . import forms
+from .enums import SigninErrorType
 from .magic_code_generator import MagicCodeStatus, MagicCodeGenerator
 from .signin_manager import SigninManager
 from .transient_models import UserAuthenticationData
@@ -24,8 +25,20 @@ logger = logging.getLogger(__name__)
 class UserSigninView( View ):
 
     def get(self, request, *args, **kwargs):
+        error_message = None
+        error_param = request.GET.get( 'error' )
+
+        if error_param:
+            try:
+                error_type = SigninErrorType.from_name( error_param )
+                error_message = error_type.description
+            except ValueError:
+                # Unknown error type, ignore
+                pass
+
         context = {
             'email_not_configured': not EmailSender.is_email_configured(),
+            'error_message': error_message,
         }
         return render( request, 'user/pages/signin.html', context )
 

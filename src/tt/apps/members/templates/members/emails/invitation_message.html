@@ -1,9 +1,9 @@
 {% extends "notify/emails/base_email_message.html" %}
 {% load common_tags %}
-{% block title %}Trip Invitation{% endblock %}
+{% block title %}Added to Trip{% endblock %}
 {% block content %}
 <p>
-  <strong>{{ invited_by_name }}</strong> has invited you to collaborate on a trip:
+  <strong>{{ invited_by_name }}</strong> has added you to a trip:
 </p>
 <p>
   <strong>Trip:</strong> {{ trip_title }}<br>
@@ -13,10 +13,10 @@
 </p>
 <p>
   <a href="{{ acceptance_url }}" style="display: inline-block; padding: 10px 20px; background-color: #177072; color: white; text-decoration: none; border-radius: 5px;">
-    Accept Invitation
+    View Trip
   </a>
 </p>
 <p>
-  This invitation link will remain valid until you accept it.
+  This link is valid for 3 days and can only be used once.
 </p>
 {% endblock %}

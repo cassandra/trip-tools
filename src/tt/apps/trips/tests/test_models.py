@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from tt.apps.trips.enums import TripPermissionLevel
 from tt.apps.trips.models import TripMember
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 

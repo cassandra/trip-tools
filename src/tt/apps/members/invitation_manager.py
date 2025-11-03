@@ -87,7 +87,7 @@ class MemberInvitationManager( Singleton ):
                 member.save()
 
         if send_email:
-            if user_created or not user.email_verified:
+            if user_created:
                 self._send_signup_invitation_email(
                     request = request,
                     trip = trip,
@@ -185,6 +185,25 @@ class MemberInvitationManager( Singleton ):
         logger.info( f'Sent signup invitation email to {user.email} for trip {trip.pk}' )
         return
 
-    def verify_invitation_token( self, user, token : str ) -> bool:
-        """Verify that the invitation token is valid for the given user."""
-        return bool( self._token_generator.check_token( user = user, token = token ) )
+    def verify_invitation_token( self, user, token : str, trip = None ) -> bool:
+        """
+        Verify that the invitation token is valid for the given user.
+
+        Also checks one-time use: if trip is provided, verifies the invitation hasn't been accepted yet.
+        """
+        # First check the token itself
+        if not self._token_generator.check_token( user = user, token = token ):
+            return False
+
+        # If trip provided, check if invitation has already been accepted (one-time use)
+        if trip:
+            try:
+                member = TripMember.objects.get( trip = trip, user = user )
+                # If invitation was already accepted, token is no longer valid
+                if member.invitation_accepted_datetime is not None:
+                    return False
+            except TripMember.DoesNotExist:
+                # Member doesn't exist yet - token is valid
+                pass
+
+        return True

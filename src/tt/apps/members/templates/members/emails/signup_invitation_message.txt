@@ -13,4 +13,4 @@ To create your account and access the trip, click the link below:
 
 {{ signup_url }}
 
-This link will remain valid and can be used to sign in anytime.{% endblock %}
+This invitation link is valid for 3 days and can only be used once.{% endblock %}

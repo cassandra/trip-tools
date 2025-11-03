@@ -75,6 +75,11 @@ class TripMember(models.Model):
         related_name = 'trips_shared_by_me',
     )
     added_datetime = models.DateTimeField( auto_now_add = True )
+    invitation_accepted_datetime = models.DateTimeField(
+        null = True,
+        blank = True,
+        help_text = 'When the invitation was accepted. Used for one-time token validation.',
+    )
 
     class Meta:
         verbose_name = 'Trip Member'
