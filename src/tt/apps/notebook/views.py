@@ -152,6 +152,17 @@ class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
         return render(request, 'notebook/pages/editor.html', context)
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
+        """
+        Non-JavaScript fallback for saving notebook entries.
+
+        NOTE: In normal usage, notebook entries are saved via auto-save AJAX
+        (see NotebookAutoSaveView below), which provides optimistic locking,
+        version conflict detection, and real-time status updates.
+
+        This POST method serves as a fallback for environments where JavaScript
+        is disabled or for manual form submission. It handles basic save
+        functionality but lacks the collaborative editing features of auto-save.
+        """
         request_member = self.get_trip_member( request, trip_id = trip_id )
         self.assert_is_editor( request_member )
         trip = request_member.trip

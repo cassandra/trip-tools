@@ -70,7 +70,9 @@
   --top-buttons-height: 2.5rem;
   --bottom-buttons-height: 2.5rem;
   --secondary-nav-height: 50px;
-  --secondary-page-header-height: 1.5rem;
+  --secondary-page-header-height: 4rem;
+  --app-sidebar-width: 250px;
+  --app-topbar-height: 60px;
 }
 
 html, body {
@@ -652,11 +654,6 @@ input[type="password"],
    Reusable layout for application sections with fixed topbar + sidebar
    ==================== */
 
-:root {
-  --app-sidebar-width: 250px;
-  --app-topbar-height: 60px;
-}
-
 body {
   overflow-x: hidden;
 }
@@ -979,17 +976,20 @@ body {
 .secondary-page-header {
   position: sticky;
   top: var(--app-topbar-height);
+  height: var(--secondary-page-header-height);
   background-color: #f8f9fa;
   border-bottom: 1px solid var(--line-color);
   z-index: 1010;
-  margin: -1rem -1rem 1rem -1rem; /* Extend beyond .m-3 wrapper to edges */
-  padding: 1rem;  /* Add padding inside header for spacing */
+  margin: -1rem -1rem 0 -1rem; /* Extend beyond .m-3 wrapper to edges, no bottom margin */
+  padding: 0.5rem 1rem;  /* Vertical padding to fit content within defined height */
+  display: flex;
+  align-items: center;
 }
 
 /* Notebook Editor Sticky Header */
 .notebook-editor-header {
   position: sticky;
-  top: calc(var(--app-topbar-height) + 4rem); /* Below topbar and secondary-page-header */
+  top: calc(var(--app-topbar-height) + var(--secondary-page-header-height));
   background-color: #ffffff;
   border-bottom: 1px solid var(--line-color);
   z-index: 1005;
