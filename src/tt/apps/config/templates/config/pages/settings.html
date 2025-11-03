@@ -1,9 +1,31 @@
-{% extends "config/pages/config_base.html" %}
+{% extends "user/pages/account_base.html" %}
 
-{% block config_content %}
-<div class="row">
-  <div class="col-12">
-    {% include "config/panes/system_settings.html" %}
+{% block account_content %}
+<div id="{{ attr_page_context.container_html_id }}" 
+     class="{{ DIVID.ATTR_V2_CONTAINER_CLASS }}"> 
+
+  <div class="{{ DIVID.ATTR_V2_FORM_CLASS }}">
+    <form id="{{ attr_page_context.form_html_id }}"
+          action="{% if selected_subsystem_id %}{% url 'config_settings' subsystem_id=selected_subsystem_id %}{% else %}{% url 'config_settings' %}{% endif %}" 
+          method="post" 
+          class="{{ DIVID.ATTR_V2_FORM_CLASS }} form">
+      {% csrf_token %}
+      
+      <!-- Main content wrapper for updates -->
+      <div id="{{ attr_page_context.content_html_id }}" 
+           class="{{ DIVID.ATTR_V2_CONTENT_CLASS }}">
+        {% include "config/panes/subsystem_edit_content_body.html" %}
+      </div>
+    </form>
   </div>
+  
 </div>
+
+<script>
+// Initialize this specific container (for async-loaded content)
+if (window.Tt && window.Tt.attr && window.Tt.attr.initializeContainer) {
+    window.Tt.attr.initializeContainer('#{{ attr_page_context.container_html_id }}');
+}
+</script>
+
 {% endblock %}

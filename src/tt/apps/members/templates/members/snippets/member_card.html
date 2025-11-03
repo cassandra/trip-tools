@@ -1,5 +1,7 @@
 {% load static %}
 {% load icons %}
+{% load tz %}
+{% timezone USER_TIMEZONE %}
 
 <div class="list-group-item" id="member-{{ member_data.pk }}">
   <div class="d-flex w-100 justify-content-between align-items-start">
@@ -66,3 +68,4 @@
     </div>
   </div>
 </div>
+{% endtimezone %}

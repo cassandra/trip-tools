@@ -1,0 +1,18 @@
+{% extends "pages/secondary-page-horizontal-nav.html" %}
+{% load static %}
+
+{% block horizontal_nav_items %}
+{% for account_page in account_page_context.account_page_list %}
+<li class="nav-item">
+  <a class="nav-link {% if account_page == account_page_context.active_page %}active{% endif %}"
+     href="{% url account_page.url_name %}">{{ account_page.label }}</a>
+</li>
+{% endfor %}
+{% endblock %}
+
+{% block secondary_content %}
+<div class="m-3">
+  {% block account_content %}
+  {% endblock %}
+</div>
+{% endblock %}

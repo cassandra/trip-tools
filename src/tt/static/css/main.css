@@ -44,9 +44,6 @@
   --edit-mode-dash-color: #A94A32;    /* Dashed line color */
   --edit-hr-color: #a0a0a0;
   
-  --top-buttons-height: 2.5rem;
-  --bottom-buttons-height: 2.5rem;
-
   --status-highlighted-color: red;
   --status-hover-color: blue;
 
@@ -69,7 +66,10 @@
   --on-status-ok-color: white;
   --on-status-bad-color: white;
   --on-status-idle-color: black;
-  
+
+  --top-buttons-height: 2.5rem;
+  --bottom-buttons-height: 2.5rem;
+  --secondary-nav-height: 50px;
 }
 
 html, body {
@@ -731,13 +731,12 @@ body {
 
 /* Main Content Area */
 .app-main {
-  padding: 2rem;
-  margin-top: var(--app-topbar-height);
+  padding-top: var(--app-topbar-height);
   min-height: calc(100vh - var(--app-topbar-height));
   transition: margin-left 0.3s ease;
 }
 .app-main-sidebar {
-  margin-left: var(--app-sidebar-width);
+  padding-left: var(--app-sidebar-width);
 }
 
 /* Sidebar Navigation */
@@ -809,7 +808,7 @@ body {
   }
 
   .app-main {
-    margin-left: 0;
+    padding-left: 0;
   }
 }
 
@@ -817,10 +816,6 @@ body {
    Secondary Page Extensions
    Light variant backgrounds for secondary navigation
    ==================== */
-
-:root {
-  --secondary-nav-height: 50px;
-}
 
 /* Logo and branding in topbar */
 .app-topbar .logo-text {
@@ -970,22 +965,18 @@ body {
 
 /* Main Content Areas for Secondary Pages */
 .app-main-horizontal-nav {
-  margin-top: var(--secondary-nav-height));
-  padding: 2rem;
+  padding-top: var(--secondary-nav-height);
   min-height: calc(100vh - var(--secondary-nav-height));
 }
 
 .app-main-simple {
-  margin-top: var(--app-topbar-height);
+  padding-top: var(--app-topbar-height);
   padding: 2rem;
   min-height: calc(100vh - var(--app-topbar-height));
 }
 
 /* Mobile Responsive for Secondary Pages */
 @media (max-width: 768px) {
-  .app-main-horizontal-nav {
-    margin-top: var(--secondary-nav-height);
-  }
 
   .secondary-nav-horizontal .nav-tabs .nav-link {
     padding: 0 1rem;
