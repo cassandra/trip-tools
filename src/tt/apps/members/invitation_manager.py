@@ -101,7 +101,7 @@ class MemberInvitationManager( Singleton ):
                     user = user,
                     invited_by_user = invited_by_user,
                 )
-
+            
         return member, user_created
 
     def _send_invitation_email( self,

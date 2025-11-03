@@ -1005,13 +1005,13 @@ body {
 }
 
 .bg-editor {
-    background-color: var(--info-color) !important;
-    color: var(--on-primary-color) !important;
+    background-color: var(--warning-color) !important;
+    color: var(--on-warning-color) !important;
 }
 
 .bg-viewer {
-    background-color: #6c757d !important;
-    color: #ffffff !important;
+    background-color: var(--muted-color) !important;
+    color: var(--on-muted-color) !important;
 }
 
 /* Permission Change Dropdown Styling */

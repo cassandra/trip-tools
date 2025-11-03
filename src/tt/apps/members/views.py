@@ -290,7 +290,7 @@ class MemberAcceptInvitationView( View ):
                     pass
 
             # Redirect to signin with error message for expired/used tokens
-            signin_url = reverse( 'user_signin' ) + f'?error={SigninErrorType.INVITATION_EXPIRED.name.lower()}'
+            signin_url = reverse( 'user_signin' ) + f'?error={SigninErrorType.INVITATION_EXPIRED}'
             return HttpResponseRedirect( signin_url )
 
         # Log user in if not authenticated
@@ -361,7 +361,7 @@ class MemberSignupAndAcceptView( View ):
                     pass
 
             # Redirect to signin with error message for expired/used tokens
-            signin_url = reverse( 'user_signin' ) + f'?error={SigninErrorType.INVITATION_EXPIRED.name.lower()}'
+            signin_url = reverse( 'user_signin' ) + f'?error={SigninErrorType.INVITATION_EXPIRED}'
             return HttpResponseRedirect( signin_url )
 
         # Log user in if not authenticated
