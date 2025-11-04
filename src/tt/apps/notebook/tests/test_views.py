@@ -41,7 +41,7 @@ class NotebookListViewTests(TestCase):
         response = self.client.get(self.list_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'notebook/pages/list.html')
+        self.assertTemplateUsed(response, 'notebook/pages/notebook_entry_list.html')
         self.assertIn('trip_page', response.context)
         self.assertIn('notebook_entries', response.context)
 
@@ -219,7 +219,7 @@ class NotebookEditViewTests(TestCase):
 
     def test_new_entry_requires_authentication(self):
         """Test that creating new entry redirects unauthenticated users."""
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
         response = self.client.get(new_url)
         self.assertEqual(response.status_code, 302)
         self.assertIn('/user/signin', response.url)
@@ -231,7 +231,7 @@ class NotebookEditViewTests(TestCase):
             date=date(2024, 1, 15),
             text='Test content'
         )
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -242,7 +242,7 @@ class NotebookEditViewTests(TestCase):
     def test_new_entry_displays_for_authenticated_user(self):
         """Test that GET to new entry URL creates entry and redirects to edit."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
 
         # Verify no entries exist yet
         self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 0)
@@ -257,7 +257,7 @@ class NotebookEditViewTests(TestCase):
         entry = NotebookEntry.objects.get(trip=self.trip)
 
         # Verify redirect URL points to edit view
-        expected_url = reverse('notebook_edit', kwargs={
+        expected_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -271,14 +271,14 @@ class NotebookEditViewTests(TestCase):
             text='Test content'
         )
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
         response = self.client.get(edit_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'notebook/pages/editor.html')
+        self.assertTemplateUsed(response, 'notebook/pages/notebook_entry.html')
         self.assertIn('trip_page', response.context)
         self.assertIn('form', response.context)
         self.assertEqual(response.context['entry'], entry)
@@ -301,7 +301,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        other_trip_url = reverse('notebook_edit', kwargs={
+        other_trip_url = reverse('notebook_entry', kwargs={
             'trip_id': other_trip.pk,
             'entry_pk': other_entry.pk
         })
@@ -320,7 +320,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -338,7 +338,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -351,7 +351,7 @@ class NotebookEditViewTests(TestCase):
     def test_new_entry_creates_with_todays_date(self):
         """Test that new entries are created with today's date by default."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
 
         response = self.client.get(new_url)
 
@@ -367,7 +367,7 @@ class NotebookEditViewTests(TestCase):
     def test_new_entry_creates_blank_text(self):
         """Test that new entries start with empty text."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
 
         response = self.client.get(new_url)
 
@@ -387,7 +387,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -415,7 +415,7 @@ class NotebookEditViewTests(TestCase):
         new_date = date(2024, 1, 20)
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -445,7 +445,7 @@ class NotebookEditViewTests(TestCase):
         self.client.force_login(self.user)
 
         # Create a new entry (which will have today's date)
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
         response = self.client.get(new_url)
         self.assertEqual(response.status_code, 302)
 
@@ -453,7 +453,7 @@ class NotebookEditViewTests(TestCase):
         new_entry = NotebookEntry.objects.exclude(pk=existing_entry.pk).get(trip=self.trip)
 
         # Try to edit the new entry to use the existing entry's date
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': new_entry.pk
         })
@@ -487,7 +487,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry2.pk
         })
@@ -513,7 +513,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -537,7 +537,7 @@ class NotebookEditViewTests(TestCase):
             text='Test content'
         )
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -562,7 +562,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry1.pk
         })
@@ -586,7 +586,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry.pk
         })
@@ -617,7 +617,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': entry2.pk
         })
@@ -669,7 +669,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        edit_url = reverse('notebook_edit', kwargs={
+        edit_url = reverse('notebook_entry', kwargs={
             'trip_id': self.trip.pk,
             'entry_pk': my_entry.pk
         })
@@ -686,7 +686,7 @@ class NotebookEditViewTests(TestCase):
         from datetime import date as date_class
 
         self.client.force_login(self.user)
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
 
         # Verify no entries exist
         self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 0)
@@ -721,7 +721,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
 
         # Verify 3 entries exist
         self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 3)
@@ -1274,7 +1274,7 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_new_entry_has_version_one(self):
         """Test that newly created entries start with version 1."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
 
         response = self.client.get(new_url)
         self.assertEqual(response.status_code, 302)

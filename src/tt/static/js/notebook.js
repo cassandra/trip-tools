@@ -8,6 +8,7 @@
     this.$textarea = $container.find('.notebook-textarea');
     this.$dateInput = $container.find('.notebook-date');
     this.$statusElement = $container.find('.notebook-status');
+    this.$dayOfWeek = $container.find('.notebook-day-of-week');
 
     this.saveTimeout = null;
     this.maxTimeout = null;
@@ -41,6 +42,9 @@
     // Setup auto-save using event delegation on container
     this.$container.on('input', '.notebook-textarea', this.handleInput.bind(this));
     this.$container.on('input', '.notebook-date', this.handleInput.bind(this));
+
+    // Setup day of week update on date change
+    this.$container.on('change', '.notebook-date', this.updateDayOfWeek.bind(this));
   };
 
   NotebookEditor.prototype.handleInput = function() {
@@ -241,6 +245,28 @@
 
     this.$statusElement.html('<small><em>' + statusText + '</em></small>');
     this.$statusElement.attr('class', statusClass);
+  };
+
+  NotebookEditor.prototype.updateDayOfWeek = function() {
+    if (!this.$dayOfWeek.length) {
+      return;
+    }
+
+    var dateValue = this.$dateInput.val();
+    if (!dateValue) {
+      this.$dayOfWeek.text('');
+      return;
+    }
+
+    // Parse the date (format is YYYY-MM-DD from date input)
+    var date = new Date(dateValue + 'T00:00:00');
+
+    // Get day of week name
+    var dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var dayOfWeek = dayNames[date.getDay()];
+
+    // Update the display
+    this.$dayOfWeek.text('(' + dayOfWeek + ')');
   };
 
   NotebookEditor.prototype.hasUnsavedContent = function() {

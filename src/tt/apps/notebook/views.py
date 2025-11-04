@@ -30,23 +30,23 @@ class NotebookListView( LoginRequiredMixin, TripViewMixin, View ):
         notebook_entries = trip.notebook_entries.all()
 
         trip_page_context = TripPageContext(
-            trip=trip,
-            active_page=TripPage.NOTES,
-            notebook_entries=notebook_entries
+            active_page = TripPage.NOTES,
+            request_member = request_member,
+            notebook_entries = notebook_entries
         )
         context = {
             'trip_page': trip_page_context,
             'notebook_entries': notebook_entries,
         }
-        return render(request, 'notebook/pages/list.html', context)
+        return render(request, 'notebook/pages/notebook_entry_list.html', context)
 
 
-class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
+class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
     """Edit or create a notebook entry."""
 
     def get(self, request, trip_id: int, entry_pk: int = None, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member( request, trip_id = trip_id )
-        self.assert_is_editor( request_member )
+        self.assert_is_viewer( request_member )
         trip = request_member.trip
 
         if entry_pk:
@@ -56,6 +56,9 @@ class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
                 trip = trip,
             )
         else:
+            # Only editors can create new entries
+            self.assert_is_editor( request_member )
+
             max_date = trip.notebook_entries.aggregate( Max( 'date' ) )['date__max']
             if max_date:
                 default_date = max_date + timedelta( days = 1 )
@@ -67,25 +70,33 @@ class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
                 date = default_date,
                 text = '',
             )
-            return redirect( 'notebook_edit', trip_id = trip.pk, entry_pk = entry.pk )
+            return redirect( 'notebook_entry', trip_id = trip.pk, entry_pk = entry.pk )
 
-        form = NotebookEntryForm(instance=entry, trip=trip)
         notebook_entries = trip.notebook_entries.all()
 
         trip_page_context = TripPageContext(
-            trip=trip,
-            active_page=TripPage.NOTES,
-            notebook_entries=notebook_entries,
-            notebook_entry_pk=entry_pk
+            active_page = TripPage.NOTES,
+            request_member = request_member,
+            notebook_entries = notebook_entries,
+            notebook_entry_pk = entry_pk
         )
 
-        context = {
-            'trip_page': trip_page_context,
-            'form': form,
-            'entry': entry,
-        }
-
-        return render(request, 'notebook/pages/editor.html', context)
+        if request_member.can_edit_trip:
+            # Render editable template
+            form = NotebookEntryForm(instance=entry, trip=trip)
+            context = {
+                'trip_page': trip_page_context,
+                'form': form,
+                'entry': entry,
+            }
+            return render(request, 'notebook/pages/notebook_entry.html', context)
+        else:
+            # Render read-only template
+            context = {
+                'trip_page': trip_page_context,
+                'entry': entry,
+            }
+            return render(request, 'notebook/pages/notebook_entry_readonly.html', context)
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
         """
@@ -117,15 +128,15 @@ class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
                 entry.modified_by = request.user
                 entry.save()
 
-            return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
+            return redirect('notebook_entry', trip_id=trip.pk, entry_pk=entry.pk)
 
         notebook_entries = trip.notebook_entries.all()
 
         trip_page_context = TripPageContext(
-            trip=trip,
-            active_page=TripPage.NOTES,
-            notebook_entries=notebook_entries,
-            notebook_entry_pk=entry_pk
+            active_page = TripPage.NOTES,
+            request_member = request_member,
+            notebook_entries = notebook_entries,
+            notebook_entry_pk = entry_pk
         )
 
         context = {
@@ -134,7 +145,7 @@ class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
             'entry': entry,
         }
 
-        return render(request, 'notebook/pages/editor.html', context, status=400)
+        return render(request, 'notebook/pages/notebook_entry.html', context, status=400)
 
 
 class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
