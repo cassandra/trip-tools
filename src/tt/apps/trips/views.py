@@ -56,8 +56,8 @@ class TripHomeView( TripViewMixin, ModalView ):
         request.view_parameters.to_session( request )
 
         trip_page_context = TripPageContext(
-            trip = trip,
             active_page = TripPage.OVERVIEW,
+            request_member = request_member,
         )
 
         context = {

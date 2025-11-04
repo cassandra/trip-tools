@@ -45,7 +45,7 @@ class CollaborativeEditingVersionTrackingTests(TestCase):
     def test_new_entry_starts_with_version_one(self):
         """Test that newly created entries start with version 1."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
 
         # Create new entry
         response = self.client.get(new_url)
@@ -1069,7 +1069,7 @@ class CollaborativeEditingEndToEndTests(TestCase):
         client_bob.force_login(self.user_b)
 
         # Alice creates new entry
-        new_url = reverse('notebook_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
         response = client_alice.get(new_url)
         self.assertEqual(response.status_code, 302)
 

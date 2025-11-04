@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import BadRequest
+from django.core.exceptions import BadRequest, PermissionDenied
 from django.http import Http404, HttpRequest
 
 from .enums import TripPermissionLevel
@@ -33,30 +33,26 @@ class TripViewMixin:
         except TripMember.DoesNotExist:
             raise Http404()
 
-    def assert_has_permission( self, 
+    def assert_has_permission( self,
                                trip_member     : TripMember,
-                               required_level  : TripPermissionLevel ):
+                               required_level  : TripPermissionLevel ) -> None:
         if not trip_member.has_trip_permission( required_level ):
-            raise Http404( 'Trip not found' )
-        return
-        
-    def assert_is_viewer( self, trip_member : TripMember ):
-        self.assert_has_permission( 
+            raise PermissionDenied( 'Insufficient permission for this action' )
+
+    def assert_is_viewer( self, trip_member : TripMember ) -> None:
+        self.assert_has_permission(
             trip_member = trip_member,
             required_level = TripPermissionLevel.VIEWER,
         )
-        return    
-        
-    def assert_is_editor( self, trip_member : TripMember ):
-        self.assert_has_permission( 
+
+    def assert_is_editor( self, trip_member : TripMember ) -> None:
+        self.assert_has_permission(
             trip_member = trip_member,
             required_level = TripPermissionLevel.EDITOR,
         )
-        return    
-        
-    def assert_is_admin( self, trip_member : TripMember ):
-        self.assert_has_permission( 
+
+    def assert_is_admin( self, trip_member : TripMember ) -> None:
+        self.assert_has_permission(
             trip_member = trip_member,
             required_level = TripPermissionLevel.ADMIN,
-        )
-        return    
+        )    

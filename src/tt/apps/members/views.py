@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model, login as django_login
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import BadRequest
+from django.core.exceptions import BadRequest, PermissionDenied
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -44,8 +44,8 @@ class MemberListView( LoginRequiredMixin, TripViewMixin, View ):
             continue
 
         trip_page_context = TripPageContext(
-            trip = trip,
             active_page = TripPage.MEMBERS,
+            request_member = request_member,
         )
         context = {
             'trip_page': trip_page_context,
@@ -53,7 +53,7 @@ class MemberListView( LoginRequiredMixin, TripViewMixin, View ):
             'member_data_list': member_data_list,
         }
 
-        return render( request, 'members/pages/list.html', context )
+        return render( request, 'members/pages/member_list.html', context )
 
 
 class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
@@ -122,9 +122,9 @@ class MemberPermissionChangeView( LoginRequiredMixin, TripViewMixin, View ):
         trip = request_member.trip
     
         target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
-        
+
         if target_member.permission_level > request_member.permission_level:
-            raise Http404( 'Cannot modify this member' )
+            raise PermissionDenied( 'Cannot modify a member with higher permissions than your own' )
 
         form = MemberPermissionForm( request.POST, member = target_member )
         if not form.is_valid():
@@ -171,14 +171,14 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
     def get(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member( request, trip_id = trip_id )
         trip = request_member.trip
-        
+
         target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
         is_self_removal = bool( request_member.user == target_member.user )
 
         if not is_self_removal:
             self.assert_is_admin( trip_member = request_member )
             if target_member.permission_level > request_member.permission_level:
-                raise Http404( 'Cannot remove this member' )
+                raise PermissionDenied( 'Cannot remove a member with higher permissions than your own' )
 
         if target_member.permission_level == TripPermissionLevel.OWNER:
             owner_count = trip.members.filter(
@@ -202,14 +202,14 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
     def post(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member( request, trip_id = trip_id )
         trip = request_member.trip
-        
+
         target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
         is_self_removal = bool( request_member.user == target_member.user )
 
         if not is_self_removal:
             self.assert_is_admin( trip_member = request_member )
             if target_member.permission_level > request_member.permission_level:
-                raise Http404( 'Cannot remove this member' )
+                raise PermissionDenied( 'Cannot remove a member with higher permissions than your own' )
 
         form = MemberRemoveForm( request.POST, member = target_member, is_self_removal = is_self_removal )
 

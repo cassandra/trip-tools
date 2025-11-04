@@ -11,12 +11,12 @@ from tt.apps.trips.mixins import TripViewMixin
 class ItineraryHomeView( LoginRequiredMixin, TripViewMixin, View ):
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        trip_member = self.get_trip_member( request, trip_id = trip_id )
-        self.assert_is_viewer( trip_member )
+        request_member = self.get_trip_member( request, trip_id = trip_id )
+        self.assert_is_viewer( request_member )
 
         trip_page_context = TripPageContext(
-            trip = trip_member.trip,
-            active_page = TripPage.ITINERARY
+            active_page = TripPage.ITINERARY,
+            request_member = request_member,
         )
         context = {
             'trip_page': trip_page_context,

@@ -99,6 +99,10 @@ class TripMember(models.Model):
     def can_manage_members( self ):
         return self.has_trip_permission( required_level = TripPermissionLevel.ADMIN )
 
+    @property
+    def can_edit_trip( self ):
+        return self.has_trip_permission( required_level = TripPermissionLevel.EDITOR )
+
     def can_modify_member( self, other_member : 'TripMember' ):
         return bool( self.can_manage_members
                      and ( self.permission_level >= other_member.permission_level ))
