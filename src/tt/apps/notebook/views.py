@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
 
 from tt.apps.trips.context import TripPageContext
-from tt.apps.trips.enums import TripPage, TripPermissionLevel
+from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
 
 from .autosave_helpers import NotebookAutoSaveHelper, NotebookConflictHelper

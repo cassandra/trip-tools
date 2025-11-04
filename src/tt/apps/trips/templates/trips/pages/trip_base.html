@@ -55,7 +55,7 @@
       {% for entry in trip_page.notebook_entries %}
       <li>
         <a href="{% url 'notebook_entry' trip_id=trip_page.trip.pk entry_pk=entry.pk %}"{% if entry.pk == trip_page.notebook_entry_pk %} class="active" aria-current="page"{% endif %}>
-          {{ entry.date|date:'M j' }}
+          {{ entry.date|date:'D, M j' }}
         </a>
       </li>
       {% endfor %}
