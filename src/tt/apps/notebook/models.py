@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from tt.apps.trips.models import Trip
@@ -20,6 +21,15 @@ class NotebookEntry(models.Model):
 
     date = models.DateField()
     text = models.TextField()
+    edit_version = models.IntegerField(default=1, editable=False)
+    modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete = models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name = 'modified_notebook_entries',
+        editable = False
+    )
 
     created_datetime = models.DateTimeField(auto_now_add = True)
     modified_datetime = models.DateTimeField(auto_now = True)

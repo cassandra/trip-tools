@@ -70,6 +70,9 @@
   --top-buttons-height: 2.5rem;
   --bottom-buttons-height: 2.5rem;
   --secondary-nav-height: 50px;
+  --secondary-page-header-height: 4rem;
+  --app-sidebar-width: 250px;
+  --app-topbar-height: 60px;
 }
 
 html, body {
@@ -651,11 +654,6 @@ input[type="password"],
    Reusable layout for application sections with fixed topbar + sidebar
    ==================== */
 
-:root {
-  --app-sidebar-width: 250px;
-  --app-topbar-height: 60px;
-}
-
 body {
   overflow-x: hidden;
 }
@@ -975,6 +973,34 @@ body {
   min-height: calc(100vh - var(--app-topbar-height));
 }
 
+.secondary-page-header {
+  position: sticky;
+  top: var(--app-topbar-height);
+  height: var(--secondary-page-header-height);
+  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--line-color);
+  z-index: 1010;
+  margin: -1rem -1rem 0 -1rem; /* Extend beyond .m-3 wrapper to edges, no bottom margin */
+  padding: 0.5rem 1rem;  /* Vertical padding to fit content within defined height */
+  display: flex;
+  align-items: center;
+}
+.secondary-page-content {
+  padding-top: 1rem; /* Compensate for -1rem top margin on secondary-page-header */
+}
+
+/* Notebook Editor Sticky Header */
+.notebook-editor-header {
+  position: sticky;
+  top: calc(var(--app-topbar-height) + var(--secondary-page-header-height));
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--line-color);
+  z-index: 1005;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+}
+
+
 /* Mobile Responsive for Secondary Pages */
 @media (max-width: 768px) {
 
@@ -1049,4 +1075,88 @@ body {
     font-size: 0.75rem;
     padding: 0.35em 0.65em;
 }
+
+/* ========================================
+   Unified Diff Display Styles
+   For notebook conflict resolution
+   ======================================== */
+
+.diff-container {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.unified-diff {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.unified-diff > div {
+    padding: 2px 8px;
+    margin: 0;
+    border-left: 3px solid transparent;
+}
+
+/* File headers (--- +++) */
+.diff-header {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: bold;
+    border-left-color: #6c757d;
+}
+
+/* Hunk headers (@@ -line,count +line,count @@) */
+.diff-hunk {
+    background-color: #d6ebff;
+    color: #004085;
+    font-weight: bold;
+    border-left-color: #007bff;
+    margin-top: 8px;
+}
+
+/* Deleted lines (present in server, removed in client) */
+.diff-delete {
+    background-color: #ffebe9;
+    color: #040410;
+    border-left-color: #d73a49;
+    font-weight: 500;
+}
+
+/* Added lines (not in server, added in client) */
+.diff-add {
+    background-color: #e6ffed;
+    color: #040410;
+    border-left-color: #28a745;
+    font-weight: 500;
+}
+
+/* Context lines (unchanged) */
+.diff-context {
+    background-color: #ffffff;
+    color: #333333;
+}
+
+/* Empty diff message */
+.diff-no-changes {
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Raw text comparison section */
+.raw-text-comparison {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #dee2e6;
+}
+
 

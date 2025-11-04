@@ -9,7 +9,11 @@
       "Bash(python src/manage.py test:*)",
       "Bash(gh issue view:*)",
       "Bash(python -m py_compile:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(cat:*)",
+      "Bash(flake8:*)"
     ],
     "deny": [],
     "ask": []

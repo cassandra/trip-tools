@@ -1,6 +1,5 @@
-import json
 import logging
-from datetime import date as date_class, datetime, timedelta
+from datetime import date as date_class, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError, transaction
@@ -13,6 +12,7 @@ from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
 
+from .autosave_helpers import NotebookAutoSaveHelper, NotebookConflictHelper
 from .forms import NotebookEntryForm
 from .models import NotebookEntry
 
@@ -88,6 +88,17 @@ class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
         return render(request, 'notebook/pages/editor.html', context)
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
+        """
+        Non-JavaScript fallback for saving notebook entries.
+
+        NOTE: In normal usage, notebook entries are saved via auto-save AJAX
+        (see NotebookAutoSaveView below), which provides optimistic locking,
+        version conflict detection, and real-time status updates.
+
+        This POST method serves as a fallback for environments where JavaScript
+        is disabled or for manual form submission. It handles basic save
+        functionality but lacks the collaborative editing features of auto-save.
+        """
         request_member = self.get_trip_member( request, trip_id = trip_id )
         self.assert_is_editor( request_member )
         trip = request_member.trip
@@ -102,7 +113,9 @@ class NotebookEditView( LoginRequiredMixin, TripViewMixin, View ):
 
         if form.is_valid():
             with transaction.atomic():
-                form.save()
+                entry = form.save(commit=False)
+                entry.modified_by = request.user
+                entry.save()
 
             return redirect('notebook_edit', trip_id=trip.pk, entry_pk=entry.pk)
 
@@ -144,56 +157,64 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
             trip = trip,
         )
 
-        try:
-            data = json.loads(request.body)
-            text = data.get('text', '')
-            date_str = data.get('date')
-        except json.JSONDecodeError:
-            logger.warning('Invalid JSON in auto-save request')
-            return JsonResponse(
-                {'status': 'error', 'message': 'Invalid JSON'},
-                status=400
-            )
+        # Parse and validate request
+        autosave_request, error_response = NotebookAutoSaveHelper.parse_autosave_request(
+            request_body = request.body
+        )
+        if error_response:
+            return error_response
 
-        if date_str:
-            try:
-                new_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            except ValueError:
-                logger.warning(f'Invalid date format: {date_str}')
-                return JsonResponse(
-                    {'status': 'error', 'message': 'Invalid date format'},
-                    status=400
-                )
-
-            if new_date != entry.date:
-                existing = NotebookEntry.objects.filter(
-                    trip=trip,
-                    date=new_date
-                ).exclude(pk=entry.pk)
-
-                if existing.exists():
-                    return JsonResponse(
-                        {
-                            'status': 'error',
-                            'message': f'An entry for {new_date.strftime("%B %d, %Y")} already exists.'
-                        },
-                        status=400
-                    )
         try:
             with transaction.atomic():
-                entry.text = text
-                if date_str:
-                    entry.date = new_date
-                entry.save()
+                # Use select_for_update to lock the row for the duration of the transaction
+                locked_entry = NotebookEntry.objects.select_for_update().get(pk=entry.pk)
+
+                # Check version conflict - backward compatible (treat missing version as no check)
+                if autosave_request.client_version is not None:
+                    if locked_entry.edit_version != autosave_request.client_version:
+                        return NotebookConflictHelper.build_conflict_response(
+                            request = request,
+                            entry = locked_entry,
+                            client_text = autosave_request.text
+                        )
+
+                # Check for date conflicts if date is changing (inside transaction for atomicity)
+                date_error = NotebookAutoSaveHelper.validate_date_uniqueness(
+                    entry = locked_entry,
+                    new_date = autosave_request.new_date
+                )
+                if date_error:
+                    return date_error
+
+                # Update fields and increment version atomically
+                updated_entry = NotebookAutoSaveHelper.update_entry_atomically(
+                    entry = locked_entry,
+                    text = autosave_request.text,
+                    user = request.user,
+                    new_date = autosave_request.new_date
+                )
 
             return JsonResponse({
                 'status': 'success',
-                'modified_datetime': entry.modified_datetime.isoformat(),
+                'version': updated_entry.edit_version,
+                'modified_datetime': updated_entry.modified_datetime.isoformat(),
             })
 
-        except (IntegrityError, DatabaseError) as e:
-            logger.error(f'Error auto-saving notebook entry: {e}')
+        except NotebookEntry.DoesNotExist:
+            logger.error(f'Entry {entry_pk} not found during atomic update')
             return JsonResponse(
-                {'status': 'error', 'message': 'Failed to save entry'},
+                {'status': 'error', 'message': 'Entry not found'},
+                status=404
+            )
+        except IntegrityError as e:
+            logger.warning(f'Integrity constraint violation for entry {entry_pk}: {e}')
+            return JsonResponse(
+                {'status': 'error', 'message': 'Unable to save - entry date conflicts with another entry'},
+                status=409
+            )
+        except DatabaseError as e:
+            logger.error(f'Database error auto-saving notebook entry {entry_pk}: {e}')
+            return JsonResponse(
+                {'status': 'error', 'message': 'Database error occurred'},
                 status=500
             )

@@ -13,6 +13,9 @@ Execute comprehensive refactoring analysis and planning:
 
 1. **Use TodoWrite to plan refactoring phases** - Track analysis and implementation
    - Read `docs/CLAUDE.md` for development philosophy and well-factored code principles
+   - Read `docs/dev/backend/backend-guidelines.md` for Django view philosophy and delegation patterns
+   - Read `docs/dev/frontend/frontend-guidelines.md` for view preparation and data structure patterns
+   - Read `docs/dev/shared/project-structure.md` for file naming and encapsulation conventions
    - Use specialized agents for expert refactoring analysis
 
 2. **Analyze current implementation** - Understand existing code:
@@ -35,6 +38,13 @@ Execute comprehensive refactoring analysis and planning:
    - Performance bottlenecks
    - Maintainability concerns
    - Testing gaps
+
+   **Django-Specific Architectural Issues** (from backend-guidelines.md):
+   - **Business logic in views** - Views should delegate business logic to helper/manager/builder classes
+   - **Poor encapsulation** - Check for naked module-level functions that should be encapsulated in classes
+   - **Template preparation** - Views should prepare data structures; complex logic delegated to builder classes
+   - **Missing delegation patterns** - Complex view logic should use Manager/Helper/Builder pattern
+   - **Utility organization** - Utilities should be in classes (following `*_helpers.py`, `*_manager.py` patterns)
 
 5. **Assess refactoring impact** - Evaluate scope and risk:
    - Files and components affected
@@ -64,6 +74,13 @@ Execute comprehensive refactoring analysis and planning:
    - Risk assessment and mitigation strategies
    - Testing strategy for each phase
    - Success metrics and validation criteria
+
+   **Django Architecture Checklist** (verify against backend-guidelines.md):
+   - [ ] Views contain minimal business logic (delegated to helper/manager/builder classes)
+   - [ ] No naked module-level utility functions (use Manager/Helper/Builder classes)
+   - [ ] Complex data preparation delegated to builder classes
+   - [ ] Template contexts use dataclasses for multiple related values
+   - [ ] Proper file naming conventions (`*_helpers.py`, `*_manager.py`, `*_data.py`)
 
 **Refactoring guidelines:**
 - Maintain existing behavior (no functional changes in Phase 1)
