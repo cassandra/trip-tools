@@ -66,8 +66,10 @@ class MemberInvitationManager( Singleton ):
         with transaction.atomic():
             # Create user inside transaction if needed
             if user_created:
+                first_name = email.split('@')[0].strip()
                 user = User.objects.create(
                     email = email,
+                    first_name = first_name,
                     email_verified = False,
                     is_active = True,
                 )
