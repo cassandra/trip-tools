@@ -14,7 +14,8 @@
       "WebFetch(domain:github.com)",
       "Bash(cat:*)",
       "Bash(flake8:*)",
-      "SlashCommand(/icon:*)"
+      "SlashCommand(/icon:*)",
+      "WebFetch(domain:objects.githubusercontent.com)"
     ],
     "deny": [],
     "ask": []
