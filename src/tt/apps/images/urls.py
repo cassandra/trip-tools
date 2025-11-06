@@ -1,5 +1,7 @@
-from django.urls import path
+from django.urls import re_path
+
+from . import views
 
 urlpatterns = [
-    # Image URLs will be defined here
+    re_path(r'^trip$', views.TripImagesHomeView.as_view(), name='images_trip_home'),
 ]

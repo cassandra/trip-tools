@@ -1,0 +1,30 @@
+{% extends "modals/action_2_with_cancel.html" %}
+
+{% block modal_dialog_id %}journal-create-modal{% endblock %}
+
+{% block title_text %}Create Trip Journal{% endblock %}
+
+{% block body %}
+<!-- TODO: Implement journal create form -->
+<!--
+  Form fields to implement:
+  - Title (required, CharField)
+  - Description (optional, TextField)
+  - Timezone (dropdown of pytz timezones, default from user)
+  - Visibility (radio buttons: Private, Protected, Public)
+  - Password (conditional, shown only if Protected selected)
+  - Seed from notebook (checkbox, creates JournalEntry for each NotebookEntry)
+ -->
+
+<div class="form-group">
+  <p><strong>TODO:</strong> Implement journal creation form</p>
+</div>
+{% endblock %}
+
+{% block action_left %}
+<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-primary">Create Journal</button>
+{% endblock %}

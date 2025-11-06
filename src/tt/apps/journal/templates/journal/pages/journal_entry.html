@@ -1,0 +1,30 @@
+{% extends "journal/pages/journal_base.html" %}
+{% load static %}
+
+{% block trip_content %}
+<div class="m-3">
+  <h1>Journal Entry</h1>
+
+  <!-- TODO: Implement journal entry editor -->
+  <!--
+    Features to implement:
+    - Date picker with timezone conversion
+    - Title field (optional)
+    - Markdown text area with autosave
+    - Reference image selector (dropdown of images for this date)
+    - Suggested images gallery (images matching date boundaries)
+    - Autosave status indicator (like notebook)
+    - Version conflict handling (like notebook)
+    - Readonly view for viewers (non-editors)
+   -->
+
+  <div class="alert alert-info">
+    <strong>Coming Soon:</strong> Journal entry editor with autosave
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_post_javascript %}
+{{ block.super }}
+<!-- TODO: Add journal.js for autosave functionality (similar to notebook.js) -->
+{% endblock %}

@@ -11,6 +11,8 @@ class TripPage(str, Enum):
     LOCATIONS  = 'locations'
     BOOKINGS   = 'bookings'
     NOTES      = 'notes'
+    JOURNAL    = 'journal'
+    IMAGES     = 'images'
     MEMBERS    = 'members'
 
 
