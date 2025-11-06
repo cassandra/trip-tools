@@ -93,4 +93,13 @@ DIVID = {
     'ATTR_V2_SHOW_MORE_TEXT_CLASS': 'show-more-text',
     'ATTR_V2_SHOW_LESS_TEXT_CLASS': 'show-less-text',
     'ATTR_V2_DELETE_FILE_ATTR': 'delete_file_attribute',
+
+    # Trip Images Upload
+    'IMAGES_UPLOAD_ZONE_ID': 'images-upload-zone',
+    'IMAGES_FILE_INPUT_ID': 'images-file-input',
+    'IMAGES_PROGRESS_SECTION_ID': 'images-progress-section',
+    'IMAGES_PROGRESS_COUNT_ID': 'images-progress-count',
+    'IMAGES_FILE_PROGRESS_LIST_ID': 'images-file-progress-list',
+    'IMAGES_UPLOADED_GRID_ID': 'images-uploaded-grid',
+    'IMAGES_UPLOADED_COUNT_ID': 'images-uploaded-count',
 }

@@ -100,6 +100,14 @@ class TripImage(models.Model):
         blank = True,
         help_text = 'List of tags extracted from EXIF or user-added',
     )
+    has_exif = models.BooleanField(
+        default = False,
+        help_text = 'Whether EXIF metadata was successfully extracted from the uploaded image',
+    )
+    timezone_unknown = models.BooleanField(
+        default = False,
+        help_text = 'Whether datetime_utc timezone is uncertain (no EXIF offset found, assumed UTC)',
+    )
 
     # Upload tracking
     uploaded_by = models.ForeignKey(

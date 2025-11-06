@@ -241,6 +241,12 @@ PIPELINE = {
             ),
             'output_filename': 'css/css_head.css',
         },
+        'trip_images_upload': {
+            'source_filenames': (
+                'css/trip_images_upload.css',
+            ),
+            'output_filename': 'css/trip_images_upload.css',
+        },
     },
     'JAVASCRIPT': {
         'js_before_content': {
@@ -261,6 +267,12 @@ PIPELINE = {
                 'bootstrap/js/bootstrap.js',
             ),
             'output_filename': 'js/js_after_content.js',
+        },
+        'trip_images_upload': {
+            'source_filenames': (
+                'js/trip_images_upload.js',
+            ),
+            'output_filename': 'js/trip_images_upload.js',
         },
     }
 }

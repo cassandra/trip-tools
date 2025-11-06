@@ -12,15 +12,22 @@ class TripImageAdmin(admin.ModelAdmin):
     list_display = (
         'uuid',
         'datetime_utc',
+        'timezone_unknown',
+        'has_exif',
         'uploaded_by_link',
         'uploaded_datetime',
         'caption_preview',
         'tags_preview',
     )
 
-    list_filter = ('datetime_utc', 'uploaded_datetime')
+    list_filter = (
+        'datetime_utc',
+        'uploaded_datetime',
+        'has_exif',
+        'timezone_unknown',
+    )
     search_fields = ['caption', 'tags', 'uploaded_by__email']
-    readonly_fields = ('uuid', 'uploaded_datetime')
+    readonly_fields = ('uuid', 'uploaded_datetime', 'has_exif', 'timezone_unknown')
     date_hierarchy = 'datetime_utc'
 
     @admin_link('uploaded_by', 'Uploaded By')
