@@ -4,27 +4,64 @@
 
 {% block title_text %}Create Trip Journal{% endblock %}
 
-{% block body %}
-<!-- TODO: Implement journal create form -->
-<!--
-  Form fields to implement:
-  - Title (required, CharField)
-  - Description (optional, TextField)
-  - Timezone (dropdown of pytz timezones, default from user)
-  - Visibility (radio buttons: Private, Protected, Public)
-  - Password (conditional, shown only if Protected selected)
-  - Seed from notebook (checkbox, creates JournalEntry for each NotebookEntry)
- -->
-
-<div class="form-group">
-  <p><strong>TODO:</strong> Implement journal creation form</p>
-</div>
+{% block preamble %}
+<form method="post" action="{% url 'journal_create' trip_id=trip_id %}" data-async="modal">
+  {% csrf_token %}
 {% endblock %}
 
-{% block action_left %}
-<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+{% block body %}
+  <div class="form-group">
+    <label for="{{ form.title.id_for_label }}" class="font-weight-bold">
+      Journal Title <span class="text-danger">*</span>
+    </label>
+    {{ form.title }}
+    {% if form.title.errors %}
+    <div class="text-danger small mt-1">
+      {{ form.title.errors }}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted">Give your journal a title (defaults to trip title)</small>
+  </div>
+
+  <div class="form-group">
+    <label for="{{ form.description.id_for_label }}" class="font-weight-bold">
+      Description
+    </label>
+    {{ form.description }}
+    {% if form.description.errors %}
+    <div class="text-danger small mt-1">
+      {{ form.description.errors }}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted">Optional description for your journal</small>
+  </div>
+
+  <div class="form-group">
+    <label for="{{ form.timezone.id_for_label }}" class="font-weight-bold">
+      Timezone <span class="text-danger">*</span>
+    </label>
+    {{ form.timezone }}
+    {% if form.timezone.errors %}
+    <div class="text-danger small mt-1">
+      {{ form.timezone.errors }}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted">Timezone for journal entries (e.g., America/New_York)</small>
+  </div>
+
+  <div class="alert alert-info mt-3">
+    <small>
+      <strong>Note:</strong> Your journal will be created as <strong>Private</strong> (visible only to trip members).
+      Existing notebook entries will be automatically imported.
+      You can change visibility settings later.
+    </small>
+  </div>
 {% endblock %}
 
 {% block action_right %}
-<button type="submit" class="btn btn-primary">Create Journal</button>
+<button type="submit" class="btn btn-primary">CREATE JOURNAL</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
 {% endblock %}

@@ -22,6 +22,12 @@
 {% block sidebar_content %}
 <ul class="app-sidebar-nav">
   <li>
+    <a href="{% url 'dashboard_home' %}">
+      {% icon "chevron-left" size="sm" %}
+      <span>Back to Dashboard</span>
+    </a>
+  </li>
+  <li>
     <a href="{% url 'trips_home' trip_id=trip_page.trip.pk %}"{% if trip_page.active_page.value == 'trip_overview' %} class="active" aria-current="page"{% endif %}>
       {% icon "home" size="sm" %}
       <span>Trip Overview</span>

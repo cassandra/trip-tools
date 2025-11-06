@@ -1,14 +1,21 @@
+from datetime import date as date_class, timedelta
+
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Max
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View
 
+from tt.apps.console.console_helper import ConsoleSettingsHelper
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
 from tt.async_view import ModalView
 
 from .context import JournalPageContext
+from .enums import JournalVisibility
+from .forms import JournalForm
+from .models import Journal, JournalEntry
 
 
 class JournalHomeView(LoginRequiredMixin, TripViewMixin, View):
@@ -28,22 +35,30 @@ class JournalHomeView(LoginRequiredMixin, TripViewMixin, View):
         self.assert_is_viewer(request_member)
         trip = request_member.trip
 
-        # TODO: Fetch journal for trip (MVP: get_primary_for_trip)
-        # For now, create empty contexts to support template structure
-        journal = None  # Will be: Journal.objects.get_primary_for_trip(trip)
-        journal_entries = []  # Will be: journal.entries.all() if journal else []
+        # Fetch journal for trip (MVP: get_primary_for_trip)
+        journal = Journal.objects.get_primary_for_trip(trip)
+        journal_entries = journal.entries.all() if journal else []
 
         trip_page_context = TripPageContext(
             active_page = TripPage.JOURNAL,
             request_member = request_member,
         )
         journal_page_context = JournalPageContext(
+            journal = journal,
             journal_entries = journal_entries
         )
         context = {
             'trip_page': trip_page_context,
             'journal_page': journal_page_context,
+            'journal': journal,
+            'journal_entries': journal_entries,
         }
+
+        # Check permissions for editing
+        if not request_member.can_edit_trip:
+            # Non-editors cannot edit journal entries - show permission denied
+            return render(request, 'journal/pages/journal_permission_denied.html', context)
+        
         return render(request, 'journal/pages/journal_home.html', context)
 
 
@@ -64,9 +79,21 @@ class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member(request, trip_id=trip_id)
         self.assert_is_editor(request_member)
+        trip = request_member.trip
 
-        # TODO: Build context with form
+        # Get user's timezone setting
+        tz_name = ConsoleSettingsHelper().get_tz_name(request.user)
+
+        # Create form with initial values from trip and user
+        initial = {
+            'title': trip.title,
+            'description': trip.description,
+            'timezone': tz_name,
+        }
+        form = JournalForm(initial=initial)
+
         context = {
+            'form': form,
             'trip_id': trip_id,
         }
         return self.modal_response(request, context=context)
@@ -74,13 +101,38 @@ class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
     def post(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member(request, trip_id=trip_id)
         self.assert_is_editor(request_member)
+        trip = request_member.trip
 
-        # TODO: Process form
-        # - Create Journal
-        # - Create JournalEntry objects (seeded from NotebookEntry if requested)
-        # - Return refresh or redirect
+        form = JournalForm(request.POST)
 
-        return HttpResponse("TODO: Implement CreateJournalView POST")
+        if form.is_valid():
+            # Create journal with form data
+            journal = form.save(commit=False)
+            journal.trip = trip
+            journal.visibility = JournalVisibility.PRIVATE
+            journal.modified_by = request.user
+            journal.save()
+
+            # Seed journal entries from notebook entries
+            notebook_entries = trip.notebook_entries.all()
+            for notebook_entry in notebook_entries:
+                JournalEntry.objects.create(
+                    journal = journal,
+                    date = notebook_entry.date,
+                    timezone = journal.timezone,
+                    text = notebook_entry.text,
+                    source_notebook_entry = notebook_entry,
+                    source_notebook_version = notebook_entry.edit_version,
+                    modified_by = request.user,
+                )
+
+            return self.refresh_response(request)
+
+        context = {
+            'form': form,
+            'trip_id': trip_id,
+        }
+        return self.modal_response(request, context=context, status=400)
 
 
 class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
@@ -95,30 +147,88 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
     - Handle POST for non-JS fallback
     """
 
-    def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
+    def get(self, request, trip_id: int, entry_pk: int = None, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member(request, trip_id=trip_id)
         self.assert_is_viewer(request_member)
         trip = request_member.trip
 
-        # TODO: Implement view logic
-        # - Fetch JournalEntry (via get_object_or_404)
-        # - Fetch Journal (via entry.journal)
-        # - Fetch all journal entries for sidebar
-        # For now, create empty contexts to support template structure
-        journal = None  # Will be: Journal.objects.get_primary_for_trip(trip)
-        journal_entries = []  # Will be: journal.entries.all() if journal else []
+        # Get the primary journal for the trip
+        journal = Journal.objects.get_primary_for_trip(trip)
+        if not journal:
+            # TODO: Handle case where no journal exists - redirect to journal home
+            return redirect('journal_home', trip_id=trip.pk)
 
         trip_page_context = TripPageContext(
             active_page = TripPage.JOURNAL,
             request_member = request_member,
         )
+        
+        # Check permissions for editing
+        if not request_member.can_edit_trip:
+            # Non-editors cannot edit journal entries - show permission denied
+            journal_entries = journal.entries.all() if journal else []
+            journal_page_context = JournalPageContext(
+                journal = journal,
+                journal_entries = journal_entries,
+            )
+            context = {
+                'trip_page': trip_page_context,
+                'journal_page': journal_page_context,
+                'journal': journal,
+            }
+            return render(request, 'journal/pages/journal_permission_denied.html', context)
+        
+        if entry_pk:
+            # Existing entry - fetch it
+            entry = get_object_or_404(
+                JournalEntry,
+                pk = entry_pk,
+                journal = journal,
+            )
+        else:
+            # New entry creation
+            # Only editors can create new entries
+            self.assert_is_editor(request_member)
+
+            # Calculate default date and timezone
+            latest_entry = journal.entries.order_by('-date').first()
+            if latest_entry:
+                # Subsequent entry: inherit from previous entry
+                default_date = latest_entry.date + timedelta(days=1)
+                default_timezone = latest_entry.timezone
+            else:
+                # First entry: use today and inherit from journal
+                default_date = date_class.today()
+                default_timezone = journal.timezone
+
+            # Generate default title: journal title + date
+            default_title = f"{journal.title} - {default_date.strftime('%B %d, %Y')}"
+
+            # Create new entry
+            entry = JournalEntry.objects.create(
+                journal = journal,
+                date = default_date,
+                timezone = default_timezone,
+                title = default_title,
+                text = '',
+                modified_by = request.user,
+            )
+
+            # Redirect to the edit view for the new entry
+            return redirect('journal_entry', trip_id=trip.pk, entry_pk=entry.pk)
+
+        # TODO: Render edit view for existing entry (stub for now)
+        journal_entries = journal.entries.all()
         journal_page_context = JournalPageContext(
+            journal = journal,
             journal_entries = journal_entries,
-            journal_entry_pk = entry_pk
+            journal_entry_pk = entry_pk,
         )
         context = {
             'trip_page': trip_page_context,
             'journal_page': journal_page_context,
+            'journal': journal,
+            'entry': entry,
         }
         return render(request, 'journal/pages/journal_entry.html', context)
 

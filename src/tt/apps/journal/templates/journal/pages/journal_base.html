@@ -20,7 +20,7 @@
   {% endfor %}
   {% if trip_page.request_member.can_edit_trip %}
   <li>
-    <a href="{% url 'journal_home' trip_id=trip_page.trip.pk %}" class="text-muted">
+    <a href="{% url 'journal_entry_new' trip_id=trip_page.trip.pk %}" class="text-muted">
       {% icon "plus" size="sm" css_class="tt-icon-left" %}
       <span>New Entry</span>
     </a>
