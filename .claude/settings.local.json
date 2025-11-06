@@ -13,7 +13,8 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "Bash(cat:*)",
-      "Bash(flake8:*)"
+      "Bash(flake8:*)",
+      "SlashCommand(/icon:*)"
     ],
     "deny": [],
     "ask": []

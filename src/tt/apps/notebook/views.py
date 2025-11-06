@@ -13,6 +13,7 @@ from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
 
 from .autosave_helpers import NotebookAutoSaveHelper, NotebookConflictHelper
+from .context import NotebookPageContext
 from .forms import NotebookEntryForm
 from .models import NotebookEntry
 
@@ -32,10 +33,13 @@ class NotebookListView( LoginRequiredMixin, TripViewMixin, View ):
         trip_page_context = TripPageContext(
             active_page = TripPage.NOTES,
             request_member = request_member,
+        )
+        notebook_page_context = NotebookPageContext(
             notebook_entries = notebook_entries
         )
         context = {
             'trip_page': trip_page_context,
+            'notebook_page': notebook_page_context,
             'notebook_entries': notebook_entries,
         }
         return render(request, 'notebook/pages/notebook_entry_list.html', context)
@@ -77,6 +81,8 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
         trip_page_context = TripPageContext(
             active_page = TripPage.NOTES,
             request_member = request_member,
+        )
+        notebook_page_context = NotebookPageContext(
             notebook_entries = notebook_entries,
             notebook_entry_pk = entry_pk
         )
@@ -86,6 +92,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
             form = NotebookEntryForm(instance=entry, trip=trip)
             context = {
                 'trip_page': trip_page_context,
+                'notebook_page': notebook_page_context,
                 'form': form,
                 'entry': entry,
             }
@@ -94,6 +101,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
             # Render read-only template
             context = {
                 'trip_page': trip_page_context,
+                'notebook_page': notebook_page_context,
                 'entry': entry,
             }
             return render(request, 'notebook/pages/notebook_entry_readonly.html', context)
@@ -135,12 +143,15 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
         trip_page_context = TripPageContext(
             active_page = TripPage.NOTES,
             request_member = request_member,
+        )
+        notebook_page_context = NotebookPageContext(
             notebook_entries = notebook_entries,
             notebook_entry_pk = entry_pk
         )
 
         context = {
             'trip_page': trip_page_context,
+            'notebook_page': notebook_page_context,
             'form': form,
             'entry': entry,
         }

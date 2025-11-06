@@ -189,7 +189,7 @@
 
   NotebookEditor.prototype.updateStatus = function(status, message) {
     var statusText = '';
-    var statusClass = 'text-light';
+    var statusClass = 'badge badge-secondary';
 
     // Hide error alert for non-error statuses (conflicts now use modal only)
     if (status !== 'error') {
@@ -202,11 +202,11 @@
     switch(status) {
       case 'unsaved':
         statusText = 'Unsaved changes';
-        statusClass = 'text-danger';
+        statusClass = 'badge badge-warning';
         break;
       case 'saving':
         statusText = 'Saving...';
-        statusClass = 'text-info';
+        statusClass = 'badge badge-info';
         break;
       case 'saved':
         if (message) {
@@ -215,15 +215,15 @@
         } else {
           statusText = 'Saved';
         }
-        statusClass = 'text-success';
+        statusClass = 'badge badge-success';
         break;
       case 'conflict':
         statusText = 'Version conflict detected';
-        statusClass = 'text-danger';
+        statusClass = 'badge badge-danger';
         break;
       case 'error':
         statusText = 'Save failed: ' + (message || 'Unknown error');
-        statusClass = 'text-danger';
+        statusClass = 'badge badge-danger';
 
         // Show error in prominent alert banner
         var $errorAlert = this.$container.find('.notebook-error-alert');
@@ -243,8 +243,8 @@
         break;
     }
 
-    this.$statusElement.html('<small><em>' + statusText + '</em></small>');
-    this.$statusElement.attr('class', statusClass);
+    this.$statusElement.text(statusText);
+    this.$statusElement.attr('class', 'notebook-status ' + statusClass);
   };
 
   NotebookEditor.prototype.updateDayOfWeek = function() {

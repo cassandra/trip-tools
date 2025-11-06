@@ -1,14 +1,7 @@
-{% extends "trips/pages/trip_base.html" %}
-{% load static %}
-{% load icons %}
+{% extends "notebook/pages/notebook_base.html" %}
 
 {% block trip_content %}
 <div class="m-3">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="h2 mb-1">Trip Notes</h1>
-    </div>
-  </div>
 
   {% if notebook_entries %}
   <div class="list-group">

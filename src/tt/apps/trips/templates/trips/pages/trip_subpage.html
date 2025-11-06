@@ -1,0 +1,25 @@
+{% extends "trips/pages/trip_base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block sidebar_content %}
+<div class="trip-subpage-sidebar">
+  
+<ul class="app-sidebar-nav">
+  <li>
+    <a href="{% url 'trips_home' trip_id=trip_page.trip.pk %}">
+      {% icon "chevron-left" size="sm" %}
+      <span>Back to Trip</span>
+    </a>
+  </li>
+</ul>
+
+{% block trip_subpage_sidebar_header %}
+{% endblock %}
+  
+{% block subpage_sidebar_content %}
+{% endblock %}
+
+</div>
+
+{% endblock %}
