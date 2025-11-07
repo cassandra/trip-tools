@@ -8,15 +8,8 @@
 {% endblock %}
 
 {% block trip_content %}
-<!-- Mobile warning: Display below 768px -->
-<div class="d-md-none">
-  <div class="alert alert-warning m-3">
-    <strong>Large Screen Required:</strong> Journal editing requires a larger screen. Please use landscape mode or a desktop device.
-  </div>
-</div>
-
-<!-- Main journal editor layout: Display at 768px and above -->
-<div class="d-none d-md-block journal-editor-layout">
+<!-- Main journal editor layout -->
+<div class="journal-editor-layout">
 
   <!-- ===========================================
        CENTER EDITOR PANEL
@@ -29,8 +22,8 @@
 
       <!-- Compact Header: Two columns -->
       <div class="row mb-3 journal-form-header">
-        <!-- Left column: Reference Image -->
-        <div class="col-md-3">
+        <!-- Left column: Reference Image (hidden on small screens) -->
+        <div class="col-md-3 d-none d-md-block">
           <div class="form-group">
             <div class="journal-reference-image-placeholder bg-light border d-flex align-items-center justify-content-center text-muted">
               {% icon "camera" size="lg" %}
@@ -39,7 +32,7 @@
         </div>
 
         <!-- Right column: Title, Date, Timezone -->
-        <div class="col-md-9">
+        <div class="col-12 col-md-9">
           <div>
             <!-- Title (full width in left column) -->
             <div class="form-group form-inline mb-2">
@@ -96,7 +89,7 @@
   <!-- ===========================================
        RIGHT IMAGE PANEL
        =========================================== -->
-  <div class="journal-image-panel">
+  <div class="journal-image-panel d-none d-lg-flex" id="journal-image-panel">
     {% include "journal/panes/journal_entry_image_picker.html" %}
 
   </div>

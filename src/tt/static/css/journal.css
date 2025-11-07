@@ -57,6 +57,11 @@
   margin-bottom: 1rem;
 }
 
+/* Force labels to stay inline with inputs */
+.journal-form-header label {
+  white-space: nowrap;
+}
+
 /* Textarea Container - Scrollable */
 .journal-textarea-container {
   flex: 1;
@@ -192,10 +197,27 @@
   }
 }
 
-/* Below 768px: Hide editor (mobile warning shown instead) */
+/* Below 768px: Responsive adjustments for narrow screens */
 @media (max-width: 767px) {
-  .journal-editor-layout {
-    display: none;
+  .journal-editor-header {
+    padding: 1rem;
+  }
+
+  .journal-entry-form {
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  .journal-form-header .form-inline {
+    flex-wrap: wrap;
+  }
+
+  .journal-form-header .form-group {
+    margin-right: 0.5rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .journal-save-status {
+    font-size: 0.75rem;
   }
 }
 

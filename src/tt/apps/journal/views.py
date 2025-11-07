@@ -1,7 +1,6 @@
 from datetime import date as date_class, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -321,9 +320,10 @@ class JournalEntryImagePickerView(LoginRequiredMixin, TripViewMixin, View):
             return http_response({'error': 'Invalid date format'}, status=400)
 
         # Get scope filter (stub for now - will implement filtering logic later)
-        scope = request.GET.get('scope', 'all')
+        scope = request.GET.get('scope', 'all')  # noqa: F841
         # Valid values: 'all', 'unused', 'in-use'
         # For now, we ignore this and always show all images
+        # TODO: Apply scope filtering when text editing is implemented
 
         # Get timezone from entry
         timezone = entry.timezone

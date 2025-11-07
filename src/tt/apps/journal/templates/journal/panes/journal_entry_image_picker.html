@@ -3,12 +3,7 @@
 
 <!-- Panel Header - Fixed -->
 <div class="journal-image-panel-header">
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <h5 class="mb-0">Images</h5>
-    <button type="button" class="btn btn-sm btn-link text-muted p-0" title="Collapse panel">
-      {% icon "chevron-right" size="sm" %}
-    </button>
-  </div>
+  <h5 class="mb-2">Images</h5>
 
   <!-- Date and Scope Filter Form -->
   <form method="get" action="{% url 'journal_entry_images' trip_id=trip.id entry_pk=entry.id %}" data-async="#journal-image-gallery" data-mode="insert">
