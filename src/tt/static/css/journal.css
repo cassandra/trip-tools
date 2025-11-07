@@ -10,7 +10,7 @@
 
 /* Main Layout Container */
 .journal-editor-layout {
-  display: flex;
+  display: flex !important;
   height: calc(100vh - var(--app-topbar-height));
   overflow: hidden;
 }
@@ -18,8 +18,9 @@
 /* Center Editor Panel */
 .journal-editor-panel {
   flex: 1;
-  overflow-y: auto;
-  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background-color: var(--white);
 }
 
@@ -28,18 +29,40 @@
   width: 400px;
   border-left: 1px solid var(--line-color);
   background-color: var(--muted-bg-light);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   flex-shrink: 0;
 }
 
 /* Editor Header with Save Status */
 .journal-editor-header {
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   background-color: var(--white);
-  z-index: 10;
-  padding-bottom: 0.5rem;
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+}
+
+/* Editor Form Container */
+.journal-entry-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+/* Form Header (Title, Date, Timezone, Reference Image) */
+.journal-form-header {
+  flex-shrink: 0;
   margin-bottom: 1rem;
+}
+
+/* Textarea Container - Scrollable */
+.journal-textarea-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .journal-save-status {
@@ -47,38 +70,42 @@
   padding: 0.35rem 0.65rem;
 }
 
+/* Reference Image Placeholder */
+.journal-reference-image-placeholder {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 4px;
+  min-height: 120px;
+}
+
 /* Journal Textarea - Monospace Font */
 .journal-textarea {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
   font-size: 0.95rem;
   line-height: 1.6;
-  resize: vertical;
-  min-height: 400px;
+  resize: none;
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
 }
 
-/* Image Panel Header */
+/* Image Panel Header - Fixed */
 .journal-image-panel-header {
-  padding: 1rem 1rem 0.5rem 1rem;
-  background-color: var(--muted-bg-light);
-  border-bottom: 1px solid var(--line-color);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-/* Date Filter Indicator */
-.journal-image-date-filter {
-  padding: 0.5rem 1rem;
+  flex-shrink: 0;
+  padding: 1rem;
   background-color: var(--muted-bg-light);
   border-bottom: 1px solid var(--line-color);
 }
 
-/* Image Gallery Grid */
+/* Image Gallery Grid - Scrollable */
 .journal-image-gallery {
+  flex: 1;
+  overflow-y: auto;
   padding: 1rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 1rem;
+  align-content: start;
 }
 
 /* Image Card */

@@ -21,62 +21,76 @@
   <!-- ===========================================
        CENTER EDITOR PANEL
        =========================================== -->
-  <div class="journal-editor-panel">
-
-    <!-- Editor Header: Save Status -->
-    <div class="journal-editor-header">
-      <div class="d-flex justify-content-end">
-        <span class="badge badge-secondary journal-save-status">
-          Saved 2 seconds ago
-        </span>
-      </div>
-    </div>
+  <div class="journal-editor-panel mt-2">
 
     <!-- Editor Form -->
     <form class="journal-entry-form" method="post">
       {% csrf_token %}
 
-      <!-- Date Selector -->
-      <div class="form-group">
-        <label for="id_entry_date" class="font-weight-bold">Entry Date</label>
-        <input
-          type="date"
-          class="form-control"
-          id="id_entry_date"
-          name="date"
-          value="{{ entry.date|date:'Y-m-d' }}"
-        >
-        <small class="form-text text-muted">{{ entry.date|date:"l, F j, Y" }}</small>
+      <!-- Compact Header: Two columns -->
+      <div class="row mb-3 journal-form-header">
+        <!-- Left column: Reference Image -->
+        <div class="col-md-3">
+          <div class="form-group">
+            <div class="journal-reference-image-placeholder bg-light border d-flex align-items-center justify-content-center text-muted">
+              {% icon "camera" size="lg" %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: Title, Date, Timezone -->
+        <div class="col-md-9">
+          <div>
+            <!-- Title (full width in left column) -->
+            <div class="form-group form-inline mb-2">
+              <label for="id_entry_title" class="font-weight-bold mr-2">Title:</label>
+              <input
+                  type="text"
+                  class="form-control flex-grow-1"
+                  id="id_entry_title"
+                  name="title"
+                  value="{{ entry.title }}"
+                  placeholder="Enter journal entry title..."
+              >
+            </div>
+            
+            <!-- Date and Timezone (inline in second row) -->
+            <div class="form-inline">
+              <div class="form-group mr-4">
+                <label for="id_entry_date" class="font-weight-bold mr-2">Date:</label>
+                <input
+                    type="date"
+                    class="form-control"
+                    id="id_entry_date"
+                    name="date"
+                    value="{{ entry.date|date:'Y-m-d' }}"
+                >
+                <small class="text-muted ml-2">({{ entry.date|date:"l" }})</small>
+              </div>
+              
+              <div class="form-group">
+                <label for="id_entry_timezone" class="font-weight-bold mr-2">Timezone:</label>
+                <select class="form-control" id="id_entry_timezone" name="timezone">
+                  <option value="{{ entry.timezone }}" selected>{{ entry.timezone }}</option>
+                  <!-- Phase 2: Populate timezone options via JavaScript -->
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-end mt-4">
+            <span class="badge badge-secondary journal-save-status">
+              Saved 2 seconds ago
+            </span>
+          </div>
+        </div>
+        
       </div>
 
-      <!-- Timezone Selector -->
-      <div class="form-group">
-        <label for="id_entry_timezone" class="font-weight-bold">Timezone</label>
-        <select class="form-control" id="id_entry_timezone" name="timezone">
-          <option value="{{ entry.timezone }}" selected>{{ entry.timezone }}</option>
-          <!-- Phase 2: Populate timezone options via JavaScript -->
-        </select>
-        <small class="form-text text-muted">Timezone for timestamps in this entry</small>
-      </div>
-
-      <!-- Title Field -->
-      <div class="form-group">
-        <label for="id_entry_title" class="font-weight-bold">Title</label>
-        <input
-          type="text"
-          class="form-control"
-          id="id_entry_title"
-          name="title"
-          value="{{ entry.title }}"
-          placeholder="Enter journal entry title..."
-        >
-      </div>
-
-      <!-- Markdown Text Area -->
-      <div class="form-group">
-        <label for="id_entry_text" class="font-weight-bold">Journal Entry</label>
-        <textarea class="form-control journal-textarea" id="id_entry_text" name="text" rows="20" placeholder="Write your journal entry in markdown...">{{ entry.text }}</textarea>
-        <small class="form-text text-muted">Markdown formatting supported</small>
+      <!-- Markdown Text Area - Scrollable -->
+      <div class="journal-textarea-container">
+        <textarea class="form-control journal-textarea" id="id_entry_text" name="text" placeholder="Write your journal entry in markdown...">{{ entry.text }}</textarea>
+        <small class="form-text text-muted mt-1">Markdown formatting supported</small>
       </div>
 
     </form>
@@ -88,22 +102,38 @@
        =========================================== -->
   <div class="journal-image-panel">
 
-    <!-- Panel Header -->
+    <!-- Panel Header - Fixed -->
     <div class="journal-image-panel-header">
-      <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-between align-items-center mb-2">
         <h5 class="mb-0">Images</h5>
         <button type="button" class="btn btn-sm btn-link text-muted p-0" title="Collapse panel">
           {% icon "chevron-right" size="sm" %}
         </button>
       </div>
+
+      <!-- Date Filter -->
+      <input
+        type="date"
+        class="form-control form-control-sm mb-2"
+        id="id_image_date_filter"
+        value="{{ entry.date|date:'Y-m-d' }}"
+      >
+
+      <!-- Scope Filter Pills -->
+      <div class="btn-group btn-group-sm btn-group-toggle w-100" data-toggle="buttons">
+        <label class="btn btn-outline-secondary active">
+          <input type="radio" name="image_scope" value="date" checked> Date
+        </label>
+        <label class="btn btn-outline-secondary">
+          <input type="radio" name="image_scope" value="page"> Page
+        </label>
+        <label class="btn btn-outline-secondary">
+          <input type="radio" name="image_scope" value="journal"> Journal
+        </label>
+      </div>
     </div>
 
-    <!-- Date Filter Indicator -->
-    <div class="journal-image-date-filter">
-      <small class="text-muted">Images for {{ entry.date|date:"F j, Y" }}</small>
-    </div>
-
-    <!-- Image Gallery Grid -->
+    <!-- Image Gallery Grid - Scrollable -->
     <div class="journal-image-gallery">
 
       <!-- Phase 1: Placeholder Images (3-5 static examples) -->
@@ -111,7 +141,7 @@
       <!-- Example Image 1 -->
       <div class="journal-image-card">
         <div class="journal-image-thumbnail bg-secondary text-white d-flex align-items-center justify-content-center">
-          {% icon "image" size="lg" %}
+          {% icon "camera" size="lg" %}
         </div>
         <div class="journal-image-caption">
           <small class="font-weight-bold d-block text-truncate">Geyser Photo</small>
@@ -122,7 +152,7 @@
       <!-- Example Image 2 -->
       <div class="journal-image-card">
         <div class="journal-image-thumbnail bg-info text-white d-flex align-items-center justify-content-center">
-          {% icon "image" size="lg" %}
+          {% icon "camera" size="lg" %}
         </div>
         <div class="journal-image-caption">
           <small class="font-weight-bold d-block text-truncate">Parliament</small>
@@ -134,7 +164,7 @@
       <!-- Example Image 3 -->
       <div class="journal-image-card">
         <div class="journal-image-thumbnail bg-warning text-white d-flex align-items-center justify-content-center">
-          {% icon "image" size="lg" %}
+          {% icon "camera" size="lg" %}
         </div>
         <div class="journal-image-caption">
           <small class="font-weight-bold d-block text-truncate">Sunset View</small>
@@ -145,7 +175,7 @@
       <!-- Example Image 4 -->
       <div class="journal-image-card">
         <div class="journal-image-thumbnail bg-primary text-white d-flex align-items-center justify-content-center">
-          {% icon "image" size="lg" %}
+          {% icon "camera" size="lg" %}
         </div>
         <div class="journal-image-caption">
           <small class="font-weight-bold d-block text-truncate">Dinner</small>
@@ -156,11 +186,122 @@
       <!-- Example Image 5 -->
       <div class="journal-image-card">
         <div class="journal-image-thumbnail bg-secondary text-white d-flex align-items-center justify-content-center">
-          {% icon "image" size="lg" %}
+          {% icon "camera" size="lg" %}
         </div>
         <div class="journal-image-caption">
-          <small class="font-weight-bold d-block text-truncate">Night Cityscape with Long Name</small>
+          <small class="font-weight-bold d-block text-truncate">Night Cityscape</small>
           <small class="text-muted">10:00 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 6 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-success text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Mountain Trail</small>
+          <small class="text-muted">9:15 AM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 7 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-danger text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Street Market</small>
+          <small class="text-muted">11:30 AM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 8 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-dark text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Museum Interior</small>
+          <small class="text-muted">1:45 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 9 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-info text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Harbor View</small>
+          <small class="text-muted">3:00 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 10 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-warning text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Cafe Lunch</small>
+          <small class="text-muted">12:15 PM</small>
+          <span class="badge badge-success ml-1">Used</span>
+        </div>
+      </div>
+
+      <!-- Example Image 11 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-primary text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Cathedral</small>
+          <small class="text-muted">5:30 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 12 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-secondary text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Garden Path</small>
+          <small class="text-muted">10:45 AM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 13 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-success text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Bridge Crossing</small>
+          <small class="text-muted">6:00 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 14 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-danger text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Town Square</small>
+          <small class="text-muted">4:30 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 15 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-dark text-white d-flex align-items-center justify-content-center">
+          {% icon "camera" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Evening Concert</small>
+          <small class="text-muted">9:00 PM</small>
         </div>
       </div>
 
