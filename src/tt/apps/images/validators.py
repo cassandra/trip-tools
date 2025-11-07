@@ -99,8 +99,18 @@ class ImagePermissionValidator:
     """
     Validator for image access permissions.
 
-    Checks if user has permission to access a specific image.
+    Checks if user has permission to access a specific image,
+    with optional trip context support.
     """
+
+    def __init__(self, trip=None):
+        """
+        Initialize validator with optional trip context.
+
+        Args:
+            trip: Optional Trip instance for trip-context permission check
+        """
+        self.trip = trip
 
     def __call__(self, trip_image, user):
         """
@@ -113,7 +123,7 @@ class ImagePermissionValidator:
         Raises:
             ValidationError: If user does not have permission
         """
-        if not trip_image.user_can_access(user):
+        if not trip_image.user_can_access(user, trip=self.trip):
             raise ValidationError(
                 'You do not have permission to access this image.',
                 code='permission_denied',

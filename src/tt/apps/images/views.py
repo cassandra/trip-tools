@@ -84,6 +84,10 @@ class TripImageInspectView(LoginRequiredMixin, ModalView):
 
     Displays the web-sized image along with all available metadata including
     EXIF data, upload information, and GPS coordinates if available.
+
+    Supports two access modes:
+    1. With trip context (?trip_id=X): Check trip membership permission
+    2. Without trip context: Only uploader has access
     """
 
     def get_template_name(self) -> str:
@@ -93,19 +97,35 @@ class TripImageInspectView(LoginRequiredMixin, ModalView):
         # Fetch image by UUID
         trip_image = get_object_or_404(TripImage, uuid=image_uuid)
 
-        # Permission check - ensure user has access to this image
-        if not trip_image.user_can_access(request.user):
+        # Determine trip context (optional)
+        trip = None
+        trip_id = request.GET.get('trip_id')
+        if trip_id:
+            try:
+                from tt.apps.trips.models import Trip
+                trip = Trip.objects.get(pk=int(trip_id))
+            except (ValueError, Trip.DoesNotExist):
+                pass  # Invalid trip_id, fall back to non-trip context
+
+        # Permission check with optional trip context
+        if not trip_image.user_can_access(request.user, trip=trip):
             logger.warning(
                 f"Access denied: User {request.user.email} (ID: {request.user.id}) "
-                f"attempted to access TripImage {image_uuid} owned by "
-                f"{trip_image.uploaded_by.email if trip_image.uploaded_by else 'unknown'}"
+                f"attempted to access TripImage {image_uuid} "
+                f"(trip_id: {trip_id if trip_id else 'none'}) "
+                f"owned by {trip_image.uploaded_by.email if trip_image.uploaded_by else 'unknown'}"
             )
             return JsonResponse(
                 {'error': 'You do not have permission to access this image.'},
                 status=403,
             )
 
+        # Determine if user can edit metadata (only uploader)
+        can_edit_metadata = (trip_image.uploaded_by == request.user)
+
         context = {
             'image': trip_image,
+            'can_edit_metadata': can_edit_metadata,
+            'trip': trip,  # May be None
         }
         return self.modal_response(request, context=context)

@@ -123,15 +123,17 @@ class TripImage(models.Model):
             return f"TripImage {self.uuid} ({self.datetime_utc.strftime('%Y-%m-%d')})"
         return f"TripImage {self.uuid}"
 
-    def user_can_access(self, user) -> bool:
+    def user_can_access(self, user, trip=None) -> bool:
         """
         Check if user has permission to access this image.
 
-        Currently checks if user is the uploader.
-        TODO: Extend to support journal/trip sharing permissions.
+        Permission granted when:
+        1. User is the uploader (always)
+        2. User is a current member of the specified trip (if trip provided)
 
         Args:
             user: User to check permission for
+            trip: Optional Trip instance for trip-context permission check
 
         Returns:
             True if user can access this image
@@ -139,12 +141,19 @@ class TripImage(models.Model):
         if not user or not user.is_authenticated:
             return False
 
-        # User can access their own images
+        # User can always access their own images
         if self.uploaded_by == user:
             return True
 
-        # TODO: Check if user has access via shared journal/trip
-        # For now, only uploader can access
+        # If trip context provided, check trip membership
+        if trip:
+            from tt.apps.trips.models import TripMember
+            return TripMember.objects.filter(
+                trip=trip,
+                user=user
+            ).exists()
+
+        # No trip context, only uploader has access
         return False
 
     class Meta:
