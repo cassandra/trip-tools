@@ -167,12 +167,11 @@ class ImageUploadService(Singleton):
             exif_tag_names = {ExifTags.TAGS[k]: v for k, v in exif_data.items() if k in ExifTags.TAGS}
 
             # Extract datetime with timezone offset parsing
-            datetime_tag = exif_tag_names.get('DateTimeOriginal') or exif_tag_names.get('DateTime')
-            offset_tag = exif_tag_names.get('OffsetTimeOriginal') or exif_tag_names.get('OffsetTime')
+            datetime_str = exif_tag_names.get('DateTimeOriginal') or exif_tag_names.get('DateTime')
+            offset_str = exif_tag_names.get('OffsetTimeOriginal') or exif_tag_names.get('OffsetTime')
 
-            if datetime_tag and datetime_tag in exif_data:
-                datetime_str = exif_data[datetime_tag]
-                offset_str = exif_data.get(offset_tag) if offset_tag else None
+            if datetime_str:
+                # datetime_str is already the value from exif_tag_names, not a tag key
 
                 try:
                     dt = datetime.strptime(datetime_str, '%Y:%m:%d %H:%M:%S')
