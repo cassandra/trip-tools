@@ -247,6 +247,12 @@ PIPELINE = {
             ),
             'output_filename': 'css/trip_images_upload.css',
         },
+        'journal': {
+            'source_filenames': (
+                'css/journal.css',
+            ),
+            'output_filename': 'css/journal.css',
+        },
     },
     'JAVASCRIPT': {
         'js_before_content': {

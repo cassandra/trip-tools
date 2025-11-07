@@ -1,30 +1,178 @@
 {% extends "journal/pages/journal_base.html" %}
 {% load static %}
+{% load icons %}
+{% load pipeline %}
+
+{% block head_css %}
+{% stylesheet 'journal' %}
+{% endblock %}
 
 {% block trip_content %}
-<div class="m-3">
-  <h1>Journal Entry</h1>
-
-  <!-- TODO: Implement journal entry editor -->
-  <!--
-    Features to implement:
-    - Date picker with timezone conversion
-    - Title field (optional)
-    - Markdown text area with autosave
-    - Reference image selector (dropdown of images for this date)
-    - Suggested images gallery (images matching date boundaries)
-    - Autosave status indicator (like notebook)
-    - Version conflict handling (like notebook)
-    - Readonly view for viewers (non-editors)
-   -->
-
-  <div class="alert alert-info">
-    <strong>Coming Soon:</strong> Journal entry editor with autosave
+<!-- Mobile warning: Display below 768px -->
+<div class="d-md-none">
+  <div class="alert alert-warning m-3">
+    <strong>Large Screen Required:</strong> Journal editing requires a larger screen. Please use landscape mode or a desktop device.
   </div>
 </div>
+
+<!-- Main journal editor layout: Display at 768px and above -->
+<div class="d-none d-md-block journal-editor-layout">
+
+  <!-- ===========================================
+       CENTER EDITOR PANEL
+       =========================================== -->
+  <div class="journal-editor-panel">
+
+    <!-- Editor Header: Save Status -->
+    <div class="journal-editor-header">
+      <div class="d-flex justify-content-end">
+        <span class="badge badge-secondary journal-save-status">
+          Saved 2 seconds ago
+        </span>
+      </div>
+    </div>
+
+    <!-- Editor Form -->
+    <form class="journal-entry-form" method="post">
+      {% csrf_token %}
+
+      <!-- Date Selector -->
+      <div class="form-group">
+        <label for="id_entry_date" class="font-weight-bold">Entry Date</label>
+        <input
+          type="date"
+          class="form-control"
+          id="id_entry_date"
+          name="date"
+          value="{{ entry.date|date:'Y-m-d' }}"
+        >
+        <small class="form-text text-muted">{{ entry.date|date:"l, F j, Y" }}</small>
+      </div>
+
+      <!-- Timezone Selector -->
+      <div class="form-group">
+        <label for="id_entry_timezone" class="font-weight-bold">Timezone</label>
+        <select class="form-control" id="id_entry_timezone" name="timezone">
+          <option value="{{ entry.timezone }}" selected>{{ entry.timezone }}</option>
+          <!-- Phase 2: Populate timezone options via JavaScript -->
+        </select>
+        <small class="form-text text-muted">Timezone for timestamps in this entry</small>
+      </div>
+
+      <!-- Title Field -->
+      <div class="form-group">
+        <label for="id_entry_title" class="font-weight-bold">Title</label>
+        <input
+          type="text"
+          class="form-control"
+          id="id_entry_title"
+          name="title"
+          value="{{ entry.title }}"
+          placeholder="Enter journal entry title..."
+        >
+      </div>
+
+      <!-- Markdown Text Area -->
+      <div class="form-group">
+        <label for="id_entry_text" class="font-weight-bold">Journal Entry</label>
+        <textarea class="form-control journal-textarea" id="id_entry_text" name="text" rows="20" placeholder="Write your journal entry in markdown...">{{ entry.text }}</textarea>
+        <small class="form-text text-muted">Markdown formatting supported</small>
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- ===========================================
+       RIGHT IMAGE PANEL
+       =========================================== -->
+  <div class="journal-image-panel">
+
+    <!-- Panel Header -->
+    <div class="journal-image-panel-header">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Images</h5>
+        <button type="button" class="btn btn-sm btn-link text-muted p-0" title="Collapse panel">
+          {% icon "chevron-right" size="sm" %}
+        </button>
+      </div>
+    </div>
+
+    <!-- Date Filter Indicator -->
+    <div class="journal-image-date-filter">
+      <small class="text-muted">Images for {{ entry.date|date:"F j, Y" }}</small>
+    </div>
+
+    <!-- Image Gallery Grid -->
+    <div class="journal-image-gallery">
+
+      <!-- Phase 1: Placeholder Images (3-5 static examples) -->
+
+      <!-- Example Image 1 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-secondary text-white d-flex align-items-center justify-content-center">
+          {% icon "image" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Geyser Photo</small>
+          <small class="text-muted">2:30 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 2 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-info text-white d-flex align-items-center justify-content-center">
+          {% icon "image" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Parliament</small>
+          <small class="text-muted">4:15 PM</small>
+          <span class="badge badge-success ml-1">Used</span>
+        </div>
+      </div>
+
+      <!-- Example Image 3 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-warning text-white d-flex align-items-center justify-content-center">
+          {% icon "image" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Sunset View</small>
+          <small class="text-muted">7:45 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 4 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-primary text-white d-flex align-items-center justify-content-center">
+          {% icon "image" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Dinner</small>
+          <small class="text-muted">8:20 PM</small>
+        </div>
+      </div>
+
+      <!-- Example Image 5 -->
+      <div class="journal-image-card">
+        <div class="journal-image-thumbnail bg-secondary text-white d-flex align-items-center justify-content-center">
+          {% icon "image" size="lg" %}
+        </div>
+        <div class="journal-image-caption">
+          <small class="font-weight-bold d-block text-truncate">Night Cityscape with Long Name</small>
+          <small class="text-muted">10:00 PM</small>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
 {% endblock %}
 
 {% block footer_post_javascript %}
 {{ block.super }}
-<!-- TODO: Add journal.js for autosave functionality (similar to notebook.js) -->
+<!-- Phase 2: Add journal.js for autosave functionality (similar to notebook.js) -->
 {% endblock %}
