@@ -118,6 +118,15 @@
   transform: translateY(-2px);
 }
 
+.journal-image-card.selected {
+  background-color: var(--primary-color-light, #e3f2fd);
+}
+
+.journal-image-card.selected .journal-image-thumbnail {
+  border: 3px solid var(--primary-color, #007bff);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
 .journal-image-thumbnail {
   width: 100%;
   aspect-ratio: 1;
@@ -129,6 +138,19 @@
 
 .journal-image-caption {
   padding: 0.25rem;
+}
+
+/* Image Metadata Preview Popup */
+.image-metadata-preview {
+  position: absolute;
+  background: white;
+  border: 1px solid var(--line-color);
+  border-radius: 4px;
+  padding: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  pointer-events: none;
+  min-width: 200px;
 }
 
 /* ===========================================

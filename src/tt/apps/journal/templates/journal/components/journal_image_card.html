@@ -1,0 +1,30 @@
+{% comment %}
+Reusable component for rendering a single image card in the journal image picker.
+
+Context variables:
+- image: TripImage instance
+- trip: Trip instance (for permission context)
+{% endcomment %}
+
+<div class="journal-image-card"
+     data-image-uuid="{{ image.uuid }}"
+     data-inspect-url="{% url 'images_trip_image_inspect' image_uuid=image.uuid %}?trip_id={{ trip.id }}"
+     title="{{ image.caption|default:'Untitled' }} - {% if image.datetime_utc %}{{ image.datetime_utc|date:'g:i A' }}{% else %}Unknown time{% endif %}">
+  <div class="journal-image-thumbnail">
+    <img src="{{ image.thumbnail_image.url }}" alt="{{ image.caption }}" class="w-100 h-100" style="object-fit: cover;">
+  </div>
+  <div class="journal-image-caption">
+    <small class="font-weight-bold d-block text-truncate">
+      {% if image.caption %}
+        {{ image.caption }}
+      {% else %}
+        <span class="text-muted">Untitled</span>
+      {% endif %}
+    </small>
+    {% if image.datetime_utc %}
+      <small class="text-muted">{{ image.datetime_utc|date:"g:i A" }}</small>
+    {% else %}
+      <small class="text-muted">Unknown time</small>
+    {% endif %}
+  </div>
+</div>

@@ -10,198 +10,34 @@
     </button>
   </div>
 
-  <!-- Date Filter -->
-  <input
-      type="date"
-      class="form-control form-control-sm mb-2"
-      id="id_image_date_filter"
-      value="{{ entry.date|date:'Y-m-d' }}"
-  >
+  <!-- Date and Scope Filter Form -->
+  <form method="get" action="{% url 'journal_entry_images' trip_id=trip.id entry_pk=entry.id %}" data-async="#journal-image-gallery" data-mode="insert">
+    <!-- Date Filter -->
+    <input
+        type="date"
+        class="form-control form-control-sm mb-2"
+        id="id_image_date_filter"
+        name="date"
+        value="{{ entry.date|date:'Y-m-d' }}"
+        onchange-async="true"
+    >
 
-  <!-- Scope Filter Pills -->
-  <div class="btn-group btn-group-sm btn-group-toggle w-100" data-toggle="buttons">
-    <label class="btn btn-outline-secondary active">
-      <input type="radio" name="image_scope" value="all" checked> All
-    </label>
-    <label class="btn btn-outline-secondary">
-      <input type="radio" name="image_scope" value="unused"> Unused
-    </label>
-    <label class="btn btn-outline-secondary">
-      <input type="radio" name="image_scope" value="page"> In Use
-    </label>
-  </div>
+    <!-- Scope Filter Pills -->
+    <div class="btn-group btn-group-sm btn-group-toggle w-100" data-toggle="buttons">
+      <label class="btn btn-outline-secondary active">
+        <input type="radio" name="scope" value="all" checked onchange-async="true"> All
+      </label>
+      <label class="btn btn-outline-secondary">
+        <input type="radio" name="scope" value="unused" onchange-async="true"> Unused
+      </label>
+      <label class="btn btn-outline-secondary">
+        <input type="radio" name="scope" value="in-use" onchange-async="true"> In Use
+      </label>
+    </div>
+  </form>
 </div>
 
 <!-- Image Gallery Grid - Scrollable -->
-<div class="journal-image-gallery">
-
-  <!-- Phase 1: Placeholder Images (3-5 static examples) -->
-
-  <!-- Example Image 1 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-secondary text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Geyser Photo</small>
-      <small class="text-muted">2:30 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 2 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-info text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Parliament</small>
-      <small class="text-muted">4:15 PM</small>
-      <span class="badge badge-success ml-1">Used</span>
-    </div>
-  </div>
-
-  <!-- Example Image 3 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-warning text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Sunset View</small>
-      <small class="text-muted">7:45 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 4 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-primary text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Dinner</small>
-      <small class="text-muted">8:20 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 5 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-secondary text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Night Cityscape</small>
-      <small class="text-muted">10:00 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 6 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-success text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Mountain Trail</small>
-      <small class="text-muted">9:15 AM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 7 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-danger text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Street Market</small>
-      <small class="text-muted">11:30 AM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 8 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-dark text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Museum Interior</small>
-      <small class="text-muted">1:45 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 9 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-info text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Harbor View</small>
-      <small class="text-muted">3:00 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 10 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-warning text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Cafe Lunch</small>
-      <small class="text-muted">12:15 PM</small>
-      <span class="badge badge-success ml-1">Used</span>
-    </div>
-  </div>
-
-  <!-- Example Image 11 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-primary text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Cathedral</small>
-      <small class="text-muted">5:30 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 12 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-secondary text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Garden Path</small>
-      <small class="text-muted">10:45 AM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 13 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-success text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Bridge Crossing</small>
-      <small class="text-muted">6:00 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 14 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-danger text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Town Square</small>
-      <small class="text-muted">4:30 PM</small>
-    </div>
-  </div>
-
-  <!-- Example Image 15 -->
-  <div class="journal-image-card">
-    <div class="journal-image-thumbnail bg-dark text-white d-flex align-items-center justify-content-center">
-      {% icon "camera" size="lg" %}
-    </div>
-    <div class="journal-image-caption">
-      <small class="font-weight-bold d-block text-truncate">Evening Concert</small>
-      <small class="text-muted">9:00 PM</small>
-    </div>
-  </div>
-
+<div class="journal-image-gallery" id="journal-image-gallery">
+  {% include "journal/components/journal_image_gallery_grid.html" with accessible_images=accessible_images trip=trip %}
 </div>

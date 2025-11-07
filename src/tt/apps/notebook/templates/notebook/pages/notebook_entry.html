@@ -1,5 +1,6 @@
 {% extends "notebook/pages/notebook_base.html" %}
 {% load static %}
+{% load pipeline %}
 
 {% block trip_extra_actions %}
 {% endblock %}
@@ -52,5 +53,5 @@
 
 {% block footer_post_javascript %}
 {{ block.super }}
-<script src="{% static 'js/notebook.js' %}"></script>
+{% javascript 'notebook' %}
 {% endblock %}

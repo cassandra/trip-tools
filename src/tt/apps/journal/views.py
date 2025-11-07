@@ -4,9 +4,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.views.generic import View
 
+from tt.apps.common.antinode import http_response
 from tt.apps.console.console_helper import ConsoleSettingsHelper
+from tt.apps.images.models import TripImage
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
@@ -16,6 +19,7 @@ from .context import JournalPageContext
 from .enums import JournalVisibility
 from .forms import JournalForm
 from .models import Journal, JournalEntry
+from .utils import get_entry_date_boundaries
 
 
 class JournalHomeView(LoginRequiredMixin, TripViewMixin, View):
@@ -217,7 +221,15 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
             # Redirect to the edit view for the new entry
             return redirect('journal_entry', trip_id=trip.pk, entry_pk=entry.pk)
 
-        # TODO: Render edit view for existing entry (stub for now)
+        # Fetch accessible images for the entry's date
+        start_dt, end_dt = get_entry_date_boundaries(entry.date, entry.timezone)
+        accessible_images = TripImage.objects.accessible_to_user_in_trip_for_date_range(
+            user = request.user,
+            trip = trip,
+            start_datetime = start_dt,
+            end_datetime = end_dt,
+        )
+
         journal_entries = journal.entries.all()
         journal_page_context = JournalPageContext(
             journal = journal,
@@ -229,6 +241,8 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
             'journal_page': journal_page_context,
             'journal': journal,
             'entry': entry,
+            'accessible_images': accessible_images,
+            'trip': trip,
         }
         return render(request, 'journal/pages/journal_entry.html', context)
 
@@ -270,3 +284,79 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
             'status': 'error',
             'message': 'TODO: Implement JournalEntryAutosaveView',
         }, status=501)
+
+
+class JournalEntryImagePickerView(LoginRequiredMixin, TripViewMixin, View):
+    """
+    AJAX endpoint for fetching images for a specific date.
+
+    Used by the image picker to refresh the image gallery when the date is changed.
+    Returns rendered HTML for the image gallery grid.
+    """
+
+    def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member(request, trip_id=trip_id)
+        self.assert_is_viewer(request_member)
+        trip = request_member.trip
+
+        # Get the journal entry
+        journal = Journal.objects.get_primary_for_trip(trip)
+        if not journal:
+            return http_response({'error': 'No journal found'}, status=404)
+
+        entry = get_object_or_404(
+            JournalEntry,
+            pk = entry_pk,
+            journal = journal,
+        )
+
+        # Get the selected date from query parameter (YYYY-MM-DD format)
+        selected_date_str = request.GET.get('date', None)
+        if not selected_date_str:
+            return http_response({'error': 'Date parameter required'}, status=400)
+
+        try:
+            selected_date = date_class.fromisoformat(selected_date_str)
+        except ValueError:
+            return http_response({'error': 'Invalid date format'}, status=400)
+
+        # Get scope filter (stub for now - will implement filtering logic later)
+        scope = request.GET.get('scope', 'all')
+        # Valid values: 'all', 'unused', 'in-use'
+        # For now, we ignore this and always show all images
+
+        # Get timezone from entry
+        timezone = entry.timezone
+
+        # Calculate date boundaries for the selected date
+        start_dt, end_dt = get_entry_date_boundaries(selected_date, timezone)
+
+        # Fetch accessible images for the selected date
+        accessible_images = TripImage.objects.accessible_to_user_in_trip_for_date_range(
+            user = request.user,
+            trip = trip,
+            start_datetime = start_dt,
+            end_datetime = end_dt,
+        )
+
+        # TODO: Apply scope filtering when text editing is implemented
+        # if scope == 'unused':
+        #     # Filter to images not used in this entry
+        #     pass
+        # elif scope == 'in-use':
+        #     # Filter to images used in this entry
+        #     pass
+
+        # Render the image gallery grid
+        context = {
+            'accessible_images': accessible_images,
+            'trip': trip,
+        }
+        gallery_html = render_to_string(
+            'journal/components/journal_image_gallery_grid.html',
+            context,
+            request=request
+        )
+
+        # Return antinode response with the gallery HTML
+        return http_response({'insert': {'journal-image-gallery': gallery_html}})

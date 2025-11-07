@@ -280,6 +280,18 @@ PIPELINE = {
             ),
             'output_filename': 'js/trip_images_upload.js',
         },
+        'journal': {
+            'source_filenames': (
+                'js/journal.js',
+            ),
+            'output_filename': 'js/journal.js',
+        },
+        'notebook': {
+            'source_filenames': (
+                'js/notebook.js',
+            ),
+            'output_filename': 'js/notebook.js',
+        },
     }
 }
 
