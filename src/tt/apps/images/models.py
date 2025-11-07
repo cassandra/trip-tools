@@ -123,6 +123,30 @@ class TripImage(models.Model):
             return f"TripImage {self.uuid} ({self.datetime_utc.strftime('%Y-%m-%d')})"
         return f"TripImage {self.uuid}"
 
+    def user_can_access(self, user) -> bool:
+        """
+        Check if user has permission to access this image.
+
+        Currently checks if user is the uploader.
+        TODO: Extend to support journal/trip sharing permissions.
+
+        Args:
+            user: User to check permission for
+
+        Returns:
+            True if user can access this image
+        """
+        if not user or not user.is_authenticated:
+            return False
+
+        # User can access their own images
+        if self.uploaded_by == user:
+            return True
+
+        # TODO: Check if user has access via shared journal/trip
+        # For now, only uploader can access
+        return False
+
     class Meta:
         verbose_name = 'Trip Image'
         verbose_name_plural = 'Trip Images'
