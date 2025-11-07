@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 from django.db import models
 
 if TYPE_CHECKING:
-    from .models import Journal, JournalEntry
+    from .models import Journal
 
 
 class JournalManager(models.Manager):

@@ -9,7 +9,7 @@ Following Django/TripTools testing principles:
 import io
 import logging
 import tempfile
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model

@@ -569,16 +569,16 @@ class NotebookEditViewTests(TestCase):
         response = self.client.get(edit_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('trip_page', response.context)
-        trip_page = response.context['trip_page']
+        self.assertIn('notebook_page', response.context)
+        notebook_page = response.context['notebook_page']
 
-        notebook_entries = list(trip_page.notebook_entries)
+        notebook_entries = list(notebook_page.notebook_entries)
         self.assertEqual(len(notebook_entries), 2)
         self.assertEqual(notebook_entries[0].pk, entry1.pk)
         self.assertEqual(notebook_entries[1].pk, entry2.pk)
 
-    def test_edit_includes_notebook_entry_pk_in_trip_page(self):
-        """Test that notebook edit includes notebook_entry_pk in trip_page context."""
+    def test_edit_includes_notebook_entry_pk_in_notebook_page(self):
+        """Test that notebook edit includes notebook_entry_pk in notebook_page context."""
         entry = NotebookEntry.objects.create(
             trip=self.trip,
             date=date(2024, 1, 15),
@@ -593,9 +593,9 @@ class NotebookEditViewTests(TestCase):
         response = self.client.get(edit_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('trip_page', response.context)
-        trip_page = response.context['trip_page']
-        self.assertEqual(int(trip_page.notebook_entry_pk), entry.pk)
+        self.assertIn('notebook_page', response.context)
+        notebook_page = response.context['notebook_page']
+        self.assertEqual(int(notebook_page.notebook_entry_pk), entry.pk)
 
     def test_edit_notebook_entries_ordered_by_date(self):
         """Test that notebook_entries in edit view are ordered by date."""
@@ -623,8 +623,8 @@ class NotebookEditViewTests(TestCase):
         })
         response = self.client.get(edit_url)
 
-        trip_page = response.context['trip_page']
-        notebook_entries = list(trip_page.notebook_entries)
+        notebook_page = response.context['notebook_page']
+        notebook_entries = list(notebook_page.notebook_entries)
         self.assertEqual(len(notebook_entries), 3)
         # Verify chronological order
         self.assertEqual(notebook_entries[0].pk, entry1.pk)
@@ -675,8 +675,8 @@ class NotebookEditViewTests(TestCase):
         })
         response = self.client.get(edit_url)
 
-        trip_page = response.context['trip_page']
-        notebook_entries = list(trip_page.notebook_entries)
+        notebook_page = response.context['notebook_page']
+        notebook_entries = list(notebook_page.notebook_entries)
         # Should only have the entry for the current trip and user
         self.assertEqual(len(notebook_entries), 1)
         self.assertEqual(notebook_entries[0].pk, my_entry.pk)

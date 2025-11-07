@@ -2,7 +2,7 @@
 Synthetic data factory for creating test images with configurable EXIF metadata.
 """
 import io
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
@@ -87,7 +87,7 @@ def create_test_image_with_exif(
             try:
                 offset_tag = 36881  # OffsetTimeOriginal tag code
                 exif_dict[offset_tag] = datetime_offset
-            except:
+            except Exception:
                 pass
 
     # Add GPS coordinates if provided
