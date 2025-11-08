@@ -365,7 +365,6 @@
             this.editor.updateStatus('error', 'Save failed - retrying (' + this.retryCount + '/3)...');
 
             setTimeout(function() {
-              this.isSaving = false;
               this.executeSave();
             }.bind(this), delay);
           } else {
@@ -392,16 +391,14 @@
 
     this.entryPk = $editor.data(Tt.JOURNAL_ENTRY_PK_ATTR);
     this.currentVersion = $editor.data(Tt.JOURNAL_CURRENT_VERSION_ATTR) || 1;
-    this.tripId = this.getTripIdFromUrl();
 
     this.draggedElement = null;
     this.dragSource = null; // 'picker' or 'editor'
-    this.dropZoneIndicator = null;
 
     // Initialize managers
     this.editorLayoutManager = new EditorLayoutManager(this.$editor);
 
-    var autosaveUrl = '/journal/trip/' + this.tripId + '/entry/' + this.entryPk + '/save';
+    var autosaveUrl = $editor.data(Tt.JOURNAL_AUTOSAVE_URL_ATTR);
     var csrfToken = this.getCSRFToken();
     this.autoSaveManager = new AutoSaveManager(this, autosaveUrl, csrfToken);
 
@@ -557,7 +554,7 @@
     $clone.removeClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
 
     // Remove selected state (editor UI only)
-    $clone.find('.selected').removeClass('selected');
+    $clone.find('.' + EDITOR_TRANSIENT.CSS_SELECTED).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
 
     return $clone.html();
   };
@@ -856,7 +853,7 @@
     var self = this;
 
     // Use event delegation for dynamically added images
-    this.$editor.on('click', 'img.trip-image', function(e) {
+    this.$editor.on('click', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -875,7 +872,7 @@
     });
 
     // Prevent default drag on existing images (handled in setupImageReordering)
-    this.$editor.on('dragstart', 'img.trip-image', function(e) {
+    this.$editor.on('dragstart', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
       // This is handled in setupImageReordering
     });
   };
@@ -1003,12 +1000,12 @@
     // No need for hover-based wrapping
 
     // Handle delete button click
-    this.$editor.on('click', '.trip-image-delete-btn', function(e) {
+    this.$editor.on('click', EDITOR_TRANSIENT.SEL_DELETE_BTN, function(e) {
       e.preventDefault();
       e.stopPropagation();
 
-      var $wrapper = $(this).closest('.trip-image-wrapper');
-      var $img = $wrapper.find('img.trip-image');
+      var $wrapper = $(this).closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+      var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
 
       self.removeImage($img);
     });
@@ -1023,10 +1020,10 @@
 
           // Check if we're at an image
           var $img = null;
-          if (node.nodeType === Node.ELEMENT_NODE && $(node).is('img.trip-image')) {
+          if (node.nodeType === Node.ELEMENT_NODE && $(node).is(Tt.JOURNAL_IMAGE_SELECTOR)) {
             $img = $(node);
           } else if (node.nodeType === Node.ELEMENT_NODE) {
-            $img = $(node).find('img.trip-image').first();
+            $img = $(node).find(Tt.JOURNAL_IMAGE_SELECTOR).first();
           }
 
           if ($img && $img.length) {
@@ -1043,7 +1040,7 @@
    */
   JournalEditor.prototype.removeImage = function($img) {
     // Images are always wrapped, so remove the wrapper
-    var $wrapper = $img.closest('.trip-image-wrapper');
+    var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
     $wrapper.remove();
 
     // Trigger autosave
@@ -1062,7 +1059,7 @@
     // Tab to navigate between images
     this.$editor.on('keydown', function(e) {
       if (e.key === 'Tab') {
-        var $images = self.$editor.find('img.trip-image');
+        var $images = self.$editor.find(Tt.JOURNAL_IMAGE_SELECTOR);
 
         if ($images.length > 0) {
           var selection = window.getSelection();
@@ -1097,14 +1094,6 @@
    */
   JournalEditor.prototype.getCSRFToken = function() {
     return Cookies.get('csrftoken');
-  };
-
-  /**
-   * Utility: Get trip ID from URL
-   */
-  JournalEditor.prototype.getTripIdFromUrl = function() {
-    var matches = window.location.pathname.match(/\/trip\/(\d+)\//);
-    return matches ? matches[1] : null;
   };
 
   /**

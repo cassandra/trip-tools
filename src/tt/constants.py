@@ -119,6 +119,7 @@ DIVID = {
     'JOURNAL_ENTRY_PK_ATTR': 'entry-pk',
     'JOURNAL_CURRENT_VERSION_ATTR': 'current-version',
     'JOURNAL_IMAGE_UUID_ATTR': 'image-uuid',
+    'JOURNAL_AUTOSAVE_URL_ATTR': 'autosave-url',
 
     # Journal - Persistent HTML Elements (saved to database)
     'JOURNAL_IMAGE_WRAPPER_CLASS': 'trip-image-wrapper',
