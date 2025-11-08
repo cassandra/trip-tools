@@ -170,7 +170,7 @@
     // The response contains a 'modal' key with backend-rendered HTML
     if (responseData && responseData.modal) {
       // Generate unique modal ID
-      var modalId = 'notebook-conflict-modal-' + Date.now();
+      var modalId = 'edit-conflict-modal-' + Date.now();
       var $modal = $('<div id="' + modalId + '" class="modal fade" tabindex="-1" role="dialog"></div>');
 
       // Insert modal content from backend

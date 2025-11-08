@@ -111,7 +111,7 @@ class TestUiConflictModalLongDiffView(View):
             'diff_html': diff_html,
         }
 
-        return render(request, 'notebook/modals/edit_conflict.html', context)
+        return render(request, 'common/modals/edit_conflict.html', context)
 
 
 class TestUiConflictModalEmptyDiffView(View):
@@ -131,4 +131,4 @@ class TestUiConflictModalEmptyDiffView(View):
             'diff_html': diff_html,
         }
 
-        return render(request, 'notebook/modals/edit_conflict.html', context)
+        return render(request, 'common/modals/edit_conflict.html', context)

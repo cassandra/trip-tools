@@ -1,6 +1,8 @@
 from datetime import date as date_class, timedelta
+import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -8,17 +10,19 @@ from django.views.generic import View
 
 from tt.apps.common.antinode import http_response
 from tt.apps.console.console_helper import ConsoleSettingsHelper
-from tt.apps.images.models import TripImage
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
 from tt.async_view import ModalView
 
+from .autosave_helpers import JournalAutoSaveHelper, JournalConflictHelper
 from .context import JournalPageContext
 from .enums import JournalVisibility
-from .forms import JournalForm
+from .forms import JournalForm, JournalEntryForm
 from .models import Journal, JournalEntry
-from .services import JournalImagePickerService
+from .services import JournalImagePickerService, JournalEntrySeederService
+
+logger = logging.getLogger(__name__)
 
 
 class JournalHomeView(LoginRequiredMixin, TripViewMixin, View):
@@ -119,14 +123,10 @@ class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
             # Seed journal entries from notebook entries
             notebook_entries = trip.notebook_entries.all()
             for notebook_entry in notebook_entries:
-                JournalEntry.objects.create(
-                    journal = journal,
-                    date = notebook_entry.date,
-                    timezone = journal.timezone,
-                    text = notebook_entry.text,
-                    source_notebook_entry = notebook_entry,
-                    source_notebook_version = notebook_entry.edit_version,
-                    modified_by = request.user,
+                JournalEntrySeederService.create_from_notebook_entry(
+                    notebook_entry=notebook_entry,
+                    journal=journal,
+                    user=request.user,
                 )
 
             return self.refresh_response(request)
@@ -204,15 +204,11 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
                 default_date = date_class.today()
                 default_timezone = journal.timezone
 
-            # Generate default title: journal title + date
-            default_title = f"{journal.title} - {default_date.strftime('%B %d, %Y')}"
-
-            # Create new entry
+            # Create new entry (title will be auto-generated from date in model.save())
             entry = JournalEntry.objects.create(
                 journal = journal,
                 date = default_date,
                 timezone = default_timezone,
-                title = default_title,
                 text = '',
                 modified_by = request.user,
             )
@@ -235,11 +231,16 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
             journal_entries = journal_entries,
             journal_entry_pk = entry_pk,
         )
+
+        # Create form for entry metadata fields
+        journal_entry_form = JournalEntryForm(instance=entry)
+
         context = {
             'trip_page': trip_page_context,
             'journal_page': journal_page_context,
             'journal': journal,
             'entry': entry,
+            'journal_entry_form': journal_entry_form,
             'accessible_images': accessible_images,
             'trip': trip,
         }
@@ -261,28 +262,103 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
     """
     AJAX endpoint for autosaving journal entries.
 
-    TODO: Implement autosave functionality similar to NotebookEntry.
-    - Accept JSON request body with date, title, text, reference_image_id, version
-    - Validate and save atomically
-    - Handle version conflicts
-    - Return JSON response with version and timestamp
+    Handles auto-save requests with HTML sanitization, version conflict detection,
+    and atomic updates. Similar to NotebookEntry autosave but with HTML content.
     """
+
+    def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Method not allowed'},
+            status=405,
+        )
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
         request_member = self.get_trip_member(request, trip_id=trip_id)
         self.assert_is_editor(request_member)
+        trip = request_member.trip
 
-        # TODO: Implement autosave logic
-        # - Parse JSON request
-        # - Lock entry with select_for_update()
-        # - Check version conflict
-        # - Update entry atomically
-        # - Return success JSON with new version
+        # Get the journal and entry
+        journal = Journal.objects.get_primary_for_trip(trip)
+        if not journal:
+            return JsonResponse(
+                {'status': 'error', 'message': 'No journal found for this trip'},
+                status=404
+            )
 
-        return JsonResponse({
-            'status': 'error',
-            'message': 'TODO: Implement JournalEntryAutosaveView',
-        }, status=501)
+        entry = get_object_or_404(
+            JournalEntry,
+            pk=entry_pk,
+            journal=journal,
+        )
+
+        # Parse and validate request
+        autosave_request, error_response = JournalAutoSaveHelper.parse_autosave_request(
+            request_body=request.body
+        )
+        if error_response:
+            return error_response
+
+        # Sanitize HTML content
+        sanitized_text = JournalAutoSaveHelper.sanitize_html_content(autosave_request.text)
+
+        try:
+            with transaction.atomic():
+                # Use select_for_update to lock the row for the duration of the transaction
+                locked_entry = JournalEntry.objects.select_for_update().get(pk=entry.pk)
+
+                # Check version conflict - backward compatible (treat missing version as no check)
+                if autosave_request.client_version is not None:
+                    if locked_entry.edit_version != autosave_request.client_version:
+                        return JournalConflictHelper.build_conflict_response(
+                            request=request,
+                            entry=locked_entry,
+                            client_text=autosave_request.text  # Show unsanitized version in diff
+                        )
+
+                # Check for date conflicts if date is changing (inside transaction for atomicity)
+                if autosave_request.new_date:
+                    date_error = JournalAutoSaveHelper.validate_date_uniqueness(
+                        entry=locked_entry,
+                        new_date=autosave_request.new_date
+                    )
+                    if date_error:
+                        return date_error
+
+                # Update fields and increment version atomically
+                updated_entry = JournalAutoSaveHelper.update_entry_atomically(
+                    entry=locked_entry,
+                    text=sanitized_text,  # Use sanitized HTML
+                    user=request.user,
+                    new_date=autosave_request.new_date,
+                    new_title=autosave_request.new_title,
+                    new_timezone=autosave_request.new_timezone,
+                    new_reference_image_id=autosave_request.new_reference_image_id
+                )
+
+            return JsonResponse({
+                'status': 'success',
+                'version': updated_entry.edit_version,
+                'modified_datetime': updated_entry.modified_datetime.isoformat(),
+            })
+
+        except JournalEntry.DoesNotExist:
+            logger.error(f'Entry {entry_pk} not found during atomic update')
+            return JsonResponse(
+                {'status': 'error', 'message': 'Entry not found'},
+                status=404
+            )
+        except IntegrityError as e:
+            logger.warning(f'Integrity constraint violation for entry {entry_pk}: {e}')
+            return JsonResponse(
+                {'status': 'error', 'message': 'Unable to save - entry date conflicts with another entry'},
+                status=409
+            )
+        except DatabaseError as e:
+            logger.error(f'Database error auto-saving journal entry {entry_pk}: {e}')
+            return JsonResponse(
+                {'status': 'error', 'message': 'Database error occurred'},
+                status=500
+            )
 
 
 class JournalEntryImagePickerView(LoginRequiredMixin, TripViewMixin, View):

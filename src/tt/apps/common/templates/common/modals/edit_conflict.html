@@ -3,7 +3,7 @@
 {% load icons %}
 {% load tz %}
 
-{% block modal_dialog_id %}notebook-conflict-modal{% endblock %}
+{% block modal_dialog_id %}edit-conflict-modal{% endblock %}
 {% block modal_dialog_class %}tt-modal-dialog-800{% endblock %}
 
 {% block title_image %}
@@ -18,7 +18,7 @@
 {% timezone USER_TIMEZONE %}
 <div class="alert alert-warning">
   <strong>{% icon "warning" %} Another user has modified this entry</strong><br>
-  This notebook entry was modified by <strong>{{ modified_by_name }}</strong>
+  This entry was modified by <strong>{{ modified_by_name }}</strong>
   at <strong>{{ modified_at_datetime|date:"F j, Y \a\t g:i A" }}</strong>.<br><br>
   <em>Your unsaved changes may be lost if you refresh. Consider copying your changes before refreshing.</em>
 </div>

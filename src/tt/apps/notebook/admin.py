@@ -11,20 +11,15 @@ class NotebookEntryAdmin(admin.ModelAdmin):
 
     list_display = (
         'date',
-        'user_link',
         'trip_link',
         'text_preview',
         'created_datetime',
     )
 
     list_filter = ('date', 'created_datetime')
-    search_fields = ['text', 'user__email', 'trip__title']
+    search_fields = ['text', 'trip__title']
     readonly_fields = ('created_datetime', 'modified_datetime')
     date_hierarchy = 'date'
-
-    @admin_link('user', 'User')
-    def user_link(self, user):
-        return user.email
 
     @admin_link('trip', 'Trip')
     def trip_link(self, trip):

@@ -190,7 +190,7 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
             with transaction.atomic():
                 # Use select_for_update to lock the row for the duration of the transaction
                 locked_entry = NotebookEntry.objects.select_for_update().get(pk=entry.pk)
-
+                
                 # Check version conflict - backward compatible (treat missing version as no check)
                 if autosave_request.client_version is not None:
                     if locked_entry.edit_version != autosave_request.client_version:

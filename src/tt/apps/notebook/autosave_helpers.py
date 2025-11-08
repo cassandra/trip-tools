@@ -3,10 +3,11 @@ Helper classes for notebook entry auto-save operations.
 
 This module provides encapsulated business logic for handling
 notebook entry auto-save, including version conflict detection,
-date validation, diff generation, and atomic updates.
+date validation, and atomic updates.
+
+Note: This module now uses shared utilities from tt.apps.common.autosave_helpers
+for common auto-save functionality.
 """
-import difflib
-import html
 import json
 import logging
 from dataclasses import dataclass
@@ -14,11 +15,9 @@ from datetime import date as date_class, datetime
 from typing import Optional, Tuple
 
 from django.contrib.auth import get_user_model
-from django.db.models import F
 from django.http import HttpRequest, JsonResponse
-from django.template.loader import render_to_string
 
-from tt.apps.common import antinode
+from tt.apps.common.autosave_helpers import AutoSaveHelper as SharedAutoSaveHelper, ConflictHelper, DiffHelper
 
 from .models import NotebookEntry
 
@@ -35,7 +34,11 @@ class AutoSaveRequest:
 
 
 class NotebookDiffHelper:
-    """Helper for generating visual diffs between notebook versions."""
+    """
+    Helper for generating visual diffs between notebook versions.
+
+    Wrapper around shared DiffHelper for backward compatibility.
+    """
 
     @classmethod
     def generate_unified_diff_html( cls,
@@ -54,55 +57,15 @@ class NotebookDiffHelper:
         Returns:
             HTML string with styled unified diff, ready for display
         """
-        # Split texts into lines for difflib (preserving line endings)
-        server_lines = server_text.splitlines(keepends=True)
-        client_lines = client_text.splitlines(keepends=True)
-
-        # Generate unified diff
-        diff_lines = difflib.unified_diff(
-            server_lines,
-            client_lines,
-            fromfile='Server Version (Latest)',
-            tofile='Your Changes',
-            lineterm='',
-            n=3  # 3 lines of context (standard)
-        )
-
-        # Convert to list and check if there are any differences
-        diff_list = list(diff_lines)
-        if not diff_list:
-            return '<div class="diff-no-changes">No differences detected</div>'
-
-        # Build HTML with proper styling
-        html_parts = ['<div class="unified-diff">']
-
-        for line in diff_list:
-            # Escape HTML to prevent XSS
-            escaped_line = html.escape(line)
-
-            # Apply styling based on line prefix
-            if line.startswith('---') or line.startswith('+++'):
-                # File headers
-                html_parts.append(f'<div class="diff-header">{escaped_line}</div>')
-            elif line.startswith('@@'):
-                # Hunk headers (line number ranges)
-                html_parts.append(f'<div class="diff-hunk">{escaped_line}</div>')
-            elif line.startswith('-'):
-                # Deleted lines (in server version, not in client)
-                html_parts.append(f'<div class="diff-delete">{escaped_line}</div>')
-            elif line.startswith('+'):
-                # Added lines (in client, not in server)
-                html_parts.append(f'<div class="diff-add">{escaped_line}</div>')
-            else:
-                # Context lines (unchanged)
-                html_parts.append(f'<div class="diff-context">{escaped_line}</div>')
-
-        html_parts.append('</div>')
-        return ''.join(html_parts)
+        return DiffHelper.generate_unified_diff_html(server_text, client_text)
 
 
 class NotebookConflictHelper:
-    """Helper for handling edit conflicts in notebook entries."""
+    """
+    Helper for handling edit conflicts in notebook entries.
+
+    Wrapper around shared ConflictHelper for backward compatibility.
+    """
 
     @classmethod
     def build_conflict_response( cls,
@@ -120,41 +83,10 @@ class NotebookConflictHelper:
         Returns:
             JsonResponse with modal HTML and server version (status 409)
         """
-        if entry.modified_by:
-            modified_by_name = entry.modified_by.get_full_name()
-        else:
-            modified_by_name = 'another user'
-
-        logger.info(
-            f'Version conflict for entry {entry.pk} (trip {entry.trip.pk}): '
-            f'client version mismatch, server={entry.edit_version}, '
-            f'modified_by={modified_by_name}'
-        )
-
-        # Generate unified diff HTML for modal display
-        diff_html = NotebookDiffHelper.generate_unified_diff_html(
-            server_text = entry.text,
-            client_text = client_text
-        )
-
-        # Render modal template
-        modal_html = render_to_string(
-            'notebook/modals/edit_conflict.html',
-            {
-                'modified_by_name': modified_by_name,
-                'modified_at_datetime': entry.modified_datetime,
-                'diff_html': diff_html,
-            },
-            request=request
-        )
-
-        # Return modal HTML for frontend display
-        return antinode.http_response(
-            {
-                'modal': modal_html,
-                'server_version': entry.edit_version,
-            },
-            status=409
+        return ConflictHelper.build_conflict_response(
+            request=request,
+            entry=entry,
+            client_text=client_text,
         )
 
 
@@ -162,8 +94,9 @@ class NotebookAutoSaveHelper:
     """Helper for notebook entry auto-save operations."""
 
     @classmethod
-    def parse_autosave_request( cls,
-                                request_body : bytes ) -> Tuple[Optional[AutoSaveRequest], Optional[JsonResponse]]:
+    def parse_autosave_request(
+            cls,
+            request_body : bytes ) -> Tuple[Optional[AutoSaveRequest], Optional[JsonResponse]]:
         """
         Parse and validate auto-save request JSON.
 
@@ -198,9 +131,9 @@ class NotebookAutoSaveHelper:
                 )
 
         return AutoSaveRequest(
-            text=text,
-            new_date=new_date,
-            client_version=client_version
+            text = text,
+            new_date = new_date,
+            client_version = client_version
         ), None
 
     @classmethod
@@ -251,19 +184,13 @@ class NotebookAutoSaveHelper:
         Returns:
             Updated entry with refreshed version
         """
-        entry.text = text
-        entry.modified_by = user
-        update_fields = ['text', 'edit_version', 'modified_by', 'modified_datetime']
-
+        extra_updates = {}
         if new_date:
-            entry.date = new_date
-            update_fields.append('date')
+            extra_updates['date'] = new_date
 
-        # Use F() expression for atomic increment to prevent race conditions
-        entry.edit_version = F('edit_version') + 1
-        entry.save(update_fields=update_fields)
-
-        # Refresh to get the actual version value (F() expressions don't update in-memory)
-        entry.refresh_from_db(fields=['edit_version', 'modified_datetime'])
-
-        return entry
+        return SharedAutoSaveHelper.update_entry_atomically(
+            entry=entry,
+            text=text,
+            user=user,
+            extra_updates=extra_updates if extra_updates else None
+        )

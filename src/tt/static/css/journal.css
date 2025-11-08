@@ -62,12 +62,13 @@
   white-space: nowrap;
 }
 
-/* Textarea Container - Scrollable */
-.journal-textarea-container {
+/* Editor Container - Scrollable */
+.journal-editor-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 .journal-save-status {
@@ -83,15 +84,64 @@
   min-height: 120px;
 }
 
-/* Journal Textarea - Monospace Font */
-.journal-textarea {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  resize: none;
+/* ContentEditable Editor */
+.journal-contenteditable {
   flex: 1;
   overflow-y: auto;
   height: 100%;
+  padding: 1rem;
+  border: 1px solid var(--line-color);
+  border-radius: 4px;
+  background-color: var(--white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-color);
+  outline: none;
+  min-height: 300px;
+}
+
+.journal-contenteditable:focus {
+  border-color: var(--primary-color, #007bff);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Placeholder styling */
+.journal-contenteditable:empty:before {
+  content: attr(data-placeholder);
+  color: var(--muted-text, #6c757d);
+  font-style: italic;
+}
+
+/* ContentEditable paragraph styling */
+.journal-contenteditable p {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.journal-contenteditable p:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile Warning */
+.journal-editor-mobile-warning {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+@media (min-width: 768px) {
+  .journal-editor-mobile-warning {
+    display: none !important;
+  }
 }
 
 /* Image Panel Header - Fixed */
@@ -197,6 +247,131 @@
   }
 }
 
+/* ===========================================
+   CONTENTEDITABLE IMAGE STYLES
+   =========================================== */
+
+/* Trip images inserted into editor */
+.journal-contenteditable img.trip-image {
+  max-width: 100%;
+  height: auto;
+  cursor: move;
+  user-select: none;
+  border-radius: 4px;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+/* Float-right layout for images in paragraphs */
+.journal-contenteditable img.trip-image[data-layout="float-right"] {
+  float: right;
+  margin: 0 0 1rem 1rem;
+  max-width: 45%;
+}
+
+/* Full-width layout for images between paragraphs */
+.journal-contenteditable img.trip-image[data-layout="full-width"] {
+  display: block;
+  margin: 1.5rem auto;
+  max-width: 100%;
+}
+
+/* Image hover state */
+.journal-contenteditable img.trip-image:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Image selected state */
+.journal-contenteditable img.trip-image.selected {
+  outline: 3px solid var(--primary-color, #007bff);
+  outline-offset: 2px;
+}
+
+/* Image being dragged */
+.journal-contenteditable img.trip-image.dragging {
+  opacity: 0.5;
+}
+
+/* Image delete button overlay */
+.trip-image-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.trip-image-delete-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: rgba(220, 53, 69, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.trip-image-delete-btn:hover {
+  background-color: rgba(200, 35, 51, 1);
+}
+
+.trip-image-wrapper:hover .trip-image-delete-btn {
+  display: flex;
+}
+
+/* ===========================================
+   DROP ZONE INDICATORS
+   =========================================== */
+
+/* Drop zone indicator for paragraphs */
+.journal-contenteditable p.drop-zone-active {
+  background-color: rgba(0, 123, 255, 0.1);
+  outline: 2px dashed var(--primary-color, #007bff);
+  outline-offset: 4px;
+}
+
+/* Drop zone indicator between paragraphs */
+.drop-zone-between {
+  height: 4px;
+  background-color: var(--primary-color, #007bff);
+  margin: 0.5rem 0;
+  border-radius: 2px;
+  position: relative;
+}
+
+.drop-zone-between::before {
+  content: 'Drop here for full-width image';
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+/* Dragging state for picker images */
+.journal-image-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+/* Drag over state for editor */
+.journal-contenteditable.drag-over {
+  background-color: rgba(0, 123, 255, 0.05);
+  border-color: var(--primary-color, #007bff);
+}
+
 /* Below 768px: Responsive adjustments for narrow screens */
 @media (max-width: 767px) {
   .journal-editor-header {
@@ -218,6 +393,12 @@
 
   .journal-save-status {
     font-size: 0.75rem;
+  }
+
+  /* Disable contenteditable on mobile */
+  .journal-contenteditable {
+    pointer-events: none;
+    user-select: none;
   }
 }
 

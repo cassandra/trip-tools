@@ -134,7 +134,7 @@ class JournalEntry(models.Model):
     title = models.CharField(max_length = 200, blank = True)
     text = models.TextField(
         blank = True,
-        help_text = 'Markdown formatted journal entry text',
+        help_text = 'HTML formatted journal entry text (sanitized on save)',
     )
 
     # Source tracking (for seeding from notebook)
@@ -165,6 +165,18 @@ class JournalEntry(models.Model):
         related_name = 'modified_journal_entries',
         editable = False,
     )
+
+    def save(self, *args, **kwargs):
+        """Override save to auto-generate title from date if empty."""
+        if not self.title:
+            # Ensure date is a date object (Django may pass string initially)
+            from datetime import date as date_class
+            if isinstance(self.date, str):
+                date_obj = date_class.fromisoformat(self.date)
+            else:
+                date_obj = self.date
+            self.title = date_obj.strftime('%A, %B %d, %Y')
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.journal.title} - {self.date}"

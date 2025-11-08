@@ -548,8 +548,8 @@ class NotebookEditViewTests(TestCase):
         trip_page = response.context['trip_page']
         self.assertEqual(trip_page.active_page, TripPage.NOTES)
 
-    def test_edit_includes_notebook_entries_in_trip_page(self):
-        """Test that notebook edit includes notebook_entries in trip_page context."""
+    def test_edit_includes_notebook_entries_in_notebook_page(self):
+        """Test that notebook edit includes notebook_entries in notebook_page context."""
         entry1 = NotebookEntry.objects.create(
             trip=self.trip,
             date=date(2024, 1, 10),

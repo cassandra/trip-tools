@@ -18,7 +18,8 @@
       "WebFetch(domain:objects.githubusercontent.com)",
       "Bash(gh issue list:*)",
       "Bash(python manage.py check:*)",
-      "Bash(python manage.py shell:*)"
+      "Bash(python manage.py shell:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
