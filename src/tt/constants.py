@@ -102,4 +102,29 @@ DIVID = {
     'IMAGES_FILE_PROGRESS_LIST_ID': 'images-file-progress-list',
     'IMAGES_UPLOADED_GRID_ID': 'images-uploaded-grid',
     'IMAGES_UPLOADED_COUNT_ID': 'images-uploaded-count',
+
+    # Journal Editor - IDs
+    'JOURNAL_EDITOR_ID': 'id_entry_text',
+    'JOURNAL_TITLE_INPUT_ID': 'id_entry_title',
+    'JOURNAL_DATE_INPUT_ID': 'id_entry_date',
+    'JOURNAL_TIMEZONE_INPUT_ID': 'id_entry_timezone',
+
+    # Journal Editor - Classes
+    'JOURNAL_EDITOR_CLASS': 'journal-contenteditable',
+    'JOURNAL_ENTRY_FORM_CLASS': 'journal-entry-form',
+    'JOURNAL_SAVE_STATUS_CLASS': 'journal-save-status',
+    'JOURNAL_IMAGE_CARD_CLASS': 'journal-image-card',
+
+    # Journal - Data Attributes
+    'JOURNAL_ENTRY_PK_ATTR': 'entry-pk',
+    'JOURNAL_CURRENT_VERSION_ATTR': 'current-version',
+    'JOURNAL_IMAGE_UUID_ATTR': 'image-uuid',
+
+    # Journal - Persistent HTML Elements (saved to database)
+    'JOURNAL_IMAGE_WRAPPER_CLASS': 'trip-image-wrapper',
+    'JOURNAL_IMAGE_CLASS': 'trip-image',
+    'JOURNAL_FULL_WIDTH_GROUP_CLASS': 'full-width-image-group',
+    'JOURNAL_FLOAT_MARKER_CLASS': 'has-float-image',
+    'JOURNAL_LAYOUT_ATTR': 'layout',
+    'JOURNAL_UUID_ATTR': 'uuid',
 }

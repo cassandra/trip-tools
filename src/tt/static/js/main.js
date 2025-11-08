@@ -94,6 +94,46 @@
         DATA_ORIGINAL_VALUE_ATTR: 'data-original-value',
         ATTR_V2_DELETE_FILE_ATTR: 'delete_file_attribute',
 
+        // Journal Editor - IDs
+        JOURNAL_EDITOR_ID: 'id_entry_text',
+        JOURNAL_TITLE_INPUT_ID: 'id_entry_title',
+        JOURNAL_DATE_INPUT_ID: 'id_entry_date',
+        JOURNAL_TIMEZONE_INPUT_ID: 'id_entry_timezone',
+
+        // Journal Editor - Classes
+        JOURNAL_EDITOR_CLASS: 'journal-contenteditable',
+        JOURNAL_ENTRY_FORM_CLASS: 'journal-entry-form',
+        JOURNAL_SAVE_STATUS_CLASS: 'journal-save-status',
+        JOURNAL_IMAGE_CARD_CLASS: 'journal-image-card',
+
+        // Journal - Data Attributes
+        JOURNAL_ENTRY_PK_ATTR: 'entry-pk',
+        JOURNAL_CURRENT_VERSION_ATTR: 'current-version',
+        JOURNAL_IMAGE_UUID_ATTR: 'image-uuid',
+
+        // Journal - Persistent HTML Elements (saved to database)
+        JOURNAL_IMAGE_WRAPPER_CLASS: 'trip-image-wrapper',
+        JOURNAL_IMAGE_CLASS: 'trip-image',
+        JOURNAL_FULL_WIDTH_GROUP_CLASS: 'full-width-image-group',
+        JOURNAL_FLOAT_MARKER_CLASS: 'has-float-image',
+        JOURNAL_LAYOUT_ATTR: 'layout',
+        JOURNAL_UUID_ATTR: 'uuid',
+
+        // Journal - Ready-to-use selectors
+        JOURNAL_EDITOR_SELECTOR: '#id_entry_text',
+        JOURNAL_TITLE_INPUT_SELECTOR: '#id_entry_title',
+        JOURNAL_DATE_INPUT_SELECTOR: '#id_entry_date',
+        JOURNAL_TIMEZONE_INPUT_SELECTOR: '#id_entry_timezone',
+        JOURNAL_ENTRY_FORM_SELECTOR: '.journal-entry-form',
+        JOURNAL_SAVE_STATUS_SELECTOR: '.journal-save-status',
+        JOURNAL_IMAGE_CARD_SELECTOR: '.journal-image-card',
+        JOURNAL_IMAGE_WRAPPER_SELECTOR: '.trip-image-wrapper',
+        JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR: '.trip-image-wrapper[data-layout="float-right"]',
+        JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR: '.trip-image-wrapper[data-layout="full-width"]',
+        JOURNAL_IMAGE_SELECTOR: 'img.trip-image',
+        JOURNAL_FULL_WIDTH_GROUP_SELECTOR: '.full-width-image-group',
+        JOURNAL_FLOAT_MARKER_SELECTOR: '.has-float-image',
+
         // Trip Images Upload - DIVID constants
         DIVID: {
             IMAGES_UPLOAD_ZONE_ID: 'images-upload-zone',

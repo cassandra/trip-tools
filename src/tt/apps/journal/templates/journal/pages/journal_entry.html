@@ -17,7 +17,7 @@
   <div class="journal-editor-panel mt-2">
 
     <!-- Editor Form -->
-    <form class="journal-entry-form" method="post">
+    <form class="{{ DIVID.JOURNAL_ENTRY_FORM_CLASS }}" method="post">
       {% csrf_token %}
 
       <!-- Compact Header: Two columns -->
@@ -36,24 +36,24 @@
           <div>
             <!-- Title (full width in left column) -->
             <div class="form-group form-inline mb-2">
-              <label for="id_entry_title" class="font-weight-bold mr-2">Title:</label>
+              <label for="{{ DIVID.JOURNAL_TITLE_INPUT_ID }}" class="font-weight-bold mr-2">Title:</label>
               <input
                   type="text"
                   class="form-control flex-grow-1"
-                  id="id_entry_title"
+                  id="{{ DIVID.JOURNAL_TITLE_INPUT_ID }}"
                   name="title"
                   value="{{ entry.title }}"
                   placeholder="Enter journal entry title..."
               >
             </div>
-            
+
             <!-- Date and Timezone (inline in second row) -->
             <div class="form-inline">
-              <label for="id_entry_date" class="font-weight-bold mr-2">Date:</label>
+              <label for="{{ DIVID.JOURNAL_DATE_INPUT_ID }}" class="font-weight-bold mr-2">Date:</label>
               <input
                   type="date"
                   class="form-control mr-2"
-                  id="id_entry_date"
+                  id="{{ DIVID.JOURNAL_DATE_INPUT_ID }}"
                   name="date"
                   value="{{ entry.date|date:'Y-m-d' }}"
               >
@@ -61,14 +61,14 @@
               {{ journal_entry_form.timezone }}
             </div>
           </div>
-          
+
           <div class="d-flex justify-content-end mt-4">
-            <span class="badge badge-secondary journal-save-status">
+            <span class="badge badge-secondary {{ DIVID.JOURNAL_SAVE_STATUS_CLASS }}">
               Saved 2 seconds ago
             </span>
           </div>
         </div>
-        
+
       </div>
 
       {% include "journal/panes/journal_entry_text_edit.html" %}

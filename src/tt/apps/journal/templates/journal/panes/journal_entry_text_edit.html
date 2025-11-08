@@ -1,11 +1,11 @@
 <div class="journal-editor-container">
   <!-- ContentEditable Editor -->
   <div
-    class="journal-contenteditable"
-    id="id_entry_text"
+    class="{{ DIVID.JOURNAL_EDITOR_CLASS }}"
+    id="{{ DIVID.JOURNAL_EDITOR_ID }}"
     contenteditable="true"
-    data-entry-pk="{{ entry.pk }}"
-    data-current-version="{{ entry.edit_version }}"
+    data-{{ DIVID.JOURNAL_ENTRY_PK_ATTR }}="{{ entry.pk }}"
+    data-{{ DIVID.JOURNAL_CURRENT_VERSION_ATTR }}="{{ entry.edit_version }}"
     data-placeholder="Start writing your journal entry..."
     role="textbox"
     aria-label="Journal entry content"
@@ -21,5 +21,5 @@
   </div>
 
   <!-- Hidden textarea for form fallback (non-JS) -->
-  <textarea class="d-none" name="text" id="id_entry_text_fallback">{{ entry.text }}</textarea>
+  <textarea class="d-none" name="text" id="{{ DIVID.JOURNAL_EDITOR_ID }}_fallback">{{ entry.text }}</textarea>
 </div>

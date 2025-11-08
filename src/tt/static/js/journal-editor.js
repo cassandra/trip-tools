@@ -45,38 +45,34 @@
   'use strict';
 
   /**
-   * CONSTANTS - True magic strings that appear in multiple locations
-   * These strings are used in both JavaScript and CSS, and changing them
-   * requires updates in multiple files.
+   * EDITOR-ONLY TRANSIENT CONSTANTS
+   * These are runtime-only CSS classes added/removed by JavaScript.
+   * They are NEVER saved to the database and NEVER appear in templates.
+   *
+   * For shared constants (IDs, classes used in templates), see Tt namespace in main.js
    */
-  const EDITOR_CONSTANTS = {
-    // CSS Classes - Persistent (saved to database)
-    CSS_WRAPPER: 'trip-image-wrapper',
-    CSS_IMAGE: 'trip-image',
-    CSS_FULL_WIDTH_GROUP: 'full-width-image-group',
-    CSS_FLOAT_MARKER: 'has-float-image',
-
-    // CSS Classes - Transient (editor-only, never saved)
+  const EDITOR_TRANSIENT = {
+    // Transient CSS classes (editor UI only, never saved)
     CSS_DELETE_BTN: 'trip-image-delete-btn',
     CSS_DROP_ZONE_ACTIVE: 'drop-zone-active',
     CSS_DROP_ZONE_BETWEEN: 'drop-zone-between',
     CSS_DRAGGING: 'dragging',
     CSS_DRAG_OVER: 'drag-over',
+    CSS_SELECTED: 'selected',
 
-    // Data Attributes
-    ATTR_LAYOUT: 'data-layout',
-    ATTR_UUID: 'data-uuid',
-
-    // Layout Values
-    LAYOUT_FLOAT_RIGHT: 'float-right',
-    LAYOUT_FULL_WIDTH: 'full-width',
-
-    // Commonly used selectors
-    SEL_WRAPPER: '.trip-image-wrapper',
-    SEL_IMAGE: 'img.trip-image',
+    // Transient element selectors
     SEL_DELETE_BTN: '.trip-image-delete-btn',
-    SEL_WRAPPER_FLOAT: '.trip-image-wrapper[data-layout="float-right"]',
-    SEL_WRAPPER_FULL: '.trip-image-wrapper[data-layout="full-width"]',
+    SEL_DROP_ZONE_BETWEEN: '.drop-zone-between',
+  };
+
+  /**
+   * LAYOUT VALUES
+   * These are the actual string values for data-layout attribute.
+   * Not DOM selectors, just the values.
+   */
+  const LAYOUT_VALUES = {
+    FLOAT_RIGHT: 'float-right',
+    FULL_WIDTH: 'full-width',
   };
 
   // Module state
@@ -103,9 +99,9 @@
    */
   EditorLayoutManager.prototype.wrapFullWidthImageGroups = function() {
     // Remove existing wrappers first
-    this.$editor.find('.' + EDITOR_CONSTANTS.CSS_FULL_WIDTH_GROUP).each(function() {
+    this.$editor.find('.' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS).each(function() {
       var $group = $(this);
-      $group.children(EDITOR_CONSTANTS.SEL_WRAPPER_FULL).unwrap();
+      $group.children(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR).unwrap();
     });
 
     // Group consecutive full-width images
@@ -114,7 +110,7 @@
 
     this.$editor.children().each(function() {
       var $child = $(this);
-      if ($child.is(EDITOR_CONSTANTS.SEL_WRAPPER_FULL)) {
+      if ($child.is(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
         currentGroup.push(this);
       } else {
         if (currentGroup.length > 0) {
@@ -131,7 +127,7 @@
 
     // Wrap each group
     groups.forEach(function(group) {
-      $(group).wrapAll('<div class="' + EDITOR_CONSTANTS.CSS_FULL_WIDTH_GROUP + '"></div>');
+      $(group).wrapAll('<div class="' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS + '"></div>');
     });
   };
 
@@ -141,13 +137,13 @@
    */
   EditorLayoutManager.prototype.markFloatParagraphs = function() {
     // Remove existing marks
-    this.$editor.find('p').removeClass(EDITOR_CONSTANTS.CSS_FLOAT_MARKER);
+    this.$editor.find('p').removeClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
 
     // Mark paragraphs with float-right images
     this.$editor.find('p').each(function() {
       var $p = $(this);
-      if ($p.find(EDITOR_CONSTANTS.SEL_WRAPPER_FLOAT).length > 0) {
-        $p.addClass(EDITOR_CONSTANTS.CSS_FLOAT_MARKER);
+      if ($p.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR).length > 0) {
+        $p.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
       }
     });
   };
@@ -157,14 +153,14 @@
    * Called on page load to add buttons to wrappers from saved content
    */
   EditorLayoutManager.prototype.ensureDeleteButtons = function() {
-    this.$editor.find(EDITOR_CONSTANTS.SEL_WRAPPER).each(function() {
+    this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
       var $wrapper = $(this);
 
       // Check if delete button already exists
-      if ($wrapper.find(EDITOR_CONSTANTS.SEL_DELETE_BTN).length === 0) {
+      if ($wrapper.find(EDITOR_TRANSIENT.SEL_DELETE_BTN).length === 0) {
         // Add delete button
         var $deleteBtn = $('<button>', {
-          'class': EDITOR_CONSTANTS.CSS_DELETE_BTN,
+          'class': EDITOR_TRANSIENT.CSS_DELETE_BTN,
           'type': 'button',
           'title': 'Remove image',
           'text': '×'
@@ -388,14 +384,14 @@
    */
   function JournalEditor($editor) {
     this.$editor = $editor;
-    this.$form = $editor.closest('.journal-entry-form');
-    this.$titleInput = this.$form.find('#id_entry_title');
-    this.$dateInput = this.$form.find('#id_entry_date');
-    this.$timezoneInput = this.$form.find('#id_entry_timezone');
-    this.$statusElement = this.$form.find('.journal-save-status');
+    this.$form = $editor.closest(Tt.JOURNAL_ENTRY_FORM_SELECTOR);
+    this.$titleInput = this.$form.find('#' + Tt.JOURNAL_TITLE_INPUT_ID);
+    this.$dateInput = this.$form.find('#' + Tt.JOURNAL_DATE_INPUT_ID);
+    this.$timezoneInput = this.$form.find('#' + Tt.JOURNAL_TIMEZONE_INPUT_ID);
+    this.$statusElement = this.$form.find('.' + Tt.JOURNAL_SAVE_STATUS_CLASS);
 
-    this.entryPk = $editor.data('entry-pk');
-    this.currentVersion = $editor.data('current-version') || 1;
+    this.entryPk = $editor.data(Tt.JOURNAL_ENTRY_PK_ATTR);
+    this.currentVersion = $editor.data(Tt.JOURNAL_CURRENT_VERSION_ATTR) || 1;
     this.tripId = this.getTripIdFromUrl();
 
     this.draggedElement = null;
@@ -550,15 +546,15 @@
     var $clone = this.$editor.clone();
 
     // Remove transient elements (never saved to database)
-    $clone.find(EDITOR_CONSTANTS.SEL_DELETE_BTN).remove();
-    $clone.find('.' + EDITOR_CONSTANTS.CSS_DROP_ZONE_BETWEEN).remove();
+    $clone.find(EDITOR_TRANSIENT.SEL_DELETE_BTN).remove();
+    $clone.find('.' + EDITOR_TRANSIENT.CSS_DROP_ZONE_BETWEEN).remove();
 
     // Remove transient classes (editor-only states)
-    $clone.find('.' + EDITOR_CONSTANTS.CSS_DROP_ZONE_ACTIVE)
-          .removeClass(EDITOR_CONSTANTS.CSS_DROP_ZONE_ACTIVE);
-    $clone.find('.' + EDITOR_CONSTANTS.CSS_DRAGGING)
-          .removeClass(EDITOR_CONSTANTS.CSS_DRAGGING);
-    $clone.removeClass(EDITOR_CONSTANTS.CSS_DRAG_OVER);
+    $clone.find('.' + EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE)
+          .removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    $clone.find('.' + EDITOR_TRANSIENT.CSS_DRAGGING)
+          .removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+    $clone.removeClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
 
     // Remove selected state (editor UI only)
     $clone.find('.selected').removeClass('selected');
@@ -640,10 +636,10 @@
 
     // Make picker images draggable (already set in HTML)
     // Handle dragstart from picker
-    $(document).on('dragstart', '.journal-image-card', function(e) {
+    $(document).on('dragstart', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
       self.draggedElement = this;
       self.dragSource = 'picker';
-      $(this).addClass(EDITOR_CONSTANTS.CSS_DRAGGING);
+      $(this).addClass(EDITOR_TRANSIENT.CSS_DRAGGING);
 
       // Set drag data
       e.originalEvent.dataTransfer.effectAllowed = 'copy';
@@ -651,8 +647,8 @@
     });
 
     // Handle dragend from picker
-    $(document).on('dragend', '.journal-image-card', function(e) {
-      $(this).removeClass(EDITOR_CONSTANTS.CSS_DRAGGING);
+    $(document).on('dragend', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
+      $(this).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
       self.clearDropZones();
       self.draggedElement = null;
       self.dragSource = null;
@@ -670,14 +666,14 @@
 
     this.$editor.on('dragenter', function(e) {
       if (self.dragSource === 'picker') {
-        $(this).addClass(EDITOR_CONSTANTS.CSS_DRAG_OVER);
+        $(this).addClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
       }
     });
 
     this.$editor.on('dragleave', function(e) {
       // Only remove if we're leaving the editor completely
-      if (!$(e.relatedTarget).closest('.journal-contenteditable').length) {
-        $(this).removeClass(EDITOR_CONSTANTS.CSS_DRAG_OVER);
+      if (!$(e.relatedTarget).closest('.' + Tt.JOURNAL_EDITOR_CLASS).length) {
+        $(this).removeClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
         self.clearDropZones();
       }
     });
@@ -686,7 +682,7 @@
       e.preventDefault();
       e.stopPropagation();
 
-      $(this).removeClass(EDITOR_CONSTANTS.CSS_DRAG_OVER);
+      $(this).removeClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
 
       if (self.dragSource === 'picker' && self.draggedElement) {
         self.handleImageDrop(e);
@@ -702,22 +698,22 @@
   JournalEditor.prototype.showDropZones = function(e) {
     var $target = $(e.target);
     var $paragraph = $target.closest('p');
-    var $imageWrapper = $target.closest(EDITOR_CONSTANTS.SEL_WRAPPER_FULL);
+    var $imageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
     // Clear existing indicators
     this.clearDropZones();
 
     if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
       // Mouse is over a paragraph - show paragraph drop zone
-      $paragraph.addClass(EDITOR_CONSTANTS.CSS_DROP_ZONE_ACTIVE);
+      $paragraph.addClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
     } else if ($imageWrapper.length && $imageWrapper.closest(this.$editor).length) {
       // Mouse is over a full-width image - highlight it to show insertion point
       // (wrapper may be inside .full-width-image-group, so check if it's within editor)
-      $imageWrapper.addClass(EDITOR_CONSTANTS.CSS_DROP_ZONE_ACTIVE);
+      $imageWrapper.addClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
     } else {
       // Mouse is between paragraphs/images - show between indicator
       var mouseY = e.clientY;
-      var $children = this.$editor.children('p, ' + EDITOR_CONSTANTS.SEL_WRAPPER_FULL + ', .' + EDITOR_CONSTANTS.CSS_FULL_WIDTH_GROUP);
+      var $children = this.$editor.children('p, ' + Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR + ', .' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS);
 
       $children.each(function() {
         var rect = this.getBoundingClientRect();
@@ -725,7 +721,7 @@
         var betweenBottom = rect.top + 20;
 
         if (mouseY >= betweenTop && mouseY <= betweenBottom) {
-          var $indicator = $('<div class="' + EDITOR_CONSTANTS.CSS_DROP_ZONE_BETWEEN + '"></div>');
+          var $indicator = $('<div class="' + EDITOR_TRANSIENT.CSS_DROP_ZONE_BETWEEN + '"></div>');
           $(this).before($indicator);
           return false;
         }
@@ -737,9 +733,9 @@
    * Clear drop zone indicators
    */
   JournalEditor.prototype.clearDropZones = function() {
-    this.$editor.find('p').removeClass(EDITOR_CONSTANTS.CSS_DROP_ZONE_ACTIVE);
-    this.$editor.find(EDITOR_CONSTANTS.SEL_WRAPPER).removeClass(EDITOR_CONSTANTS.CSS_DROP_ZONE_ACTIVE);
-    this.$editor.find('.' + EDITOR_CONSTANTS.CSS_DROP_ZONE_BETWEEN).remove();
+    this.$editor.find('p').removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    this.$editor.find('.' + EDITOR_TRANSIENT.CSS_DROP_ZONE_BETWEEN).remove();
   };
 
   /**
@@ -757,33 +753,33 @@
 
     var $target = $(e.target);
     var $paragraph = $target.closest('p');
-    var $imageWrapper = $target.closest(EDITOR_CONSTANTS.SEL_WRAPPER_FULL);
+    var $imageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
-    var layout = EDITOR_CONSTANTS.LAYOUT_FULL_WIDTH;
+    var layout = LAYOUT_VALUES.FULL_WIDTH;
     var $insertTarget = null;
 
     if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
       // Dropped into a paragraph - float-right layout
-      layout = EDITOR_CONSTANTS.LAYOUT_FLOAT_RIGHT;
+      layout = LAYOUT_VALUES.FLOAT_RIGHT;
       $insertTarget = $paragraph;
 
       // Check and enforce 2-image limit per paragraph
-      var existingWrappers = $paragraph.find(EDITOR_CONSTANTS.SEL_WRAPPER_FLOAT);
+      var existingWrappers = $paragraph.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
       if (existingWrappers.length >= 2) {
         // Remove the rightmost wrapper (with image inside)
         existingWrappers.last().remove();
       }
     } else if ($imageWrapper.length && $imageWrapper.closest(this.$editor).length) {
       // Dropped onto an existing full-width image - insert after it (into same group)
-      layout = EDITOR_CONSTANTS.LAYOUT_FULL_WIDTH;
+      layout = LAYOUT_VALUES.FULL_WIDTH;
       $insertTarget = $imageWrapper;
     } else {
       // Dropped between paragraphs/images - full-width layout
-      layout = EDITOR_CONSTANTS.LAYOUT_FULL_WIDTH;
+      layout = LAYOUT_VALUES.FULL_WIDTH;
 
       // Find the closest paragraph or full-width group to insert before/after
       var mouseY = e.clientY;
-      var $children = this.$editor.children('p, ' + EDITOR_CONSTANTS.SEL_WRAPPER_FULL + ', .' + EDITOR_CONSTANTS.CSS_FULL_WIDTH_GROUP);
+      var $children = this.$editor.children('p, ' + Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR + ', .' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS);
       var closestElement = null;
       var minDistance = Infinity;
 
@@ -804,10 +800,10 @@
     var $wrappedImage = this.createImageElement(imageUuid, imageUrl, caption, layout);
 
     // Insert the wrapped image
-    if (layout === EDITOR_CONSTANTS.LAYOUT_FLOAT_RIGHT) {
+    if (layout === LAYOUT_VALUES.FLOAT_RIGHT) {
       // Insert at beginning of paragraph for float-right
       $insertTarget.prepend($wrappedImage);
-    } else if ($insertTarget.is(EDITOR_CONSTANTS.SEL_WRAPPER_FULL)) {
+    } else if ($insertTarget.is(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
       // Insert after the target image wrapper (will be in same group)
       $insertTarget.after($wrappedImage);
     } else {
@@ -828,20 +824,20 @@
     var $img = $('<img>', {
       'src': url,
       'alt': caption,
-      'class': EDITOR_CONSTANTS.CSS_IMAGE,
+      'class': Tt.JOURNAL_IMAGE_CLASS,
     });
-    $img.attr(EDITOR_CONSTANTS.ATTR_UUID, uuid);
+    $img.attr('data-' + Tt.JOURNAL_UUID_ATTR, uuid);
     $img.attr('draggable', true);
 
     // Create wrapper with layout attribute
     var $wrapper = $('<span>', {
-      'class': EDITOR_CONSTANTS.CSS_WRAPPER
+      'class': Tt.JOURNAL_IMAGE_WRAPPER_CLASS
     });
-    $wrapper.attr(EDITOR_CONSTANTS.ATTR_LAYOUT, layout);
+    $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR, layout);
 
     // Create delete button
     var $deleteBtn = $('<button>', {
-      'class': EDITOR_CONSTANTS.CSS_DELETE_BTN,
+      'class': EDITOR_TRANSIENT.CSS_DELETE_BTN,
       'type': 'button',
       'title': 'Remove image',
       'text': '×'
@@ -868,7 +864,7 @@
       var uuid = $img.data('uuid');
 
       // Get inspect URL from the corresponding picker card
-      var $pickerCard = $('.journal-image-card[data-image-uuid="' + uuid + '"]');
+      var $pickerCard = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
       var inspectUrl = $pickerCard.data('inspect-url');
 
       if (inspectUrl) {
@@ -891,24 +887,24 @@
     var self = this;
 
     // Handle dragstart for images already in editor
-    this.$editor.on('dragstart', EDITOR_CONSTANTS.SEL_IMAGE, function(e) {
+    this.$editor.on('dragstart', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
       var $img = $(this);
-      var $wrapper = $img.closest(EDITOR_CONSTANTS.SEL_WRAPPER);
+      var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
 
       self.draggedElement = $wrapper[0]; // Store wrapper, not image
       self.dragSource = 'editor';
-      $wrapper.addClass(EDITOR_CONSTANTS.CSS_DRAGGING);
+      $wrapper.addClass(EDITOR_TRANSIENT.CSS_DRAGGING);
 
       e.originalEvent.dataTransfer.effectAllowed = 'move';
       e.originalEvent.dataTransfer.setData('text/plain', '');
     });
 
     // Handle dragend for images in editor
-    this.$editor.on('dragend', EDITOR_CONSTANTS.SEL_IMAGE, function(e) {
+    this.$editor.on('dragend', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
       var $img = $(this);
-      var $wrapper = $img.closest(EDITOR_CONSTANTS.SEL_WRAPPER);
+      var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
 
-      $wrapper.removeClass(EDITOR_CONSTANTS.CSS_DRAGGING);
+      $wrapper.removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
       self.clearDropZones();
       self.draggedElement = null;
       self.dragSource = null;
@@ -920,7 +916,7 @@
         e.preventDefault();
         e.stopPropagation();
 
-        $(this).removeClass(EDITOR_CONSTANTS.CSS_DRAG_OVER);
+        $(this).removeClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
         self.handleImageReorder(e);
         self.clearDropZones();
       }
@@ -940,17 +936,17 @@
     var $paragraph = $target.closest('p');
 
     var oldLayout = $wrapper.data('layout');
-    var newLayout = EDITOR_CONSTANTS.LAYOUT_FULL_WIDTH;
+    var newLayout = LAYOUT_VALUES.FULL_WIDTH;
 
     if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
       // Dropped into a paragraph
-      newLayout = EDITOR_CONSTANTS.LAYOUT_FLOAT_RIGHT;
+      newLayout = LAYOUT_VALUES.FLOAT_RIGHT;
 
       // Remove from old location
       $wrapper.remove();
 
       // Check 2-image limit
-      var existingWrappers = $paragraph.find(EDITOR_CONSTANTS.SEL_WRAPPER_FLOAT);
+      var existingWrappers = $paragraph.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
       if (existingWrappers.length >= 2) {
         existingWrappers.last().remove();
       }
@@ -959,14 +955,14 @@
       $paragraph.prepend($wrapper);
     } else {
       // Dropped between paragraphs
-      newLayout = EDITOR_CONSTANTS.LAYOUT_FULL_WIDTH;
+      newLayout = LAYOUT_VALUES.FULL_WIDTH;
 
       // Remove from old location
       $wrapper.remove();
 
       // Find closest paragraph or full-width wrapper
       var mouseY = e.clientY;
-      var $paragraphs = this.$editor.children('p, ' + EDITOR_CONSTANTS.SEL_WRAPPER_FULL);
+      var $paragraphs = this.$editor.children('p, ' + Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
       var closestElement = null;
       var minDistance = Infinity;
 
@@ -990,7 +986,7 @@
 
     // Update layout attribute if changed
     if (newLayout !== oldLayout) {
-      $wrapper.attr(EDITOR_CONSTANTS.ATTR_LAYOUT, newLayout);
+      $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR, newLayout);
     }
 
     // Trigger autosave
@@ -1115,7 +1111,7 @@
    * Initialize editor on document ready
    */
   $(document).ready(function() {
-    var $editor = $('#id_entry_text');
+    var $editor = $('#' + Tt.JOURNAL_EDITOR_ID);
 
     if ($editor.length && $editor.attr('contenteditable') === 'true') {
       editorInstance = new JournalEditor($editor);
