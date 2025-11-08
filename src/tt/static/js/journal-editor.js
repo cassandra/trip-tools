@@ -795,15 +795,22 @@
     // Editor drag events
     this.$editor.on('dragover', function(e) {
       e.preventDefault();
-      e.originalEvent.dataTransfer.dropEffect = 'copy';
 
-      if (self.dragSource === 'picker') {
+      // Set appropriate drop effect based on drag source
+      if (self.dragSource === 'editor') {
+        e.originalEvent.dataTransfer.dropEffect = 'move';
+      } else {
+        e.originalEvent.dataTransfer.dropEffect = 'copy';
+      }
+
+      // Show drop zones for both picker and editor drags
+      if (self.dragSource === 'picker' || self.dragSource === 'editor') {
         self.showDropZones(e);
       }
     });
 
     this.$editor.on('dragenter', function(e) {
-      if (self.dragSource === 'picker') {
+      if (self.dragSource === 'picker' || self.dragSource === 'editor') {
         $(this).addClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
       }
     });
@@ -824,6 +831,8 @@
 
       if (self.dragSource === 'picker' && self.draggedElement) {
         self.handleImageDrop(e);
+      } else if (self.dragSource === 'editor' && self.draggedElement) {
+        self.handleImageReorder(e);
       }
 
       self.clearDropZones();
@@ -1058,17 +1067,8 @@
       self.dragSource = null;
     });
 
-    // Drop handling for reordering
-    this.$editor.on('drop', function(e) {
-      if (self.dragSource === 'editor' && self.draggedElement) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        $(this).removeClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
-        self.handleImageReorder(e);
-        self.clearDropZones();
-      }
-    });
+    // Drop handling is now unified in setupImageDragDrop()
+    // No separate drop handler needed here
   };
 
   /**
@@ -1102,33 +1102,41 @@
       // Insert at beginning of paragraph
       $paragraph.prepend($wrapper);
     } else {
-      // Dropped between paragraphs
+      // Dropped outside paragraphs (full-width area)
       newLayout = LAYOUT_VALUES.FULL_WIDTH;
 
       // Remove from old location
       $wrapper.remove();
 
-      // Find closest paragraph or full-width wrapper
-      var mouseY = e.clientY;
-      var $paragraphs = this.$editor.children('p, ' + Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
-      var closestElement = null;
-      var minDistance = Infinity;
+      // Check if dropping on/near a specific full-width image wrapper
+      var $targetImageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
-      $paragraphs.each(function() {
-        var rect = this.getBoundingClientRect();
-        var distance = Math.abs(rect.top - mouseY);
-
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestElement = this;
-        }
-      });
-
-      // Insert before closest element
-      if (closestElement) {
-        $(closestElement).before($wrapper);
+      if ($targetImageWrapper.length && $targetImageWrapper.closest(this.$editor).length) {
+        // Dropping on a specific full-width image - insert after it (within same group)
+        $targetImageWrapper.after($wrapper);
       } else {
-        this.$editor.append($wrapper);
+        // Dropped between major sections - find closest paragraph or group
+        var mouseY = e.clientY;
+        var $children = this.$editor.children('p, .' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS);
+        var closestElement = null;
+        var minDistance = Infinity;
+
+        $children.each(function() {
+          var rect = this.getBoundingClientRect();
+          var distance = Math.abs(rect.top - mouseY);
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestElement = this;
+          }
+        });
+
+        // Insert before closest element
+        if (closestElement) {
+          $(closestElement).before($wrapper);
+        } else {
+          this.$editor.append($wrapper);
+        }
       }
     }
 
