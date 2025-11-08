@@ -253,6 +253,13 @@ PIPELINE = {
             ),
             'output_filename': 'css/journal.css',
         },
+        'journal_editor': {
+            'source_filenames': (
+                'css/journal.css',
+                'css/journal-editor.css',
+            ),
+            'output_filename': 'css/journal_editor.css',
+        },
     },
     'JAVASCRIPT': {
         'js_before_content': {
@@ -285,6 +292,12 @@ PIPELINE = {
                 'js/journal.js',
             ),
             'output_filename': 'js/journal.js',
+        },
+        'journal_editor': {
+            'source_filenames': (
+                'js/journal-editor.js',
+            ),
+            'output_filename': 'js/journal_editor.js',
         },
         'notebook': {
             'source_filenames': (
