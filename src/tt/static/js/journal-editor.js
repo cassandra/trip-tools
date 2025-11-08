@@ -379,6 +379,141 @@
   };
 
   /**
+   * JournalImagePicker
+   *
+   * Manages image selection in the journal image picker panel.
+   *
+   * Features:
+   * - Single-click selection toggle
+   * - Ctrl/Cmd+click for multi-select
+   * - Shift+click for range selection
+   * - Double-click to open Image Inspector modal
+   * - Selection count badge display
+   */
+  function JournalImagePicker($panel) {
+    this.$panel = $panel;
+    this.selectedImages = new Set();
+    this.lastSelectedIndex = null;
+
+    this.init();
+  }
+
+  /**
+   * Initialize image picker event handlers
+   */
+  JournalImagePicker.prototype.init = function() {
+    var self = this;
+
+    // Click handler for image selection
+    $(document).on('click', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
+      e.preventDefault();
+      self.handleImageClick(this, e);
+    });
+
+    // Double-click handler for opening inspector modal
+    $(document).on('dblclick', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
+      e.preventDefault();
+      self.handleImageDoubleClick(this);
+    });
+  };
+
+  /**
+   * Handle image card click with modifier key support
+   */
+  JournalImagePicker.prototype.handleImageClick = function(card, event) {
+    var $card = $(card);
+    var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+    var isCtrlOrCmd = event.ctrlKey || event.metaKey;
+    var isShift = event.shiftKey;
+
+    if (isShift && this.lastSelectedIndex !== null) {
+      this.handleRangeSelection($card);
+    } else if (isCtrlOrCmd) {
+      this.toggleSelection($card, uuid);
+    } else {
+      this.clearAllSelections();
+      this.toggleSelection($card, uuid);
+    }
+
+    this.updateSelectionUI();
+  };
+
+  /**
+   * Handle Shift+click range selection
+   */
+  JournalImagePicker.prototype.handleRangeSelection = function($clickedCard) {
+    var $allCards = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR);
+    var clickedIndex = $allCards.index($clickedCard);
+    var startIndex = Math.min(this.lastSelectedIndex, clickedIndex);
+    var endIndex = Math.max(this.lastSelectedIndex, clickedIndex);
+
+    for (var i = startIndex; i <= endIndex; i++) {
+      var $card = $allCards.eq(i);
+      var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+      this.selectedImages.add(uuid);
+      $card.addClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    }
+  };
+
+  /**
+   * Toggle selection state for a single image
+   */
+  JournalImagePicker.prototype.toggleSelection = function($card, uuid) {
+    if (this.selectedImages.has(uuid)) {
+      this.selectedImages.delete(uuid);
+      $card.removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    } else {
+      this.selectedImages.add(uuid);
+      $card.addClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    }
+
+    var $allCards = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR);
+    this.lastSelectedIndex = $allCards.index($card);
+  };
+
+  /**
+   * Clear all selections
+   */
+  JournalImagePicker.prototype.clearAllSelections = function() {
+    this.selectedImages.clear();
+    $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    this.lastSelectedIndex = null;
+  };
+
+  /**
+   * Update selection count badge UI
+   */
+  JournalImagePicker.prototype.updateSelectionUI = function() {
+    var count = this.selectedImages.size;
+    var $countBadge = $('#selected-images-count');
+
+    if (count > 0) {
+      if ($countBadge.length === 0) {
+        $('.journal-image-panel-header h5').after(
+          '<span id="selected-images-count" class="badge badge-primary ml-2">' +
+          count + ' selected</span>'
+        );
+      } else {
+        $countBadge.text(count + ' selected');
+      }
+    } else {
+      $countBadge.remove();
+    }
+  };
+
+  /**
+   * Handle double-click to open Image Inspector modal
+   */
+  JournalImagePicker.prototype.handleImageDoubleClick = function(card) {
+    var $card = $(card);
+    var inspectUrl = $card.data('inspect-url');
+
+    if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
+      AN.get(inspectUrl);
+    }
+  };
+
+  /**
    * JournalEditor - Main editor class
    */
   function JournalEditor($editor) {
@@ -401,6 +536,12 @@
     var autosaveUrl = $editor.data(Tt.JOURNAL_AUTOSAVE_URL_ATTR);
     var csrfToken = this.getCSRFToken();
     this.autoSaveManager = new AutoSaveManager(this, autosaveUrl, csrfToken);
+
+    // Initialize image picker (if panel exists)
+    var $imagePanel = $('.journal-image-panel');
+    if ($imagePanel.length > 0) {
+      this.imagePicker = new JournalImagePicker($imagePanel);
+    }
 
     this.init();
   }
@@ -847,13 +988,14 @@
   };
 
   /**
-   * Setup image click to inspect
+   * Setup image double-click to inspect
+   * Single-click is reserved for future selection feature
    */
   JournalEditor.prototype.setupImageClickToInspect = function() {
     var self = this;
 
-    // Use event delegation for dynamically added images
-    this.$editor.on('click', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
+    // Double-click to open Image Inspector modal (consistent with picker behavior)
+    this.$editor.on('dblclick', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -869,6 +1011,15 @@
       } else {
         console.warn('No inspect URL found for image:', uuid);
       }
+    });
+
+    // Single-click handler - reserved for future selection feature
+    this.$editor.on('click', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // TODO: Implement image selection toggle (similar to picker)
+      // For now, this just prevents default link/image behavior
     });
 
     // Prevent default drag on existing images (handled in setupImageReordering)
