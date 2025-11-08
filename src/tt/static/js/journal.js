@@ -1,11 +1,12 @@
 /**
  * Journal Entry Editor - ContentEditable with Image Management
  *
- * Phases implemented:
- * - Phase 2: Drag-and-drop image insertion with layout detection
- * - Phase 3: Image click to inspect
- * - Phase 4: Image reordering within editor
- * - Phase 5: Image removal with keyboard/hover controls
+ * Features:
+ * - Rich text editing with automatic paragraph creation
+ * - Drag-and-drop image insertion with layout detection
+ * - Image click to inspect in modal
+ * - Image reordering within editor
+ * - Image removal with keyboard and hover controls
  * - Autosave integration with 2-second debounce
  * - Responsive design with mobile warning
  * - Full keyboard navigation support
@@ -57,7 +58,7 @@
     }
 
     // Store initial content and metadata
-    this.lastSavedHTML = this.$editor.html();
+    this.lastSavedHTML = this.getCleanHTML();
     this.lastSavedTitle = this.$titleInput.val() || '';
     this.lastSavedDate = this.$dateInput.val() || '';
     this.lastSavedTimezone = this.$timezoneInput.val() || '';
@@ -70,16 +71,16 @@
     // Setup autosave handlers
     this.setupAutosave();
 
-    // Setup drag-and-drop for image insertion (Phase 2)
+    // Setup drag-and-drop for image insertion
     this.setupImageDragDrop();
 
-    // Setup image click to inspect (Phase 3)
+    // Setup image click to inspect
     this.setupImageClickToInspect();
 
-    // Setup image reordering (Phase 4)
+    // Setup image reordering
     this.setupImageReordering();
 
-    // Setup image removal (Phase 5)
+    // Setup image removal
     this.setupImageRemoval();
 
     // Setup keyboard navigation
@@ -91,6 +92,15 @@
    */
   JournalEditor.prototype.initContentEditable = function() {
     var self = this;
+
+    // Ensure all image wrappers have delete buttons (needed on page load)
+    this.ensureDeleteButtons();
+
+    // Wrap consecutive full-width images in groups (for CSS float clearing)
+    this.wrapFullWidthImageGroups();
+
+    // Mark paragraphs that contain float-right images for CSS float clearing
+    this.markFloatParagraphs();
 
     // Only add paragraph structure if editor is genuinely empty
     var hasTextContent = $.trim(this.$editor.text()).length > 0;
@@ -154,8 +164,14 @@
    * Handle content change
    */
   JournalEditor.prototype.handleContentChange = function() {
-    // Check if any field has changed
-    var htmlChanged = (this.$editor.html() !== this.lastSavedHTML);
+    // Wrap consecutive full-width images in groups (for CSS float clearing)
+    this.wrapFullWidthImageGroups();
+
+    // Mark paragraphs with float images (for CSS float clearing)
+    this.markFloatParagraphs();
+
+    // Check if any field has changed (use clean HTML to ignore UI wrappers)
+    var htmlChanged = (this.getCleanHTML() !== this.lastSavedHTML);
     var titleChanged = (this.$titleInput.val() || '') !== this.lastSavedTitle;
     var dateChanged = (this.$dateInput.val() || '') !== this.lastSavedDate;
     var timezoneChanged = (this.$timezoneInput.val() || '') !== this.lastSavedTimezone;
@@ -204,7 +220,7 @@
 
     // Capture snapshot of what we're saving (prevents race conditions)
     var snapshot = {
-      html: this.$editor.html(),
+      html: this.getCleanHTML(),
       title: this.$titleInput.val() || '',
       date: this.$dateInput.val() || '',
       timezone: this.$timezoneInput.val() || '',
@@ -236,8 +252,8 @@
           this.lastSavedTimezone = snapshot.timezone;
           this.lastSavedReferenceImage = snapshot.referenceImage;
 
-          // Recheck if changes occurred during save
-          var htmlChanged = (this.$editor.html() !== this.lastSavedHTML);
+          // Recheck if changes occurred during save (use clean HTML to ignore UI wrappers)
+          var htmlChanged = (this.getCleanHTML() !== this.lastSavedHTML);
           var titleChanged = (this.$titleInput.val() || '') !== this.lastSavedTitle;
           var dateChanged = (this.$dateInput.val() || '') !== this.lastSavedDate;
           var timezoneChanged = (this.$timezoneInput.val() || '') !== this.lastSavedTimezone;
@@ -295,6 +311,19 @@
         this.isSaving = false;
       }.bind(this)
     });
+  };
+
+  /**
+   * Get clean HTML for saving (removes UI-only delete buttons, keeps wrappers)
+   */
+  JournalEditor.prototype.getCleanHTML = function() {
+    // Clone the editor content to avoid modifying the displayed version
+    var $clone = this.$editor.clone();
+
+    // Remove delete buttons (but keep wrappers)
+    $clone.find('.trip-image-delete-btn').remove();
+
+    return $clone.html();
   };
 
   /**
@@ -364,7 +393,7 @@
   };
 
   /**
-   * PHASE 2: Setup drag-and-drop for image insertion from picker
+   * Setup drag-and-drop for image insertion from picker
    */
   JournalEditor.prototype.setupImageDragDrop = function() {
     var self = this;
@@ -433,6 +462,7 @@
   JournalEditor.prototype.showDropZones = function(e) {
     var $target = $(e.target);
     var $paragraph = $target.closest('p');
+    var $imageWrapper = $target.closest('.trip-image-wrapper[data-layout="full-width"]');
 
     // Clear existing indicators
     this.clearDropZones();
@@ -440,12 +470,16 @@
     if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
       // Mouse is over a paragraph - show paragraph drop zone
       $paragraph.addClass('drop-zone-active');
+    } else if ($imageWrapper.length && $imageWrapper.closest(this.$editor).length) {
+      // Mouse is over a full-width image - highlight it to show insertion point
+      // (wrapper may be inside .full-width-image-group, so check if it's within editor)
+      $imageWrapper.addClass('drop-zone-active');
     } else {
-      // Mouse is between paragraphs - show between indicator
+      // Mouse is between paragraphs/images - show between indicator
       var mouseY = e.clientY;
-      var $paragraphs = this.$editor.children('p');
+      var $children = this.$editor.children('p, .trip-image-wrapper[data-layout="full-width"], .full-width-image-group');
 
-      $paragraphs.each(function() {
+      $children.each(function() {
         var rect = this.getBoundingClientRect();
         var betweenTop = rect.top - 20;
         var betweenBottom = rect.top + 20;
@@ -464,6 +498,7 @@
    */
   JournalEditor.prototype.clearDropZones = function() {
     this.$editor.find('p').removeClass('drop-zone-active');
+    this.$editor.find('.trip-image-wrapper').removeClass('drop-zone-active');
     this.$editor.find('.drop-zone-between').remove();
   };
 
@@ -482,6 +517,7 @@
 
     var $target = $(e.target);
     var $paragraph = $target.closest('p');
+    var $imageWrapper = $target.closest('.trip-image-wrapper[data-layout="full-width"]');
 
     var layout = 'full-width';
     var $insertTarget = null;
@@ -492,44 +528,51 @@
       $insertTarget = $paragraph;
 
       // Check and enforce 2-image limit per paragraph
-      var existingImages = $paragraph.find('img.trip-image[data-layout="float-right"]');
-      if (existingImages.length >= 2) {
-        // Remove the rightmost image
-        existingImages.last().remove();
+      var existingWrappers = $paragraph.find('.trip-image-wrapper[data-layout="float-right"]');
+      if (existingWrappers.length >= 2) {
+        // Remove the rightmost wrapper (with image inside)
+        existingWrappers.last().remove();
       }
+    } else if ($imageWrapper.length && $imageWrapper.closest(this.$editor).length) {
+      // Dropped onto an existing full-width image - insert after it (into same group)
+      layout = 'full-width';
+      $insertTarget = $imageWrapper;
     } else {
-      // Dropped between paragraphs - full-width layout
+      // Dropped between paragraphs/images - full-width layout
       layout = 'full-width';
 
-      // Find the closest paragraph to insert before/after
+      // Find the closest paragraph or full-width group to insert before/after
       var mouseY = e.clientY;
-      var $paragraphs = this.$editor.children('p');
-      var closestParagraph = null;
+      var $children = this.$editor.children('p, .trip-image-wrapper[data-layout="full-width"], .full-width-image-group');
+      var closestElement = null;
       var minDistance = Infinity;
 
-      $paragraphs.each(function() {
+      $children.each(function() {
         var rect = this.getBoundingClientRect();
         var distance = Math.abs(rect.top - mouseY);
 
         if (distance < minDistance) {
           minDistance = distance;
-          closestParagraph = this;
+          closestElement = this;
         }
       });
 
-      $insertTarget = $(closestParagraph);
+      $insertTarget = $(closestElement);
     }
 
-    // Create image element
-    var $img = this.createImageElement(imageUuid, imageUrl, caption, layout);
+    // Create wrapped image element
+    var $wrappedImage = this.createImageElement(imageUuid, imageUrl, caption, layout);
 
-    // Insert the image
+    // Insert the wrapped image
     if (layout === 'float-right') {
       // Insert at beginning of paragraph for float-right
-      $insertTarget.prepend($img);
+      $insertTarget.prepend($wrappedImage);
+    } else if ($insertTarget.is('.trip-image-wrapper[data-layout="full-width"]')) {
+      // Insert after the target image wrapper (will be in same group)
+      $insertTarget.after($wrappedImage);
     } else {
-      // Insert before the closest paragraph for full-width
-      $insertTarget.before($img);
+      // Insert before the target element for full-width
+      $insertTarget.before($wrappedImage);
     }
 
     // Trigger autosave
@@ -537,21 +580,119 @@
   };
 
   /**
-   * Create image element with proper attributes
+   * Ensure all image wrappers have delete buttons
+   * Called on page load to add buttons to wrappers from saved content
    */
-  JournalEditor.prototype.createImageElement = function(uuid, url, caption, layout) {
-    return $('<img>', {
-      'src': url,
-      'alt': caption,
-      'class': 'trip-image',
-      'data-uuid': uuid,
-      'data-layout': layout,
-      'draggable': true
+  JournalEditor.prototype.ensureDeleteButtons = function() {
+    this.$editor.find('.trip-image-wrapper').each(function() {
+      var $wrapper = $(this);
+
+      // Check if delete button already exists
+      if ($wrapper.find('.trip-image-delete-btn').length === 0) {
+        // Add delete button
+        var $deleteBtn = $('<button>', {
+          'class': 'trip-image-delete-btn',
+          'type': 'button',
+          'title': 'Remove image',
+          'text': '×'
+        });
+        $wrapper.append($deleteBtn);
+      }
     });
   };
 
   /**
-   * PHASE 3: Setup image click to inspect
+   * Mark paragraphs that contain float-right images
+   * This allows CSS to clear floats appropriately
+   */
+  JournalEditor.prototype.markFloatParagraphs = function() {
+    // Remove existing marks
+    this.$editor.find('p').removeClass('has-float-image');
+
+    // Mark paragraphs with float-right images
+    this.$editor.find('p').each(function() {
+      var $p = $(this);
+      if ($p.find('.trip-image-wrapper[data-layout="float-right"]').length > 0) {
+        $p.addClass('has-float-image');
+      }
+    });
+  };
+
+  /**
+   * Wrap consecutive full-width images in container divs
+   * This allows them to clear floats properly
+   */
+  JournalEditor.prototype.wrapFullWidthImageGroups = function() {
+    var self = this;
+
+    // Remove existing wrappers first
+    this.$editor.find('.full-width-image-group').each(function() {
+      var $group = $(this);
+      $group.children('.trip-image-wrapper[data-layout="full-width"]').unwrap();
+    });
+
+    // Group consecutive full-width images
+    var groups = [];
+    var currentGroup = [];
+
+    this.$editor.children().each(function() {
+      var $child = $(this);
+      if ($child.is('.trip-image-wrapper[data-layout="full-width"]')) {
+        currentGroup.push(this);
+      } else {
+        if (currentGroup.length > 0) {
+          groups.push(currentGroup);
+          currentGroup = [];
+        }
+      }
+    });
+
+    // Don't forget the last group
+    if (currentGroup.length > 0) {
+      groups.push(currentGroup);
+    }
+
+    // Wrap each group
+    groups.forEach(function(group) {
+      $(group).wrapAll('<div class="full-width-image-group"></div>');
+    });
+  };
+
+  /**
+   * Create image element with proper attributes
+   */
+  JournalEditor.prototype.createImageElement = function(uuid, url, caption, layout) {
+    // Create the image element
+    var $img = $('<img>', {
+      'src': url,
+      'alt': caption,
+      'class': 'trip-image',
+      'data-uuid': uuid,
+      'draggable': true
+    });
+
+    // Create wrapper with layout attribute
+    var $wrapper = $('<span>', {
+      'class': 'trip-image-wrapper',
+      'data-layout': layout
+    });
+
+    // Create delete button
+    var $deleteBtn = $('<button>', {
+      'class': 'trip-image-delete-btn',
+      'type': 'button',
+      'title': 'Remove image',
+      'text': '×'
+    });
+
+    // Assemble: wrapper contains image and delete button
+    $wrapper.append($img, $deleteBtn);
+
+    return $wrapper;
+  };
+
+  /**
+   * Setup image click to inspect
    */
   JournalEditor.prototype.setupImageClickToInspect = function() {
     var self = this;
@@ -575,23 +716,26 @@
       }
     });
 
-    // Prevent default drag on existing images (we'll handle it in Phase 4)
+    // Prevent default drag on existing images (handled in setupImageReordering)
     this.$editor.on('dragstart', 'img.trip-image', function(e) {
-      // This is handled in Phase 4
+      // This is handled in setupImageReordering
     });
   };
 
   /**
-   * PHASE 4: Setup image reordering within editor
+   * Setup image reordering within editor
    */
   JournalEditor.prototype.setupImageReordering = function() {
     var self = this;
 
     // Handle dragstart for images already in editor
     this.$editor.on('dragstart', 'img.trip-image', function(e) {
-      self.draggedElement = this;
+      var $img = $(this);
+      var $wrapper = $img.closest('.trip-image-wrapper');
+
+      self.draggedElement = $wrapper[0]; // Store wrapper, not image
       self.dragSource = 'editor';
-      $(this).addClass('dragging');
+      $wrapper.addClass('dragging');
 
       e.originalEvent.dataTransfer.effectAllowed = 'move';
       e.originalEvent.dataTransfer.setData('text/plain', '');
@@ -599,7 +743,10 @@
 
     // Handle dragend for images in editor
     this.$editor.on('dragend', 'img.trip-image', function(e) {
-      $(this).removeClass('dragging');
+      var $img = $(this);
+      var $wrapper = $img.closest('.trip-image-wrapper');
+
+      $wrapper.removeClass('dragging');
       self.clearDropZones();
       self.draggedElement = null;
       self.dragSource = null;
@@ -626,11 +773,11 @@
       return;
     }
 
-    var $img = $(this.draggedElement);
+    var $wrapper = $(this.draggedElement);
     var $target = $(e.target);
     var $paragraph = $target.closest('p');
 
-    var oldLayout = $img.data('layout');
+    var oldLayout = $wrapper.data('layout');
     var newLayout = 'full-width';
 
     if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
@@ -638,26 +785,26 @@
       newLayout = 'float-right';
 
       // Remove from old location
-      $img.remove();
+      $wrapper.remove();
 
       // Check 2-image limit
-      var existingImages = $paragraph.find('img.trip-image[data-layout="float-right"]');
-      if (existingImages.length >= 2) {
-        existingImages.last().remove();
+      var existingWrappers = $paragraph.find('.trip-image-wrapper[data-layout="float-right"]');
+      if (existingWrappers.length >= 2) {
+        existingWrappers.last().remove();
       }
 
       // Insert at beginning of paragraph
-      $paragraph.prepend($img);
+      $paragraph.prepend($wrapper);
     } else {
       // Dropped between paragraphs
       newLayout = 'full-width';
 
       // Remove from old location
-      $img.remove();
+      $wrapper.remove();
 
-      // Find closest paragraph
+      // Find closest paragraph or full-width wrapper
       var mouseY = e.clientY;
-      var $paragraphs = this.$editor.children('p, img.trip-image[data-layout="full-width"]');
+      var $paragraphs = this.$editor.children('p, .trip-image-wrapper[data-layout="full-width"]');
       var closestElement = null;
       var minDistance = Infinity;
 
@@ -673,15 +820,15 @@
 
       // Insert before closest element
       if (closestElement) {
-        $(closestElement).before($img);
+        $(closestElement).before($wrapper);
       } else {
-        this.$editor.append($img);
+        this.$editor.append($wrapper);
       }
     }
 
     // Update layout attribute if changed
     if (newLayout !== oldLayout) {
-      $img.attr('data-layout', newLayout);
+      $wrapper.attr('data-layout', newLayout);
     }
 
     // Trigger autosave
@@ -689,25 +836,13 @@
   };
 
   /**
-   * PHASE 5: Setup image removal
+   * Setup image removal
    */
   JournalEditor.prototype.setupImageRemoval = function() {
     var self = this;
 
-    // Add delete button on image hover
-    this.$editor.on('mouseenter', 'img.trip-image', function() {
-      var $img = $(this);
-
-      // Don't add if already has wrapper
-      if ($img.parent().hasClass('trip-image-wrapper')) {
-        return;
-      }
-
-      // Wrap image and add delete button
-      $img.wrap('<span class="trip-image-wrapper"></span>');
-      var $deleteBtn = $('<button class="trip-image-delete-btn" type="button" title="Remove image">&times;</button>');
-      $img.parent().append($deleteBtn);
-    });
+    // Note: Images are always wrapped with delete button at creation time
+    // No need for hover-based wrapping
 
     // Handle delete button click
     this.$editor.on('click', '.trip-image-delete-btn', function(e) {
@@ -749,12 +884,9 @@
    * Remove image from editor
    */
   JournalEditor.prototype.removeImage = function($img) {
-    // Remove wrapper if it exists
-    if ($img.parent().hasClass('trip-image-wrapper')) {
-      $img.parent().remove();
-    } else {
-      $img.remove();
-    }
+    // Images are always wrapped, so remove the wrapper
+    var $wrapper = $img.closest('.trip-image-wrapper');
+    $wrapper.remove();
 
     // Trigger autosave
     this.handleContentChange();

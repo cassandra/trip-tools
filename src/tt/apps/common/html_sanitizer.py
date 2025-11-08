@@ -34,13 +34,15 @@ class HTMLSanitizer:
         'ul', 'ol', 'li',
         'strong', 'em', 'code', 'pre',
         'blockquote', 'hr', 'br',
-        'img', 'a',
+        'img', 'a', 'span', 'div',
     ]
 
     # Default allowed attributes by tag
     DEFAULT_ALLOWED_ATTRIBUTES = {
-        'img': ['src', 'alt', 'data-uuid', 'data-layout'],
+        'img': ['src', 'alt', 'class', 'data-uuid', 'draggable'],
         'a': ['href'],
+        'span': ['class', 'data-layout'],
+        'div': ['class'],
     }
 
     # Default allowed protocols for URLs
@@ -110,11 +112,13 @@ if BLEACH_AVAILABLE:
             'ul', 'ol', 'li',
             'strong', 'em', 'code', 'pre',
             'blockquote', 'hr', 'br',
-            'img', 'a',
+            'img', 'a', 'span', 'div',
         ],
         allowed_attributes={
-            'img': ['src', 'alt', 'data-uuid', 'data-layout'],
+            'img': ['src', 'alt', 'class', 'data-uuid', 'draggable'],
             'a': ['href'],
+            'span': ['class', 'data-layout'],
+            'div': ['class'],
         },
         allowed_protocols=['http', 'https', 'mailto'],
         strip=True,

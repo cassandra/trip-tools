@@ -99,6 +99,17 @@
   color: var(--text-color);
   outline: none;
   min-height: 300px;
+  text-align: center; /* Center inline-block children (full-width images) */
+}
+
+/* Reset text-align for paragraphs */
+.journal-contenteditable p {
+  text-align: left;
+}
+
+/* Clear floats before paragraphs that have their own float-right images */
+.journal-contenteditable p.has-float-image {
+  clear: both;
 }
 
 .journal-contenteditable:focus {
@@ -251,50 +262,77 @@
    CONTENTEDITABLE IMAGE STYLES
    =========================================== */
 
-/* Trip images inserted into editor */
-.journal-contenteditable img.trip-image {
-  max-width: 100%;
+/* ===========================================
+   IMAGE WRAPPER LAYOUT
+   Images are always wrapped in .trip-image-wrapper
+   =========================================== */
+
+/* Base wrapper styles */
+.trip-image-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Float-right wrapper (images within paragraphs) */
+.trip-image-wrapper[data-layout="float-right"] {
+  float: right;
+  margin: 0 0 1rem 1rem;
+  max-width: 25%; /* col-3: max 1/4 width so two images = 1/2 width */
+}
+
+/* Full-width wrapper (images between paragraphs) */
+.trip-image-wrapper[data-layout="full-width"] {
+  display: inline-block; /* Allow multiple images side-by-side */
+  margin: 0.5rem;
+  max-width: calc(33.333% - 1rem); /* col-4: max 1/3 width per image */
+  vertical-align: top;
+}
+
+/* Full-width image group container */
+.full-width-image-group {
+  display: block;
+  clear: both;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+/* Images inside wrappers fill the wrapper */
+.trip-image-wrapper img.trip-image {
+  display: block;
+  width: 100%;
   height: auto;
+  max-width: 100%;
+  object-fit: contain;
   cursor: move;
   user-select: none;
   border-radius: 4px;
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
-/* Float-right layout for images in paragraphs */
-.journal-contenteditable img.trip-image[data-layout="float-right"] {
-  float: right;
-  margin: 0 0 1rem 1rem;
-  max-width: 45%;
+/* Height constraints based on wrapper layout */
+.trip-image-wrapper[data-layout="float-right"] img.trip-image {
+  max-height: 400px;
 }
 
-/* Full-width layout for images between paragraphs */
-.journal-contenteditable img.trip-image[data-layout="full-width"] {
-  display: block;
-  margin: 1.5rem auto;
-  max-width: 100%;
+.trip-image-wrapper[data-layout="full-width"] img.trip-image {
+  max-height: 500px;
 }
 
 /* Image hover state */
-.journal-contenteditable img.trip-image:hover {
+.trip-image-wrapper:hover img.trip-image {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Image selected state */
-.journal-contenteditable img.trip-image.selected {
+.trip-image-wrapper img.trip-image.selected {
   outline: 3px solid var(--primary-color, #007bff);
   outline-offset: 2px;
 }
 
 /* Image being dragged */
-.journal-contenteditable img.trip-image.dragging {
+.trip-image-wrapper.dragging img.trip-image {
   opacity: 0.5;
-}
-
-/* Image delete button overlay */
-.trip-image-wrapper {
-  position: relative;
-  display: inline-block;
 }
 
 .trip-image-delete-btn {
@@ -333,6 +371,12 @@
 /* Drop zone indicator for paragraphs */
 .journal-contenteditable p.drop-zone-active {
   background-color: rgba(0, 123, 255, 0.1);
+  outline: 2px dashed var(--primary-color, #007bff);
+  outline-offset: 4px;
+}
+
+/* Drop zone indicator for full-width image wrappers */
+.journal-contenteditable .trip-image-wrapper.drop-zone-active {
   outline: 2px dashed var(--primary-color, #007bff);
   outline-offset: 4px;
 }
