@@ -18,7 +18,7 @@ from .context import JournalPageContext
 from .enums import JournalVisibility
 from .forms import JournalForm
 from .models import Journal, JournalEntry
-from .utils import get_entry_date_boundaries
+from .services import JournalImagePickerService
 
 
 class JournalHomeView(LoginRequiredMixin, TripViewMixin, View):
@@ -221,12 +221,12 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
             return redirect('journal_entry', trip_id=trip.pk, entry_pk=entry.pk)
 
         # Fetch accessible images for the entry's date
-        start_dt, end_dt = get_entry_date_boundaries(entry.date, entry.timezone)
-        accessible_images = TripImage.objects.accessible_to_user_in_trip_for_date_range(
-            user = request.user,
-            trip = trip,
-            start_datetime = start_dt,
-            end_datetime = end_dt,
+        accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
+            trip=trip,
+            user=request.user,
+            date=entry.date,
+            timezone=entry.timezone,
+            scope='all',  # Default to 'all' for initial page load
         )
 
         journal_entries = journal.entries.all()
@@ -319,33 +319,18 @@ class JournalEntryImagePickerView(LoginRequiredMixin, TripViewMixin, View):
         except ValueError:
             return http_response({'error': 'Invalid date format'}, status=400)
 
-        # Get scope filter (stub for now - will implement filtering logic later)
-        scope = request.GET.get('scope', 'all')  # noqa: F841
+        # Get scope filter from query parameter
+        scope = request.GET.get('scope', 'all')
         # Valid values: 'all', 'unused', 'in-use'
-        # For now, we ignore this and always show all images
-        # TODO: Apply scope filtering when text editing is implemented
 
-        # Get timezone from entry
-        timezone = entry.timezone
-
-        # Calculate date boundaries for the selected date
-        start_dt, end_dt = get_entry_date_boundaries(selected_date, timezone)
-
-        # Fetch accessible images for the selected date
-        accessible_images = TripImage.objects.accessible_to_user_in_trip_for_date_range(
-            user = request.user,
-            trip = trip,
-            start_datetime = start_dt,
-            end_datetime = end_dt,
+        # Fetch accessible images for the selected date with scope filter
+        accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
+            trip=trip,
+            user=request.user,
+            date=selected_date,
+            timezone=entry.timezone,
+            scope=scope,
         )
-
-        # TODO: Apply scope filtering when text editing is implemented
-        # if scope == 'unused':
-        #     # Filter to images not used in this entry
-        #     pass
-        # elif scope == 'in-use':
-        #     # Filter to images used in this entry
-        #     pass
 
         # Render the image gallery grid
         context = {
