@@ -37,6 +37,30 @@
         {% icon "list-ol" size="sm" aria_label="Numbered list" %}
       </button>
     </div>
+
+    <div class="toolbar-separator"></div>
+
+    <!-- Indent/Outdent Group -->
+    <div class="btn-group" role="group" aria-label="Indentation">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="indent" title="Increase indent">
+        {% icon "indent" size="sm" aria_label="Indent" %}
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="outdent" title="Decrease indent">
+        {% icon "outdent" size="sm" aria_label="Outdent" %}
+      </button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <!-- Insert Group -->
+    <div class="btn-group" role="group" aria-label="Insert">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="createLink" title="Insert link">
+        {% icon "link" size="sm" aria_label="Link" %}
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="code" title="Code block">
+        {% icon "code" size="sm" aria_label="Code" %}
+      </button>
+    </div>
   </div>
 
   <!-- ContentEditable Editor -->

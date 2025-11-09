@@ -289,6 +289,35 @@
       e.preventDefault();
       self.executeCommand('insertOrderedList');
     });
+
+    // Indent button
+    this.$toolbar.find('[data-command="indent"]').on('click', function(e) {
+      e.preventDefault();
+      self.adjustIndent(40); // Increase by 40px
+    });
+
+    // Outdent button
+    this.$toolbar.find('[data-command="outdent"]').on('click', function(e) {
+      e.preventDefault();
+      self.adjustIndent(-40); // Decrease by 40px
+    });
+
+    // Link button
+    this.$toolbar.find('[data-command="createLink"]').on('click', function(e) {
+      e.preventDefault();
+      self.createLink();
+    });
+
+    // Code block button
+    this.$toolbar.find('[data-command="code"]').on('click', function(e) {
+      e.preventDefault();
+      self.insertCodeBlock();
+    });
+
+    // Update active states on selection change
+    this.$editor.on('mouseup keyup', function() {
+      self.updateActiveStates();
+    });
   };
 
   /**
@@ -307,6 +336,129 @@
     if (this.onContentChange) {
       this.onContentChange();
     }
+  };
+
+  /**
+   * Create a hyperlink with URL validation
+   */
+  JournalEditorToolbar.prototype.createLink = function() {
+    var url = prompt('Enter URL:', 'https://');
+
+    if (url && url.trim() !== '' && url !== 'https://') {
+      // Basic URL validation
+      var urlPattern = /^(https?:\/\/|mailto:)/i;
+      if (!urlPattern.test(url)) {
+        url = 'https://' + url;
+      }
+
+      this.executeCommand('createLink', url);
+    }
+  };
+
+  /**
+   * Insert a code block (pre tag)
+   * Handles multi-line selections by wrapping all content in a single pre tag
+   */
+  JournalEditorToolbar.prototype.insertCodeBlock = function() {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    var range = selection.getRangeAt(0);
+    var fragment = range.extractContents();
+
+    // Get text content from fragment, preserving line breaks
+    var textContent = '';
+    var walker = document.createTreeWalker(fragment, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+    var node;
+    while (node = walker.nextNode()) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        textContent += node.textContent;
+      } else if (node.nodeName === 'BR' || node.nodeName === 'P' || node.nodeName === 'DIV') {
+        textContent += '\n';
+      }
+    }
+
+    // Clean up extra newlines
+    textContent = textContent.replace(/\n{3,}/g, '\n\n').trim();
+
+    // Create a single pre element with the text
+    var pre = document.createElement('pre');
+    pre.textContent = textContent;
+
+    // Insert the pre element
+    range.insertNode(pre);
+
+    // Move cursor after the pre element
+    range.setStartAfter(pre);
+    range.setEndAfter(pre);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Trigger content change for autosave
+    if (this.onContentChange) {
+      this.onContentChange();
+    }
+  };
+
+  /**
+   * Adjust indentation by adding/removing margin-left
+   * @param {number} delta - Pixels to adjust (positive = indent, negative = outdent)
+   */
+  JournalEditorToolbar.prototype.adjustIndent = function(delta) {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    var range = selection.getRangeAt(0);
+    var container = range.commonAncestorContainer;
+
+    // Find the block-level element (p, h2, li, etc.)
+    var blockElement = container.nodeType === 3 ? container.parentNode : container;
+    while (blockElement && blockElement !== this.editor) {
+      var tagName = blockElement.tagName ? blockElement.tagName.toLowerCase() : '';
+      if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'pre', 'blockquote', 'div'].indexOf(tagName) !== -1) {
+        break;
+      }
+      blockElement = blockElement.parentNode;
+    }
+
+    if (!blockElement || blockElement === this.editor) {
+      return; // No suitable block element found
+    }
+
+    // Get current margin-left
+    var currentMargin = parseInt($(blockElement).css('margin-left')) || 0;
+    var newMargin = Math.max(0, currentMargin + delta); // Don't go negative
+
+    // Apply new margin
+    $(blockElement).css('margin-left', newMargin + 'px');
+
+    // Trigger content change for autosave
+    if (this.onContentChange) {
+      this.onContentChange();
+    }
+  };
+
+  /**
+   * Update active states of toolbar buttons based on current selection
+   */
+  JournalEditorToolbar.prototype.updateActiveStates = function() {
+    var self = this;
+
+    // Check for bold
+    var isBold = document.queryCommandState('bold');
+    this.$toolbar.find('[data-command="bold"]').toggleClass('active', isBold);
+
+    // Check for italic
+    var isItalic = document.queryCommandState('italic');
+    this.$toolbar.find('[data-command="italic"]').toggleClass('active', isItalic);
+
+    // Check for unordered list
+    var isUL = document.queryCommandState('insertUnorderedList');
+    this.$toolbar.find('[data-command="insertUnorderedList"]').toggleClass('active', isUL);
+
+    // Check for ordered list
+    var isOL = document.queryCommandState('insertOrderedList');
+    this.$toolbar.find('[data-command="insertOrderedList"]').toggleClass('active', isOL);
   };
 
   /**

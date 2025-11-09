@@ -216,6 +216,13 @@
   gap: 0.25rem;
 }
 
+/* Active state for toolbar buttons */
+.journal-editor-toolbar .btn.active {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border-color: var(--primary-color, #007bff);
+}
+
 /* Toolbar button icons */
 .journal-editor-toolbar .btn svg {
   width: 1rem;
