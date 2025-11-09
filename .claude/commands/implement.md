@@ -97,19 +97,7 @@ Execute focused implementation workflow for issue that has already been picked u
    - Confirm solution follows project patterns
    - Verify all code review feedback has been addressed
 
-9. **Push implementation** - Make code available for review:
-   ```bash
-   # Add all relevant changes
-   git add .
-
-   # Create descriptive commit message following our standards
-   git commit -m "[Concise description of what was implemented]"
-
-   # Push to remote feature branch
-   git push origin
-   ```
-
-10. **Final status report** - Provide implementation summary:
+9. **Final status report** - Provide implementation summary:
     - Summarize what was implemented and approach taken
     - Note any key files or components modified
     - Highlight important implementation decisions
@@ -123,8 +111,8 @@ Execute focused implementation workflow for issue that has already been picked u
 - Use adaptive approach: specialist agents for clear domains, direct implementation for ambiguous work
 - MANDATORY code review with code-quality and test-engineer agents
 - MUST pass all tests, linting, and code review before completion
+- NO Commit and Push - stop for validation and review: commit done later
 - NO PR creation - stop at PR-ready state
-- Provide clear handoff to `/pr` command
 
 **Prerequisites:**
 - Issue #$1 must have been picked up with `/pickup` command
@@ -133,6 +121,6 @@ Execute focused implementation workflow for issue that has already been picked u
 
 **Issue to implement:** #$1
 
-**IMPORTANT**: This command stops before PR creation. After completion, user should review the implementation and run `/pr "Title"` to create the pull request.
+**IMPORTANT**: This command stops before commiting changes. After completion, user should review the implementation and commit when ready.
 
 Begin implementation process now.

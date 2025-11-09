@@ -227,7 +227,7 @@ class JournalAutoSaveHelper:
             new_date: Optional new date for entry
             new_title: Optional new title for entry
             new_timezone: Optional new timezone for entry
-            new_reference_image_id: Optional new reference image ID (use -1 to clear)
+            new_reference_image_id: Optional new reference image ID (None to clear, or valid ID)
 
         Returns:
             Updated entry with refreshed version
@@ -243,12 +243,10 @@ class JournalAutoSaveHelper:
         if new_timezone:
             extra_updates['timezone'] = new_timezone
 
-        # Handle reference_image_id: -1 means clear the reference, None means no change
+        # Handle reference_image_id: None means clear, valid ID means set
+        # Always update when present in request (matches title/date/timezone pattern)
         if new_reference_image_id is not None:
-            if new_reference_image_id == -1:
-                extra_updates['reference_image_id'] = None
-            else:
-                extra_updates['reference_image_id'] = new_reference_image_id
+            extra_updates['reference_image_id'] = new_reference_image_id
 
         return SharedAutoSaveHelper.update_entry_atomically(
             entry = entry,

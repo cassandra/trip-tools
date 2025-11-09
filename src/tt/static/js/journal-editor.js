@@ -170,6 +170,64 @@
   // Global singleton
   const imageSelectionCoordinator = new ImageSelectionCoordinator();
 
+  /**
+   * ImageDataService
+   *
+   * Centralized service for retrieving image data from picker cards.
+   * Decouples features from picker DOM structure.
+   *
+   * All image data lookups should go through this service to avoid
+   * duplicated DOM queries and tight coupling to picker implementation.
+   */
+  const ImageDataService = {
+    /**
+     * Get complete image data for a given UUID
+     * @param {string} uuid - Image UUID
+     * @returns {Object|null} Image data object or null if not found
+     *   {
+     *     pk: integer,
+     *     uuid: string,
+     *     url: string,
+     *     caption: string,
+     *     inspectUrl: string
+     *   }
+     */
+    getImageDataByUUID: function(uuid) {
+      if (!uuid) {
+        console.error('[ImageDataService] Cannot lookup image: missing UUID');
+        return null;
+      }
+
+      // Find picker card with this UUID
+      var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
+
+      if ($card.length === 0) {
+        console.warn('[ImageDataService] No picker card found for UUID:', uuid);
+        return null;
+      }
+
+      // Extract all data from card in one pass
+      var pk = $card.data('image-pk');
+      var $img = $card.find('img');
+      var url = $img.attr('src') || '';
+      var caption = $img.attr('alt') || '';
+      var inspectUrl = $card.data('inspect-url') || '';
+
+      if (!pk) {
+        console.error('[ImageDataService] Picker card missing data-image-pk for UUID:', uuid);
+        return null;
+      }
+
+      return {
+        pk: parseInt(pk, 10),
+        uuid: uuid,
+        url: url,
+        caption: caption,
+        inspectUrl: inspectUrl
+      };
+    }
+  };
+
   // Module state
   let editorInstance = null;
 
@@ -978,11 +1036,9 @@
 
     // Handle dragend from picker
     $(document).on('dragend', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
-      // Clean up visual feedback (handles multi-image .dragging and count badge)
+      // Visual cleanup only - state cleanup happens in drop handlers
       self.updateDraggingVisuals(false);
       self.clearDropZones();
-      self.draggedElement = null;
-      self.dragSource = null;
     });
 
     // Editor drag events
@@ -1017,6 +1073,12 @@
     });
 
     this.$editor.on('drop', function(e) {
+      // Check if drop is actually on reference container - if so, let it handle the drop
+      var $target = $(e.target);
+      if ($target.closest('.journal-reference-image-container').length) {
+        return; // Don't preventDefault, don't stopPropagation - let reference handler get it
+      }
+
       e.preventDefault();
       e.stopPropagation();
 
@@ -1029,6 +1091,20 @@
       }
 
       self.clearDropZones();
+
+      // Clean up drag state after processing
+      self.draggedElement = null;
+      self.dragSource = null;
+    });
+
+    // Handle Escape key to cancel drag operation
+    $(document).on('keydown', function(e) {
+      if (e.key === 'Escape' && (self.draggedElement || self.dragSource)) {
+        self.updateDraggingVisuals(false);
+        self.clearDropZones();
+        self.draggedElement = null;
+        self.dragSource = null;
+      }
     });
   };
 
@@ -1302,6 +1378,7 @@
       return [];
     }
 
+    var self = this;
     var $draggedCard = $(this.draggedElement);
     var draggedUuid = $draggedCard.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
 
@@ -1317,25 +1394,102 @@
         var $card = $(this);
         var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
         if (selectedUuids.has(uuid)) {
-          imagesToInsert.push({
-            uuid: uuid,
-            pk: $card.data('image-pk'),
-            url: $card.data('image-url'),
-            caption: $card.data('caption') || 'Untitled'
-          });
+          var imageData = self.getImageDataFromUUID(uuid);
+          if (imageData) {
+            imagesToInsert.push(imageData);
+          }
         }
       });
     } else {
       // Single-image insert: just the dragged card
-      imagesToInsert.push({
-        uuid: draggedUuid,
-        pk: $draggedCard.data('image-pk'),
-        url: $draggedCard.data('image-url'),
-        caption: $draggedCard.data('caption') || 'Untitled'
-      });
+      var imageData = this.getImageDataFromUUID(draggedUuid);
+      if (imageData) {
+        imagesToInsert.push(imageData);
+      }
     }
 
     return imagesToInsert;
+  };
+
+  /**
+   * Get image data object from UUID by looking up picker card
+   * @param {string} uuid - Image UUID
+   * @returns {Object|null} {uuid, pk, url, caption} or null if not found
+   */
+  JournalEditor.prototype.getImageDataFromUUID = function(uuid) {
+    var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
+
+    if (!$card.length) {
+      return null;
+    }
+
+    return {
+      uuid: uuid,
+      pk: $card.data('image-pk'),
+      url: $card.data('image-url'),
+      caption: $card.data('caption') || 'Untitled'
+    };
+  };
+
+  /**
+   * Get image data for currently dragged image(s)
+   * Returns single image data or null (for reference area use - multi-select not allowed)
+   * @returns {Object|null} {uuid, pk, url, caption} or null if multi-select or no drag
+   */
+  JournalEditor.prototype.getDraggedImageData = function() {
+    if (!this.draggedElement || !this.dragSource) {
+      return null;
+    }
+
+    if (this.dragSource === 'picker') {
+      // Use existing helper that handles picker selection logic
+      var imagesToInsert = this.getPickerImagesToInsert();
+      return (imagesToInsert.length === 1) ? imagesToInsert[0] : null;
+    } else if (this.dragSource === 'editor') {
+      // Use existing helper that handles editor selection logic
+      var wrappersToMove = this.getEditorWrappersToMove();
+      if (wrappersToMove.length !== 1) {
+        return null;
+      }
+
+      // Get UUID from the single wrapper
+      var $wrapper = wrappersToMove[0];
+      var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+      var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+
+      // Look up full image data from picker card
+      return this.getImageDataFromUUID(uuid);
+    }
+
+    return null;
+  };
+
+  /**
+   * Check if reference drop zone should highlight
+   * (Only for single-image drags, not multi-select)
+   * @returns {boolean}
+   */
+  JournalEditor.prototype.shouldShowReferenceDropZone = function() {
+    return this.getDraggedImageData() !== null;
+  };
+
+  /**
+   * Show/hide reference drop zone highlighting
+   * Uses CSS constant for consistency with editor drop zones
+   * @param {boolean} show - true to show, false to hide
+   */
+  JournalEditor.prototype.showReferenceDropZone = function(show) {
+    if (!this.$referenceContainer || !this.$referenceContainer.length) {
+      return;
+    }
+
+    var $target = this.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
+
+    if (show) {
+      $target.addClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    } else {
+      $target.removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    }
   };
 
   /**
@@ -1565,11 +1719,9 @@
 
     // Handle dragend for images in editor
     this.$editor.on('dragend', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
-      // Clean up visual feedback (handles multi-image .dragging and count badge)
+      // Visual cleanup only - state cleanup happens in drop handlers
       self.updateDraggingVisuals(false);
       self.clearDropZones();
-      self.draggedElement = null;
-      self.dragSource = null;
     });
 
     // Drop handling is now unified in setupImageDragDrop()
@@ -1791,31 +1943,27 @@
     }
 
     // Setup drag-and-drop on placeholder/preview
-    var $placeholder = this.$referenceContainer.find('.journal-reference-image-placeholder');
-    var $preview = this.$referenceContainer.find('.journal-reference-image-preview');
-    var $dropTarget = $placeholder.length ? $placeholder : $preview;
-
-    // Allow drop on both placeholder and preview
     this.$referenceContainer.on('dragover', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      e.originalEvent.dataTransfer.dropEffect = 'copy';
 
-      // Only highlight if dragging from picker (single image only)
-      if (self.dragSource === 'picker') {
-        var imagesToInsert = self.getPickerImagesToInsert();
-        if (imagesToInsert.length === 1) {
-          var $target = self.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
-          $target.addClass('drop-zone-active');
-        }
+      // Set dropEffect based on drag source
+      // Editor drags are 'move', picker drags are 'copy'
+      if (self.dragSource === 'editor') {
+        e.originalEvent.dataTransfer.dropEffect = 'move';
+      } else {
+        e.originalEvent.dataTransfer.dropEffect = 'copy';
+      }
+
+      if (self.shouldShowReferenceDropZone()) {
+        self.showReferenceDropZone(true);
       }
     });
 
     this.$referenceContainer.on('dragleave', function(e) {
       // Only remove if we're leaving the container completely
       if (!$(e.relatedTarget).closest('.journal-reference-image-container').length) {
-        var $target = self.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
-        $target.removeClass('drop-zone-active');
+        self.showReferenceDropZone(false);
       }
     });
 
@@ -1823,16 +1971,25 @@
       e.preventDefault();
       e.stopPropagation();
 
-      var $target = self.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
-      $target.removeClass('drop-zone-active');
+      self.showReferenceDropZone(false);
 
-      if (self.dragSource === 'picker' && self.draggedElement) {
-        // Get images to insert - only accept single image
-        var imagesToInsert = self.getPickerImagesToInsert();
-        if (imagesToInsert.length === 1) {
-          var imageData = imagesToInsert[0];
+      try {
+        var imageData = self.getDraggedImageData();
+        if (imageData) {
           self.setReferenceImage(imageData);
+        } else {
+          console.warn('[JournalEditor] Drop failed: no image data available');
         }
+      } catch (error) {
+        console.error('[JournalEditor] Error setting reference image:', error);
+        // Show user-friendly notification if toast system is available
+        if (typeof Tt !== 'undefined' && Tt.showToast) {
+          Tt.showToast('error', 'Could not set reference image. Please try again.');
+        }
+      } finally {
+        // Always clean up drag state, even if error occurred
+        self.draggedElement = null;
+        self.dragSource = null;
       }
     });
 
@@ -1855,43 +2012,36 @@
 
   /**
    * Set reference image from image data
-   * @param {Object} imageData - {uuid, url, caption, pk}
+   * @param {Object} imageData - {uuid, url, caption, pk (optional)}
    */
   JournalEditor.prototype.setReferenceImage = function(imageData) {
-    // Get PK from picker card if not in imageData
-    var imagePk = imageData.pk;
-    if (!imagePk) {
-      var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + imageData.uuid + '"]');
-      imagePk = $card.data('image-pk');
-    }
-
-    if (!imagePk) {
-      console.error('Cannot set reference image: missing PK');
-      return;
+    // Use ImageDataService to get complete data if needed
+    var completeData = imageData;
+    if (!imageData.pk || !imageData.inspectUrl) {
+      completeData = ImageDataService.getImageDataByUUID(imageData.uuid);
+      if (!completeData) {
+        console.error('[JournalEditor] Cannot set reference image: lookup failed for UUID', imageData.uuid);
+        return;
+      }
     }
 
     // Update state
-    this.currentReferenceImageId = parseInt(imagePk, 10);
+    this.currentReferenceImageId = completeData.pk;
     this.$referenceContainer.data('reference-image-id', this.currentReferenceImageId);
-    this.$referenceContainer.data('reference-image-uuid', imageData.uuid);
+    this.$referenceContainer.data('reference-image-uuid', completeData.uuid);
 
-    // Get inspect URL from picker card
-    var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + imageData.uuid + '"]');
-    var inspectUrl = $card.data('inspect-url') || '';
+    // Update preview image attributes
+    var $preview = this.$referenceContainer.find('.journal-reference-image-preview');
+    var $placeholder = this.$referenceContainer.find('.journal-reference-image-placeholder');
+    var $img = $preview.find('.journal-reference-image-thumbnail');
 
-    // Replace placeholder with preview
-    var previewHtml =
-      '<div class="journal-reference-image-preview">' +
-        '<img src="' + imageData.url + '" ' +
-             'alt="' + (imageData.caption || 'Reference') + '" ' +
-             'class="journal-reference-image-thumbnail" ' +
-             'data-inspect-url="' + inspectUrl + '">' +
-        '<button type="button" ' +
-                'class="journal-reference-image-clear" ' +
-                'title="Clear reference image">&times;</button>' +
-      '</div>';
+    $img.attr('src', completeData.url);
+    $img.attr('alt', completeData.caption || 'Reference');
+    $img.attr('data-inspect-url', completeData.inspectUrl);
 
-    this.$referenceContainer.html(previewHtml);
+    // Show preview, hide placeholder
+    $placeholder.addClass('d-none');
+    $preview.removeClass('d-none');
 
     // Trigger autosave
     this.handleContentChange();
@@ -1901,31 +2051,17 @@
    * Clear reference image
    */
   JournalEditor.prototype.clearReferenceImage = function() {
-    // Update state - use -1 to signal "clear" to backend
-    this.currentReferenceImageId = -1;
+    // Update state - set to null (matches title/date/timezone pattern)
+    this.currentReferenceImageId = null;
     this.$referenceContainer.data('reference-image-id', '');
     this.$referenceContainer.data('reference-image-uuid', '');
 
-    // Replace preview with placeholder
-    var placeholderHtml =
-      '<div class="journal-reference-image-placeholder bg-light border d-flex align-items-center justify-content-center text-muted">' +
-        '<svg class="icon icon-lg" aria-hidden="true"><use xlink:href="#icon-camera"></use></svg>' +
-        '<span class="journal-reference-drop-hint">Drop reference image</span>' +
-      '</div>';
+    // Hide preview, show placeholder
+    this.$referenceContainer.find('.journal-reference-image-preview').addClass('d-none');
+    this.$referenceContainer.find('.journal-reference-image-placeholder').removeClass('d-none');
 
-    this.$referenceContainer.html(placeholderHtml);
-
-    // Trigger autosave (will send -1 to backend)
+    // Trigger autosave (will send null to backend to clear the field)
     this.handleContentChange();
-
-    // After autosave completes, reset to null for future changes
-    // This prevents sending -1 repeatedly
-    var self = this;
-    setTimeout(function() {
-      if (self.currentReferenceImageId === -1) {
-        self.currentReferenceImageId = null;
-      }
-    }, 3000);
   };
 
   /**
@@ -2106,20 +2242,12 @@
 
     // Only use first selected image (single selection only)
     var firstUuid = Array.from(this.imagePicker.selectedImages)[0];
-    var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + firstUuid + '"]');
+    var imageData = this.getImageDataFromUUID(firstUuid);
 
-    if (!$card.length) {
+    if (!imageData) {
       console.error('Cannot find picker card for UUID:', firstUuid);
       return;
     }
-
-    // Get image data from card
-    var imageData = {
-      uuid: firstUuid,
-      pk: $card.data('image-pk'),
-      url: $card.find('img').attr('src'),
-      caption: $card.data('caption') || 'Reference'
-    };
 
     // Set as reference image
     this.setReferenceImage(imageData);
@@ -2142,22 +2270,12 @@
 
     // Only use first selected image (single selection only)
     var firstUuid = Array.from(this.selectedEditorImages)[0];
+    var imageData = this.getImageDataFromUUID(firstUuid);
 
-    // Find corresponding picker card to get PK and other data
-    var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + firstUuid + '"]');
-
-    if (!$card.length) {
+    if (!imageData) {
       console.error('Cannot find picker card for UUID:', firstUuid);
       return;
     }
-
-    // Get image data from card
-    var imageData = {
-      uuid: firstUuid,
-      pk: $card.data('image-pk'),
-      url: $card.find('img').attr('src'),
-      caption: $card.data('caption') || 'Reference'
-    };
 
     // Set as reference image
     this.setReferenceImage(imageData);
