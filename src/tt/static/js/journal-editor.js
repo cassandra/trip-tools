@@ -391,7 +391,7 @@
       title: this.editor.$titleInput.val() || '',
       date: this.editor.$dateInput.val() || '',
       timezone: this.editor.$timezoneInput.val() || '',
-      referenceImage: this.editor.getReferenceImageId()
+      referenceImageId: this.editor.getReferenceImageId()
     };
 
     var data = {
@@ -399,7 +399,8 @@
       version: this.editor.currentVersion,
       new_title: snapshot.title,
       new_date: snapshot.date,
-      new_timezone: snapshot.timezone
+      new_timezone: snapshot.timezone,
+      reference_image_id: snapshot.referenceImageId
     };
 
     $.ajax({
@@ -417,7 +418,7 @@
           this.lastSavedTitle = snapshot.title;
           this.lastSavedDate = snapshot.date;
           this.lastSavedTimezone = snapshot.timezone;
-          this.lastSavedReferenceImage = snapshot.referenceImage;
+          this.lastSavedReferenceImage = snapshot.referenceImageId;
 
           // Recheck if changes occurred during save
           this.hasUnsavedChanges = this.detectChanges();
@@ -662,6 +663,10 @@
     // Track UUIDs of images currently in editor content (for picker filtering)
     this.usedImageUUIDs = new Set();
 
+    // Reference image state
+    this.currentReferenceImageId = null;
+    this.$referenceContainer = $('.journal-reference-image-container');
+
     // Initialize badge manager for editor selections
     this.editorBadgeManager = new SelectionBadgeManager(this.$statusElement, 'selected-editor-images-count');
 
@@ -696,6 +701,9 @@
     // Initialize used image tracking from existing content
     this.initializeUsedImages();
 
+    // Initialize reference image state from server data
+    this.initializeReferenceImage();
+
     // Apply initial filter to image picker now that usedImageUUIDs is populated
     if (this.imagePicker) {
       this.imagePicker.applyFilter(this.imagePicker.filterScope);
@@ -726,6 +734,9 @@
     // Setup image removal
     this.setupImageRemoval();
 
+    // Setup reference image functionality
+    this.setupReferenceImage();
+
     // Setup keyboard navigation
     this.setupKeyboardNavigation();
   };
@@ -745,6 +756,19 @@
         self.usedImageUUIDs.add(uuid);
       }
     });
+  };
+
+  /**
+   * Initialize reference image state from server data
+   * Reads data-reference-image-id from container
+   */
+  JournalEditor.prototype.initializeReferenceImage = function() {
+    if (this.$referenceContainer.length) {
+      var refImageId = this.$referenceContainer.data('reference-image-id');
+      if (refImageId) {
+        this.currentReferenceImageId = parseInt(refImageId, 10);
+      }
+    }
   };
 
   /**
@@ -869,11 +893,10 @@
 
   /**
    * Get current reference image ID
-   * TODO: Implement when reference image UI is added
+   * Returns current reference image ID for autosave
    */
   JournalEditor.prototype.getReferenceImageId = function() {
-    // Placeholder - will be implemented when reference image selection is added
-    return null;
+    return this.currentReferenceImageId;
   };
 
   /**
@@ -1296,6 +1319,7 @@
         if (selectedUuids.has(uuid)) {
           imagesToInsert.push({
             uuid: uuid,
+            pk: $card.data('image-pk'),
             url: $card.data('image-url'),
             caption: $card.data('caption') || 'Untitled'
           });
@@ -1305,6 +1329,7 @@
       // Single-image insert: just the dragged card
       imagesToInsert.push({
         uuid: draggedUuid,
+        pk: $draggedCard.data('image-pk'),
         url: $draggedCard.data('image-url'),
         caption: $draggedCard.data('caption') || 'Untitled'
       });
@@ -1756,6 +1781,154 @@
   };
 
   /**
+   * Setup reference image drag-and-drop, clear button, and double-click
+   */
+  JournalEditor.prototype.setupReferenceImage = function() {
+    var self = this;
+
+    if (!this.$referenceContainer.length) {
+      return;
+    }
+
+    // Setup drag-and-drop on placeholder/preview
+    var $placeholder = this.$referenceContainer.find('.journal-reference-image-placeholder');
+    var $preview = this.$referenceContainer.find('.journal-reference-image-preview');
+    var $dropTarget = $placeholder.length ? $placeholder : $preview;
+
+    // Allow drop on both placeholder and preview
+    this.$referenceContainer.on('dragover', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.originalEvent.dataTransfer.dropEffect = 'copy';
+
+      // Only highlight if dragging from picker (single image only)
+      if (self.dragSource === 'picker') {
+        var imagesToInsert = self.getPickerImagesToInsert();
+        if (imagesToInsert.length === 1) {
+          var $target = self.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
+          $target.addClass('drop-zone-active');
+        }
+      }
+    });
+
+    this.$referenceContainer.on('dragleave', function(e) {
+      // Only remove if we're leaving the container completely
+      if (!$(e.relatedTarget).closest('.journal-reference-image-container').length) {
+        var $target = self.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
+        $target.removeClass('drop-zone-active');
+      }
+    });
+
+    this.$referenceContainer.on('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      var $target = self.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
+      $target.removeClass('drop-zone-active');
+
+      if (self.dragSource === 'picker' && self.draggedElement) {
+        // Get images to insert - only accept single image
+        var imagesToInsert = self.getPickerImagesToInsert();
+        if (imagesToInsert.length === 1) {
+          var imageData = imagesToInsert[0];
+          self.setReferenceImage(imageData);
+        }
+      }
+    });
+
+    // Setup clear button click
+    this.$referenceContainer.on('click', '.journal-reference-image-clear', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      self.clearReferenceImage();
+    });
+
+    // Setup double-click to open inspector
+    this.$referenceContainer.on('dblclick', '.journal-reference-image-thumbnail', function(e) {
+      e.preventDefault();
+      var inspectUrl = $(this).data('inspect-url');
+      if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
+        AN.get(inspectUrl);
+      }
+    });
+  };
+
+  /**
+   * Set reference image from image data
+   * @param {Object} imageData - {uuid, url, caption, pk}
+   */
+  JournalEditor.prototype.setReferenceImage = function(imageData) {
+    // Get PK from picker card if not in imageData
+    var imagePk = imageData.pk;
+    if (!imagePk) {
+      var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + imageData.uuid + '"]');
+      imagePk = $card.data('image-pk');
+    }
+
+    if (!imagePk) {
+      console.error('Cannot set reference image: missing PK');
+      return;
+    }
+
+    // Update state
+    this.currentReferenceImageId = parseInt(imagePk, 10);
+    this.$referenceContainer.data('reference-image-id', this.currentReferenceImageId);
+    this.$referenceContainer.data('reference-image-uuid', imageData.uuid);
+
+    // Get inspect URL from picker card
+    var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + imageData.uuid + '"]');
+    var inspectUrl = $card.data('inspect-url') || '';
+
+    // Replace placeholder with preview
+    var previewHtml =
+      '<div class="journal-reference-image-preview">' +
+        '<img src="' + imageData.url + '" ' +
+             'alt="' + (imageData.caption || 'Reference') + '" ' +
+             'class="journal-reference-image-thumbnail" ' +
+             'data-inspect-url="' + inspectUrl + '">' +
+        '<button type="button" ' +
+                'class="journal-reference-image-clear" ' +
+                'title="Clear reference image">&times;</button>' +
+      '</div>';
+
+    this.$referenceContainer.html(previewHtml);
+
+    // Trigger autosave
+    this.handleContentChange();
+  };
+
+  /**
+   * Clear reference image
+   */
+  JournalEditor.prototype.clearReferenceImage = function() {
+    // Update state - use -1 to signal "clear" to backend
+    this.currentReferenceImageId = -1;
+    this.$referenceContainer.data('reference-image-id', '');
+    this.$referenceContainer.data('reference-image-uuid', '');
+
+    // Replace preview with placeholder
+    var placeholderHtml =
+      '<div class="journal-reference-image-placeholder bg-light border d-flex align-items-center justify-content-center text-muted">' +
+        '<svg class="icon icon-lg" aria-hidden="true"><use xlink:href="#icon-camera"></use></svg>' +
+        '<span class="journal-reference-drop-hint">Drop reference image</span>' +
+      '</div>';
+
+    this.$referenceContainer.html(placeholderHtml);
+
+    // Trigger autosave (will send -1 to backend)
+    this.handleContentChange();
+
+    // After autosave completes, reset to null for future changes
+    // This prevents sending -1 repeatedly
+    var self = this;
+    setTimeout(function() {
+      if (self.currentReferenceImageId === -1) {
+        self.currentReferenceImageId = null;
+      }
+    }, 3000);
+  };
+
+  /**
    * Setup keyboard navigation and shortcuts
    */
   JournalEditor.prototype.setupKeyboardNavigation = function() {
@@ -1922,8 +2095,8 @@
   };
 
   /**
-   * Set reference image from picker selection (STUB)
-   * Entry point for future representative image feature
+   * Set reference image from picker selection
+   * Called by Ctrl+R keyboard shortcut when picker has selections
    */
   JournalEditor.prototype.setReferenceImageFromPicker = function() {
     if (!this.imagePicker || this.imagePicker.selectedImages.size === 0) {
@@ -1931,15 +2104,35 @@
       return;
     }
 
-    // Get first selected UUID
+    // Only use first selected image (single selection only)
     var firstUuid = Array.from(this.imagePicker.selectedImages)[0];
-    console.log('[Keyboard Shortcut] Ctrl+R: Set reference image from picker (STUB)', firstUuid);
-    console.log('[Future Feature] This will set the reference image for the journal entry');
+    var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + firstUuid + '"]');
+
+    if (!$card.length) {
+      console.error('Cannot find picker card for UUID:', firstUuid);
+      return;
+    }
+
+    // Get image data from card
+    var imageData = {
+      uuid: firstUuid,
+      pk: $card.data('image-pk'),
+      url: $card.find('img').attr('src'),
+      caption: $card.data('caption') || 'Reference'
+    };
+
+    // Set as reference image
+    this.setReferenceImage(imageData);
+
+    // Clear picker selection after setting
+    if (this.imagePicker) {
+      this.imagePicker.clearAllSelections();
+    }
   };
 
   /**
-   * Set reference image from editor selection (STUB)
-   * Entry point for future representative image feature
+   * Set reference image from editor selection
+   * Called by Ctrl+R keyboard shortcut when editor has selections
    */
   JournalEditor.prototype.setReferenceImageFromEditor = function() {
     if (this.selectedEditorImages.size === 0) {
@@ -1947,10 +2140,30 @@
       return;
     }
 
-    // Get first selected UUID
+    // Only use first selected image (single selection only)
     var firstUuid = Array.from(this.selectedEditorImages)[0];
-    console.log('[Keyboard Shortcut] Ctrl+R: Set reference image from editor (STUB)', firstUuid);
-    console.log('[Future Feature] This will set the reference image for the journal entry');
+
+    // Find corresponding picker card to get PK and other data
+    var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + firstUuid + '"]');
+
+    if (!$card.length) {
+      console.error('Cannot find picker card for UUID:', firstUuid);
+      return;
+    }
+
+    // Get image data from card
+    var imageData = {
+      uuid: firstUuid,
+      pk: $card.data('image-pk'),
+      url: $card.find('img').attr('src'),
+      caption: $card.data('caption') || 'Reference'
+    };
+
+    // Set as reference image
+    this.setReferenceImage(imageData);
+
+    // Clear editor selections after setting
+    this.clearEditorImageSelections();
   };
 
   /**

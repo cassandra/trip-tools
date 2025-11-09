@@ -9,6 +9,7 @@ Context variables:
 <div class="{{ DIVID.JOURNAL_IMAGE_CARD_CLASS }}"
      draggable="true"
      data-{{ DIVID.JOURNAL_IMAGE_UUID_ATTR }}="{{ image.uuid }}"
+     data-image-pk="{{ image.pk }}"
      data-image-url="{{ image.web_image.url }}"
      data-inspect-url="{% url 'images_trip_image_inspect' image_uuid=image.uuid %}?trip_id={{ trip.id }}"
      data-caption="{{ image.caption|default:'Untitled' }}"

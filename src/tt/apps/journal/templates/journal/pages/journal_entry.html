@@ -25,8 +25,27 @@
         <!-- Left column: Reference Image (hidden on small screens) -->
         <div class="col-md-3 d-none d-md-block">
           <div class="form-group">
-            <div class="journal-reference-image-placeholder bg-light border d-flex align-items-center justify-content-center text-muted">
-              {% icon "camera" size="lg" %}
+            <div class="journal-reference-image-container"
+                 data-reference-image-id="{% if entry.reference_image %}{{ entry.reference_image.pk }}{% endif %}"
+                 data-reference-image-uuid="{% if entry.reference_image %}{{ entry.reference_image.uuid }}{% endif %}">
+              {% if entry.reference_image %}
+              <!-- Preview state: Show thumbnail + clear button -->
+              <div class="journal-reference-image-preview">
+                <img src="{{ entry.reference_image.thumbnail_image.url }}"
+                     alt="{{ entry.reference_image.caption|default:'Reference' }}"
+                     class="journal-reference-image-thumbnail"
+                     data-inspect-url="{% url 'images_trip_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_id={{ trip.id }}">
+                <button type="button"
+                        class="journal-reference-image-clear"
+                        title="Clear reference image">&times;</button>
+              </div>
+              {% else %}
+              <!-- Placeholder state: Camera icon (drop zone) -->
+              <div class="journal-reference-image-placeholder bg-light border d-flex align-items-center justify-content-center text-muted">
+                {% icon "camera" size="lg" %}
+                <span class="journal-reference-drop-hint">Drop reference image</span>
+              </div>
+              {% endif %}
             </div>
           </div>
         </div>

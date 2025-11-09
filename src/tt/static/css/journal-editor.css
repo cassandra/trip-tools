@@ -87,12 +87,85 @@
   padding: 0.35rem 0.65rem;
 }
 
-/* Reference Image Placeholder */
+/* Reference Image Container */
+.journal-reference-image-container {
+  width: 100%;
+  position: relative;
+}
+
+/* Reference Image Placeholder (empty state) */
 .journal-reference-image-placeholder {
   width: 100%;
   aspect-ratio: 4/3;
   border-radius: 4px;
   min-height: 120px;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.journal-reference-image-placeholder.drop-zone-active {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  border-color: var(--primary-color, #007bff) !important;
+  border-style: dashed !important;
+  border-width: 2px !important;
+}
+
+.journal-reference-drop-hint {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Reference Image Preview (with image) */
+.journal-reference-image-preview {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.journal-reference-image-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line-color);
+}
+
+.journal-reference-image-preview:hover .journal-reference-image-thumbnail {
+  opacity: 0.9;
+}
+
+/* Clear button (similar to trip-image-delete-btn) */
+.journal-reference-image-clear {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: rgba(220, 53, 69, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.journal-reference-image-clear:hover {
+  background-color: rgba(200, 35, 51, 1);
+}
+
+.journal-reference-image-preview:hover .journal-reference-image-clear {
+  display: flex;
 }
 
 /* ===========================================
