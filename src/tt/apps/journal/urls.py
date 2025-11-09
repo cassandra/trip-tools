@@ -9,4 +9,5 @@ urlpatterns = [
     re_path(r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/$', views.JournalEntryView.as_view(), name='journal_entry'),
     re_path(r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/save$', views.JournalEntryAutosaveView.as_view(), name='journal_entry_autosave'),
     re_path(r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/images/$', views.JournalEntryImagePickerView.as_view(), name='journal_entry_images'),
+    re_path(r'^editor-help$', views.JournalEditorHelpView.as_view(), name='journal_editor_help'),
 ]

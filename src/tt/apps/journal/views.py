@@ -421,3 +421,20 @@ class JournalEntryImagePickerView(LoginRequiredMixin, TripViewMixin, View):
 
         # Return antinode response with the gallery HTML
         return http_response({'insert': {'journal-image-gallery': gallery_html}})
+
+
+class JournalEditorHelpView(LoginRequiredMixin, ModalView):
+    """
+    Modal view for displaying editing help for journal editor.
+
+    Shows keyboard shortcuts and editor guidance.
+    Accessible to all authenticated users (trip-independent).
+    """
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_editor_help.html'
+
+    def get(self, request, *args, **kwargs) -> HttpResponse:
+        # No context needed - help is generic
+        context = {}
+        return self.modal_response(request, context=context)

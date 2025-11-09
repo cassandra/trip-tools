@@ -23,4 +23,15 @@
 
   <!-- Hidden textarea for form fallback (non-JS) -->
   <textarea class="d-none" name="text" id="{{ DIVID.JOURNAL_EDITOR_ID }}_fallback">{{ entry.text }}</textarea>
+
+  <!-- Editing Help Button -->
+  <div class="d-flex justify-content-end mt-2">
+    <a href="{% url 'journal_editor_help' %}"
+       class="btn btn-sm btn-outline-secondary"
+       data-async="modal"
+       title="Show keyboard shortcuts and editing help">
+      {% load icons %}
+      {% icon "question-circle" size="sm" %} Editing Help
+    </a>
+  </div>
 </div>

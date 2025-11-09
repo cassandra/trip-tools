@@ -44,6 +44,7 @@ AVAILABLE_ICONS = {
     'history',
     'home',
     'info-circle',
+    'keyboard',
     'layers',
     'lightbulb',
     'lock',

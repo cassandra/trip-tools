@@ -12,7 +12,11 @@
  * - Image removal with keyboard and hover controls
  * - Autosave integration with 2-second debounce
  * - Responsive design with mobile warning
- * - Full keyboard navigation support
+ * - Simplified keyboard shortcuts (6 total)
+ *   - Text formatting: Ctrl/Cmd+B/I
+ *   - Picker operations: Escape, Delete, Ctrl+R (stub)
+ *   - Editor operations: Escape, Delete, Ctrl+R (stub)
+ *   - Global: Ctrl+/ for help (stub)
  *
  * ============================================================
  * HTML CONTRACT: PERSISTENT vs TRANSIENT
@@ -1657,42 +1661,207 @@
   };
 
   /**
-   * Setup keyboard navigation
+   * Setup keyboard navigation and shortcuts
    */
   JournalEditor.prototype.setupKeyboardNavigation = function() {
     var self = this;
 
-    // Tab to navigate between images
-    this.$editor.on('keydown', function(e) {
-      if (e.key === 'Tab') {
-        var $images = self.$editor.find(Tt.JOURNAL_IMAGE_SELECTOR);
+    // Global keyboard shortcut handler
+    $(document).on('keydown', function(e) {
+      self.handleGlobalKeyboardShortcut(e);
+    });
+  };
 
-        if ($images.length > 0) {
-          var selection = window.getSelection();
-          var currentNode = selection.anchorNode;
+  /**
+   * Global keyboard shortcut handler
+   * Routes shortcuts based on active context
+   */
+  JournalEditor.prototype.handleGlobalKeyboardShortcut = function(e) {
+    var context = this.determineActiveContext();
+    var isCtrlOrCmd = e.ctrlKey || e.metaKey;
 
-          // Find current image
-          var currentIndex = -1;
-          $images.each(function(index) {
-            if (this === currentNode || $.contains(this, currentNode)) {
-              currentIndex = index;
-              return false;
-            }
-          });
+    // GLOBAL shortcuts (work in all contexts)
+    // Ctrl/Cmd+/ - Show keyboard shortcuts help (STUB)
+    if (isCtrlOrCmd && e.key === '/') {
+      e.preventDefault();
+      this.showKeyboardShortcutsHelp();
+      return;
+    }
 
-          // Navigate to next/previous image
-          var nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+    // TEXT EDITING CONTEXT shortcuts
+    if (context === 'text') {
+      // Ctrl/Cmd+B - Bold
+      if (isCtrlOrCmd && e.key === 'b') {
+        e.preventDefault();
+        document.execCommand('bold', false, null);
+        return;
+      }
 
-          if (nextIndex >= 0 && nextIndex < $images.length) {
-            e.preventDefault();
-            var range = document.createRange();
-            range.selectNode($images[nextIndex]);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          }
+      // Ctrl/Cmd+I - Italic
+      if (isCtrlOrCmd && e.key === 'i') {
+        e.preventDefault();
+        document.execCommand('italic', false, null);
+        return;
+      }
+
+      // All other text shortcuts: preserve browser defaults
+      return;
+    }
+
+    // PICKER IMAGES CONTEXT shortcuts
+    if (context === 'picker') {
+      // Escape - Clear all selections
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (this.imagePicker) {
+          this.imagePicker.clearAllSelections();
         }
+        return;
+      }
+
+      // Delete/Backspace - Clear selection (same as Escape)
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        if (this.imagePicker) {
+          this.imagePicker.clearAllSelections();
+        }
+        return;
+      }
+
+      // Ctrl/Cmd+R - Set representative image (STUB)
+      if (isCtrlOrCmd && e.key === 'r') {
+        e.preventDefault();
+        this.setReferenceImageFromPicker();
+        return;
+      }
+
+      return;
+    }
+
+    // EDITOR IMAGES CONTEXT shortcuts
+    if (context === 'editor-images') {
+      // Escape - Clear selections
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.clearEditorImageSelections();
+        return;
+      }
+
+      // Delete/Backspace - Remove from editor
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        this.batchRemoveEditorImages(this.selectedEditorImages);
+        return;
+      }
+
+      // Ctrl/Cmd+R - Set representative image (STUB)
+      if (isCtrlOrCmd && e.key === 'r') {
+        e.preventDefault();
+        this.setReferenceImageFromEditor();
+        return;
+      }
+
+      return;
+    }
+  };
+
+  /**
+   * Determine active context for keyboard shortcuts
+   * Returns: 'text' | 'picker' | 'editor-images'
+   *
+   * Context Priority:
+   * 1. Picker selections (highest priority)
+   * 2. Editor image selections
+   * 3. Text editing (default)
+   */
+  JournalEditor.prototype.determineActiveContext = function() {
+    // Check if picker has selections
+    if (this.imagePicker && this.imagePicker.selectedImages.size > 0) {
+      return 'picker';
+    }
+
+    // Check if editor has image selections
+    if (this.selectedEditorImages.size > 0) {
+      return 'editor-images';
+    }
+
+    // Default to text editing context
+    return 'text';
+  };
+
+  /**
+   * Batch remove editor images by UUID set
+   * @param {Set} uuidSet - Set of UUIDs to remove
+   */
+  JournalEditor.prototype.batchRemoveEditorImages = function(uuidSet) {
+    if (uuidSet.size === 0) {
+      return;
+    }
+
+    // Find and remove all wrappers with matching UUIDs
+    this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
+      var $wrapper = $(this);
+      var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+      var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+
+      if (uuidSet.has(uuid)) {
+        $wrapper.remove();
       }
     });
+
+    // Clear selections
+    this.clearEditorImageSelections();
+
+    // Trigger autosave
+    this.handleContentChange();
+  };
+
+  /**
+   * Set reference image from picker selection (STUB)
+   * Entry point for future representative image feature
+   */
+  JournalEditor.prototype.setReferenceImageFromPicker = function() {
+    if (!this.imagePicker || this.imagePicker.selectedImages.size === 0) {
+      console.log('[Keyboard Shortcut] Ctrl+R: No picker images selected');
+      return;
+    }
+
+    // Get first selected UUID
+    var firstUuid = Array.from(this.imagePicker.selectedImages)[0];
+    console.log('[Keyboard Shortcut] Ctrl+R: Set reference image from picker (STUB)', firstUuid);
+    console.log('[Future Feature] This will set the reference image for the journal entry');
+  };
+
+  /**
+   * Set reference image from editor selection (STUB)
+   * Entry point for future representative image feature
+   */
+  JournalEditor.prototype.setReferenceImageFromEditor = function() {
+    if (this.selectedEditorImages.size === 0) {
+      console.log('[Keyboard Shortcut] Ctrl+R: No editor images selected');
+      return;
+    }
+
+    // Get first selected UUID
+    var firstUuid = Array.from(this.selectedEditorImages)[0];
+    console.log('[Keyboard Shortcut] Ctrl+R: Set reference image from editor (STUB)', firstUuid);
+    console.log('[Future Feature] This will set the reference image for the journal entry');
+  };
+
+  /**
+   * Show keyboard shortcuts help modal
+   * Opens editing help modal via AN.get() to fetch from server
+   */
+  JournalEditor.prototype.showKeyboardShortcutsHelp = function() {
+    // Construct URL to editor help endpoint (no parameters needed)
+    var helpUrl = '/journal/editor-help';
+
+    // Use antinode.js to fetch and display modal
+    if (typeof AN !== 'undefined' && AN.get) {
+      AN.get(helpUrl);
+    } else {
+      console.error('Antinode.js not available');
+    }
   };
 
   /**
