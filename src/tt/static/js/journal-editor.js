@@ -1474,18 +1474,18 @@
   };
 
   /**
-   * Show/hide reference drop zone highlighting
+   * Set visibility of reference drop zone highlighting
    * Uses CSS constant for consistency with editor drop zones
-   * @param {boolean} show - true to show, false to hide
+   * @param {boolean} visible - true to show drop zone, false to hide
    */
-  JournalEditor.prototype.showReferenceDropZone = function(show) {
+  JournalEditor.prototype.setReferenceDropZoneVisible = function(visible) {
     if (!this.$referenceContainer || !this.$referenceContainer.length) {
       return;
     }
 
     var $target = this.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
 
-    if (show) {
+    if (visible) {
       $target.addClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
     } else {
       $target.removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
@@ -1956,14 +1956,14 @@
       }
 
       if (self.shouldShowReferenceDropZone()) {
-        self.showReferenceDropZone(true);
+        self.setReferenceDropZoneVisible(true);
       }
     });
 
     this.$referenceContainer.on('dragleave', function(e) {
       // Only remove if we're leaving the container completely
       if (!$(e.relatedTarget).closest('.journal-reference-image-container').length) {
-        self.showReferenceDropZone(false);
+        self.setReferenceDropZoneVisible(false);
       }
     });
 
@@ -1971,7 +1971,7 @@
       e.preventDefault();
       e.stopPropagation();
 
-      self.showReferenceDropZone(false);
+      self.setReferenceDropZoneVisible(false);
 
       try {
         var imageData = self.getDraggedImageData();

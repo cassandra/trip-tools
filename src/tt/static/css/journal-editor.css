@@ -16,6 +16,15 @@
  */
 
 /* ===========================================
+   CSS CUSTOM PROPERTIES
+   =========================================== */
+
+:root {
+  /* Reference image aspect ratio (4:3 for standard photo dimensions) */
+  --reference-image-aspect-ratio: 4 / 3;
+}
+
+/* ===========================================
    EDITOR LAYOUT
    =========================================== */
 
@@ -93,12 +102,13 @@
   position: relative;
 }
 
-/* Reference Image Placeholder (empty state) */
+/* Reference Image Placeholder (placeholder state - no image set) */
 .journal-reference-image-placeholder {
   display: flex;
   width: 100%;
-  aspect-ratio: 4/3;
+  aspect-ratio: var(--reference-image-aspect-ratio);
   border-radius: 4px;
+  /* Min height ensures comfortable drop target on small screens where aspect-ratio might be too small */
   min-height: 120px;
   flex-direction: column;
   gap: 0.5rem;
@@ -106,11 +116,11 @@
 }
 
 .journal-reference-image-placeholder.drop-zone-active {
-  /* Note: !important needed to override Bootstrap .bg-light and .border utility classes */
+  /* Note: !important needed to override Bootstrap .bg-light utility class */
   background-color: rgba(0, 123, 255, 0.1) !important;
-  border-color: var(--primary-color, #007bff) !important;
-  border-style: dashed !important;
-  border-width: 2px !important;
+  /* Use outline instead of border to avoid layout shifts */
+  outline: 2px dashed var(--primary-color, #007bff);
+  outline-offset: 4px;
 }
 
 .journal-reference-image-preview.drop-zone-active {
@@ -123,10 +133,10 @@
   font-weight: 500;
 }
 
-/* Reference Image Preview (with image) */
+/* Reference Image Preview (preview state - image set) */
 .journal-reference-image-preview {
   width: 100%;
-  aspect-ratio: 4/3;
+  aspect-ratio: var(--reference-image-aspect-ratio);
   border-radius: 4px;
   position: relative;
   overflow: hidden;
