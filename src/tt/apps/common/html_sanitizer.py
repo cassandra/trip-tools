@@ -110,7 +110,7 @@ if BLEACH_AVAILABLE:
         allowed_tags=[
             'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
             'ul', 'ol', 'li',
-            'strong', 'em', 'code', 'pre',
+            'strong', 'em', 'b', 'i', 'code', 'pre',
             'blockquote', 'hr', 'br',
             'img', 'a', 'span', 'div',
         ],

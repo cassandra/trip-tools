@@ -81,8 +81,16 @@ p.has-float-image {
   text-align: center; /* Center inline-block children (full-width images) */
 }
 
-/* Reset text-align for paragraphs */
-.journal-contenteditable p {
+/* Reset text-align for text content (paragraphs, headings, lists) */
+.journal-contenteditable p,
+.journal-contenteditable h1,
+.journal-contenteditable h2,
+.journal-contenteditable h3,
+.journal-contenteditable h4,
+.journal-contenteditable h5,
+.journal-contenteditable h6,
+.journal-contenteditable ul,
+.journal-contenteditable ol {
   text-align: left;
 }
 

@@ -232,6 +232,84 @@
   let editorInstance = null;
 
   /**
+   * JournalEditorToolbar
+   *
+   * Manages the formatting toolbar for rich text editing.
+   * Provides buttons for text formatting (bold, italic), headings, and lists.
+   *
+   * Features:
+   * - Text formatting: Bold, Italic
+   * - Headings: H2, H3, H4 (dropdown)
+   * - Lists: Unordered (bullets), Ordered (numbers)
+   * - Integrates with existing autosave system
+   * - Uses document.execCommand for simplicity (Phase 1 implementation)
+   */
+  function JournalEditorToolbar($toolbar, $editor, onContentChange) {
+    this.$toolbar = $toolbar;
+    this.$editor = $editor;
+    this.onContentChange = onContentChange;
+    this.editor = $editor[0];
+
+    this.initializeToolbar();
+  }
+
+  /**
+   * Initialize toolbar event handlers
+   */
+  JournalEditorToolbar.prototype.initializeToolbar = function() {
+    var self = this;
+
+    // Bold button
+    this.$toolbar.find('[data-command="bold"]').on('click', function(e) {
+      e.preventDefault();
+      self.executeCommand('bold');
+    });
+
+    // Italic button
+    this.$toolbar.find('[data-command="italic"]').on('click', function(e) {
+      e.preventDefault();
+      self.executeCommand('italic');
+    });
+
+    // Heading buttons (H2, H3, H4)
+    this.$toolbar.find('[data-command="heading"]').on('click', function(e) {
+      e.preventDefault();
+      var level = $(this).data('level');
+      self.executeCommand('formatBlock', '<h' + level + '>');
+    });
+
+    // Unordered list button
+    this.$toolbar.find('[data-command="insertUnorderedList"]').on('click', function(e) {
+      e.preventDefault();
+      self.executeCommand('insertUnorderedList');
+    });
+
+    // Ordered list button
+    this.$toolbar.find('[data-command="insertOrderedList"]').on('click', function(e) {
+      e.preventDefault();
+      self.executeCommand('insertOrderedList');
+    });
+  };
+
+  /**
+   * Execute a formatting command and trigger content change
+   * @param {string} command - execCommand name
+   * @param {string} value - Optional value for command
+   */
+  JournalEditorToolbar.prototype.executeCommand = function(command, value) {
+    // Focus editor to ensure command applies to correct element
+    this.editor.focus();
+
+    // Execute the formatting command
+    document.execCommand(command, false, value || null);
+
+    // Trigger content change for autosave
+    if (this.onContentChange) {
+      this.onContentChange();
+    }
+  };
+
+  /**
    * EditorLayoutManager
    *
    * Manages layout-related DOM manipulations for the editor.
@@ -777,6 +855,9 @@
     // Initialize ContentEditable
     this.initContentEditable();
 
+    // Initialize toolbar
+    this.initializeToolbar();
+
     // Setup autosave handlers
     this.setupAutosave();
 
@@ -874,6 +955,23 @@
         document.execCommand('defaultParagraphSeparator', false, 'p');
       }
     });
+  };
+
+  /**
+   * Initialize formatting toolbar
+   */
+  JournalEditor.prototype.initializeToolbar = function() {
+    var $toolbar = $('.journal-editor-toolbar');
+    if ($toolbar.length) {
+      var self = this;
+      this.toolbar = new JournalEditorToolbar(
+        $toolbar,
+        this.$editor,
+        function() {
+          self.handleContentChange();
+        }
+      );
+    }
   };
 
   /**
