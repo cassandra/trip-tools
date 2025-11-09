@@ -685,7 +685,8 @@
     $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).each(function() {
       var $card = $(this);
       var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
-      var isUsed = usedImageUUIDs.has(uuid);
+      // Check if count > 0 to handle same image appearing multiple times
+      var isUsed = (usedImageUUIDs.get(uuid) || 0) > 0;
 
       if (scope === 'all') {
         $card.show();
@@ -718,8 +719,10 @@
     this.selectedEditorImages = new Set();
     this.lastSelectedEditorIndex = null;
 
-    // Track UUIDs of images currently in editor content (for picker filtering)
-    this.usedImageUUIDs = new Set();
+    // Track usage counts of images in editor (Map<uuid, count>)
+    // Used for picker filtering (unused/used/all scopes)
+    // Map allows tracking same image appearing multiple times
+    this.usedImageUUIDs = new Map();
 
     // Reference image state
     this.currentReferenceImageId = null;
@@ -801,7 +804,8 @@
 
   /**
    * Initialize used image tracking from existing editor content
-   * Parses all images in the editor and populates usedImageUUIDs Set
+   * Parses all images in the editor and populates usedImageUUIDs Map with counts
+   * Handles same image appearing multiple times by incrementing count
    */
   JournalEditor.prototype.initializeUsedImages = function() {
     var self = this;
@@ -811,7 +815,8 @@
       var $img = $(this);
       var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
       if (uuid) {
-        self.usedImageUUIDs.add(uuid);
+        var currentCount = self.usedImageUUIDs.get(uuid) || 0;
+        self.usedImageUUIDs.set(uuid, currentCount + 1);
       }
     });
   };
@@ -1311,7 +1316,9 @@
     $wrapper.append($deleteBtn);
 
     // Track this image as used (for picker filtering)
-    this.usedImageUUIDs.add(uuid);
+    // Increment count to handle same image appearing multiple times
+    var currentCount = this.usedImageUUIDs.get(uuid) || 0;
+    this.usedImageUUIDs.set(uuid, currentCount + 1);
 
     // Update picker filter if it exists
     if (this.imagePicker) {
@@ -1919,8 +1926,14 @@
     $wrapper.remove();
 
     // Remove from used images tracking (for picker filtering)
+    // Decrement count to handle same image appearing multiple times
     if (uuid) {
-      this.usedImageUUIDs.delete(uuid);
+      var currentCount = this.usedImageUUIDs.get(uuid) || 0;
+      if (currentCount > 1) {
+        this.usedImageUUIDs.set(uuid, currentCount - 1);
+      } else {
+        this.usedImageUUIDs.delete(uuid);
+      }
 
       // Update picker filter if it exists
       if (this.imagePicker) {
@@ -2214,7 +2227,13 @@
         $wrapper.remove();
 
         // Remove from used images tracking (for picker filtering)
-        self.usedImageUUIDs.delete(uuid);
+        // Decrement count to handle same image appearing multiple times
+        var currentCount = self.usedImageUUIDs.get(uuid) || 0;
+        if (currentCount > 1) {
+          self.usedImageUUIDs.set(uuid, currentCount - 1);
+        } else {
+          self.usedImageUUIDs.delete(uuid);
+        }
       }
     });
 
