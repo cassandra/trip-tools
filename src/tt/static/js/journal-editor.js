@@ -876,7 +876,9 @@
     $(document).on('dragstart', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
       self.draggedElement = this;
       self.dragSource = 'picker';
-      $(this).addClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+
+      // Update visual feedback (handles multi-image .dragging and count badge)
+      self.updateDraggingVisuals(true);
 
       // Set drag data
       e.originalEvent.dataTransfer.effectAllowed = 'copy';
@@ -885,7 +887,8 @@
 
     // Handle dragend from picker
     $(document).on('dragend', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
-      $(this).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+      // Clean up visual feedback (handles multi-image .dragging and count badge)
+      self.updateDraggingVisuals(false);
       self.clearDropZones();
       self.draggedElement = null;
       self.dragSource = null;
@@ -985,18 +988,20 @@
   };
 
   /**
-   * Handle image drop into editor
+   * Handle image drop into editor (supports multi-image drop)
    */
   JournalEditor.prototype.handleImageDrop = function(e) {
     if (!this.draggedElement) {
       return;
     }
 
-    var $card = $(this.draggedElement);
-    var imageUuid = $card.data('image-uuid');
-    var imageUrl = $card.data('image-url');
-    var caption = $card.data('caption') || 'Untitled';
+    // Get images to insert (1 or many)
+    var imagesToInsert = this.getPickerImagesToInsert();
+    if (imagesToInsert.length === 0) {
+      return;
+    }
 
+    // Determine drop layout and target (same logic as before)
     var $target = $(e.target);
     var $paragraph = $target.closest('p');
     var $imageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
@@ -1008,13 +1013,6 @@
       // Dropped into a paragraph - float-right layout
       layout = LAYOUT_VALUES.FLOAT_RIGHT;
       $insertTarget = $paragraph;
-
-      // Check and enforce 2-image limit per paragraph
-      var existingWrappers = $paragraph.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
-      if (existingWrappers.length >= 2) {
-        // Remove the rightmost wrapper (with image inside)
-        existingWrappers.last().remove();
-      }
     } else if ($imageWrapper.length && $imageWrapper.closest(this.$editor).length) {
       // Dropped onto an existing full-width image - insert after it (into same group)
       layout = LAYOUT_VALUES.FULL_WIDTH;
@@ -1042,23 +1040,63 @@
       $insertTarget = $(closestElement);
     }
 
-    // Create wrapped image element
-    var $wrappedImage = this.createImageElement(imageUuid, imageUrl, caption, layout);
+    // Insert each image using existing logic
+    var $lastInserted = null;
+    for (var i = 0; i < imagesToInsert.length; i++) {
+      var imageData = imagesToInsert[i];
 
-    // Insert the wrapped image
-    if (layout === LAYOUT_VALUES.FLOAT_RIGHT) {
-      // Insert at beginning of paragraph for float-right
-      $insertTarget.prepend($wrappedImage);
-    } else if ($insertTarget.is(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
-      // Insert after the target image wrapper (will be in same group)
-      $insertTarget.after($wrappedImage);
-    } else {
-      // Insert before the target element for full-width
-      $insertTarget.before($wrappedImage);
+      // Create wrapped image element
+      var $wrappedImage = this.createImageElement(
+        imageData.uuid,
+        imageData.url,
+        imageData.caption,
+        layout
+      );
+
+      // Insert the wrapped image
+      if (!$lastInserted) {
+        // First insertion - use original target logic
+        if (layout === LAYOUT_VALUES.FLOAT_RIGHT) {
+          // Insert at beginning of paragraph for float-right
+          $insertTarget.prepend($wrappedImage);
+        } else if ($insertTarget.is(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
+          // Insert after the target image wrapper (will be in same group)
+          $insertTarget.after($wrappedImage);
+        } else {
+          // Insert before the target element for full-width
+          $insertTarget.before($wrappedImage);
+        }
+      } else {
+        // Subsequent insertions - chain after last inserted
+        if (layout === LAYOUT_VALUES.FLOAT_RIGHT) {
+          // For float-right, prepend each one (so they appear in order)
+          $insertTarget.prepend($wrappedImage);
+        } else {
+          // For full-width, insert after last
+          $lastInserted.after($wrappedImage);
+        }
+      }
+
+      $lastInserted = $wrappedImage;
     }
 
-    // Trigger autosave
+    // NOW enforce 2-image limit per paragraph (after all insertions)
+    if (layout === LAYOUT_VALUES.FLOAT_RIGHT) {
+      var existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+      while (existingWrappers.length > 2) {
+        // Remove rightmost (last) wrapper
+        existingWrappers.last().remove();
+        existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+      }
+    }
+
+    // Trigger layout refresh + autosave (ONCE, not per image)
     this.handleContentChange();
+
+    // Clear picker selections if multiple images were inserted
+    if (this.imagePicker && imagesToInsert.length > 1) {
+      this.imagePicker.clearAllSelections();
+    }
   };
 
 
@@ -1141,6 +1179,162 @@
   JournalEditor.prototype.setupImageSelection = function() {
     // Event handlers are already set up in setupImageClickToInspect()
     // This method is a placeholder for any future initialization needs
+  };
+
+  /**
+   * Get picker images to insert (for multi-image drag-and-drop)
+   * Returns array of image data objects: [{uuid, url, caption}, ...]
+   */
+  JournalEditor.prototype.getPickerImagesToInsert = function() {
+    if (!this.draggedElement || !this.imagePicker) {
+      return [];
+    }
+
+    var $draggedCard = $(this.draggedElement);
+    var draggedUuid = $draggedCard.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+
+    // Check if dragged card is part of selection
+    var isDraggedSelected = this.imagePicker.selectedImages.has(draggedUuid);
+
+    var imagesToInsert = [];
+
+    if (isDraggedSelected && this.imagePicker.selectedImages.size > 1) {
+      // Multi-image insert: get all selected cards in DOM order
+      var selectedUuids = this.imagePicker.selectedImages;
+      $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).each(function() {
+        var $card = $(this);
+        var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+        if (selectedUuids.has(uuid)) {
+          imagesToInsert.push({
+            uuid: uuid,
+            url: $card.data('image-url'),
+            caption: $card.data('caption') || 'Untitled'
+          });
+        }
+      });
+    } else {
+      // Single-image insert: just the dragged card
+      imagesToInsert.push({
+        uuid: draggedUuid,
+        url: $draggedCard.data('image-url'),
+        caption: $draggedCard.data('caption') || 'Untitled'
+      });
+    }
+
+    return imagesToInsert;
+  };
+
+  /**
+   * Get editor wrappers to move (for multi-image drag-and-drop)
+   * Returns array of jQuery wrapper objects: [$wrapper1, $wrapper2, ...]
+   */
+  JournalEditor.prototype.getEditorWrappersToMove = function() {
+    if (!this.draggedElement) {
+      return [];
+    }
+
+    var $draggedWrapper = $(this.draggedElement);
+    var $draggedImg = $draggedWrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+    var draggedUuid = $draggedImg.data(Tt.JOURNAL_UUID_ATTR);
+
+    // Check if dragged wrapper is part of selection
+    var isDraggedSelected = this.selectedEditorImages.has(draggedUuid);
+
+    var wrappersToMove = [];
+
+    if (isDraggedSelected && this.selectedEditorImages.size > 1) {
+      // Multi-image move: get all selected wrappers in DOM order
+      var selectedUuids = this.selectedEditorImages;
+      var self = this;
+      this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
+        var $wrapper = $(this);
+        var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+        var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+        if (selectedUuids.has(uuid)) {
+          wrappersToMove.push($wrapper);
+        }
+      });
+    } else {
+      // Single-image move: just the dragged wrapper
+      wrappersToMove.push($draggedWrapper);
+    }
+
+    return wrappersToMove;
+  };
+
+  /**
+   * Update dragging visuals (count badge and .dragging class)
+   * @param {boolean} isDragging - true to show, false to hide
+   */
+  JournalEditor.prototype.updateDraggingVisuals = function(isDragging) {
+    if (isDragging) {
+      var count = 0;
+      var $elementsToMark = [];
+
+      if (this.dragSource === 'picker' && this.imagePicker) {
+        var draggedUuid = $(this.draggedElement).data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+        var isDraggedSelected = this.imagePicker.selectedImages.has(draggedUuid);
+
+        if (isDraggedSelected && this.imagePicker.selectedImages.size > 1) {
+          // Mark all selected cards
+          count = this.imagePicker.selectedImages.size;
+          var selectedUuids = this.imagePicker.selectedImages;
+          $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).each(function() {
+            var $card = $(this);
+            if (selectedUuids.has($card.data(Tt.JOURNAL_IMAGE_UUID_ATTR))) {
+              $elementsToMark.push($card);
+            }
+          });
+        } else {
+          // Just the dragged card
+          count = 1;
+          $elementsToMark.push($(this.draggedElement));
+        }
+      } else if (this.dragSource === 'editor') {
+        var $draggedWrapper = $(this.draggedElement);
+        var $draggedImg = $draggedWrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+        var draggedUuid = $draggedImg.data(Tt.JOURNAL_UUID_ATTR);
+        var isDraggedSelected = this.selectedEditorImages.has(draggedUuid);
+
+        if (isDraggedSelected && this.selectedEditorImages.size > 1) {
+          // Mark all selected wrappers
+          count = this.selectedEditorImages.size;
+          var selectedUuids = this.selectedEditorImages;
+          var self = this;
+          this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
+            var $wrapper = $(this);
+            var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+            if (selectedUuids.has($img.data(Tt.JOURNAL_UUID_ATTR))) {
+              $elementsToMark.push($wrapper);
+            }
+          });
+        } else {
+          // Just the dragged wrapper
+          count = 1;
+          $elementsToMark.push($draggedWrapper);
+        }
+      }
+
+      // Apply .dragging class
+      $elementsToMark.forEach(function($el) {
+        $el.addClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+      });
+
+      // Add count badge if multiple images
+      if (count > 1 && this.draggedElement) {
+        var $badge = $('<span>')
+          .addClass('drag-count-badge')
+          .text(count + ' images');
+        $(this.draggedElement).append($badge);
+      }
+    } else {
+      // Remove .dragging class from all elements
+      $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+      this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+
+      // Remove count badges
+      $('.drag-count-badge').remove();
+    }
   };
 
   /**
@@ -1247,7 +1441,9 @@
 
       self.draggedElement = $wrapper[0]; // Store wrapper, not image
       self.dragSource = 'editor';
-      $wrapper.addClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+
+      // Update visual feedback (handles multi-image .dragging and count badge)
+      self.updateDraggingVisuals(true);
 
       e.originalEvent.dataTransfer.effectAllowed = 'move';
       e.originalEvent.dataTransfer.setData('text/plain', '');
@@ -1255,10 +1451,8 @@
 
     // Handle dragend for images in editor
     this.$editor.on('dragend', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
-      var $img = $(this);
-      var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
-
-      $wrapper.removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+      // Clean up visual feedback (handles multi-image .dragging and count badge)
+      self.updateDraggingVisuals(false);
       self.clearDropZones();
       self.draggedElement = null;
       self.dragSource = null;
@@ -1269,48 +1463,56 @@
   };
 
   /**
-   * Handle image reordering
+   * Handle image reordering within editor (supports multi-image move)
    */
   JournalEditor.prototype.handleImageReorder = function(e) {
     if (!this.draggedElement) {
       return;
     }
 
-    var $wrapper = $(this.draggedElement);
+    // Get wrappers to move (1 or many)
+    var wrappersToMove = this.getEditorWrappersToMove();
+    if (wrappersToMove.length === 0) {
+      return;
+    }
+
+    // CRITICAL: Detach all wrappers first to prevent DOM issues
+    // Store them in an array with their DOM elements
+    var wrappersData = [];
+    for (var i = 0; i < wrappersToMove.length; i++) {
+      var $wrapper = wrappersToMove[i];
+      var oldLayout = $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR);
+      wrappersData.push({
+        element: $wrapper.get(0),  // Store raw DOM element
+        $wrapper: $wrapper,
+        oldLayout: oldLayout
+      });
+      $wrapper.detach();  // Detach (not remove) to preserve event handlers
+    }
+
+    // Determine target layout and position (same logic as before)
     var $target = $(e.target);
     var $paragraph = $target.closest('p');
-
-    var oldLayout = $wrapper.data('layout');
     var newLayout = LAYOUT_VALUES.FULL_WIDTH;
+    var $insertTarget = null;
+    var insertMode = null; // 'prepend-paragraph', 'after-wrapper', 'before-element', 'append-editor'
 
     if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
       // Dropped into a paragraph
       newLayout = LAYOUT_VALUES.FLOAT_RIGHT;
-
-      // Remove from old location
-      $wrapper.remove();
-
-      // Check 2-image limit
-      var existingWrappers = $paragraph.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
-      if (existingWrappers.length >= 2) {
-        existingWrappers.last().remove();
-      }
-
-      // Insert at beginning of paragraph
-      $paragraph.prepend($wrapper);
+      $insertTarget = $paragraph;
+      insertMode = 'prepend-paragraph';
     } else {
       // Dropped outside paragraphs (full-width area)
       newLayout = LAYOUT_VALUES.FULL_WIDTH;
-
-      // Remove from old location
-      $wrapper.remove();
 
       // Check if dropping on/near a specific full-width image wrapper
       var $targetImageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
       if ($targetImageWrapper.length && $targetImageWrapper.closest(this.$editor).length) {
         // Dropping on a specific full-width image - insert after it (within same group)
-        $targetImageWrapper.after($wrapper);
+        $insertTarget = $targetImageWrapper;
+        insertMode = 'after-wrapper';
       } else {
         // Dropped between major sections - find closest paragraph or group
         var mouseY = e.clientY;
@@ -1328,22 +1530,70 @@
           }
         });
 
-        // Insert before closest element
         if (closestElement) {
-          $(closestElement).before($wrapper);
+          $insertTarget = $(closestElement);
+          insertMode = 'before-element';
         } else {
-          this.$editor.append($wrapper);
+          $insertTarget = this.$editor;
+          insertMode = 'append-editor';
         }
       }
     }
 
-    // Update layout attribute if changed
-    if (newLayout !== oldLayout) {
-      $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR, newLayout);
+    // Insert each wrapper using existing logic
+    var $lastMoved = null;
+    for (var i = 0; i < wrappersData.length; i++) {
+      var wrapperData = wrappersData[i];
+      var $wrapper = wrapperData.$wrapper;
+
+      // Insert wrapper at target
+      if (!$lastMoved) {
+        // First move - use original target logic
+        if (insertMode === 'prepend-paragraph') {
+          $insertTarget.prepend($wrapper);
+        } else if (insertMode === 'after-wrapper') {
+          $insertTarget.after($wrapper);
+        } else if (insertMode === 'before-element') {
+          $insertTarget.before($wrapper);
+        } else if (insertMode === 'append-editor') {
+          $insertTarget.append($wrapper);
+        }
+      } else {
+        // Subsequent moves - chain after last moved
+        if (insertMode === 'prepend-paragraph') {
+          // For float-right, prepend each one (so they appear in order)
+          $insertTarget.prepend($wrapper);
+        } else {
+          // For full-width, insert after last moved
+          $lastMoved.after($wrapper);
+        }
+      }
+
+      // Update layout attribute if changed
+      if (newLayout !== wrapperData.oldLayout) {
+        $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR, newLayout);
+      }
+
+      $lastMoved = $wrapper;
     }
 
-    // Trigger autosave
+    // NOW enforce 2-image limit per paragraph (after all insertions)
+    if (insertMode === 'prepend-paragraph') {
+      var existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+      while (existingWrappers.length > 2) {
+        // Remove rightmost (last) wrapper
+        existingWrappers.last().remove();
+        existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+      }
+    }
+
+    // Trigger layout refresh + autosave (ONCE, not per wrapper)
     this.handleContentChange();
+
+    // Clear editor selections if multiple wrappers were moved
+    if (wrappersToMove.length > 1) {
+      this.clearEditorImageSelections();
+    }
   };
 
   /**

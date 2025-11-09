@@ -245,6 +245,26 @@
   opacity: 0.5;
 }
 
+/* Picker card being dragged - TRANSIENT */
+.journal-image-card.dragging {
+  opacity: 0.5;
+}
+
+/* Drag count badge - TRANSIENT */
+.drag-count-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 1000;
+  pointer-events: none;
+}
+
 /* Delete Button - TRANSIENT (never saved) */
 .trip-image-delete-btn {
   position: absolute;
