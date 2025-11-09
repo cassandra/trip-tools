@@ -95,3 +95,28 @@ p.has-float-image {
 .journal-contenteditable p:last-child {
   margin-bottom: 0;
 }
+
+/* ===========================================
+   IMAGE CAPTIONS - PERSISTENT
+   Captions are displayed below images
+   =========================================== */
+
+/* Caption display below images */
+.trip-image-wrapper .trip-image-caption {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #6c757d;
+  text-align: center;
+  font-style: italic;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Float-right captions: smaller text, left-aligned */
+.trip-image-wrapper[data-layout="float-right"] .trip-image-caption {
+  font-size: 0.75rem;
+  text-align: left;
+}

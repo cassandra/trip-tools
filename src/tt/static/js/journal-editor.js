@@ -25,6 +25,7 @@
  * PERSISTENT HTML (saved to database, visible in public view):
  * - <span class="trip-image-wrapper" data-layout="float-right|full-width">
  * - <img class="trip-image" data-uuid="..." src="..." alt="...">
+ * - <span class="trip-image-caption">Caption text</span> (optional, if caption exists)
  * - <div class="full-width-image-group"> (wraps consecutive full-width images)
  * - <p class="has-float-image"> (paragraphs containing float-right images)
  * - data-layout attribute (float-right | full-width)
@@ -1123,7 +1124,16 @@
     });
     $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR, layout);
 
-    // Create delete button
+    // Create caption span if caption exists and is non-empty
+    var $captionSpan = null;
+    if (caption && $.trim(caption).length > 0) {
+      $captionSpan = $('<span>', {
+        'class': 'trip-image-caption',
+        'text': caption
+      });
+    }
+
+    // Create delete button (TRANSIENT)
     var $deleteBtn = $('<button>', {
       'class': EDITOR_TRANSIENT.CSS_DELETE_BTN,
       'type': 'button',
@@ -1131,8 +1141,12 @@
       'text': '×'
     });
 
-    // Assemble: wrapper contains image and delete button
-    $wrapper.append($img, $deleteBtn);
+    // Assemble: wrapper contains image, optional caption, and delete button
+    $wrapper.append($img);
+    if ($captionSpan) {
+      $wrapper.append($captionSpan);
+    }
+    $wrapper.append($deleteBtn);
 
     return $wrapper;
   };
