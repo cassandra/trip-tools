@@ -2327,6 +2327,15 @@
   };
 
   /**
+   * Check if editor has unsaved content
+   * Public method for beforeunload handler to check unsaved state
+   * @returns {boolean} true if there are unsaved changes
+   */
+  JournalEditor.prototype.hasUnsavedContent = function() {
+    return this.autoSaveManager && this.autoSaveManager.hasUnsavedChanges;
+  };
+
+  /**
    * Initialize editor on document ready
    */
   $(document).ready(function() {
@@ -2334,6 +2343,26 @@
 
     if ($editor.length && $editor.attr('contenteditable') === 'true') {
       editorInstance = new JournalEditor($editor);
+    }
+  });
+
+  /**
+   * Global beforeunload handler
+   * Warns user before navigating away from page with unsaved changes
+   *
+   * Browser will display standard warning message (cannot be customized)
+   * Pattern matches NotebookEntry implementation
+   */
+  $(window).on('beforeunload', function(e) {
+    if (editorInstance && editorInstance.hasUnsavedContent()) {
+      // Prevent default behavior
+      e.preventDefault();
+
+      // Required for Chrome
+      e.returnValue = '';
+
+      // Required for other browsers
+      return '';
     }
   });
 
