@@ -235,7 +235,7 @@
 }
 
 /* Image selected state - TRANSIENT */
-.trip-image-wrapper img.trip-image.selected {
+.trip-image-wrapper.selected img.trip-image {
   outline: 3px solid var(--primary-color, #007bff);
   outline-offset: 2px;
 }

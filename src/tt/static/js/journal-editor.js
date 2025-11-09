@@ -75,6 +75,96 @@
     FULL_WIDTH: 'full-width',
   };
 
+  /**
+   * ============================================================
+   * SHARED UTILITIES FOR IMAGE SELECTION
+   * ============================================================
+   */
+
+  /**
+   * Get modifier key state from event
+   * @param {Event} event - Mouse event
+   * @returns {Object} { isCtrlOrCmd, isShift }
+   */
+  function getSelectionModifiers(event) {
+    return {
+      isCtrlOrCmd: event.ctrlKey || event.metaKey,
+      isShift: event.shiftKey
+    };
+  }
+
+  /**
+   * SelectionBadgeManager
+   *
+   * Manages a selection count badge next to a reference element.
+   * Used by both picker and editor to show selection counts.
+   */
+  function SelectionBadgeManager($referenceElement, badgeId) {
+    this.$referenceElement = $referenceElement;
+    this.badgeId = badgeId;
+    this.$badge = null;
+  }
+
+  SelectionBadgeManager.prototype.update = function(count) {
+    if (count > 0) {
+      if (!this.$badge) {
+        this.$badge = $('<span>')
+          .attr('id', this.badgeId)
+          .addClass('badge badge-primary ml-2')
+          .insertAfter(this.$referenceElement);
+      }
+      this.$badge.text(count + ' selected');
+    } else {
+      this.remove();
+    }
+  };
+
+  SelectionBadgeManager.prototype.remove = function() {
+    if (this.$badge) {
+      this.$badge.remove();
+      this.$badge = null;
+    }
+  };
+
+  /**
+   * ImageSelectionCoordinator
+   *
+   * Ensures mutual exclusivity between picker and editor image selections.
+   * Only one area can have selections at a time.
+   *
+   * Usage:
+   * - Call notifyPickerSelection() when picker selections change
+   * - Call notifyEditorSelection() when editor selections change
+   * - Coordinator will call clearSelection() on the other area as needed
+   */
+  function ImageSelectionCoordinator() {
+    this.pickerClearCallback = null;
+    this.editorClearCallback = null;
+  }
+
+  ImageSelectionCoordinator.prototype.registerPicker = function(clearCallback) {
+    this.pickerClearCallback = clearCallback;
+  };
+
+  ImageSelectionCoordinator.prototype.registerEditor = function(clearCallback) {
+    this.editorClearCallback = clearCallback;
+  };
+
+  ImageSelectionCoordinator.prototype.notifyPickerSelection = function(hasSelections) {
+    if (hasSelections && this.editorClearCallback) {
+      this.editorClearCallback();
+    }
+  };
+
+  ImageSelectionCoordinator.prototype.notifyEditorSelection = function(hasSelections) {
+    if (hasSelections && this.pickerClearCallback) {
+      this.pickerClearCallback();
+    }
+  };
+
+  // Global singleton
+  const imageSelectionCoordinator = new ImageSelectionCoordinator();
+
   // Module state
   let editorInstance = null;
 
@@ -395,6 +485,13 @@
     this.selectedImages = new Set();
     this.lastSelectedIndex = null;
 
+    // Initialize badge manager
+    var $headerTitle = this.$panel.find('.journal-image-panel-header h5');
+    this.badgeManager = new SelectionBadgeManager($headerTitle, 'selected-images-count');
+
+    // Register with coordinator
+    imageSelectionCoordinator.registerPicker(this.clearAllSelections.bind(this));
+
     this.init();
   }
 
@@ -423,12 +520,11 @@
   JournalImagePicker.prototype.handleImageClick = function(card, event) {
     var $card = $(card);
     var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
-    var isCtrlOrCmd = event.ctrlKey || event.metaKey;
-    var isShift = event.shiftKey;
+    var modifiers = getSelectionModifiers(event);
 
-    if (isShift && this.lastSelectedIndex !== null) {
+    if (modifiers.isShift && this.lastSelectedIndex !== null) {
       this.handleRangeSelection($card);
-    } else if (isCtrlOrCmd) {
+    } else if (modifiers.isCtrlOrCmd) {
       this.toggleSelection($card, uuid);
     } else {
       this.clearAllSelections();
@@ -485,20 +581,10 @@
    */
   JournalImagePicker.prototype.updateSelectionUI = function() {
     var count = this.selectedImages.size;
-    var $countBadge = $('#selected-images-count');
+    this.badgeManager.update(count);
 
-    if (count > 0) {
-      if ($countBadge.length === 0) {
-        $('.journal-image-panel-header h5').after(
-          '<span id="selected-images-count" class="badge badge-primary ml-2">' +
-          count + ' selected</span>'
-        );
-      } else {
-        $countBadge.text(count + ' selected');
-      }
-    } else {
-      $countBadge.remove();
-    }
+    // Notify coordinator when selections change
+    imageSelectionCoordinator.notifyPickerSelection(count > 0);
   };
 
   /**
@@ -529,6 +615,16 @@
 
     this.draggedElement = null;
     this.dragSource = null; // 'picker' or 'editor'
+
+    // Editor image selection state
+    this.selectedEditorImages = new Set();
+    this.lastSelectedEditorIndex = null;
+
+    // Initialize badge manager for editor selections
+    this.editorBadgeManager = new SelectionBadgeManager(this.$statusElement, 'selected-editor-images-count');
+
+    // Register with coordinator
+    imageSelectionCoordinator.registerEditor(this.clearEditorImageSelections.bind(this));
 
     // Initialize managers
     this.editorLayoutManager = new EditorLayoutManager(this.$editor);
@@ -569,6 +665,9 @@
 
     // Setup image click to inspect
     this.setupImageClickToInspect();
+
+    // Setup image selection
+    this.setupImageSelection();
 
     // Setup image reordering
     this.setupImageReordering();
@@ -1022,19 +1121,117 @@
       }
     });
 
-    // Single-click handler - reserved for future selection feature
+    // Single-click handler - now implemented for selection
     this.$editor.on('click', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
       e.preventDefault();
       e.stopPropagation();
 
-      // TODO: Implement image selection toggle (similar to picker)
-      // For now, this just prevents default link/image behavior
+      self.handleEditorImageClick(this, e);
     });
 
     // Prevent default drag on existing images (handled in setupImageReordering)
     this.$editor.on('dragstart', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
       // This is handled in setupImageReordering
     });
+  };
+
+  /**
+   * Setup image selection in editor
+   */
+  JournalEditor.prototype.setupImageSelection = function() {
+    // Event handlers are already set up in setupImageClickToInspect()
+    // This method is a placeholder for any future initialization needs
+  };
+
+  /**
+   * Handle editor image click with modifier key support
+   */
+  JournalEditor.prototype.handleEditorImageClick = function(img, event) {
+    var $img = $(img);
+    var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+    var modifiers = getSelectionModifiers(event);
+
+    // Clear text selection (contenteditable conflict prevention)
+    this.clearTextSelection();
+
+    if (modifiers.isShift && this.lastSelectedEditorIndex !== null) {
+      this.handleEditorRangeSelection($img);
+    } else if (modifiers.isCtrlOrCmd) {
+      this.toggleEditorImageSelection($img, uuid);
+    } else {
+      this.clearEditorImageSelections();
+      this.toggleEditorImageSelection($img, uuid);
+    }
+
+    this.updateEditorSelectionUI();
+  };
+
+  /**
+   * Clear text selection in contenteditable
+   */
+  JournalEditor.prototype.clearTextSelection = function() {
+    if (window.getSelection) {
+      var selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        selection.removeAllRanges();
+      }
+    }
+  };
+
+  /**
+   * Handle Shift+click range selection for editor images
+   */
+  JournalEditor.prototype.handleEditorRangeSelection = function($clickedImg) {
+    var $allImages = this.$editor.find(Tt.JOURNAL_IMAGE_SELECTOR);
+    var clickedIndex = $allImages.index($clickedImg);
+    var startIndex = Math.min(this.lastSelectedEditorIndex, clickedIndex);
+    var endIndex = Math.max(this.lastSelectedEditorIndex, clickedIndex);
+
+    for (var i = startIndex; i <= endIndex; i++) {
+      var $img = $allImages.eq(i);
+      var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+      this.selectedEditorImages.add(uuid);
+      $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).addClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    }
+  };
+
+  /**
+   * Toggle selection state for a single editor image
+   */
+  JournalEditor.prototype.toggleEditorImageSelection = function($img, uuid) {
+    var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+
+    if (this.selectedEditorImages.has(uuid)) {
+      this.selectedEditorImages.delete(uuid);
+      $wrapper.removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    } else {
+      this.selectedEditorImages.add(uuid);
+      $wrapper.addClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    }
+
+    var $allImages = this.$editor.find(Tt.JOURNAL_IMAGE_SELECTOR);
+    this.lastSelectedEditorIndex = $allImages.index($img);
+  };
+
+  /**
+   * Clear all editor image selections
+   */
+  JournalEditor.prototype.clearEditorImageSelections = function() {
+    this.selectedEditorImages.clear();
+    this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    this.lastSelectedEditorIndex = null;
+    this.updateEditorSelectionUI();
+  };
+
+  /**
+   * Update editor selection count badge UI
+   */
+  JournalEditor.prototype.updateEditorSelectionUI = function() {
+    var count = this.selectedEditorImages.size;
+    this.editorBadgeManager.update(count);
+
+    // Notify coordinator when selections change
+    imageSelectionCoordinator.notifyEditorSelection(count > 0);
   };
 
   /**
