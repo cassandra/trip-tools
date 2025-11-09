@@ -17,16 +17,16 @@
         onchange-async="true"
     >
 
-    <!-- Scope Filter Pills -->
+    <!-- Scope Filter Pills (client-side filtering only) -->
     <div class="btn-group btn-group-sm btn-group-toggle w-100" data-toggle="buttons">
       <label class="btn btn-outline-secondary active">
-        <input type="radio" name="scope" value="all" checked onchange-async="true"> All
+        <input type="radio" name="scope" value="unused" checked> Unused
       </label>
       <label class="btn btn-outline-secondary">
-        <input type="radio" name="scope" value="unused" onchange-async="true"> Unused
+        <input type="radio" name="scope" value="used"> Used
       </label>
       <label class="btn btn-outline-secondary">
-        <input type="radio" name="scope" value="in-use" onchange-async="true"> In Use
+        <input type="radio" name="scope" value="all"> All
       </label>
     </div>
   </form>

@@ -17,7 +17,7 @@ from tt.async_view import ModalView
 
 from .autosave_helpers import JournalAutoSaveHelper, JournalConflictHelper
 from .context import JournalPageContext
-from .enums import JournalVisibility
+from .enums import JournalVisibility, ImagePickerScope
 from .forms import JournalForm, JournalEntryForm
 from .models import Journal, JournalEntry
 from .services import JournalImagePickerService, JournalEntrySeederService
@@ -222,7 +222,7 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
             user=request.user,
             date=entry.date,
             timezone=entry.timezone,
-            scope='all',  # Default to 'all' for initial page load
+            scope=ImagePickerScope.DEFAULT,
         )
 
         journal_entries = journal.entries.all()
@@ -395,17 +395,14 @@ class JournalEntryImagePickerView(LoginRequiredMixin, TripViewMixin, View):
         except ValueError:
             return http_response({'error': 'Invalid date format'}, status=400)
 
-        # Get scope filter from query parameter
-        scope = request.GET.get('scope', 'all')
-        # Valid values: 'all', 'unused', 'in-use'
-
-        # Fetch accessible images for the selected date with scope filter
+        # Fetch accessible images for the selected date
+        # Phase 1: Always use DEFAULT scope - filtering done client-side
         accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
             trip=trip,
             user=request.user,
             date=selected_date,
             timezone=entry.timezone,
-            scope=scope,
+            scope=ImagePickerScope.DEFAULT,
         )
 
         # Render the image gallery grid

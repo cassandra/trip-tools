@@ -484,11 +484,14 @@
    * - Shift+click for range selection
    * - Double-click to open Image Inspector modal
    * - Selection count badge display
+   * - Client-side filtering by usage (unused/used/all)
    */
-  function JournalImagePicker($panel) {
+  function JournalImagePicker($panel, editor) {
     this.$panel = $panel;
+    this.editor = editor; // Reference to JournalEditor for usedImageUUIDs
     this.selectedImages = new Set();
     this.lastSelectedIndex = null;
+    this.filterScope = 'unused'; // Default filter: 'unused' | 'used' | 'all'
 
     // Initialize badge manager
     var $headerTitle = this.$panel.find('.journal-image-panel-header h5');
@@ -517,6 +520,14 @@
       e.preventDefault();
       self.handleImageDoubleClick(this);
     });
+
+    // Radio button change handler for filtering
+    this.$panel.find('input[name="scope"]').on('change', function(e) {
+      var newScope = $(this).val();
+      self.applyFilter(newScope);
+    });
+
+    // NOTE: Initial filter is applied by JournalEditor.init() after usedImageUUIDs is populated
   };
 
   /**
@@ -605,6 +616,29 @@
   };
 
   /**
+   * Apply filter to image cards based on usage scope
+   * @param {string} scope - 'unused' | 'used' | 'all'
+   */
+  JournalImagePicker.prototype.applyFilter = function(scope) {
+    this.filterScope = scope;
+    var usedImageUUIDs = this.editor.usedImageUUIDs;
+
+    $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).each(function() {
+      var $card = $(this);
+      var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+      var isUsed = usedImageUUIDs.has(uuid);
+
+      if (scope === 'all') {
+        $card.show();
+      } else if (scope === 'unused') {
+        $card.toggle(!isUsed);
+      } else if (scope === 'used') {
+        $card.toggle(isUsed);
+      }
+    });
+  };
+
+  /**
    * JournalEditor - Main editor class
    */
   function JournalEditor($editor) {
@@ -625,6 +659,9 @@
     this.selectedEditorImages = new Set();
     this.lastSelectedEditorIndex = null;
 
+    // Track UUIDs of images currently in editor content (for picker filtering)
+    this.usedImageUUIDs = new Set();
+
     // Initialize badge manager for editor selections
     this.editorBadgeManager = new SelectionBadgeManager(this.$statusElement, 'selected-editor-images-count');
 
@@ -639,9 +676,10 @@
     this.autoSaveManager = new AutoSaveManager(this, autosaveUrl, csrfToken);
 
     // Initialize image picker (if panel exists)
+    // IMPORTANT: Must initialize AFTER usedImageUUIDs is created
     var $imagePanel = $('.journal-image-panel');
     if ($imagePanel.length > 0) {
-      this.imagePicker = new JournalImagePicker($imagePanel);
+      this.imagePicker = new JournalImagePicker($imagePanel, this);
     }
 
     this.init();
@@ -653,6 +691,14 @@
   JournalEditor.prototype.init = function() {
     if (!this.$editor.length) {
       return;
+    }
+
+    // Initialize used image tracking from existing content
+    this.initializeUsedImages();
+
+    // Apply initial filter to image picker now that usedImageUUIDs is populated
+    if (this.imagePicker) {
+      this.imagePicker.applyFilter(this.imagePicker.filterScope);
     }
 
     // Initialize autosave baseline with current content
@@ -682,6 +728,23 @@
 
     // Setup keyboard navigation
     this.setupKeyboardNavigation();
+  };
+
+  /**
+   * Initialize used image tracking from existing editor content
+   * Parses all images in the editor and populates usedImageUUIDs Set
+   */
+  JournalEditor.prototype.initializeUsedImages = function() {
+    var self = this;
+    this.usedImageUUIDs.clear();
+
+    this.$editor.find(Tt.JOURNAL_IMAGE_SELECTOR).each(function() {
+      var $img = $(this);
+      var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+      if (uuid) {
+        self.usedImageUUIDs.add(uuid);
+      }
+    });
   };
 
   /**
@@ -1147,6 +1210,14 @@
       $wrapper.append($captionSpan);
     }
     $wrapper.append($deleteBtn);
+
+    // Track this image as used (for picker filtering)
+    this.usedImageUUIDs.add(uuid);
+
+    // Update picker filter if it exists
+    if (this.imagePicker) {
+      this.imagePicker.applyFilter(this.imagePicker.filterScope);
+    }
 
     return $wrapper;
   };
@@ -1663,15 +1734,25 @@
    * Remove image from editor
    */
   JournalEditor.prototype.removeImage = function($img) {
+    // Get UUID before removing
+    var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+
     // Images are always wrapped, so remove the wrapper
     var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
     $wrapper.remove();
 
+    // Remove from used images tracking (for picker filtering)
+    if (uuid) {
+      this.usedImageUUIDs.delete(uuid);
+
+      // Update picker filter if it exists
+      if (this.imagePicker) {
+        this.imagePicker.applyFilter(this.imagePicker.filterScope);
+      }
+    }
+
     // Trigger autosave
     this.handleContentChange();
-
-    // Update image panel badges (if applicable)
-    // This would be handled by the backend on next autosave
   };
 
   /**
@@ -1812,6 +1893,8 @@
       return;
     }
 
+    var self = this;
+
     // Find and remove all wrappers with matching UUIDs
     this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
       var $wrapper = $(this);
@@ -1820,8 +1903,16 @@
 
       if (uuidSet.has(uuid)) {
         $wrapper.remove();
+
+        // Remove from used images tracking (for picker filtering)
+        self.usedImageUUIDs.delete(uuid);
       }
     });
+
+    // Update picker filter if it exists
+    if (this.imagePicker) {
+      this.imagePicker.applyFilter(this.imagePicker.filterScope);
+    }
 
     // Clear selections
     this.clearEditorImageSelections();

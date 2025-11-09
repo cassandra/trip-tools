@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 
 from tt.apps.common.html_sanitizer import sanitize_rich_text_html
 from tt.apps.images.models import TripImage
+from .enums import ImagePickerScope
 from .utils import get_entry_date_boundaries
 
 User = get_user_model()
@@ -14,21 +15,22 @@ class JournalImagePickerService:
     """Service for journal image picker operations."""
 
     @staticmethod
-    def get_accessible_images_for_image_picker(trip, user, date, timezone, scope='all'):
+    def get_accessible_images_for_image_picker(trip, user, date, timezone, scope=ImagePickerScope.DEFAULT):
         """
         Get images accessible for journal image picker, ordered chronologically.
 
-        Returns images for the specified date in chronological order by datetime_utc.
+        Returns all images for the specified date in chronological order by datetime_utc.
         This is the single source of truth for image picker queries.
+
+        Phase 1: All filtering is done client-side. The scope parameter is accepted
+        but always returns all images regardless of value.
 
         Args:
             trip: Trip instance
             user: User instance for permission checking
             date: Date to fetch images for (date object)
             timezone: Timezone string for date boundary calculation
-            scope: Filter scope - 'all', 'unused', or 'in-use' (default: 'all')
-                   NOTE: Only 'all' is implemented currently. Filtering logic
-                   will be added when text editing is implemented.
+            scope: ImagePickerScope enum value (default: ImagePickerScope.DEFAULT)
 
         Returns:
             QuerySet of TripImage objects ordered by datetime_utc
@@ -40,14 +42,6 @@ class JournalImagePickerService:
             start_datetime=start_dt,
             end_datetime=end_dt,
         ).order_by('datetime_utc')
-
-        # TODO: Apply scope filtering when text editing is implemented
-        # if scope == 'unused':
-        #     # Filter to images not used in this entry
-        #     pass
-        # elif scope == 'in-use':
-        #     # Filter to images used in this entry
-        #     pass
 
         return images
 
