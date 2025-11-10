@@ -82,6 +82,327 @@
 
   /**
    * ============================================================
+   * TOOLBAR HELPER - DOM CLEANUP AND NORMALIZATION
+   * ============================================================
+   *
+   * Provides centralized DOM cleanup utilities for toolbar operations.
+   * Ensures clean, normalized HTML structure after formatting operations.
+   *
+   * Key responsibilities:
+   * - Remove empty/whitespace-only elements
+   * - Normalize formatting tags (b→strong, i→em)
+   * - Clean up inline styles (remove empty/zero-value attributes)
+   * - Validate and fix HTML structure
+   */
+  var ToolbarHelper = {
+    /**
+     * Remove empty or whitespace-only elements
+     * Aggressively cleans up artifacts from editing operations
+     *
+     * @param {jQuery} $root - Root element to clean (will clean descendants)
+     */
+    removeEmptyElements: function($root) {
+      var self = this;
+
+      // Tags that should be removed if empty
+      var emptyCheckTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                            'ul', 'ol', 'li', 'strong', 'em', 'b', 'i',
+                            'a', 'span', 'div', 'blockquote', 'pre'];
+
+      // Void elements that are allowed to be "empty" (self-closing)
+      var voidElements = ['br', 'hr', 'img'];
+
+      // Process multiple times to handle nested empty elements
+      // (removing outer empty might reveal inner empty)
+      var maxIterations = 5;
+      var iteration = 0;
+      var removedCount;
+
+      do {
+        removedCount = 0;
+        iteration++;
+
+        emptyCheckTags.forEach(function(tag) {
+          $root.find(tag).each(function() {
+            var $elem = $(this);
+
+            // Get text content without considering child elements
+            var textContent = $elem.contents().filter(function() {
+              return this.nodeType === Node.TEXT_NODE;
+            }).text().trim();
+
+            // Check if element has any non-empty child elements
+            var hasNonEmptyChildren = false;
+            $elem.children().each(function() {
+              var childTag = this.tagName.toLowerCase();
+              // If child is a void element, consider it non-empty
+              if (voidElements.indexOf(childTag) !== -1) {
+                hasNonEmptyChildren = true;
+                return false; // break
+              }
+              // If child has actual content, consider it non-empty
+              if ($(this).text().trim().length > 0) {
+                hasNonEmptyChildren = true;
+                return false; // break
+              }
+            });
+
+            // Remove if:
+            // 1. No text content AND
+            // 2. No non-empty children AND
+            // 3. Not a special case (like <br> inside <p>)
+            if (textContent.length === 0 && !hasNonEmptyChildren) {
+              // Special case: <p><br></p> is valid (cursor position), but only if it's the only child
+              if (tag === 'p' && $elem.children().length === 1 && $elem.children('br').length === 1) {
+                // Keep this - it's a valid cursor position
+                return;
+              }
+
+              $elem.remove();
+              removedCount++;
+            }
+          });
+        });
+      } while (removedCount > 0 && iteration < maxIterations);
+    },
+
+    /**
+     * Normalize formatting tags to semantic HTML
+     * Converts <b> to <strong>, <i> to <em>
+     * Unwraps nested identical formatting tags
+     *
+     * @param {jQuery} $root - Root element to normalize
+     */
+    normalizeFormatting: function($root) {
+      // Convert <b> to <strong>
+      $root.find('b').each(function() {
+        var $b = $(this);
+        var $strong = $('<strong>').html($b.html());
+        // Preserve attributes if any
+        $.each(this.attributes, function() {
+          $strong.attr(this.name, this.value);
+        });
+        $b.replaceWith($strong);
+      });
+
+      // Convert <i> to <em>
+      $root.find('i').each(function() {
+        var $i = $(this);
+        var $em = $('<em>').html($i.html());
+        // Preserve attributes if any
+        $.each(this.attributes, function() {
+          $em.attr(this.name, this.value);
+        });
+        $i.replaceWith($em);
+      });
+
+      // Unwrap nested identical formatting tags
+      // e.g., <strong><strong>text</strong></strong> → <strong>text</strong>
+      this.unwrapNestedTags($root, 'strong');
+      this.unwrapNestedTags($root, 'em');
+
+      // Remove unnecessary spans with no attributes
+      $root.find('span:not([class]):not([style]):not([data-layout])').each(function() {
+        var $span = $(this);
+        $span.replaceWith($span.html());
+      });
+    },
+
+    /**
+     * Unwrap nested identical tags
+     * @param {jQuery} $root - Root element
+     * @param {string} tagName - Tag name to unwrap (e.g., 'strong', 'em')
+     */
+    unwrapNestedTags: function($root, tagName) {
+      var found;
+      var maxIterations = 10;
+      var iteration = 0;
+
+      do {
+        found = false;
+        iteration++;
+
+        $root.find(tagName).each(function() {
+          var $outer = $(this);
+          var $directChild = $outer.children(tagName).first();
+
+          if ($directChild.length > 0) {
+            // If the only child is the same tag, unwrap it
+            if ($outer.children().length === 1) {
+              $outer.replaceWith($directChild);
+              found = true;
+            }
+            // If parent has no direct text content, just nested tag
+            else if ($outer.contents().filter(function() {
+              return this.nodeType === Node.TEXT_NODE && this.textContent.trim().length > 0;
+            }).length === 0) {
+              $outer.replaceWith($outer.html());
+              found = true;
+            }
+          }
+        });
+      } while (found && iteration < maxIterations);
+    },
+
+    /**
+     * Clean up inline styles
+     * Remove empty style attributes and zero-value margins
+     *
+     * @param {jQuery} $root - Root element to clean
+     */
+    cleanupInlineStyles: function($root) {
+      $root.find('[style]').each(function() {
+        var $elem = $(this);
+        var styleAttr = $elem.attr('style');
+
+        if (!styleAttr || styleAttr.trim() === '') {
+          // Remove empty style attribute
+          $elem.removeAttr('style');
+          return;
+        }
+
+        // Check for margin-left: 0px (from indent/outdent)
+        var marginLeft = $elem.css('margin-left');
+        if (marginLeft === '0px' || marginLeft === '0' || parseInt(marginLeft) === 0) {
+          // Remove margin-left from style
+          $elem.css('margin-left', '');
+
+          // If style is now empty, remove the attribute
+          if (!$elem.attr('style') || $elem.attr('style').trim() === '') {
+            $elem.removeAttr('style');
+          }
+        }
+      });
+    },
+
+    /**
+     * Validate and fix HTML structure
+     * - Move orphaned list items into proper lists
+     * - Unwrap block elements from inline contexts
+     * - Remove nested anchor tags
+     *
+     * @param {jQuery} $root - Root element to validate
+     */
+    validateStructure: function($root) {
+      // Fix orphaned list items (li elements not inside ul/ol)
+      $root.find('li').each(function() {
+        var $li = $(this);
+        var $parent = $li.parent();
+
+        // If parent is not ul or ol, wrap in ul
+        if ($parent[0].tagName.toLowerCase() !== 'ul' && $parent[0].tagName.toLowerCase() !== 'ol') {
+          var $ul = $('<ul>').append($li);
+          $li.replaceWith($ul);
+        }
+      });
+
+      // Remove nested anchor tags (invalid HTML)
+      $root.find('a a').each(function() {
+        var $innerA = $(this);
+        $innerA.replaceWith($innerA.html());
+      });
+
+      // Remove empty anchor tags
+      $root.find('a').each(function() {
+        var $a = $(this);
+        if ($a.text().trim() === '' && $a.children('img').length === 0) {
+          $a.remove();
+        }
+      });
+
+      // Remove empty lists
+      $root.find('ul, ol').each(function() {
+        var $list = $(this);
+        if ($list.children('li').length === 0) {
+          $list.remove();
+        }
+      });
+    },
+
+    /**
+     * Full cleanup - runs all cleanup operations in order
+     * Call this after any toolbar operation
+     *
+     * @param {jQuery} $root - Root element to clean (usually $editor)
+     */
+    fullCleanup: function($root) {
+      this.normalizeFormatting($root);
+      this.validateStructure($root);
+      this.cleanupInlineStyles($root);
+      this.removeEmptyElements($root);
+    }
+  };
+
+  /**
+   * ============================================================
+   * CONTENT NORMALIZATION
+   * Enforce canonical structure after content changes
+   * ============================================================
+   */
+
+  /**
+   * Normalize editor content to enforce canonical structure
+   * - Allows: p, h2-h4, ul, ol, pre, br, and image wrappers at top level
+   * - Wraps naked text nodes in paragraphs
+   * - Wraps or removes other invalid elements
+   * - Note: We accept top-level <br> tags (browser native behavior) and treat them like empty <p>
+   * @param {HTMLElement} editor - The contenteditable editor element
+   */
+  function normalizeEditorContent(editor) {
+    var $editor = $(editor);
+    var nodesToWrap = [];
+    var nodesToRemove = [];
+
+    // First pass: identify problems
+    $editor.contents().each(function() {
+      var isTextNode = this.nodeType === Node.TEXT_NODE;
+      var isElement = this.nodeType === Node.ELEMENT_NODE;
+
+      if (isTextNode) {
+        // Wrap non-empty text nodes in paragraphs
+        if (this.textContent.trim().length > 0) {
+          nodesToWrap.push(this);
+        } else {
+          nodesToRemove.push(this);
+        }
+      } else if (isElement) {
+        var tagName = this.tagName.toLowerCase();
+
+        // Check for invalid top-level elements
+        // Valid: p, h2-h4, ul, ol, pre, br, image wrapper divs
+        if (tagName === 'br') {
+          // Accept BR at top level (browser native behavior)
+          // Treat it like an empty <p> - it's valid structure
+        } else if (['p', 'h2', 'h3', 'h4', 'ul', 'ol', 'pre', 'div', 'span'].indexOf(tagName) === -1) {
+          // Invalid block element - wrap in paragraph
+          nodesToWrap.push(this);
+        } else if (tagName === 'div') {
+          // Only allow divs if they're image wrappers
+          if (!$(this).hasClass('trip-image-wrapper')) {
+            nodesToWrap.push(this);
+          }
+        }
+      }
+    });
+
+    // Second pass: fix problems
+    nodesToRemove.forEach(function(node) {
+      $(node).remove();
+    });
+
+    nodesToWrap.forEach(function(node) {
+      var p = document.createElement('p');
+      $(node).wrap(p);
+    });
+
+    // Ensure editor is never completely empty - add empty paragraph if needed
+    if ($editor.children().length === 0) {
+      $editor.append('<p><br></p>');
+    }
+  }
+
+  /**
+   * ============================================================
    * SHARED UTILITIES FOR IMAGE SELECTION
    * ============================================================
    */
@@ -235,23 +556,152 @@
    * JournalEditorToolbar
    *
    * Manages the formatting toolbar for rich text editing.
-   * Provides buttons for text formatting (bold, italic), headings, and lists.
+   * Uses custom DOM manipulation for all operations with immediate cleanup.
    *
    * Features:
-   * - Text formatting: Bold, Italic
-   * - Headings: H2, H3, H4 (dropdown)
-   * - Lists: Unordered (bullets), Ordered (numbers)
+   * - Text formatting: Bold, Italic (custom implementation)
+   * - Headings: H2, H3, H4 (custom implementation)
+   * - Lists: Unordered (bullets), Ordered (numbers) (custom implementation)
+   * - Links: Hyperlink insertion with validation (custom implementation)
+   * - Code blocks: Monospace pre blocks (custom implementation)
+   * - Indent/Outdent: Margin-based indentation (custom implementation)
+   * - Immediate HTML cleanup after each operation via ToolbarHelper
    * - Integrates with existing autosave system
-   * - Uses document.execCommand for simplicity (Phase 1 implementation)
    */
   function JournalEditorToolbar($toolbar, $editor, onContentChange) {
     this.$toolbar = $toolbar;
     this.$editor = $editor;
-    this.onContentChange = onContentChange;
     this.editor = $editor[0];
+    this.onContentChange = onContentChange;
 
     this.initializeToolbar();
   }
+
+  /**
+   * COMMENTED OUT - Not needed with native execCommand approach
+   * Get all top-level blocks within the current selection
+   * Returns only direct children of the editor that are valid blocks
+   * @returns {Array<Element>} Array of block elements (p, h2-h4, ul, ol, pre)
+   */
+  /*
+  JournalEditorToolbar.prototype.getSelectedBlocks = function() {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return [];
+
+    var range = selection.getRangeAt(0);
+    var blocks = [];
+    var self = this;
+
+    console.log('getSelectedBlocks: range start=', range.startContainer, range.startOffset, 'end=', range.endContainer, range.endOffset);
+
+    // Get all direct children of editor that fall within the selection
+    var allBlocks = [];
+    var startBlock = null;
+    var endBlock = null;
+
+    // Collect all valid blocks
+    $(this.editor).children().each(function() {
+      var tagName = this.tagName ? this.tagName.toLowerCase() : '';
+
+      // Only include valid block types
+      if (['p', 'h2', 'h3', 'h4', 'ul', 'ol', 'pre'].indexOf(tagName) === -1) {
+        return; // Skip br, image wrappers, divs, etc.
+      }
+
+      allBlocks.push(this);
+    });
+
+    // Find start and end blocks
+    allBlocks.forEach(function(block, index) {
+      var containsStart = block.contains(range.startContainer) || block === range.startContainer;
+      var containsEnd = block.contains(range.endContainer) || block === range.endContainer;
+
+      console.log('  Block', block.tagName.toLowerCase(), $(block).text().substring(0, 20), 'containsStart=', containsStart, 'containsEnd=', containsEnd);
+
+      if (containsStart) {
+        startBlock = block;
+      }
+      if (containsEnd) {
+        endBlock = block;
+      }
+    });
+
+    // If start/end not found in blocks, check if selection is at editor level
+    if (!startBlock && range.startContainer === self.editor) {
+      // Selection starts at editor level - find first block at or after offset
+      var startOffset = range.startOffset;
+      var childAtOffset = self.editor.childNodes[startOffset];
+      console.log('  Start at editor level, offset', startOffset, 'child=', childAtOffset);
+
+      // Find the first valid block at or after this position
+      var found = false;
+      for (var i = 0; i < allBlocks.length; i++) {
+        var blockIndex = Array.prototype.indexOf.call(self.editor.childNodes, allBlocks[i]);
+        if (blockIndex >= startOffset) {
+          startBlock = allBlocks[i];
+          found = true;
+          break;
+        }
+      }
+      if (!found && allBlocks.length > 0) {
+        startBlock = allBlocks[0];
+      }
+      console.log('  -> using start block', startBlock ? startBlock.tagName : 'none');
+    }
+    if (!endBlock && range.endContainer === self.editor) {
+      // Selection ends at editor level - find last block before offset
+      var endOffset = range.endOffset;
+      console.log('  End at editor level, offset', endOffset);
+
+      // Find the last valid block before or at this position
+      for (var i = allBlocks.length - 1; i >= 0; i--) {
+        var blockIndex = Array.prototype.indexOf.call(self.editor.childNodes, allBlocks[i]);
+        if (blockIndex < endOffset) {
+          endBlock = allBlocks[i];
+          break;
+        }
+      }
+      if (!endBlock && allBlocks.length > 0) {
+        endBlock = allBlocks[allBlocks.length - 1];
+      }
+      console.log('  -> using end block', endBlock ? endBlock.tagName : 'none');
+    }
+
+    // Collect all blocks from start to end (inclusive)
+    if (startBlock && endBlock) {
+      var startIndex = allBlocks.indexOf(startBlock);
+      var endIndex = allBlocks.indexOf(endBlock);
+      if (startIndex !== -1 && endIndex !== -1) {
+        for (var i = startIndex; i <= endIndex; i++) {
+          blocks.push(allBlocks[i]);
+        }
+      }
+    }
+
+    // If no blocks found, cursor might be in a specific block - find it
+    if (blocks.length === 0) {
+      console.log('  No blocks found via intersection, trying fallback...');
+      var container = range.commonAncestorContainer;
+      var node = container.nodeType === Node.TEXT_NODE ? container.parentNode : container;
+
+      // Walk up to find the top-level block
+      while (node && node !== this.editor) {
+        if (node.parentNode === this.editor) {
+          var tagName = node.tagName ? node.tagName.toLowerCase() : '';
+          console.log('    Found top-level node:', tagName);
+          if (['p', 'h2', 'h3', 'h4', 'ul', 'ol', 'pre'].indexOf(tagName) !== -1) {
+            blocks.push(node);
+          }
+          break;
+        }
+        node = node.parentNode;
+      }
+    }
+
+    console.log('  Final blocks count:', blocks.length);
+    return blocks;
+  };
+  */
 
   /**
    * Initialize toolbar event handlers
@@ -262,32 +712,32 @@
     // Bold button
     this.$toolbar.find('[data-command="bold"]').on('click', function(e) {
       e.preventDefault();
-      self.executeCommand('bold');
+      self.applyBold();
     });
 
     // Italic button
     this.$toolbar.find('[data-command="italic"]').on('click', function(e) {
       e.preventDefault();
-      self.executeCommand('italic');
+      self.applyItalic();
     });
 
     // Heading buttons (H2, H3, H4)
     this.$toolbar.find('[data-command="heading"]').on('click', function(e) {
       e.preventDefault();
       var level = $(this).data('level');
-      self.executeCommand('formatBlock', '<h' + level + '>');
+      self.applyHeading(level);
     });
 
     // Unordered list button
     this.$toolbar.find('[data-command="insertUnorderedList"]').on('click', function(e) {
       e.preventDefault();
-      self.executeCommand('insertUnorderedList');
+      self.toggleList('ul');
     });
 
     // Ordered list button
     this.$toolbar.find('[data-command="insertOrderedList"]').on('click', function(e) {
       e.preventDefault();
-      self.executeCommand('insertOrderedList');
+      self.toggleList('ol');
     });
 
     // Indent button
@@ -321,18 +771,65 @@
   };
 
   /**
-   * Execute a formatting command and trigger content change
-   * @param {string} command - execCommand name
-   * @param {string} value - Optional value for command
+   * Apply bold formatting to selection
+   * Respects block boundaries - applies <strong> within each block separately
    */
-  JournalEditorToolbar.prototype.executeCommand = function(command, value) {
-    // Focus editor to ensure command applies to correct element
+  JournalEditorToolbar.prototype.applyBold = function() {
     this.editor.focus();
 
-    // Execute the formatting command
-    document.execCommand(command, false, value || null);
+    // Use browser's native execCommand which respects block boundaries
+    document.execCommand('bold', false, null);
 
-    // Trigger content change for autosave
+    // Trigger autosave
+    if (this.onContentChange) {
+      this.onContentChange();
+    }
+  };
+
+  /**
+   * Apply italic formatting to selection
+   * Respects block boundaries - applies <em> within each block separately
+   */
+  JournalEditorToolbar.prototype.applyItalic = function() {
+    this.editor.focus();
+
+    // Use browser's native execCommand which respects block boundaries
+    document.execCommand('italic', false, null);
+
+    // Trigger autosave
+    if (this.onContentChange) {
+      this.onContentChange();
+    }
+  };
+
+  /**
+   * Apply heading format using browser's native formatBlock
+   * @param {number} level - Heading level (2, 3, or 4)
+   */
+  JournalEditorToolbar.prototype.applyHeading = function(level) {
+    this.editor.focus();
+
+    // Use browser's native formatBlock command
+    document.execCommand('formatBlock', false, 'h' + level);
+
+    // Trigger autosave
+    if (this.onContentChange) {
+      this.onContentChange();
+    }
+  };
+
+  /**
+   * Toggle list formatting using browser's native command
+   * @param {string} listType - 'ul' or 'ol'
+   */
+  JournalEditorToolbar.prototype.toggleList = function(listType) {
+    this.editor.focus();
+
+    // Use browser's native list toggle command
+    var command = listType === 'ul' ? 'insertUnorderedList' : 'insertOrderedList';
+    document.execCommand(command, false, null);
+
+    // Trigger autosave
     if (this.onContentChange) {
       this.onContentChange();
     }
@@ -342,6 +839,29 @@
    * Create a hyperlink with URL validation
    */
   JournalEditorToolbar.prototype.createLink = function() {
+    this.editor.focus();
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    var range = selection.getRangeAt(0);
+
+    // Check if already in a link
+    var container = range.commonAncestorContainer;
+    var $container = container.nodeType === Node.TEXT_NODE ? $(container.parentNode) : $(container);
+    var $linkParent = $container.closest('a');
+
+    if ($linkParent.length > 0) {
+      // Already in a link - remove it
+      $linkParent.contents().unwrap();
+
+      // Trigger autosave
+      if (this.onContentChange) {
+        this.onContentChange();
+      }
+      return;
+    }
+
+    // Not in a link - prompt for URL
     var url = prompt('Enter URL:', 'https://');
 
     if (url && url.trim() !== '' && url !== 'https://') {
@@ -351,48 +871,38 @@
         url = 'https://' + url;
       }
 
-      this.executeCommand('createLink', url);
+      // Create link element
+      var link = document.createElement('a');
+      link.href = url;
+
+      // Wrap selection or insert link with selected text
+      try {
+        range.surroundContents(link);
+      } catch (e) {
+        // surroundContents fails if range spans multiple elements
+        // Fallback: wrap extracted contents
+        var fragment = range.extractContents();
+        link.appendChild(fragment);
+        range.insertNode(link);
+      }
+
+      // No cleanup needed - inline formatting is simple
+
+      // Trigger autosave
+      if (this.onContentChange) {
+        this.onContentChange();
+      }
     }
   };
 
   /**
-   * Insert a code block (pre tag)
-   * Handles multi-line selections by wrapping all content in a single pre tag
+   * Insert a code block using browser's native formatBlock
    */
   JournalEditorToolbar.prototype.insertCodeBlock = function() {
-    var selection = window.getSelection();
-    if (!selection.rangeCount) return;
+    this.editor.focus();
 
-    var range = selection.getRangeAt(0);
-    var fragment = range.extractContents();
-
-    // Get text content from fragment, preserving line breaks
-    var textContent = '';
-    var walker = document.createTreeWalker(fragment, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
-    var node;
-    while (node = walker.nextNode()) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        textContent += node.textContent;
-      } else if (node.nodeName === 'BR' || node.nodeName === 'P' || node.nodeName === 'DIV') {
-        textContent += '\n';
-      }
-    }
-
-    // Clean up extra newlines
-    textContent = textContent.replace(/\n{3,}/g, '\n\n').trim();
-
-    // Create a single pre element with the text
-    var pre = document.createElement('pre');
-    pre.textContent = textContent;
-
-    // Insert the pre element
-    range.insertNode(pre);
-
-    // Move cursor after the pre element
-    range.setStartAfter(pre);
-    range.setEndAfter(pre);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    // Use browser's native formatBlock with 'pre'
+    document.execCommand('formatBlock', false, 'pre');
 
     // Trigger content change for autosave
     if (this.onContentChange) {
@@ -401,36 +911,15 @@
   };
 
   /**
-   * Adjust indentation by adding/removing margin-left
+   * Adjust indentation using browser's native indent/outdent commands
    * @param {number} delta - Pixels to adjust (positive = indent, negative = outdent)
    */
   JournalEditorToolbar.prototype.adjustIndent = function(delta) {
-    var selection = window.getSelection();
-    if (!selection.rangeCount) return;
+    this.editor.focus();
 
-    var range = selection.getRangeAt(0);
-    var container = range.commonAncestorContainer;
-
-    // Find the block-level element (p, h2, li, etc.)
-    var blockElement = container.nodeType === 3 ? container.parentNode : container;
-    while (blockElement && blockElement !== this.editor) {
-      var tagName = blockElement.tagName ? blockElement.tagName.toLowerCase() : '';
-      if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'pre', 'blockquote', 'div'].indexOf(tagName) !== -1) {
-        break;
-      }
-      blockElement = blockElement.parentNode;
-    }
-
-    if (!blockElement || blockElement === this.editor) {
-      return; // No suitable block element found
-    }
-
-    // Get current margin-left
-    var currentMargin = parseInt($(blockElement).css('margin-left')) || 0;
-    var newMargin = Math.max(0, currentMargin + delta); // Don't go negative
-
-    // Apply new margin
-    $(blockElement).css('margin-left', newMargin + 'px');
+    // Use browser's native indent/outdent command
+    var command = delta > 0 ? 'indent' : 'outdent';
+    document.execCommand(command, false, null);
 
     // Trigger content change for autosave
     if (this.onContentChange) {
@@ -440,25 +929,37 @@
 
   /**
    * Update active states of toolbar buttons based on current selection
+   * Uses DOM traversal instead of queryCommandState for accurate detection
    */
   JournalEditorToolbar.prototype.updateActiveStates = function() {
-    var self = this;
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
 
-    // Check for bold
-    var isBold = document.queryCommandState('bold');
+    var range = selection.getRangeAt(0);
+    var container = range.commonAncestorContainer;
+    var $container = container.nodeType === Node.TEXT_NODE ? $(container.parentNode) : $(container);
+
+    // Check for bold (strong or b tag)
+    var isBold = $container.closest('strong, b').length > 0;
     this.$toolbar.find('[data-command="bold"]').toggleClass('active', isBold);
 
-    // Check for italic
-    var isItalic = document.queryCommandState('italic');
+    // Check for italic (em or i tag)
+    var isItalic = $container.closest('em, i').length > 0;
     this.$toolbar.find('[data-command="italic"]').toggleClass('active', isItalic);
 
-    // Check for unordered list
-    var isUL = document.queryCommandState('insertUnorderedList');
-    this.$toolbar.find('[data-command="insertUnorderedList"]').toggleClass('active', isUL);
+    // Check for lists (li element indicates we're in a list)
+    var $listItem = $container.closest('li');
+    if ($listItem.length > 0) {
+      var $list = $listItem.parent();
+      var isUL = $list.prop('tagName').toLowerCase() === 'ul';
+      var isOL = $list.prop('tagName').toLowerCase() === 'ol';
 
-    // Check for ordered list
-    var isOL = document.queryCommandState('insertOrderedList');
-    this.$toolbar.find('[data-command="insertOrderedList"]').toggleClass('active', isOL);
+      this.$toolbar.find('[data-command="insertUnorderedList"]').toggleClass('active', isUL);
+      this.$toolbar.find('[data-command="insertOrderedList"]').toggleClass('active', isOL);
+    } else {
+      this.$toolbar.find('[data-command="insertUnorderedList"]').removeClass('active');
+      this.$toolbar.find('[data-command="insertOrderedList"]').removeClass('active');
+    }
   };
 
   /**
@@ -1186,6 +1687,9 @@
   JournalEditor.prototype.getCleanHTML = function() {
     // Clone the editor content to avoid modifying the displayed version
     var $clone = this.$editor.clone();
+
+    // Normalize structure before saving (wraps naked text, removes invalid elements)
+    normalizeEditorContent($clone[0]);
 
     // Remove transient elements (never saved to database)
     $clone.find(EDITOR_TRANSIENT.SEL_DELETE_BTN).remove();
