@@ -2,12 +2,14 @@
 
 import argparse
 import os
+import platform
 import re
 import secrets
 import shlex
 import stat
 import shutil
 import string
+import subprocess
 import sys
 import tempfile
 from typing import Union
@@ -163,6 +165,7 @@ class TtEnvironmentGenerator:
         
         self._setup_secrets_directory()
         self._check_existing_env_file()
+        self._check_and_fix_macos_ssl_certificates()
 
         db_dir, media_dir = self._get_data_directories()
         self._settings_map['TT_DB_PATH'] = db_dir
@@ -236,6 +239,148 @@ class TtEnvironmentGenerator:
                 self.print_warning( f'Error creating backup: {e}' )
                 exit(1)
         return
+
+    def _check_and_fix_macos_ssl_certificates( self ):
+        """
+        Detect and fix macOS SSL certificate issues.
+        This addresses the common Python on macOS issue where SSL certificates
+        are not properly configured, causing SMTP TLS/SSL connections to fail.
+        """
+        # Only run on macOS
+        if platform.system() != 'Darwin':
+            return
+
+        # Test if SSL certificates are working by attempting a real SSL connection
+        ssl_working = False
+        try:
+            import ssl
+            import socket
+
+            # Create SSL context like Django does
+            context = ssl.create_default_context()
+
+            # Try to connect to a real server to verify certificates work
+            # Using google.com on port 443 as a reliable test
+            with socket.create_connection(("www.google.com", 443), timeout=5) as sock:
+                with context.wrap_socket(sock, server_hostname="www.google.com") as ssock:
+                    # If we got here, SSL certificates are working
+                    ssl_working = True
+
+        except ssl.SSLError:
+            # SSL certificates not working
+            pass
+        except Exception:
+            # Other error (network, timeout, etc) - don't assume SSL is broken
+            # Just skip the fix if we can't test
+            return
+
+        if ssl_working:
+            # SSL is working, no action needed
+            return
+
+        # SSL certificates not working - offer to fix
+        self.print_warning(
+            'macOS SSL Certificate Issue Detected\n'
+            '\n'
+            'Python SSL certificates are not properly configured on this system.\n'
+            'This will cause email SMTP testing with TLS/SSL to fail.\n'
+            '\n'
+            'This is a common issue with Python installations on macOS.\n'
+        )
+
+        # Present two options for fixing the issue
+        self.print_notice(
+            'Two options to fix this:\n'
+            '\n'
+            'Option A: System-wide fix (affects all Python on this Mac)\n'
+            '  - Installs certificates globally\n'
+            '  - Requires sudo/admin password\n'
+            '  - One-time setup\n'
+            '\n'
+            'Option B: Project-only fix (only affects this Django project)\n'
+            '  - Uses certifi package in your virtualenv\n'
+            '  - No sudo required\n'
+            '  - Portable across developers\n'
+        )
+
+        while True:
+            choice = self.input_string('Which fix do you prefer? [A/B]', default='B').strip().upper()
+            if choice in ['A', 'B']:
+                break
+            self.print_warning('Please enter A or B.')
+
+        if choice == 'A':
+            self._show_system_wide_macos_ssl_fix()
+        else:
+            self._apply_project_only_macos_ssl_fix()
+
+        return
+
+    def _show_system_wide_macos_ssl_fix(self):
+        """Show instructions for system-wide SSL certificate fix"""
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+        cert_command = f"/Applications/Python {python_version}/Install Certificates.command"
+
+        if os.path.exists(cert_command):
+            self.print_notice(
+                'System-Wide Fix Instructions:\n'
+                '\n'
+                'After this script completes, run the following command:\n'
+                f'\n    sudo "{cert_command}"\n'
+                '\n'
+                'You will be prompted for your admin password.\n'
+                'This is a one-time setup that fixes SSL for all Python scripts on your Mac.\n'
+            )
+        else:
+            self.print_warning(
+                f'Could not find Install Certificates script at:\n'
+                f'{cert_command}\n'
+                '\n'
+                'You may need to reinstall Python or manually install certificates.\n'
+            )
+
+    def _apply_project_only_macos_ssl_fix(self):
+        """Apply project-only SSL fix by adding TT_SSL_CERT_FILE to environment"""
+        # Check if certifi is available
+        try:
+            import certifi
+            cert_path = certifi.where()
+            self.print_success(f'✓ certifi is installed! CA bundle at: {cert_path}')
+
+            # Test if using certifi fixes the issue
+            self.print_notice('Testing SSL with certifi...')
+            try:
+                import ssl
+                import socket
+
+                # Set SSL_CERT_FILE and test
+                os.environ['SSL_CERT_FILE'] = cert_path
+                context = ssl.create_default_context()
+                with socket.create_connection(("www.google.com", 443), timeout=5) as sock:
+                    with context.wrap_socket(sock, server_hostname="www.google.com") as ssock:
+                        self.print_success('✓ SSL works with certifi!')
+
+                        # Add to settings map
+                        self._settings_map['TT_SSL_CERT_FILE'] = cert_path
+
+                        self.print_notice(
+                            'Project-Only Fix Applied:\n'
+                            '\n'
+                            f'Added TT_SSL_CERT_FILE to your environment configuration.\n'
+                            'The Django development settings are configured to use this.\n'
+                            'This fix is portable - works for all macOS developers on this project.\n'
+                        )
+                        return
+
+            except Exception as e:
+                self.print_warning(f'SSL still fails with certifi: {e}')
+
+        except ImportError:
+            self.print_warning(
+                'certifi is not installed in your virtualenv.\n'
+                'Install it with: pip install certifi\n'
+                'Then re-run this script.'
+            )
 
     def _get_data_directories( self ):
         

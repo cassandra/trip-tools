@@ -79,6 +79,12 @@ BASE_URL_FOR_EMAIL_LINKS = 'http:/127.0.0.1:8411/'
 #
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# macOS SSL certificate fix - use certifi CA bundle for server verification
+# Set Python's SSL_CERT_FILE environment variable so ssl.create_default_context() uses it
+import os
+if os.getenv('TT_SSL_CERT_FILE'):
+    os.environ['SSL_CERT_FILE'] = os.getenv('TT_SSL_CERT_FILE')
+
 SUPPRESS_MONITORS = False
 
 # ====================

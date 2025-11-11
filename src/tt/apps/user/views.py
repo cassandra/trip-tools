@@ -26,6 +26,10 @@ logger = logging.getLogger(__name__)
 class UserSigninView( View ):
 
     def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            url = reverse( 'home' )
+            return HttpResponseRedirect( url )
+            
         error_message = None
         error_param = request.GET.get( 'error' )
 
