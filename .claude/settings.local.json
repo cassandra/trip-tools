@@ -20,7 +20,8 @@
       "Bash(python manage.py check:*)",
       "Bash(python manage.py shell:*)",
       "Bash(find:*)",
-      "Bash(node --check:*)"
+      "Bash(node --check:*)",
+      "Bash(readlink:*)"
     ],
     "deny": [],
     "ask": []
