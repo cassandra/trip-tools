@@ -2009,10 +2009,18 @@
     // NOW enforce 2-image limit per paragraph (after all insertions)
     if (layout === LAYOUT_VALUES.FLOAT_RIGHT) {
       var existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+      var evicted = false;
       while (existingWrappers.length > 2) {
-        // Remove rightmost (last) wrapper
-        existingWrappers.last().remove();
+        // Remove rightmost (last) wrapper - FIFO eviction
+        // Use helper to ensure usage tracking is updated
+        this._removeWrapperAndUpdateUsage(existingWrappers.last());
         existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+        evicted = true;
+      }
+
+      // Update picker filter once if any images were evicted
+      if (evicted && this.imagePicker) {
+        this.imagePicker.applyFilter(this.imagePicker.filterScope);
       }
     }
 
@@ -2607,10 +2615,18 @@
     // NOW enforce 2-image limit per paragraph (after all insertions)
     if (insertMode === 'prepend-paragraph') {
       var existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+      var evicted = false;
       while (existingWrappers.length > 2) {
-        // Remove rightmost (last) wrapper
-        existingWrappers.last().remove();
+        // Remove rightmost (last) wrapper - FIFO eviction
+        // Use helper to ensure usage tracking is updated
+        this._removeWrapperAndUpdateUsage(existingWrappers.last());
         existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+        evicted = true;
+      }
+
+      // Update picker filter once if any images were evicted
+      if (evicted && this.imagePicker) {
+        this.imagePicker.applyFilter(this.imagePicker.filterScope);
       }
     }
 
@@ -2669,17 +2685,25 @@
   };
 
   /**
-   * Remove image from editor
+   * Remove wrapper from DOM and update usage tracking (private helper)
+   *
+   * This couples the DOM removal with data structure update to ensure
+   * they always happen together. Does NOT trigger side effects (autosave,
+   * filter updates) - caller is responsible for those.
+   *
+   * @param {jQuery} $wrapper - The image wrapper to remove
+   * @returns {string|null} The UUID of the removed image, or null if none
+   * @private
    */
-  JournalEditor.prototype.removeImage = function($img) {
-    // Get UUID before removing
+  JournalEditor.prototype._removeWrapperAndUpdateUsage = function($wrapper) {
+    // Extract UUID before removing
+    var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
     var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
 
-    // Images are always wrapped, so remove the wrapper
-    var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+    // Remove wrapper from DOM
     $wrapper.remove();
 
-    // Remove from used images tracking (for picker filtering)
+    // Update usage tracking (always paired with DOM removal)
     // Decrement count to handle same image appearing multiple times
     if (uuid) {
       var currentCount = this.usedImageUUIDs.get(uuid) || 0;
@@ -2688,11 +2712,22 @@
       } else {
         this.usedImageUUIDs.delete(uuid);
       }
+    }
 
-      // Update picker filter if it exists
-      if (this.imagePicker) {
-        this.imagePicker.applyFilter(this.imagePicker.filterScope);
-      }
+    return uuid;
+  };
+
+  /**
+   * Remove image from editor
+   */
+  JournalEditor.prototype.removeImage = function($img) {
+    // Get wrapper and remove it (updates usage tracking)
+    var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+    var uuid = this._removeWrapperAndUpdateUsage($wrapper);
+
+    // Update picker filter if image was tracked
+    if (uuid && this.imagePicker) {
+      this.imagePicker.applyFilter(this.imagePicker.filterScope);
     }
 
     // Trigger autosave
