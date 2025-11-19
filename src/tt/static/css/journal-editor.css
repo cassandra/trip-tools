@@ -288,27 +288,6 @@
   font-style: italic;
 }
 
-/* Mobile Warning */
-.journal-editor-mobile-warning {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.95);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-
-@media (min-width: 768px) {
-  .journal-editor-mobile-warning {
-    display: none !important;
-  }
-}
-
 /* ===========================================
    IMAGE PANEL - EDITOR ONLY
    =========================================== */
@@ -568,12 +547,6 @@
 
   .journal-save-status {
     font-size: 0.75rem;
-  }
-
-  /* Disable contenteditable on mobile */
-  .journal-contenteditable {
-    pointer-events: none;
-    user-select: none;
   }
 }
 

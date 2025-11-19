@@ -77,14 +77,6 @@
     aria-multiline="true"
   >{{ entry.text|safe }}</div>
 
-  <!-- Mobile Warning (shown below 768px) -->
-  <div class="journal-editor-mobile-warning d-md-none">
-    <div class="alert alert-warning mb-0">
-      <strong>Desktop Mode Recommended</strong>
-      <p class="mb-0 small">For the best editing experience with image management, please use a larger screen (768px or wider).</p>
-    </div>
-  </div>
-
   <!-- Hidden textarea for form fallback (non-JS) -->
   <textarea class="d-none" name="text" id="{{ DIVID.JOURNAL_EDITOR_ID }}_fallback">{{ entry.text }}</textarea>
 
