@@ -460,8 +460,8 @@
    Never saved to database
    =========================================== */
 
-/* Drop zone indicator for paragraphs */
-.journal-contenteditable p.drop-zone-active {
+/* Drop zone indicator for text blocks (p or div) */
+.journal-contenteditable .text-block.drop-zone-active {
   background-color: rgba(0, 123, 255, 0.1);
   outline: 2px dashed var(--primary-color, #007bff);
   outline-offset: 4px;

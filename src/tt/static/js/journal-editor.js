@@ -341,64 +341,772 @@
    */
 
   /**
-   * Normalize editor content to enforce canonical structure
-   * - Allows: p, h2-h4, ul, ol, pre, br, and image wrappers at top level
-   * - Wraps naked text nodes in paragraphs
-   * - Wraps or removes other invalid elements
-   * - Note: We accept top-level <br> tags (browser native behavior) and treat them like empty <p>
+   * ============================================================
+   * HTML NORMALIZATION SYSTEM
+   * ============================================================
+   * Implements the HTML structure specification defined in:
+   * docs/dev/domain/journal-entry-html-spec.md
+   *
+   * This system enforces canonical HTML structure for journal entries:
+   * - Top-level elements: p.text-block, div.text-block, div.content-block, h1-h6
+   * - Float-right images work in any .text-block
+   * - Handles <br> tags per spec Section 2.1
+   * - Splits headings from text blocks per spec Section 10
+   *
+   * NOTE: Old normalizeEditorContent() function removed 2025-01-19
+   * as it did not align with new specification requirements.
+   * ============================================================
+   */
+
+  /**
+   * Normalize top-level structure: wrap naked content and remove invalid elements
+   *
+   * Enforces these rules:
+   * - All text nodes must be inside p.text-block or div.text-block
+   * - Only allowed at top level: p.text-block, div.text-block, div.content-block, h1-h6
+   * - Block elements (ul, ol, blockquote, pre) are handled by wrapOrphanBlockElements()
+   * - <br> tags handled by handleTopLevelBrTags()
+   *
    * @param {HTMLElement} editor - The contenteditable editor element
    */
-  function normalizeEditorContent(editor) {
+  function normalizeTopLevelStructure(editor) {
     var $editor = $(editor);
-    var nodesToWrap = [];
-    var nodesToRemove = [];
+    var nodesToProcess = [];
 
-    // First pass: identify problems
+    // First pass: identify nodes that need wrapping or processing
     $editor.contents().each(function() {
-      var isTextNode = this.nodeType === Node.TEXT_NODE;
-      var isElement = this.nodeType === Node.ELEMENT_NODE;
+      var node = this;
+      var nodeType = node.nodeType;
 
-      if (isTextNode) {
-        // Wrap non-empty text nodes in paragraphs
-        if (this.textContent.trim().length > 0) {
-          nodesToWrap.push(this);
+      if (nodeType === Node.TEXT_NODE) {
+        // Naked text node - needs to be wrapped
+        var text = node.textContent;
+        if (text.trim().length > 0) {
+          nodesToProcess.push({type: 'wrapText', node: node});
         } else {
-          nodesToRemove.push(this);
+          // Remove whitespace-only text nodes
+          nodesToProcess.push({type: 'remove', node: node});
         }
-      } else if (isElement) {
-        var tagName = this.tagName.toLowerCase();
+      } else if (nodeType === Node.ELEMENT_NODE) {
+        var $node = $(node);
+        var tagName = node.tagName.toLowerCase();
 
-        // Check for invalid top-level elements
-        // Valid: p, h2-h4, ul, ol, pre, br, image wrapper divs
-        if (tagName === 'br') {
-          // Accept BR at top level (browser native behavior)
-          // Treat it like an empty <p> - it's valid structure
-        } else if (['p', 'h2', 'h3', 'h4', 'ul', 'ol', 'pre', 'div', 'span'].indexOf(tagName) === -1) {
-          // Invalid block element - wrap in paragraph
-          nodesToWrap.push(this);
-        } else if (tagName === 'div') {
-          // Only allow divs if they're image wrappers
-          if (!$(this).hasClass('trip-image-wrapper')) {
-            nodesToWrap.push(this);
+        // Check if element is allowed at top level
+        if (tagName === 'p') {
+          // Paragraph: ensure it has text-block class
+          if (!$node.hasClass('text-block')) {
+            nodesToProcess.push({type: 'addTextBlockClass', node: node});
           }
+        } else if (tagName === 'div') {
+          // Div: must be text-block or content-block
+          var hasTextBlock = $node.hasClass('text-block');
+          var hasContentBlock = $node.hasClass('content-block');
+
+          if (!hasTextBlock && !hasContentBlock) {
+            // Check if it's an image wrapper (legacy or malformed)
+            if ($node.hasClass('trip-image-wrapper') || $node.hasClass('full-width-image-group')) {
+              // Will be handled by wrapFullWidthImageGroups()
+              // For now, skip processing
+            } else {
+              // Invalid div - wrap its contents in text blocks
+              nodesToProcess.push({type: 'unwrapDiv', node: node});
+            }
+          }
+        } else if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].indexOf(tagName) !== -1) {
+          // Headings are allowed at top level
+          // No action needed
+        } else if (tagName === 'br') {
+          // <br> tags handled by separate function
+          // No action needed here
+        } else if (['ul', 'ol', 'blockquote', 'pre'].indexOf(tagName) !== -1) {
+          // Block elements - will be wrapped by wrapOrphanBlockElements()
+          // No action needed here
+        } else if (tagName === 'span' && $node.hasClass('trip-image-wrapper')) {
+          // Image wrapper spans are allowed
+          // No action needed
+        } else {
+          // Invalid element at top level - wrap in text block
+          nodesToProcess.push({type: 'wrapElement', node: node});
         }
       }
     });
 
-    // Second pass: fix problems
-    nodesToRemove.forEach(function(node) {
-      $(node).remove();
-    });
+    // Second pass: apply transformations
+    nodesToProcess.forEach(function(item) {
+      var $node = $(item.node);
 
-    nodesToWrap.forEach(function(node) {
-      var p = document.createElement('p');
-      $(node).wrap(p);
-    });
+      switch (item.type) {
+        case 'wrapText':
+          // Wrap naked text in p.text-block
+          var $p = $('<p class="text-block"></p>');
+          $node.wrap($p);
+          break;
 
-    // Ensure editor is never completely empty - add empty paragraph if needed
-    if ($editor.children().length === 0) {
-      $editor.append('<p><br></p>');
+        case 'remove':
+          // Remove whitespace-only text nodes
+          $node.remove();
+          break;
+
+        case 'addTextBlockClass':
+          // Add text-block class to paragraph
+          $node.addClass('text-block');
+          break;
+
+        case 'unwrapDiv':
+          // Unwrap invalid div, promote children to top level
+          var $children = $node.contents();
+          $node.replaceWith($children);
+          // Note: Promoted children will be processed in next normalization call
+          break;
+
+        case 'wrapElement':
+          // Wrap invalid element in p.text-block
+          var $wrapper = $('<p class="text-block"></p>');
+          $node.wrap($wrapper);
+          break;
+      }
+    });
+  }
+
+  /**
+   * Handle top-level <br> tags per spec Section 2.1
+   *
+   * Implements 7 scenarios:
+   * 1. BR between paragraphs → strip (redundant)
+   * 2. BR with text before → wrap text, strip BR
+   * 3. BR with text after → strip BR, wrap text
+   * 4. Text-BR-Text → create two paragraphs (separator)
+   * 5. Multiple BRs → treat as single separator
+   * 6. BR inside paragraph → leave alone (valid line break)
+   * 7. Trailing BR → strip, ensure cursor placeholder
+   *
+   * Key: BR never creates empty paragraphs, acts as paragraph separator
+   *
+   * @param {HTMLElement} editor - The contenteditable editor element
+   */
+  function handleTopLevelBrTags(editor) {
+    var $editor = $(editor);
+    var transformations = [];
+    var contents = $editor.contents().toArray();
+
+    // Helper: check if node is element node
+    function isElement(node) {
+      return node && node.nodeType === Node.ELEMENT_NODE;
     }
+
+    // Helper: check if node is non-empty text node
+    function isNonEmptyText(node) {
+      return node &&
+             node.nodeType === Node.TEXT_NODE &&
+             node.textContent.trim().length > 0;
+    }
+
+    // Helper: check if node is a <br> element
+    function isBr(node) {
+      return isElement(node) && node.tagName.toLowerCase() === 'br';
+    }
+
+    // Helper: find previous non-whitespace sibling
+    function getPreviousSignificant(node) {
+      var prev = node.previousSibling;
+      while (prev && prev.nodeType === Node.TEXT_NODE && !prev.textContent.trim()) {
+        prev = prev.previousSibling;
+      }
+      return prev;
+    }
+
+    // Helper: find next non-whitespace sibling
+    function getNextSignificant(node) {
+      var next = node.nextSibling;
+      while (next && next.nodeType === Node.TEXT_NODE && !next.textContent.trim()) {
+        next = next.nextSibling;
+      }
+      return next;
+    }
+
+    // Helper: consolidate consecutive BR tags
+    function consolidateBrTags() {
+      var i = 0;
+      while (i < contents.length) {
+        if (isBr(contents[i])) {
+          var brCount = 1;
+          var j = i + 1;
+
+          // Count consecutive BRs (skip whitespace text nodes)
+          while (j < contents.length) {
+            if (isBr(contents[j])) {
+              brCount++;
+              j++;
+            } else if (contents[j].nodeType === Node.TEXT_NODE && !contents[j].textContent.trim()) {
+              // Skip whitespace between BRs
+              j++;
+            } else {
+              break;
+            }
+          }
+
+          // If multiple BRs, mark extras for removal
+          if (brCount > 1) {
+            for (var k = i + 1; k < j; k++) {
+              if (isBr(contents[k])) {
+                transformations.push({type: 'removeBr', node: contents[k]});
+              }
+            }
+          }
+
+          i = j;
+        } else {
+          i++;
+        }
+      }
+    }
+
+    // First pass: consolidate consecutive BRs
+    consolidateBrTags();
+
+    // Second pass: process each remaining top-level BR
+    for (var i = 0; i < contents.length; i++) {
+      var node = contents[i];
+
+      if (!isBr(node)) {
+        continue;
+      }
+
+      // Skip if already marked for removal
+      var alreadyMarked = transformations.some(function(t) {
+        return t.type === 'removeBr' && t.node === node;
+      });
+      if (alreadyMarked) {
+        continue;
+      }
+
+      var prev = getPreviousSignificant(node);
+      var next = getNextSignificant(node);
+
+      var hasTextBefore = isNonEmptyText(prev);
+      var hasTextAfter = isNonEmptyText(next);
+      var hasElementBefore = isElement(prev) && !isBr(prev);
+      var hasElementAfter = isElement(next) && !isBr(next);
+
+      // Scenario 4: Text-BR-Text (separator)
+      if (hasTextBefore && hasTextAfter) {
+        transformations.push({
+          type: 'splitTextWithBr',
+          brNode: node,
+          textBefore: prev,
+          textAfter: next
+        });
+      }
+      // Scenario 2: Text before, no text after
+      else if (hasTextBefore && !hasTextAfter) {
+        transformations.push({
+          type: 'wrapTextBefore',
+          brNode: node,
+          textNode: prev
+        });
+      }
+      // Scenario 3: Text after, no text before
+      else if (!hasTextBefore && hasTextAfter) {
+        transformations.push({
+          type: 'wrapTextAfter',
+          brNode: node,
+          textNode: next
+        });
+      }
+      // Scenario 1: BR between elements (redundant)
+      // Scenario 5: Multiple BRs (already consolidated)
+      // Scenario 7: Trailing BR
+      else {
+        transformations.push({
+          type: 'removeBr',
+          node: node
+        });
+      }
+    }
+
+    // Third pass: apply transformations
+    transformations.forEach(function(t) {
+      var $node = $(t.node || t.brNode);
+
+      switch (t.type) {
+        case 'splitTextWithBr':
+          // Create two paragraphs from text-BR-text
+          var $p1 = $('<p class="text-block"></p>').text($(t.textBefore).text());
+          var $p2 = $('<p class="text-block"></p>').text($(t.textAfter).text());
+
+          // Replace textBefore with p1
+          $(t.textBefore).replaceWith($p1);
+          // Remove BR
+          $(t.brNode).remove();
+          // Replace textAfter with p2
+          $(t.textAfter).replaceWith($p2);
+          break;
+
+        case 'wrapTextBefore':
+          // Wrap text before BR in paragraph, remove BR
+          var $p = $('<p class="text-block"></p>').text($(t.textNode).text());
+          $(t.textNode).replaceWith($p);
+          $(t.brNode).remove();
+          break;
+
+        case 'wrapTextAfter':
+          // Remove BR, wrap text after in paragraph
+          $(t.brNode).remove();
+          var $pAfter = $('<p class="text-block"></p>').text($(t.textNode).text());
+          $(t.textNode).replaceWith($pAfter);
+          break;
+
+        case 'removeBr':
+          // Just remove the BR
+          $node.remove();
+          break;
+      }
+    });
+  }
+
+  /**
+   * Wrap orphan block elements in div.text-block containers
+   *
+   * Block elements (ul, ol, blockquote, pre) cannot appear at top level.
+   * They must be wrapped in div.text-block per spec Section 3.
+   *
+   * Float-right images at the beginning of these elements are preserved
+   * inside the wrapper.
+   *
+   * @param {HTMLElement} editor - The contenteditable editor element
+   */
+  function wrapOrphanBlockElements(editor) {
+    var $editor = $(editor);
+    var blockElementSelectors = ['ul', 'ol', 'blockquote', 'pre'];
+
+    blockElementSelectors.forEach(function(tagName) {
+      // Find all top-level block elements of this type
+      $editor.children(tagName).each(function() {
+        var $blockElement = $(this);
+
+        // Check if already wrapped in text-block
+        var $parent = $blockElement.parent();
+        if ($parent.hasClass('text-block')) {
+          return; // Already properly wrapped
+        }
+
+        // Wrap in div.text-block
+        var $wrapper = $('<div class="text-block"></div>');
+        $blockElement.wrap($wrapper);
+      });
+    });
+  }
+
+  /**
+   * Split text-blocks that contain headings (spec Section 10)
+   *
+   * Headings (h1-h6) cannot appear inside .text-block elements.
+   * Split into 1-3 elements depending on content position:
+   * - Content before AND after: 3 elements (block, heading, block)
+   * - Content only before OR after: 2 elements
+   * - Heading alone: 1 element (unwrap)
+   *
+   * Float-right images stay with first content block.
+   *
+   * @param {jQuery} $editor - jQuery-wrapped contenteditable element
+   */
+  function splitHeadingsFromTextBlocks($editor) {
+    var headingSelectors = 'h1, h2, h3, h4, h5, h6';
+
+    // Process all text-blocks that contain headings
+    $editor.find('.text-block').each(function() {
+      var $textBlock = $(this);
+      var $headings = $textBlock.find(headingSelectors);
+
+      if ($headings.length === 0) {
+        return; // No headings, skip
+      }
+
+      // Process each heading (may be multiple)
+      $headings.each(function() {
+        var $heading = $(this);
+
+        // Re-query parent (may have changed if previous heading was split)
+        var $currentTextBlock = $heading.closest('.text-block');
+        if ($currentTextBlock.length === 0) {
+          return; // Heading already moved to top level
+        }
+
+        // Get all children of text-block
+        var $children = $currentTextBlock.children();
+        var headingIndex = $children.index($heading);
+
+        // Split into before/heading/after groups
+        var $before = $children.slice(0, headingIndex);
+        var $after = $children.slice(headingIndex + 1);
+
+        var hasBefore = $before.length > 0;
+        var hasAfter = $after.length > 0;
+
+        if (hasBefore && hasAfter) {
+          // Case 1: Content before AND after → 3 elements
+          var $newBeforeBlock = $('<div class="text-block"></div>');
+          var $newAfterBlock = $('<div class="text-block"></div>');
+
+          $newBeforeBlock.append($before);
+          $newAfterBlock.append($after);
+
+          // Preserve float-right image in first block
+          var hasFloatImage = $currentTextBlock.hasClass('has-float-image');
+          if (hasFloatImage) {
+            $newBeforeBlock.addClass('has-float-image');
+          }
+
+          // Replace text-block with 3 elements
+          $currentTextBlock.before($newBeforeBlock);
+          $currentTextBlock.before($heading);
+          $currentTextBlock.before($newAfterBlock);
+          $currentTextBlock.remove();
+        }
+        else if (hasBefore) {
+          // Case 2: Content only before → 2 elements
+          var $beforeBlock = $('<div class="text-block"></div>');
+          $beforeBlock.append($before);
+
+          // Preserve float-right image class
+          if ($currentTextBlock.hasClass('has-float-image')) {
+            $beforeBlock.addClass('has-float-image');
+          }
+
+          $currentTextBlock.before($beforeBlock);
+          $currentTextBlock.before($heading);
+          $currentTextBlock.remove();
+        }
+        else if (hasAfter) {
+          // Case 3: Content only after → 2 elements
+          var $afterBlock = $('<div class="text-block"></div>');
+          $afterBlock.append($after);
+
+          $currentTextBlock.before($heading);
+          $currentTextBlock.before($afterBlock);
+          $currentTextBlock.remove();
+        }
+        else {
+          // Case 4: Heading alone → unwrap to top level
+          $currentTextBlock.before($heading);
+          $currentTextBlock.remove();
+        }
+      });
+    });
+
+    // Also handle headings inside p.text-block (shouldn't happen, but be defensive)
+    $editor.find('p.text-block').each(function() {
+      var $p = $(this);
+      var $headings = $p.find(headingSelectors);
+
+      if ($headings.length > 0) {
+        // Invalid: heading inside paragraph
+        // Unwrap the paragraph, promote heading to top level
+        var $contents = $p.contents();
+        $p.replaceWith($contents);
+      }
+    });
+  }
+
+  /**
+   * Enforce one block element per div.text-block (spec Section 8.2)
+   *
+   * Rules:
+   * - One block element (ul, ol, blockquote, pre) per div.text-block
+   * - One paragraph per p.text-block
+   * - Multiple paragraphs in div.text-block → convert each to p.text-block
+   * - Multiple block elements in div.text-block → split into separate divs
+   *
+   * Float-right images stay with first block.
+   *
+   * @param {jQuery} $editor - jQuery-wrapped contenteditable element
+   */
+  function enforceOneBlockPerTextBlock($editor) {
+    // Process div.text-block elements
+    $editor.find('div.text-block').each(function() {
+      var $div = $(this);
+      var blockSelectors = 'ul, ol, blockquote, pre, p';
+      var $blockElements = $div.children(blockSelectors);
+
+      if ($blockElements.length <= 1) {
+        return; // Already has one or zero block elements
+      }
+
+      // Has multiple block elements - need to split
+      var hasFloatImage = $div.hasClass('has-float-image');
+      var $floatImage = null;
+
+      // Find float-right image if exists
+      if (hasFloatImage) {
+        $floatImage = $div.children('.trip-image-wrapper[data-layout="float-right"]').first();
+      }
+
+      var isFirst = true;
+
+      $blockElements.each(function() {
+        var $block = $(this);
+        var tagName = $block.prop('tagName').toLowerCase();
+
+        if (tagName === 'p') {
+          // Convert paragraph to p.text-block
+          var $newP = $('<p class="text-block"></p>');
+          $newP.html($block.html());
+
+          // First block gets float-right image
+          if (isFirst && hasFloatImage && $floatImage) {
+            $newP.addClass('has-float-image');
+            $newP.prepend($floatImage);
+          }
+
+          $div.before($newP);
+        } else {
+          // Wrap other block elements in new div.text-block
+          var $newDiv = $('<div class="text-block"></div>');
+          $newDiv.append($block.clone());
+
+          // First block gets float-right image
+          if (isFirst && hasFloatImage && $floatImage) {
+            $newDiv.addClass('has-float-image');
+            $newDiv.prepend($floatImage);
+          }
+
+          $div.before($newDiv);
+        }
+
+        isFirst = false;
+      });
+
+      // Remove original div (now empty)
+      $div.remove();
+    });
+
+    // Process p.text-block that somehow contains nested paragraphs
+    $editor.find('p.text-block').each(function() {
+      var $p = $(this);
+      var $nestedPs = $p.find('p');
+
+      if ($nestedPs.length > 0) {
+        // Invalid: nested paragraphs
+        // Unwrap outer paragraph, convert children to text-blocks
+        var $children = $p.contents();
+        $p.replaceWith($children);
+      }
+    });
+  }
+
+  /**
+   * Convert image-only text-blocks to full-width image groups
+   *
+   * Text-blocks must contain text content. If a text-block contains only
+   * images (no text), convert it to a content-block full-width-image-group.
+   *
+   * This handles cases where float-right images end up alone after
+   * normalization splits.
+   *
+   * @param {jQuery} $editor - jQuery-wrapped contenteditable element
+   */
+  function convertImageOnlyTextBlocks($editor) {
+    $editor.find('.text-block').each(function() {
+      var $textBlock = $(this);
+
+      // Get text content (excluding images)
+      var $clone = $textBlock.clone();
+      $clone.find('.trip-image-wrapper').remove();
+      var textContent = $clone.text().trim();
+
+      if (textContent.length === 0) {
+        // Text block contains only images, no text
+        var $images = $textBlock.find('.trip-image-wrapper');
+
+        if ($images.length > 0) {
+          // Change all images to full-width layout
+          $images.attr('data-layout', 'full-width');
+
+          // Replace text-block with content-block
+          var $contentBlock = $('<div class="content-block full-width-image-group"></div>');
+          $contentBlock.append($images);
+          $textBlock.replaceWith($contentBlock);
+        } else {
+          // Empty text block with no images - remove it
+          $textBlock.remove();
+        }
+      }
+    });
+  }
+
+  /**
+   * Ensure editor is never completely empty
+   *
+   * Safety net: if editor has no content after normalization,
+   * add an empty paragraph with <br> for cursor positioning.
+   *
+   * @param {HTMLElement} editor - The contenteditable editor element
+   */
+  function ensureEditorNotEmpty(editor) {
+    var $editor = $(editor);
+
+    if ($editor.children().length === 0) {
+      // Editor is completely empty - add cursor placeholder
+      $editor.append('<p class="text-block"><br></p>');
+    }
+  }
+
+  /**
+   * Cursor Preservation Utility
+   *
+   * Saves and restores cursor position across DOM transformations.
+   * Uses text offset approach for robustness when nodes are moved/wrapped.
+   */
+  var CursorPreservation = {
+    /**
+     * Save current cursor position or text selection
+     * @param {jQuery} $editor - jQuery-wrapped editor element
+     * @returns {Object|null} Marker object for restoration, or null if no selection
+     */
+    save: function($editor) {
+      var selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) {
+        return null;
+      }
+
+      var range = selection.getRangeAt(0);
+      var editor = $editor[0];
+
+      // Check if selection is inside editor
+      if (!editor.contains(range.commonAncestorContainer)) {
+        return null;
+      }
+
+      // Calculate START text offset (for selections)
+      var preStartRange = range.cloneRange();
+      preStartRange.selectNodeContents(editor);
+      preStartRange.setEnd(range.startContainer, range.startOffset);
+      var startTextOffset = preStartRange.toString().length;
+
+      // Calculate END text offset
+      var preEndRange = range.cloneRange();
+      preEndRange.selectNodeContents(editor);
+      preEndRange.setEnd(range.endContainer, range.endOffset);
+      var endTextOffset = preEndRange.toString().length;
+
+      // Also store visual element reference for fallback
+      var $closestBlock = $(range.endContainer).closest('.text-block, h1, h2, h3, h4, h5, h6');
+      var blockIndex = $closestBlock.length ? $editor.children().index($closestBlock) : 0;
+
+      return {
+        startTextOffset: startTextOffset,
+        endTextOffset: endTextOffset,
+        blockIndex: blockIndex,
+        isCollapsed: range.collapsed
+      };
+    },
+
+    /**
+     * Restore cursor position or text selection from marker
+     * @param {jQuery} $editor - jQuery-wrapped editor element
+     * @param {Object} marker - Marker object from save()
+     */
+    restore: function($editor, marker) {
+      if (!marker) {
+        return;
+      }
+
+      var editor = $editor[0];
+
+      try {
+        var range = document.createRange();
+
+        // Backward compatibility: handle old markers with only textOffset
+        var startTextOffset = marker.startTextOffset !== undefined ? marker.startTextOffset : marker.textOffset;
+        var endTextOffset = marker.endTextOffset !== undefined ? marker.endTextOffset : marker.textOffset;
+
+        var currentOffset = 0;
+        var startNode = null;
+        var startOffset = 0;
+        var endNode = null;
+        var endOffset = 0;
+
+        // Walk through text nodes to find both start and end positions
+        var walker = document.createTreeWalker(
+          editor,
+          NodeFilter.SHOW_TEXT,
+          null,
+          false
+        );
+
+        var node;
+        while (node = walker.nextNode()) {
+          var nodeLength = node.textContent.length;
+
+          // Find start position
+          if (!startNode && currentOffset + nodeLength >= startTextOffset) {
+            startNode = node;
+            startOffset = Math.min(startTextOffset - currentOffset, nodeLength);
+          }
+
+          // Find end position
+          if (!endNode && currentOffset + nodeLength >= endTextOffset) {
+            endNode = node;
+            endOffset = Math.min(endTextOffset - currentOffset, nodeLength);
+            break; // Found both positions
+          }
+
+          currentOffset += nodeLength;
+        }
+
+        if (startNode && endNode) {
+          // Successfully found both positions - restore selection or cursor
+          range.setStart(startNode, startOffset);
+          range.setEnd(endNode, endOffset);
+        } else {
+          // Fallback: position at end of block at saved index
+          var $children = $editor.children();
+          var $targetBlock = $children.eq(Math.min(marker.blockIndex, $children.length - 1));
+
+          if ($targetBlock.length) {
+            range.selectNodeContents($targetBlock[0]);
+            range.collapse(false); // Collapse to end
+          } else {
+            // Ultimate fallback: end of editor
+            range.selectNodeContents(editor);
+            range.collapse(false);
+          }
+        }
+
+        // Apply the range
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } catch (e) {
+        // If restoration fails, just log and continue
+        // Better to have working editor without cursor than to crash
+        console.warn('Cursor restoration failed:', e);
+      }
+    }
+  };
+
+  /**
+   * Master Normalization Function
+   *
+   * Orchestrates all normalization operations in correct sequence.
+   * This is the single entry point for running full normalization.
+   *
+   * @param {HTMLElement} editor - The contenteditable editor element
+   */
+  function runFullNormalization(editor) {
+    var $editor = $(editor);
+
+    // Run normalization functions in correct order
+    normalizeTopLevelStructure(editor);
+    handleTopLevelBrTags(editor);
+    wrapOrphanBlockElements(editor);
+    splitHeadingsFromTextBlocks($editor);
+    enforceOneBlockPerTextBlock($editor);
+    convertImageOnlyTextBlocks($editor);
+    ensureEditorNotEmpty(editor);
+
+    // Run existing cleanup helpers
+    ToolbarHelper.fullCleanup($editor);
   }
 
   /**
@@ -780,7 +1488,7 @@
     // Use browser's native execCommand which respects block boundaries
     document.execCommand('bold', false, null);
 
-    // Trigger autosave
+    // Trigger autosave (which will normalize after idle period)
     if (this.onContentChange) {
       this.onContentChange();
     }
@@ -1009,25 +1717,26 @@
       groups.push(currentGroup);
     }
 
-    // Wrap each group
+    // Wrap each group with content-block class per spec
     groups.forEach(function(group) {
-      $(group).wrapAll('<div class="' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS + '"></div>');
+      $(group).wrapAll('<div class="content-block ' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS + '"></div>');
     });
   };
 
   /**
-   * Mark paragraphs that contain float-right images
+   * Mark text blocks that contain float-right images
    * This allows CSS to clear floats appropriately
+   * Updated to handle both p.text-block and div.text-block per spec
    */
   EditorLayoutManager.prototype.markFloatParagraphs = function() {
-    // Remove existing marks
-    this.$editor.find('p').removeClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+    // Remove existing marks from all text blocks
+    this.$editor.find('.text-block').removeClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
 
-    // Mark paragraphs with float-right images
-    this.$editor.find('p').each(function() {
-      var $p = $(this);
-      if ($p.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR).length > 0) {
-        $p.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+    // Mark text blocks (both <p> and <div>) with float-right images
+    this.$editor.find('.text-block').each(function() {
+      var $textBlock = $(this);
+      if ($textBlock.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR).length > 0) {
+        $textBlock.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
       }
     });
   };
@@ -1060,13 +1769,16 @@
    * This ensures consistent layout behavior across all operations
    */
   EditorLayoutManager.prototype.refreshLayout = function() {
-    // 1. Ensure delete buttons exist (must happen before any other operations)
+    // 1. Run full HTML normalization first
+    runFullNormalization(this.$editor[0]);
+
+    // 2. Ensure delete buttons exist (must happen after normalization)
     this.ensureDeleteButtons();
 
-    // 2. Wrap full-width image groups (affects DOM structure)
+    // 3. Wrap full-width image groups (affects DOM structure)
     this.wrapFullWidthImageGroups();
 
-    // 3. Mark float paragraphs (depends on DOM structure being finalized)
+    // 4. Mark float paragraphs (depends on DOM structure being finalized)
     this.markFloatParagraphs();
   };
 
@@ -1170,6 +1882,9 @@
     if (this.isSaving || !this.hasUnsavedChanges) {
       return;
     }
+
+    // Run normalization on live editor before save (so user sees normalized result)
+    this.editor.runNormalizationAtIdle();
 
     this.isSaving = true;
     this.editor.updateStatus('saving');
@@ -1601,11 +2316,17 @@
       }
     });
 
-    // Handle Enter key to ensure proper paragraph structure
+    // Handle Enter and Backspace keys for block escape and paragraph structure
     this.$editor.on('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        // Let browser handle it, but ensure we get <p> tags
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        // First check if we should escape from a block element
+        self.handleEnterInBlock(e);
+
+        // Then ensure we get <p> tags for normal Enter
         document.execCommand('defaultParagraphSeparator', false, 'p');
+      } else if (e.key === 'Backspace') {
+        // Check if we should escape from a block element
+        self.handleBackspaceInBlock(e);
       }
     });
   };
@@ -1638,6 +2359,11 @@
       self.handleContentChange();
     });
 
+    // Note: Paste normalization is not needed here because initContentEditable()
+    // already handles paste events by preventing default and inserting plain text only.
+    // The plain text insertion via execCommand('insertText') creates properly
+    // structured content that doesn't require additional normalization.
+
     // Track metadata changes
     this.$titleInput.on('input', function() {
       self.handleContentChange();
@@ -1653,7 +2379,8 @@
   };
 
   /**
-   * Handle content change
+   * Handle content change (fired on every keystroke)
+   * Note: Does NOT run normalization - that happens at idle time (see runNormalizationAtIdle)
    */
   JournalEditor.prototype.handleContentChange = function() {
     // Refresh layout (groups and float markers, but NOT delete buttons - they already exist)
@@ -1663,6 +2390,273 @@
 
     // Schedule autosave (handles change detection and debouncing)
     this.autoSaveManager.scheduleSave();
+  };
+
+  /**
+   * Run normalization at idle time (after user stops typing for 2 seconds)
+   * Called by autosave idle timer before actual save
+   */
+  JournalEditor.prototype.runNormalizationAtIdle = function() {
+    // Save cursor position before normalization
+    var cursor = CursorPreservation.save(this.$editor);
+
+    // Run full HTML normalization
+    runFullNormalization(this.$editor[0]);
+
+    // Restore cursor position after normalization
+    CursorPreservation.restore(this.$editor, cursor);
+
+    // Refresh layout to update markers and groups
+    this.editorLayoutManager.wrapFullWidthImageGroups();
+    this.editorLayoutManager.markFloatParagraphs();
+  };
+
+  /**
+   * Check if cursor is at the absolute end of an element
+   * @param {Range} range - Current selection range
+   * @param {HTMLElement} element - Element to check
+   * @returns {boolean} True if cursor is at end
+   */
+  JournalEditor.prototype.isCursorAtEnd = function(range, element) {
+    // Create a range from cursor to end of element
+    var testRange = document.createRange();
+    testRange.setStart(range.endContainer, range.endOffset);
+    testRange.setEndAfter(element);
+
+    // If the range is empty (collapsed), cursor is at end
+    var text = testRange.toString();
+    return text.length === 0;
+  };
+
+  /**
+   * Check if cursor is at the absolute start of an element
+   * @param {Range} range - Current selection range
+   * @param {HTMLElement} element - Element to check
+   * @returns {boolean} True if cursor is at start
+   */
+  JournalEditor.prototype.isCursorAtStart = function(range, element) {
+    // Create a range from start of element to cursor
+    var testRange = document.createRange();
+    testRange.setStartBefore(element);
+    testRange.setEnd(range.startContainer, range.startOffset);
+
+    // If the range is empty (collapsed), cursor is at start
+    var text = testRange.toString();
+    return text.length === 0;
+  };
+
+  /**
+   * Position cursor at the start of an element
+   * @param {HTMLElement} element - Element to position cursor in
+   */
+  JournalEditor.prototype.setCursorAtStart = function(element) {
+    var range = document.createRange();
+    var selection = window.getSelection();
+
+    range.selectNodeContents(element);
+    range.collapse(true); // Collapse to start
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  /**
+   * Handle Enter key in block elements (blockquote, lists, code)
+   * Single Enter at start/end of block escapes to new paragraph
+   * Enter in middle extends block (native behavior)
+   *
+   * @param {Event} e - Keydown event
+   */
+  JournalEditor.prototype.handleEnterInBlock = function(e) {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    var range = selection.getRangeAt(0);
+    var $target = $(range.startContainer);
+    var self = this;
+
+    // === LISTS (ul/ol) ===
+    var $li = $target.closest('li');
+    if ($li.length) {
+      var $list = $li.closest('ul, ol');
+      var $allItems = $list.find('> li');
+
+      // Check if this is the last item
+      if ($allItems.last()[0] === $li[0]) {
+        // Check if cursor is at end of last item
+        if (this.isCursorAtEnd(range, $li[0])) {
+          // ESCAPE AFTER: Create new paragraph after list
+          e.preventDefault();
+
+          var $textBlockContainer = $list.closest('.text-block');
+          var $newParagraph = $('<p class="text-block"><br></p>');
+          $textBlockContainer.after($newParagraph);
+
+          // Move cursor to new paragraph
+          this.setCursorAtStart($newParagraph[0]);
+
+          return;
+        }
+      }
+
+      // Check if this is the first item
+      if ($allItems.first()[0] === $li[0]) {
+        // Check if cursor is at start of first item
+        if (this.isCursorAtStart(range, $li[0])) {
+          // ESCAPE BEFORE: Create new paragraph before list
+          e.preventDefault();
+
+          var $textBlockContainer = $list.closest('.text-block');
+          var $newParagraph = $('<p class="text-block"><br></p>');
+          $textBlockContainer.before($newParagraph);
+
+          // Move cursor to new paragraph
+          this.setCursorAtStart($newParagraph[0]);
+
+          return;
+        }
+      }
+
+      // Let native behavior handle list Enter (extends list)
+      return;
+    }
+
+    // === BLOCKQUOTES AND CODE BLOCKS (blockquote, pre) ===
+    var $p = $target.closest('p');
+    var $blockParent = $p.closest('blockquote, pre');
+
+    if ($blockParent.length && $blockParent.closest(this.$editor).length) {
+      var $paragraphs = $blockParent.find('p');
+
+      // Check if we're in the last paragraph
+      if ($paragraphs.last()[0] === $p[0]) {
+        // Check if cursor is at end of last paragraph
+        if (this.isCursorAtEnd(range, $p[0])) {
+          // ESCAPE AFTER: Create new paragraph after block
+          e.preventDefault();
+
+          var $textBlockContainer = $blockParent.closest('.text-block');
+          var $newParagraph = $('<p class="text-block"><br></p>');
+          $textBlockContainer.after($newParagraph);
+
+          // Move cursor to new paragraph
+          this.setCursorAtStart($newParagraph[0]);
+
+          return;
+        }
+      }
+
+      // Check if we're in the first paragraph
+      if ($paragraphs.first()[0] === $p[0]) {
+        // Check if cursor is at start of first paragraph
+        if (this.isCursorAtStart(range, $p[0])) {
+          // ESCAPE BEFORE: Create new paragraph before block
+          e.preventDefault();
+
+          var $textBlockContainer = $blockParent.closest('.text-block');
+          var $newParagraph = $('<p class="text-block"><br></p>');
+          $textBlockContainer.before($newParagraph);
+
+          // Move cursor to new paragraph
+          this.setCursorAtStart($newParagraph[0]);
+
+          return;
+        }
+      }
+    }
+
+    // Let native Enter work (extends block)
+  };
+
+  /**
+   * Handle Backspace key in block elements
+   * Backspace at start of empty paragraph in block escapes to regular paragraph
+   *
+   * @param {Event} e - Keydown event
+   */
+  JournalEditor.prototype.handleBackspaceInBlock = function(e) {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    var range = selection.getRangeAt(0);
+    var $target = $(range.startContainer);
+
+    // Check if we're in a list item
+    var $li = $target.closest('li');
+    if ($li.length) {
+      // Check if cursor is at start of empty list item
+      var text = $li.text().trim();
+      if ((text === '' || $li.html() === '<br>') && range.startOffset === 0) {
+        var $list = $li.closest('ul, ol');
+        var $allItems = $list.find('> li');
+
+        // If this is the first or only item
+        if ($allItems.first()[0] === $li[0]) {
+          e.preventDefault();
+
+          var $textBlockContainer = $list.closest('.text-block');
+
+          // If list has only one item, remove entire text-block and create paragraph
+          if ($allItems.length === 1) {
+            var $newParagraph = $('<p class="text-block"><br></p>');
+            $textBlockContainer.replaceWith($newParagraph);
+
+            // Move cursor to new paragraph
+            var newRange = document.createRange();
+            newRange.selectNodeContents($newParagraph[0]);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          } else {
+            // Remove just this list item
+            $li.remove();
+          }
+
+          return;
+        }
+      }
+      // Let native behavior handle list Backspace
+      return;
+    }
+
+    // Check if we're in a paragraph inside blockquote or pre
+    var $p = $target.closest('p');
+    var $blockParent = $p.closest('blockquote, pre');
+
+    if ($blockParent.length && $blockParent.closest(this.$editor).length) {
+      // Check if this <p> is empty and cursor is at start
+      var text = $p.text().trim();
+      if ((text === '' || $p.html() === '<br>') && range.startOffset === 0) {
+        var $paragraphs = $blockParent.find('p');
+
+        // If this is the first paragraph
+        if ($paragraphs.first()[0] === $p[0]) {
+          e.preventDefault();
+
+          var $textBlockContainer = $blockParent.closest('.text-block');
+
+          // If blockquote has only one paragraph, remove entire text-block and create paragraph
+          if ($paragraphs.length === 1) {
+            var $newParagraph = $('<p class="text-block"><br></p>');
+            $textBlockContainer.replaceWith($newParagraph);
+
+            // Move cursor to new paragraph
+            var newRange = document.createRange();
+            newRange.selectNodeContents($newParagraph[0]);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          } else {
+            // Remove just this paragraph
+            $p.remove();
+          }
+
+          return;
+        }
+      }
+    }
+
+    // If we didn't escape, let native Backspace work
   };
 
 
@@ -1688,8 +2682,8 @@
     // Clone the editor content to avoid modifying the displayed version
     var $clone = this.$editor.clone();
 
-    // Normalize structure before saving (wraps naked text, removes invalid elements)
-    normalizeEditorContent($clone[0]);
+    // Run full normalization before saving
+    runFullNormalization($clone[0]);
 
     // Remove transient elements (never saved to database)
     $clone.find(EDITOR_TRANSIENT.SEL_DELETE_BTN).remove();
@@ -1872,23 +2866,23 @@
    */
   JournalEditor.prototype.showDropZones = function(e) {
     var $target = $(e.target);
-    var $paragraph = $target.closest('p');
+    var $textBlock = $target.closest('.text-block');
     var $imageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
     // Clear existing indicators
     this.clearDropZones();
 
-    if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
-      // Mouse is over a paragraph - show paragraph drop zone
-      $paragraph.addClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    if ($textBlock.length && $textBlock.parent().is(this.$editor)) {
+      // Mouse is over a text block (p or div) - show drop zone
+      $textBlock.addClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
     } else if ($imageWrapper.length && $imageWrapper.closest(this.$editor).length) {
       // Mouse is over a full-width image - highlight it to show insertion point
       // (wrapper may be inside .full-width-image-group, so check if it's within editor)
       $imageWrapper.addClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
     } else {
-      // Mouse is between paragraphs/images - show between indicator
+      // Mouse is between blocks - show between indicator
       var mouseY = e.clientY;
-      var $children = this.$editor.children('p, ' + Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR + ', .' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS);
+      var $children = this.$editor.children('.text-block, div.content-block, h1, h2, h3, h4, h5, h6');
 
       $children.each(function() {
         var rect = this.getBoundingClientRect();
@@ -1908,7 +2902,7 @@
    * Clear drop zone indicators
    */
   JournalEditor.prototype.clearDropZones = function() {
-    this.$editor.find('p').removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    this.$editor.find('.text-block').removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
     this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
     this.$editor.find('.' + EDITOR_TRANSIENT.CSS_DROP_ZONE_BETWEEN).remove();
   };
@@ -1929,27 +2923,27 @@
 
     // Determine drop layout and target (same logic as before)
     var $target = $(e.target);
-    var $paragraph = $target.closest('p');
+    var $textBlock = $target.closest('.text-block');
     var $imageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
     var layout = LAYOUT_VALUES.FULL_WIDTH;
     var $insertTarget = null;
 
-    if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
-      // Dropped into a paragraph - float-right layout
+    if ($textBlock.length && $textBlock.parent().is(this.$editor)) {
+      // Dropped into a text block (p or div) - float-right layout
       layout = LAYOUT_VALUES.FLOAT_RIGHT;
-      $insertTarget = $paragraph;
+      $insertTarget = $textBlock;
     } else if ($imageWrapper.length && $imageWrapper.closest(this.$editor).length) {
       // Dropped onto an existing full-width image - insert after it (into same group)
       layout = LAYOUT_VALUES.FULL_WIDTH;
       $insertTarget = $imageWrapper;
     } else {
-      // Dropped between paragraphs/images - full-width layout
+      // Dropped between blocks - full-width layout
       layout = LAYOUT_VALUES.FULL_WIDTH;
 
-      // Find the closest paragraph or full-width group to insert before/after
+      // Find the closest block to insert before/after
       var mouseY = e.clientY;
-      var $children = this.$editor.children('p, ' + Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR + ', .' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS);
+      var $children = this.$editor.children('.text-block, div.content-block, h1, h2, h3, h4, h5, h6');
       var closestElement = null;
       var minDistance = Infinity;
 
@@ -2527,18 +3521,18 @@
 
     // Determine target layout and position (same logic as before)
     var $target = $(e.target);
-    var $paragraph = $target.closest('p');
+    var $textBlock = $target.closest('.text-block');
     var newLayout = LAYOUT_VALUES.FULL_WIDTH;
     var $insertTarget = null;
     var insertMode = null; // 'prepend-paragraph', 'after-wrapper', 'before-element', 'append-editor'
 
-    if ($paragraph.length && $paragraph.parent().is(this.$editor)) {
-      // Dropped into a paragraph
+    if ($textBlock.length && $textBlock.parent().is(this.$editor)) {
+      // Dropped into a text block (p or div)
       newLayout = LAYOUT_VALUES.FLOAT_RIGHT;
-      $insertTarget = $paragraph;
+      $insertTarget = $textBlock;
       insertMode = 'prepend-paragraph';
     } else {
-      // Dropped outside paragraphs (full-width area)
+      // Dropped outside text blocks (full-width area)
       newLayout = LAYOUT_VALUES.FULL_WIDTH;
 
       // Check if dropping on/near a specific full-width image wrapper
@@ -2549,9 +3543,9 @@
         $insertTarget = $targetImageWrapper;
         insertMode = 'after-wrapper';
       } else {
-        // Dropped between major sections - find closest paragraph or group
+        // Dropped between major sections - find closest block or group
         var mouseY = e.clientY;
-        var $children = this.$editor.children('p, .' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS);
+        var $children = this.$editor.children('.text-block, div.content-block, h1, h2, h3, h4, h5, h6');
         var closestElement = null;
         var minDistance = Infinity;
 

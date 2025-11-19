@@ -63,12 +63,58 @@
 }
 
 /* ===========================================
-   PARAGRAPH FLOAT CLEARING - PERSISTENT
+   TEXT BLOCK FLOAT CLEARING - PERSISTENT
    =========================================== */
 
-/* Clear floats before paragraphs that have their own float-right images */
-p.has-float-image {
+/* Clear floats before text blocks that have their own float-right images */
+.has-float-image {
   clear: both;
+}
+
+/* ===========================================
+   TEXT BLOCK & CONTENT BLOCK STYLES - PERSISTENT
+   Per spec: docs/dev/domain/journal-entry-html-spec.md
+   =========================================== */
+
+/* Text block base styling - consistent spacing regardless of element type */
+.text-block {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.text-block:last-child {
+  margin-bottom: 0;
+}
+
+/* Content block base styling - for full-width image groups */
+.content-block {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.content-block:last-child {
+  margin-bottom: 0;
+}
+
+/* ===========================================
+   BLOCKQUOTE STYLING
+   =========================================== */
+
+/* Blockquote indentation and visual styling */
+.journal-contenteditable blockquote {
+  margin: 0 0 1rem 0;
+  padding-left: 1.5rem;
+  border-left: 4px solid #dee2e6;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.journal-contenteditable blockquote p {
+  margin-bottom: 0.5rem;
+}
+
+.journal-contenteditable blockquote p:last-child {
+  margin-bottom: 0;
 }
 
 /* ===========================================
@@ -81,13 +127,13 @@ p.has-float-image {
   text-align: left;
 }
 
-/* Paragraph styling */
-.journal-contenteditable p {
+/* Direct child paragraph text blocks - scoped to prevent nested paragraph styling */
+.journal-contenteditable > p.text-block {
   margin-bottom: 1rem;
   position: relative;
 }
 
-.journal-contenteditable p:last-child {
+.journal-contenteditable > p.text-block:last-child {
   margin-bottom: 0;
 }
 
