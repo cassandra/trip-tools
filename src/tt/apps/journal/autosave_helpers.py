@@ -111,9 +111,9 @@ class JournalAutoSaveHelper:
             data = json.loads(request_body)
             text = data.get('text', '')
             client_version = data.get('version')
-            date_str = data.get('date')
-            title = data.get('title')
-            timezone = data.get('timezone')
+            date_str = data.get('new_date')
+            title = data.get('new_title')
+            timezone = data.get('new_timezone')
             reference_image_id = data.get('reference_image_id')
         except json.JSONDecodeError:
             logger.warning('Invalid JSON in auto-save request')
@@ -234,13 +234,13 @@ class JournalAutoSaveHelper:
         """
         extra_updates = {}
 
-        if new_date:
+        if new_date is not None:
             extra_updates['date'] = new_date
 
         if new_title is not None:
             extra_updates['title'] = new_title
 
-        if new_timezone:
+        if new_timezone is not None:
             extra_updates['timezone'] = new_timezone
 
         # Handle reference_image_id: None means clear, valid ID means set
