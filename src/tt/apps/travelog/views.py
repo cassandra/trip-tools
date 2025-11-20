@@ -1,8 +1,10 @@
+from uuid import UUID
+
 from django.http import HttpResponse
 from django.views.generic import View
 
 
-class JournalTableOfContentsView(View):
+class TravelogTableOfContentsView(View):
     """
     Public table of contents view for a journal.
     No authentication required - access controlled by journal visibility and password.
@@ -16,25 +18,17 @@ class JournalTableOfContentsView(View):
     - Link to image gallery
     """
 
-    def get(self, request, journal_uuid: str, *args, **kwargs) -> HttpResponse:
+    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
         # TODO: Implement view logic
         # - Get journal by UUID (404 if not found)
         # - Check visibility/password
         # - Fetch entries
         # - Render TOC template
 
-        return HttpResponse(f"TODO: Implement JournalTableOfContentsView for journal {journal_uuid}")
-
-    def post(self, request, journal_uuid: str, *args, **kwargs) -> HttpResponse:
-        # TODO: Handle password submission for PROTECTED journals
-        # - Validate password
-        # - Store in session
-        # - Redirect to TOC
-
-        return HttpResponse("TODO: Implement password submission")
+        return HttpResponse(f"TODO: Implement TravelogTableOfContentsView for journal {journal_uuid}")
 
 
-class JournalDayView(View):
+class TravelogDayView(View):
     """
     Public view for a single day's journal entry.
     No authentication required - access controlled by journal visibility and password.
@@ -48,7 +42,7 @@ class JournalDayView(View):
     - Back to TOC link
     """
 
-    def get(self, request, journal_uuid: str, date: str, *args, **kwargs) -> HttpResponse:
+    def get(self, request, journal_uuid: UUID, date: str, *args, **kwargs) -> HttpResponse:
         # TODO: Implement view logic
         # - Get journal by UUID
         # - Check visibility/password
@@ -57,10 +51,10 @@ class JournalDayView(View):
         # - Get previous/next entries for navigation
         # - Render day template
 
-        return HttpResponse(f"TODO: Implement JournalDayView for journal {journal_uuid}, date {date}")
+        return HttpResponse(f"TODO: Implement TravelogDayView for journal {journal_uuid}, date {date}")
 
 
-class JournalImageGalleryView(View):
+class TravelogImageGalleryView(View):
     """
     Public paginated image gallery for a journal.
     No authentication required - access controlled by journal visibility and password.
@@ -75,7 +69,7 @@ class JournalImageGalleryView(View):
     - Pagination controls
     """
 
-    def get(self, request, journal_uuid: str, page_num: int, *args, **kwargs) -> HttpResponse:
+    def get(self, request, journal_uuid: UUID, page_num: int, *args, **kwargs) -> HttpResponse:
         # TODO: Implement view logic
         # - Get journal by UUID
         # - Check visibility/password
@@ -83,10 +77,10 @@ class JournalImageGalleryView(View):
         # - Paginate
         # - Render gallery template
 
-        return HttpResponse(f"TODO: Implement JournalImageGalleryView for journal {journal_uuid}, page {page_num}")
+        return HttpResponse(f"TODO: Implement TravelogImageGalleryView for journal {journal_uuid}, page {page_num}")
 
 
-class JournalImageBrowseView(View):
+class TravelogImageBrowseView(View):
     """
     Public image browser view (single image with navigation).
     No authentication required - access controlled by journal visibility and password.
@@ -101,7 +95,7 @@ class JournalImageBrowseView(View):
     - Link to journal entry for this image's date
     """
 
-    def get(self, request, journal_uuid: str, image_uuid: str, *args, **kwargs) -> HttpResponse:
+    def get(self, request, journal_uuid: UUID, image_uuid: UUID, *args, **kwargs) -> HttpResponse:
         # TODO: Implement view logic
         # - Get journal by UUID
         # - Check visibility/password
@@ -109,4 +103,4 @@ class JournalImageBrowseView(View):
         # - Get previous/next images
         # - Render browse template
 
-        return HttpResponse(f"TODO: Implement JournalImageBrowseView for journal {journal_uuid}, image {image_uuid}")
+        return HttpResponse(f"TODO: Implement TravelogImageBrowseView for journal {journal_uuid}, image {image_uuid}")

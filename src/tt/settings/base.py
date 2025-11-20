@@ -118,7 +118,7 @@ INSTALLED_APPS = [
     'tt.apps.notebook',
     'tt.apps.images',
     'tt.apps.journal',
-    'tt.apps.journal_public',
+    'tt.apps.travelog',
     'tt.apps.reviews',
 ]
 
