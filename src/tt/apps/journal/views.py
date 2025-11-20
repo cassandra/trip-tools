@@ -204,6 +204,7 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
             'journal_entry_form': journal_entry_form,
             'accessible_images': accessible_images,
             'trip': trip,
+            'show_source_changed_warning': True or      entry.has_source_notebook_changed,
         }
         return render(request, 'journal/pages/journal_entry.html', context)
 

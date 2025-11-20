@@ -89,6 +89,15 @@
 
       </div>
 
+      {% if show_source_changed_warning %}
+        <div class="alert alert-warning mx-2 mb-2" role="alert">
+          <small>
+            <strong>{% icon "warning" size="lg" %} Note:</strong>
+            The source note for this entry has been updated since this journal entry was created.
+          </small>
+        </div>
+      {% endif %}
+
       {% include "journal/panes/journal_entry_text_edit.html" %}
 
     </form>

@@ -166,6 +166,18 @@ class JournalEntry(models.Model):
         editable = False,
     )
 
+    @property
+    def is_synced_with_source(self) -> bool:
+        """Check if journal entry is in sync with source notebook entry."""
+        if not self.source_notebook_entry:
+            return True  # No source, nothing to sync
+        return bool( self.source_notebook_version == self.source_notebook_entry.edit_version )
+
+    @property
+    def has_source_notebook_changed(self) -> bool:
+        """Check if the source notebook entry has changed since this journal entry was created."""
+        return bool(bool(self.source_notebook_entry) and not self.is_synced_with_source)
+
     def save(self, *args, **kwargs):
         """Override save to auto-generate title from date if empty."""
         if not self.title:
