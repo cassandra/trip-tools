@@ -1,25 +1,25 @@
-from django.urls import re_path
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    re_path(
-        r'^trip/(?P<trip_id>\d+)/$',
+    path(
+        r'trip/<uuid:trip_uuid>',
         views.NotebookListView.as_view(),
         name='notebook_list'
     ),
-    re_path(
-        r'^trip/(?P<trip_id>\d+)/entry/new/$',
-        views.NotebookEntryView.as_view(),
+    path(
+        r'trip/<uuid:trip_uuid>/new/$',
+        views.NotebookEntryNewView.as_view(),
         name='notebook_entry_new'
     ),
-    re_path(
-        r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/$',
+    path(
+        r'entry/<uuid:entry_uuid>',
         views.NotebookEntryView.as_view(),
         name='notebook_entry'
     ),
-    re_path(
-        r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/save/$',
+    path(
+        r'entry/<uuid:entry_uuid>/save',
         views.NotebookAutoSaveView.as_view(),
         name='notebook_autosave'
     ),

@@ -27,7 +27,7 @@ class NotebookListViewTests(TestCase):
             title='Test Trip',
             trip_status=TripStatus.UPCOMING
         )
-        self.list_url = reverse('notebook_list', kwargs={'trip_id': self.trip.pk})
+        self.list_url = reverse('notebook_list', kwargs={'trip_uuid': self.trip.uuid})
 
     def test_list_requires_authentication(self):
         """Test that notebook list redirects unauthenticated users."""
@@ -58,7 +58,7 @@ class NotebookListViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        other_trip_url = reverse('notebook_list', kwargs={'trip_id': other_trip.pk})
+        other_trip_url = reverse('notebook_list', kwargs={'trip_uuid': other_trip.uuid})
         response = self.client.get(other_trip_url)
 
         self.assertEqual(response.status_code, 404)
@@ -219,7 +219,7 @@ class NotebookEditViewTests(TestCase):
 
     def test_new_entry_requires_authentication(self):
         """Test that creating new entry redirects unauthenticated users."""
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
         response = self.client.get(new_url)
         self.assertEqual(response.status_code, 302)
         self.assertIn('/user/signin', response.url)
@@ -232,8 +232,7 @@ class NotebookEditViewTests(TestCase):
             text='Test content'
         )
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.get(edit_url)
         self.assertEqual(response.status_code, 302)
@@ -242,7 +241,7 @@ class NotebookEditViewTests(TestCase):
     def test_new_entry_displays_for_authenticated_user(self):
         """Test that GET to new entry URL creates entry and redirects to edit."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
 
         # Verify no entries exist yet
         self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 0)
@@ -258,8 +257,7 @@ class NotebookEditViewTests(TestCase):
 
         # Verify redirect URL points to edit view
         expected_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         self.assertEqual(response.url, expected_url)
 
@@ -272,8 +270,7 @@ class NotebookEditViewTests(TestCase):
         )
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.get(edit_url)
 
@@ -302,8 +299,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         other_trip_url = reverse('notebook_entry', kwargs={
-            'trip_id': other_trip.pk,
-            'entry_pk': other_entry.pk
+            'entry_uuid': other_entry.uuid
         })
         response = self.client.get(other_trip_url)
 
@@ -321,8 +317,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.get(edit_url)
 
@@ -339,8 +334,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.get(edit_url)
 
@@ -351,7 +345,7 @@ class NotebookEditViewTests(TestCase):
     def test_new_entry_creates_with_todays_date(self):
         """Test that new entries are created with today's date by default."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
 
         response = self.client.get(new_url)
 
@@ -367,7 +361,7 @@ class NotebookEditViewTests(TestCase):
     def test_new_entry_creates_blank_text(self):
         """Test that new entries start with empty text."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
 
         response = self.client.get(new_url)
 
@@ -388,8 +382,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.post(edit_url, {
             'date': entry.date.strftime('%Y-%m-%d'),
@@ -416,8 +409,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.post(edit_url, {
             'date': new_date.strftime('%Y-%m-%d'),
@@ -445,7 +437,7 @@ class NotebookEditViewTests(TestCase):
         self.client.force_login(self.user)
 
         # Create a new entry (which will have today's date)
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
         response = self.client.get(new_url)
         self.assertEqual(response.status_code, 302)
 
@@ -454,8 +446,7 @@ class NotebookEditViewTests(TestCase):
 
         # Try to edit the new entry to use the existing entry's date
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': new_entry.pk
+            'entry_uuid': new_entry.uuid
         })
         response = self.client.post(edit_url, {
             'date': existing_entry.date.strftime('%Y-%m-%d'),
@@ -488,8 +479,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry2.pk
+            'entry_uuidk': entry2.uuid
         })
         response = self.client.post(edit_url, {
             'date': entry1.date.strftime('%Y-%m-%d'),  # Try to change to entry1's date
@@ -514,8 +504,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.post(edit_url, {
             'date': entry.date.strftime('%Y-%m-%d'),  # Same date
@@ -538,8 +527,7 @@ class NotebookEditViewTests(TestCase):
         )
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.get(edit_url)
 
@@ -563,8 +551,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry1.pk
+            'entry_uuid': entry1.uuid
         })
         response = self.client.get(edit_url)
 
@@ -587,8 +574,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
         response = self.client.get(edit_url)
 
@@ -618,8 +604,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry2.pk
+            'entry_uuid': entry2.uuid
         })
         response = self.client.get(edit_url)
 
@@ -670,8 +655,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': my_entry.pk
+            'entry_uuid': my_entry.uuid
         })
         response = self.client.get(edit_url)
 
@@ -686,7 +670,7 @@ class NotebookEditViewTests(TestCase):
         from datetime import date as date_class
 
         self.client.force_login(self.user)
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
 
         # Verify no entries exist
         self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 0)
@@ -721,7 +705,7 @@ class NotebookEditViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
 
         # Verify 3 entries exist
         self.assertEqual(NotebookEntry.objects.filter(trip=self.trip).count(), 3)
@@ -759,8 +743,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Test'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         response = self.client.post(
@@ -779,8 +762,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Test'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -793,7 +775,6 @@ class NotebookAutoSaveViewTests(TestCase):
 
         # Try to auto-save with non-existent entry_pk
         fake_autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
             'entry_pk': 99999
         })
         response = self.client.post(
@@ -813,8 +794,7 @@ class NotebookAutoSaveViewTests(TestCase):
         )
         original_created = entry.created_datetime
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -844,8 +824,7 @@ class NotebookAutoSaveViewTests(TestCase):
         )
         new_date = date(2024, 1, 20)
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -879,7 +858,6 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Entry 2'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
             'entry_pk': entry2.pk
         })
 
@@ -910,8 +888,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Original'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -950,7 +927,6 @@ class NotebookAutoSaveViewTests(TestCase):
 
         self.client.force_login(self.user)
         other_trip_url = reverse('notebook_autosave', kwargs={
-            'trip_id': other_trip.pk,
             'entry_pk': other_entry.pk
         })
         response = self.client.post(
@@ -978,7 +954,6 @@ class NotebookAutoSaveViewTests(TestCase):
         self.client.force_login(self.user)
         # Try to auto-save entry from other_trip using self.trip
         wrong_trip_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
             'entry_pk': entry_other_trip.pk
         })
         response = self.client.post(
@@ -997,8 +972,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Test'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -1021,8 +995,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Test'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -1049,8 +1022,7 @@ class NotebookAutoSaveViewTests(TestCase):
         )
         original_version = entry.edit_version
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -1080,8 +1052,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Test'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -1108,8 +1079,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Original text'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -1152,8 +1122,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Original'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -1183,8 +1152,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Version 1'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -1228,8 +1196,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Original'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -1274,7 +1241,7 @@ class NotebookAutoSaveViewTests(TestCase):
     def test_new_entry_has_version_one(self):
         """Test that newly created entries start with version 1."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
 
         response = self.client.get(new_url)
         self.assertEqual(response.status_code, 302)

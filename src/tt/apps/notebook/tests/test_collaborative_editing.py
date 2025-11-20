@@ -45,7 +45,7 @@ class CollaborativeEditingVersionTrackingTests(TestCase):
     def test_new_entry_starts_with_version_one(self):
         """Test that newly created entries start with version 1."""
         self.client.force_login(self.user)
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
 
         # Create new entry
         response = self.client.get(new_url)
@@ -83,7 +83,7 @@ class CollaborativeEditingVersionTrackingTests(TestCase):
         )
         autosave_url = reverse('notebook_autosave', kwargs={
             'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -115,8 +115,7 @@ class CollaborativeEditingVersionTrackingTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -162,8 +161,7 @@ class CollaborativeEditingVersionTrackingTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -221,8 +219,7 @@ class CollaborativeEditingConflictDetectionTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         # Both users load entry (version 1)
@@ -272,8 +269,7 @@ class CollaborativeEditingConflictDetectionTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client = Client()
@@ -309,8 +305,7 @@ class CollaborativeEditingConflictDetectionTests(TestCase):
             edit_version=3
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client = Client()
@@ -343,8 +338,7 @@ class CollaborativeEditingConflictDetectionTests(TestCase):
             edit_version=10
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client = Client()
@@ -399,8 +393,7 @@ class CollaborativeEditingConflictResolutionTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client_a = Client()
@@ -449,8 +442,7 @@ class CollaborativeEditingConflictResolutionTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client_a = Client()
@@ -501,8 +493,7 @@ class CollaborativeEditingConflictResolutionTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client_a = Client()
@@ -577,8 +568,7 @@ class CollaborativeEditingEdgeCasesTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -607,8 +597,7 @@ class CollaborativeEditingEdgeCasesTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -634,8 +623,7 @@ class CollaborativeEditingEdgeCasesTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -659,8 +647,7 @@ class CollaborativeEditingEdgeCasesTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -691,8 +678,7 @@ class CollaborativeEditingEdgeCasesTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         self.client.force_login(self.user)
@@ -731,7 +717,6 @@ class CollaborativeEditingEdgeCasesTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
             'entry_pk': entry2.pk
         })
 
@@ -805,8 +790,7 @@ class CollaborativeEditingPermissionIntegrationTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         owner_client = Client()
@@ -839,8 +823,7 @@ class CollaborativeEditingPermissionIntegrationTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         viewer_client = Client()
@@ -870,8 +853,7 @@ class CollaborativeEditingPermissionIntegrationTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         outsider_client = Client()
@@ -931,8 +913,7 @@ class CollaborativeEditingRaceConditionTests(TransactionTestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         results = {'user_a': None, 'user_b': None}
@@ -991,8 +972,7 @@ class CollaborativeEditingRaceConditionTests(TransactionTestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client_a = Client()
@@ -1069,15 +1049,14 @@ class CollaborativeEditingEndToEndTests(TestCase):
         client_bob.force_login(self.user_b)
 
         # Alice creates new entry
-        new_url = reverse('notebook_entry_new', kwargs={'trip_id': self.trip.pk})
+        new_url = reverse('notebook_entry_new', kwargs={'trip_uuid': self.trip.uuid})
         response = client_alice.get(new_url)
         self.assertEqual(response.status_code, 302)
 
         entry = NotebookEntry.objects.get(trip=self.trip)
         self.assertEqual(entry.edit_version, 1)
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         # Alice makes first edit
@@ -1153,8 +1132,7 @@ class CollaborativeEditingEndToEndTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client_a = Client()
@@ -1255,8 +1233,7 @@ class ConflictModalTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client_a = Client()
@@ -1302,8 +1279,7 @@ class ConflictModalTests(TestCase):
             edit_version=2
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client = Client()
@@ -1338,8 +1314,7 @@ class ConflictModalTests(TestCase):
             modified_by=self.user_a
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': entry.pk
+            'entry_uuid': entry.uuid
         })
 
         client_a = Client()

@@ -1,5 +1,6 @@
-import logging
 from datetime import date as date_class, timedelta
+import logging
+from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError, transaction
@@ -8,6 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import View
 
+from tt.apps.members.models import TripMember
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
@@ -23,8 +25,8 @@ logger = logging.getLogger(__name__)
 class NotebookListView( LoginRequiredMixin, TripViewMixin, View ):
     """Show all notebook entries for a trip (chronological order)."""
 
-    def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+    def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_viewer( request_member )
         trip = request_member.trip
 
@@ -45,36 +47,44 @@ class NotebookListView( LoginRequiredMixin, TripViewMixin, View ):
         return render(request, 'notebook/pages/notebook_entry_list.html', context)
 
 
-class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
-    """Edit or create a notebook entry."""
+class NotebookEntryNewView( LoginRequiredMixin, TripViewMixin, View ):
 
-    def get(self, request, trip_id: int, entry_pk: int = None, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+    def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_viewer( request_member )
         trip = request_member.trip
 
-        if entry_pk:
-            entry = get_object_or_404(
-                NotebookEntry,
-                pk = entry_pk,
-                trip = trip,
-            )
+        # Only editors can create new entries
+        self.assert_is_editor( request_member )
+
+        max_date = trip.notebook_entries.aggregate( Max( 'date' ) )['date__max']
+        if max_date:
+            default_date = max_date + timedelta( days = 1 )
         else:
-            # Only editors can create new entries
-            self.assert_is_editor( request_member )
+            default_date = date_class.today()
 
-            max_date = trip.notebook_entries.aggregate( Max( 'date' ) )['date__max']
-            if max_date:
-                default_date = max_date + timedelta( days = 1 )
-            else:
-                default_date = date_class.today()
+        entry = NotebookEntry.objects.create(
+            trip = trip,
+            date = default_date,
+            text = '',
+        )
+        return redirect( 'notebook_entry', entry_uuid = entry.uuid )
 
-            entry = NotebookEntry.objects.create(
-                trip = trip,
-                date = default_date,
-                text = '',
-            )
-            return redirect( 'notebook_entry', trip_id = trip.pk, entry_pk = entry.pk )
+        
+class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
+
+    def get(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        entry = get_object_or_404(
+            NotebookEntry,
+            uuid = entry_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = entry.trip,
+            user = request.user,
+        )
+        self.assert_is_viewer( request_member )
+        trip = request_member.trip
 
         notebook_entries = trip.notebook_entries.all()
 
@@ -84,7 +94,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
         )
         notebook_page_context = NotebookPageContext(
             notebook_entries = notebook_entries,
-            notebook_entry_pk = entry_pk
+            notebook_entry_pk = entry.pk
         )
 
         if request_member.can_edit_trip:
@@ -106,7 +116,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
             }
             return render(request, 'notebook/pages/notebook_entry_readonly.html', context)
 
-    def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
+    def post(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
         """
         Non-JavaScript fallback for saving notebook entries.
 
@@ -118,17 +128,25 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
         is disabled or for manual form submission. It handles basic save
         functionality but lacks the collaborative editing features of auto-save.
         """
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+        entry = get_object_or_404(
+            NotebookEntry,
+            uuid = entry_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = entry.trip,
+            user = request.user,
+        )
         self.assert_is_editor( request_member )
         trip = request_member.trip
 
         entry = get_object_or_404(
             NotebookEntry,
-            pk = entry_pk,
+            pk = entry.pk,
             trip = trip,
         )
 
-        form = NotebookEntryForm(request.POST, instance=entry, trip=trip)
+        form = NotebookEntryForm( request.POST, instance = entry, trip = trip )
 
         if form.is_valid():
             with transaction.atomic():
@@ -136,7 +154,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
                 entry.modified_by = request.user
                 entry.save()
 
-            return redirect('notebook_entry', trip_id=trip.pk, entry_pk=entry.pk)
+            return redirect( 'notebook_entry', entry_uuid = entry.uuid )
 
         notebook_entries = trip.notebook_entries.all()
 
@@ -146,7 +164,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
         )
         notebook_page_context = NotebookPageContext(
             notebook_entries = notebook_entries,
-            notebook_entry_pk = entry_pk
+            notebook_entry_pk = entry.pk
         )
 
         context = {
@@ -162,20 +180,22 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
 class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
     """AJAX endpoint for auto-saving notebook entries."""
 
-    def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
-        return JsonResponse(
-            { 'status': 'error', 'message': 'Method not allowed' },
-            status = 405,
+    def post(self, request, entry_uuid: UUID, *args, **kwargs) -> JsonResponse:
+        entry = get_object_or_404(
+            NotebookEntry,
+            uuid = entry_uuid,
         )
-
-    def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = entry.trip,
+            user = request.user,
+        )
         self.assert_is_editor( request_member )
         trip = request_member.trip
 
         entry = get_object_or_404(
             NotebookEntry,
-            pk = entry_pk,
+            pk = entry.pk,
             trip = trip,
         )
 
@@ -223,19 +243,19 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
             })
 
         except NotebookEntry.DoesNotExist:
-            logger.error(f'Entry {entry_pk} not found during atomic update')
+            logger.error(f'Entry {entry.pk} not found during atomic update')
             return JsonResponse(
                 {'status': 'error', 'message': 'Entry not found'},
                 status=404
             )
         except IntegrityError as e:
-            logger.warning(f'Integrity constraint violation for entry {entry_pk}: {e}')
+            logger.warning(f'Integrity constraint violation for entry {entry.pk}: {e}')
             return JsonResponse(
                 {'status': 'error', 'message': 'Unable to save - entry date conflicts with another entry'},
                 status=409
             )
         except DatabaseError as e:
-            logger.error(f'Database error auto-saving notebook entry {entry_pk}: {e}')
+            logger.error(f'Database error auto-saving notebook entry {entry.pk}: {e}')
             return JsonResponse(
                 {'status': 'error', 'message': 'Database error occurred'},
                 status=500
