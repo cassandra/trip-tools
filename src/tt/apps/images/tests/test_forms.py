@@ -77,11 +77,13 @@ class TripImageEditFormTestCase(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         image = form.save(user=self.user)
 
-        # Verify datetime was updated
+        # Verify datetime was updated and correctly converted to UTC
+        # User entered 10:00 AM in America/Los_Angeles timezone
+        # PST is UTC-8, so 10:00 PST = 18:00 UTC
         self.assertEqual(image.datetime_utc.year, 2025)
         self.assertEqual(image.datetime_utc.month, 1)
         self.assertEqual(image.datetime_utc.day, 16)
-        self.assertEqual(image.datetime_utc.hour, 10)
+        self.assertEqual(image.datetime_utc.hour, 18)  # 10:00 PST = 18:00 UTC
         self.assertEqual(image.datetime_utc.minute, 0)
 
         # Verify timezone was set

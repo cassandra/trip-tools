@@ -488,7 +488,7 @@ class ImageUploadService(Singleton):
                 'caption': metadata_dict['caption'],
                 'tags': metadata_dict['tags'],
                 'has_exif': metadata_dict['has_exif'],
-                'timezone_unknown': metadata_dict['timezone_unknown'],
+                'timezone': metadata_dict['timezone'],
             }
 
             logger.info(f'Successfully processed image upload: {uploaded_file.name} -> {trip_image.uuid}')

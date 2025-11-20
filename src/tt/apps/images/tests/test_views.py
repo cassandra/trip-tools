@@ -230,8 +230,8 @@ class TripImageInspectViewTestCase(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(200, response.status_code)
-        self.assertIn('image', response.context)
-        self.assertEqual(self.trip_image, response.context['image'])
+        self.assertIn('image_page_context', response.context)
+        self.assertEqual(self.trip_image, response.context['image_page_context'].trip_image)
 
     def test_get_nonexistent_image_404(self):
         """GET with non-existent UUID should return 404."""
@@ -243,10 +243,18 @@ class TripImageInspectViewTestCase(TestCase):
 
     def test_get_renders_image_metadata(self):
         """GET should include image metadata in response."""
-        response = self.client.get(self.url)
+        response = self.client.get(
+            self.url,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'  # Request as AJAX for modal response
+        )
 
-        # Verify image data is accessible
-        image = response.context['image']
+        # Verify response is successful
+        self.assertEqual(200, response.status_code)
+
+        # For AJAX requests, context is embedded in the modal response
+        # Verify image data is accessible through the view's context
+        image_page_context = response.context['image_page_context']
+        image = image_page_context.trip_image
         self.assertEqual("Test image for inspection", image.caption)
         self.assertEqual(self.user, image.uploaded_by)
 
@@ -264,33 +272,30 @@ class TripImageInspectViewTestCase(TestCase):
             caption="Other user's image",
         )
 
-        # Try to access it
+        # Try to access it with AJAX header (modal requests use AJAX)
         url = reverse('images_trip_image_inspect', kwargs={'image_uuid': str(other_image.uuid)})
-        response = self.client.get(url)
+        response = self.client.get(
+            url,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
 
         self.assertEqual(403, response.status_code)
         data = response.json()
-        self.assertIn('permission', data['error'].lower())
+        # Error responses return modal HTML, not error dict
+        self.assertIn('modal', data)
+        self.assertIn('permission', data['modal'].lower())
 
     def test_get_view_mode_by_default(self):
-        """GET without mode parameter should show view mode."""
+        """GET without mode parameter should show edit mode for owner."""
         response = self.client.get(self.url)
 
         self.assertEqual(200, response.status_code)
-        self.assertFalse(response.context.get('edit_mode', False))
-        self.assertIsNone(response.context.get('form'))
+        # Owner has edit permission, so should see edit template with form
+        self.assertTemplateUsed(response, 'images/modals/trip_image_inspect_view.html')
+        self.assertIsNotNone(response.context.get('trip_image_form'))
 
-    def test_get_edit_mode_with_parameter(self):
-        """GET with mode=edit should show edit mode with form."""
-        url = f"{self.url}?mode=edit"
-        response = self.client.get(url)
-
-        self.assertEqual(200, response.status_code)
-        self.assertTrue(response.context.get('edit_mode', False))
-        self.assertIsNotNone(response.context.get('form'))
-
-    def test_get_edit_mode_requires_can_edit(self):
-        """GET with mode=edit should require edit permission."""
+    def test_get_view_mode_for_non_owner(self):
+        """GET by non-owner should return 403 (no access)."""
         # Create another user without edit permission
         User.objects.create_user(
             email='other@example.com',
@@ -299,8 +304,10 @@ class TripImageInspectViewTestCase(TestCase):
         self.client.logout()
         self.client.login(email='other@example.com', password='otherpass')
 
-        url = f"{self.url}?mode=edit"
-        response = self.client.get(url)
+        response = self.client.get(
+            self.url,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
 
         # Should return 403 since other_user cannot access this image
         self.assertEqual(403, response.status_code)
@@ -380,4 +387,6 @@ class TripImageInspectViewTestCase(TestCase):
         # Should return 403
         self.assertEqual(403, response.status_code)
         data = response.json()
-        self.assertIn('permission', data['error'].lower())
+        # Error responses return modal HTML, not error dict
+        self.assertIn('modal', data)
+        self.assertIn('permission', data['modal'].lower())

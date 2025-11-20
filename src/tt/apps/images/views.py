@@ -98,10 +98,14 @@ class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
     2. Without trip context: Only uploader has access
     """
 
-    def get_template_name(self, image_access_role : ImageAccessRole ) -> str:
+    def get_template_name(self ) -> str:
+        # We override this when editing is allowed
+        return 'images/modals/trip_image_inspect_view.html'
+
+    def get_effective_template_name(self, image_access_role : ImageAccessRole ) -> str:
         if image_access_role.can_edit:
             return 'images/modals/trip_image_inspect_edit.html'
-        return 'images/modals/trip_image_inspect_view.html'
+        return self.get_template_name()
 
     def get(self, request, image_uuid: str, *args, **kwargs) -> HttpResponse:
 
@@ -118,7 +122,9 @@ class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
             'image_page_context': image_page_context,
             'trip_image_form': trip_image_form,
         }
-        template_name = self.get_template_name( image_access_role = image_page_context.image_access_role )
+        template_name = self.get_effective_template_name(
+            image_access_role = image_page_context.image_access_role,
+        )
         return self.modal_response( request, context = context, template_name = template_name )
 
     def post(self, request, image_uuid: str, *args, **kwargs) -> HttpResponse:
@@ -139,7 +145,9 @@ class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
             'image_page_context': image_page_context,
             'trip_image_form': trip_image_form,
         }
-        template_name = self.get_template_name( image_access_role = image_page_context.image_access_role )
+        template_name = self.get_effective_template_name(
+            image_access_role = image_page_context.image_access_role,
+        )
         return self.modal_response( request, context = context, template_name = template_name )
 
     def get_image_page_context( self, request, image_uuid: str, *args, **kwargs ) -> ImagePageContext:

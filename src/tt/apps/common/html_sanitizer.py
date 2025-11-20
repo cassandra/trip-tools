@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 
 try:
     import bleach
+    from bleach.css_sanitizer import CSSSanitizer
     BLEACH_AVAILABLE = True
 except ImportError:
     BLEACH_AVAILABLE = False
@@ -39,7 +40,7 @@ class HTMLSanitizer:
 
     # Default allowed attributes by tag
     DEFAULT_ALLOWED_ATTRIBUTES = {
-        'img': ['src', 'alt', 'class', 'data-uuid', 'draggable'],
+        'img': ['src', 'alt', 'class', 'data-uuid', 'data-layout', 'draggable'],
         'a': ['href'],
         'span': ['class', 'data-layout'],
         'div': ['class'],
@@ -52,16 +53,18 @@ class HTMLSanitizer:
                   allowed_tags       : Optional[List[str]]              = None,
                   allowed_attributes : Optional[Dict[str, List[str]]]  = None,
                   allowed_protocols  : Optional[List[str]]              = None,
-                  strip              : bool                             = True):
+                  strip              : bool                             = True,
+                  css_sanitizer      : Optional[CSSSanitizer]           = None):
         """
         Initialize HTML sanitizer with custom configuration.
 
         Args:
             allowed_tags: List of allowed HTML tags (defaults to DEFAULT_ALLOWED_TAGS)
-            allowed_attributes: Dict of tag -> list of allowed attributes 
+            allowed_attributes: Dict of tag -> list of allowed attributes
                                 (defaults to DEFAULT_ALLOWED_ATTRIBUTES)
             allowed_protocols: List of allowed URL protocols (defaults to DEFAULT_ALLOWED_PROTOCOLS)
             strip: If True, strip disallowed tags; if False, escape them
+            css_sanitizer: CSSSanitizer instance for inline styles (defaults to permissive sanitizer)
         """
         if not BLEACH_AVAILABLE:
             raise ImportError(
@@ -73,6 +76,7 @@ class HTMLSanitizer:
         self.allowed_attributes = allowed_attributes or self.DEFAULT_ALLOWED_ATTRIBUTES
         self.allowed_protocols = allowed_protocols or self.DEFAULT_ALLOWED_PROTOCOLS
         self.strip = strip
+        self.css_sanitizer = css_sanitizer
 
     def sanitize( self, html_content: str ) -> str:
         """
@@ -95,6 +99,7 @@ class HTMLSanitizer:
                 attributes=self.allowed_attributes,
                 protocols=self.allowed_protocols,
                 strip=self.strip,
+                css_sanitizer=self.css_sanitizer,
             )
             return cleaned_html
         except Exception as e:
@@ -106,6 +111,18 @@ class HTMLSanitizer:
 # Pre-configured sanitizer for rich text content
 RICH_TEXT_SANITIZER = None
 if BLEACH_AVAILABLE:
+    # Create a CSS sanitizer that allows common safe CSS properties
+    css_sanitizer = CSSSanitizer(
+        allowed_css_properties=[
+            'text-align', 'text-indent',
+            'margin', 'margin-left', 'margin-right', 'margin-top', 'margin-bottom',
+            'padding', 'padding-left', 'padding-right', 'padding-top', 'padding-bottom',
+            'color', 'background-color',
+            'font-size', 'font-weight', 'font-style', 'font-family',
+            'list-style-type',
+        ]
+    )
+
     RICH_TEXT_SANITIZER = HTMLSanitizer(
         allowed_tags=[
             'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -115,7 +132,7 @@ if BLEACH_AVAILABLE:
             'img', 'a', 'span', 'div',
         ],
         allowed_attributes={
-            'img': ['src', 'alt', 'class', 'data-uuid', 'draggable'],
+            'img': ['src', 'alt', 'class', 'data-uuid', 'data-layout', 'draggable'],
             'a': ['href'],
             'span': ['class', 'data-layout'],
             'div': ['class', 'style'],
@@ -134,6 +151,7 @@ if BLEACH_AVAILABLE:
         },
         allowed_protocols=['http', 'https', 'mailto'],
         strip=True,
+        css_sanitizer=css_sanitizer,
     )
 
 

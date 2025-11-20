@@ -144,7 +144,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
 
         data = {
             'text': '<p>Content</p>',
-            'title': 'Updated Day 1 Title',
+            'new_title': 'Updated Day 1 Title',
             'version': 1,
         }
 
@@ -169,7 +169,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
         new_date = '2024-01-02'
         data = {
             'text': '<p>Content</p>',
-            'date': new_date,
+            'new_date': new_date,
             'version': 1,
         }
 
@@ -204,7 +204,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
         # Try to change entry date to Jan 2 (conflict)
         data = {
             'text': '<p>Content</p>',
-            'date': '2024-01-02',
+            'new_date': '2024-01-02',
             'version': 1,
         }
 
@@ -348,9 +348,9 @@ class JournalEntryAutosaveHelperTests(TestCase):
         data = {
             'text': '<p>Test</p>',
             'version': 5,
-            'date': '2024-01-15',
-            'title': 'New Title',
-            'timezone': 'Europe/London',
+            'new_date': '2024-01-15',
+            'new_title': 'New Title',
+            'new_timezone': 'Europe/London',
             'reference_image_id': 42,
         }
         request_body = json.dumps(data).encode('utf-8')
@@ -379,7 +379,7 @@ class JournalEntryAutosaveHelperTests(TestCase):
         """Test parsing request with invalid date."""
         data = {
             'text': '<p>Test</p>',
-            'date': 'not-a-date',
+            'new_date': 'not-a-date',
         }
         request_body = json.dumps(data).encode('utf-8')
 

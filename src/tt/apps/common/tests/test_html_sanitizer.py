@@ -140,7 +140,7 @@ class HTMLSanitizerTests(TestCase):
         '''
         result = sanitize_rich_text_html(html)
 
-        # Should preserve allowed tags
+        # Should preserve allowed tags including div
         self.assertIn('<h2>My Trip Day 1</h2>', result)
         self.assertIn('<strong>Paris</strong>', result)
         self.assertIn('<em>Eiffel Tower</em>', result)
@@ -149,17 +149,17 @@ class HTMLSanitizerTests(TestCase):
         self.assertIn('href="https://cafe.com"', result)
         self.assertIn('<blockquote>', result)
         self.assertIn('data-uuid="abc123"', result)
-
-        # Should remove div (not in allowed tags)
-        self.assertNotIn('<div>', result)
+        self.assertIn('<div>', result)  # div is now allowed for layout
 
     def test_sanitize_malicious_attribute_injection(self):
         """Test that malicious attribute injection attempts are blocked."""
         html = '<p style="background: url(javascript:alert(\'XSS\'))">Text</p>'
         result = sanitize_rich_text_html(html)
-        self.assertNotIn('style', result)
+        # CSS sanitizer removes malicious content (may leave empty style attribute)
         self.assertNotIn('javascript', result)
-        self.assertIn('Text', result)
+        self.assertNotIn('background', result)  # Disallowed CSS property removed
+        self.assertNotIn('url(', result)  # URL function removed
+        self.assertIn('Text', result)  # Content preserved
 
 
 class CustomSanitizerTests(TestCase):
