@@ -163,7 +163,7 @@ class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
         trip_page_context = None
         try:
             trip_id = int( request.GET.get('trip_id') )
-            request_member = self.get_trip_member( request, trip_id = trip_id )
+            request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
             trip_page_context = TripPageContext(
                 active_page = TripPage.IMAGES,
                 request_member = request_member,

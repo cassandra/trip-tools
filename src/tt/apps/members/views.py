@@ -30,7 +30,7 @@ INVALID_INVITATION_MESSAGE = 'This invitation link is invalid or has expired.'
 
 class MemberListView( LoginRequiredMixin, TripViewMixin, View ):
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         self.assert_is_viewer( request_member )
         trip = request_member.trip
         
@@ -62,7 +62,7 @@ class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return 'members/modals/invite.html'
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         self.assert_is_admin( request_member )
         trip = request_member.trip
 
@@ -74,7 +74,7 @@ class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return self.modal_response( request, context = context )
 
     def post(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         self.assert_is_admin( request_member )
         trip = request_member.trip
 
@@ -118,7 +118,7 @@ class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
 class MemberPermissionChangeView( LoginRequiredMixin, TripViewMixin, View ):
 
     def post(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         self.assert_is_admin( request_member )
         trip = request_member.trip
     
@@ -170,7 +170,7 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return 'members/modals/remove.html'
 
     def get(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         trip = request_member.trip
 
         target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
@@ -201,7 +201,7 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return self.modal_response( request, context = context )
 
     def post(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         trip = request_member.trip
 
         target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
@@ -285,8 +285,8 @@ class MemberAcceptInvitationView( View ):
                     member = TripMember.objects.get( trip = trip, user = user )
                     if member.invitation_accepted_datetime is not None:
                         # Already accepted - redirect to trip
-                        logger.info( f'User {user.email} revisited expired invitation link for trip {trip.pk} (already accepted)' )
-                        return HttpResponseRedirect( reverse( 'trips_home', kwargs = { 'trip_id': trip.pk } ) )
+                        return HttpResponseRedirect( reverse( 'trips_home',
+                                                              kwargs = { 'trip_uuid': trip.uuid } ) )
                 except TripMember.DoesNotExist:
                     pass
 
@@ -316,7 +316,7 @@ class MemberAcceptInvitationView( View ):
             except TripMember.DoesNotExist:
                 logger.warning( f'User {user.email} has no membership for trip {trip.pk}' )
 
-        return HttpResponseRedirect( reverse( 'trips_home', kwargs = { 'trip_id': trip.pk } ) )
+        return HttpResponseRedirect( reverse( 'trips_home', kwargs = { 'trip_uuid': trip.uuid } ) )
 
 
 class MemberSignupAndAcceptView( View ):
@@ -356,8 +356,8 @@ class MemberSignupAndAcceptView( View ):
                     member = TripMember.objects.get( trip = trip, user = user )
                     if member.invitation_accepted_datetime is not None:
                         # Already accepted - redirect to trip
-                        logger.info( f'User {user.email} revisited expired invitation link for trip {trip.pk} (already accepted)' )
-                        return HttpResponseRedirect( reverse( 'trips_home', kwargs = { 'trip_id': trip.pk } ) )
+                        return HttpResponseRedirect( reverse( 'trips_home',
+                                                              kwargs = { 'trip_uuid': trip.uuid } ) )
                 except TripMember.DoesNotExist:
                     pass
 

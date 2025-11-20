@@ -9,7 +9,7 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb bg-transparent p-0 mb-0">
           <li class="breadcrumb-item">
-            <a href="{% url 'trips_home' trip_id=trip_page.trip.pk %}">{{ trip_page.trip.title }}</a>
+            <a href="{% url 'trips_home' trip_uuid=trip_page.trip.uuid %}">{{ trip_page.trip.title }}</a>
           </li>
           <li class="breadcrumb-item active" aria-current="page">Itinerary</li>
         </ol>

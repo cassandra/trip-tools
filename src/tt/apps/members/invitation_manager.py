@@ -131,7 +131,7 @@ class MemberInvitationManager( Singleton ):
             'invited_by_name': invited_by_user.get_full_name() or invited_by_user.email,
             'acceptance_url': acceptance_url,
             'trip_url': request.build_absolute_uri(
-                reverse( 'trips_home', kwargs = { 'trip_id': trip.pk } )
+                reverse( 'trips_home', kwargs = { 'trip_uuid': trip.uuid } )
             ),
         }
 

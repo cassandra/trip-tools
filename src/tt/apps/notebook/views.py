@@ -24,7 +24,7 @@ class NotebookListView( LoginRequiredMixin, TripViewMixin, View ):
     """Show all notebook entries for a trip (chronological order)."""
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         self.assert_is_viewer( request_member )
         trip = request_member.trip
 
@@ -49,7 +49,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
     """Edit or create a notebook entry."""
 
     def get(self, request, trip_id: int, entry_pk: int = None, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         self.assert_is_viewer( request_member )
         trip = request_member.trip
 
@@ -118,7 +118,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
         is disabled or for manual form submission. It handles basic save
         functionality but lacks the collaborative editing features of auto-save.
         """
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         self.assert_is_editor( request_member )
         trip = request_member.trip
 
@@ -169,7 +169,7 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
         )
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
         self.assert_is_editor( request_member )
         trip = request_member.trip
 

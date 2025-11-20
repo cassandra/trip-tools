@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class JournalHomeView(LoginRequiredMixin, TripViewMixin, View):
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member(request, trip_id=trip_id)
+        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
         self.assert_is_viewer(request_member)
         trip = request_member.trip
 
@@ -65,7 +65,7 @@ class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
         return 'journal/modals/journal_create.html'
 
     def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member(request, trip_id=trip_id)
+        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
         self.assert_is_editor(request_member)
         trip = request_member.trip
 
@@ -85,7 +85,7 @@ class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
         return self.modal_response(request, context=context)
 
     def post(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member(request, trip_id=trip_id)
+        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
         self.assert_is_editor(request_member)
         trip = request_member.trip
 
@@ -119,7 +119,7 @@ class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
 class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
 
     def get(self, request, trip_id: int, entry_pk: int = None, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member(request, trip_id=trip_id)
+        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
         self.assert_is_viewer(request_member)
         trip = request_member.trip
 
@@ -218,7 +218,7 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
         )
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
-        request_member = self.get_trip_member(request, trip_id=trip_id)
+        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
         self.assert_is_editor(request_member)
         trip = request_member.trip
 
@@ -306,7 +306,7 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
 class JournalEntryImagePickerView(LoginRequiredMixin, TripViewMixin, View):
 
     def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member(request, trip_id=trip_id)
+        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
         self.assert_is_viewer(request_member)
         trip = request_member.trip
 
@@ -367,7 +367,7 @@ class JournalEntryDeleteModalView(LoginRequiredMixin, TripViewMixin, ModalView):
         return 'journal/modals/journal_entry_delete.html'
 
     def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member(request, trip_id=trip_id)
+        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
         self.assert_is_editor(request_member)
         trip = request_member.trip
 
@@ -389,7 +389,7 @@ class JournalEntryDeleteModalView(LoginRequiredMixin, TripViewMixin, ModalView):
         return self.modal_response(request, context=context)
 
     def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member(request, trip_id=trip_id)
+        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
         self.assert_is_editor(request_member)
         trip = request_member.trip
 
