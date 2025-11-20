@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -13,6 +15,11 @@ class NotebookEntry(models.Model):
     """
     objects = managers.NotebookEntryManager()
 
+    uuid = models.UUIDField(
+        default = uuid.uuid4,
+        unique = True,
+        editable = False,
+    )
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,

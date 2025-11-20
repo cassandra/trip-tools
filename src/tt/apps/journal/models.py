@@ -14,29 +14,24 @@ from . import managers
 
 class Journal(models.Model):
     """
-    Container for published trip journal with visibility controls.
-
     Database supports multiple journals per trip for future flexibility.
     MVP will create/use a single journal per trip, but the schema allows
     expansion for future use cases (e.g., different perspectives, time periods).
     """
     objects = managers.JournalManager()
 
-    # UUID for public URL access (non-guessable)
     uuid = models.UUIDField(
         default = uuid.uuid4,
         unique = True,
         editable = False,
     )
 
-    # Many-to-one relationship with Trip (allows multiple journals per trip)
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,
         related_name = 'journals',
     )
 
-    # Content
     title = models.CharField(max_length = 200)
     description = models.TextField(blank = True)
     timezone = models.CharField(
@@ -45,7 +40,6 @@ class Journal(models.Model):
         help_text = 'Timezone for journal entries (pytz timezone name)',
     )
 
-    # Visibility settings for journal web view
     visibility = LabeledEnumField(
         JournalVisibility,
         'Visibility',
@@ -58,7 +52,6 @@ class Journal(models.Model):
         help_text = 'Hashed password for PROTECTED visibility mode',
     )
 
-    # Timestamps and tracking
     created_datetime = models.DateTimeField(auto_now_add = True)
     modified_datetime = models.DateTimeField(auto_now = True)
     modified_by = models.ForeignKey(
@@ -78,42 +71,36 @@ class Journal(models.Model):
         ordering = ['-created_datetime']
 
     def set_password(self, raw_password):
-        """Set the password using Django's password hashing."""
         if raw_password:
             self._password = make_password(raw_password)
         else:
             self._password = None
 
     def check_password(self, raw_password):
-        """
-        Check if the provided password matches the stored hashed password.
-        Returns True if password matches, False otherwise.
-        """
         if not self._password:
             return False
         return check_password(raw_password, self._password)
 
     @property
     def has_password(self):
-        """Check if a password is set for this journal."""
         return bool(self._password)
 
 
 class JournalEntry(models.Model):
-    """
-    Individual journal entry for a specific date with markdown text.
-    One entry per date per journal.
-    """
+
     objects = managers.JournalEntryManager()
 
-    # Relationship to journal
+    uuid = models.UUIDField(
+        default = uuid.uuid4,
+        unique = True,
+        editable = False,
+    )
     journal = models.ForeignKey(
         Journal,
         on_delete = models.CASCADE,
         related_name = 'entries',
     )
 
-    # Reference image for table of contents display
     reference_image = models.ForeignKey(
         TripImage,
         on_delete = models.SET_NULL,
@@ -122,7 +109,6 @@ class JournalEntry(models.Model):
         related_name = 'journal_entries_as_reference',
     )
 
-    # Date and timezone
     date = models.DateField()
     timezone = models.CharField(
         max_length = 63,
@@ -154,7 +140,6 @@ class JournalEntry(models.Model):
     # Version control for optimistic locking
     edit_version = models.IntegerField(default = 1, editable = False)
 
-    # Timestamps and tracking
     created_datetime = models.DateTimeField(auto_now_add = True)
     modified_datetime = models.DateTimeField(auto_now = True)
     modified_by = models.ForeignKey(
@@ -168,14 +153,12 @@ class JournalEntry(models.Model):
 
     @property
     def is_synced_with_source(self) -> bool:
-        """Check if journal entry is in sync with source notebook entry."""
         if not self.source_notebook_entry:
             return True  # No source, nothing to sync
         return bool( self.source_notebook_version == self.source_notebook_entry.edit_version )
 
     @property
     def has_source_notebook_changed(self) -> bool:
-        """Check if the source notebook entry has changed since this journal entry was created."""
         return bool(bool(self.source_notebook_entry) and not self.is_synced_with_source)
 
     def save(self, *args, **kwargs):

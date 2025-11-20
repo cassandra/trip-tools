@@ -14,11 +14,12 @@ from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage, TripPermissionLevel
 from tt.apps.trips.helpers import TripHelpers
 from tt.apps.trips.mixins import TripViewMixin
-from tt.apps.trips.models import Trip, TripMember
+from tt.apps.trips.models import Trip
 from tt.apps.user.enums import SigninErrorType
 
 from .forms import MemberInviteForm, MemberPermissionForm, MemberRemoveForm
 from .invitation_manager import MemberInvitationManager
+from .models import TripMember
 
 User = get_user_model()
 logger = logging.getLogger(__name__)

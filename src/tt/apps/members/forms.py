@@ -4,7 +4,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from tt.apps.trips.enums import TripPermissionLevel
-from tt.apps.trips.models import TripMember
+
+from .models import TripMember
 
 User = get_user_model()
 

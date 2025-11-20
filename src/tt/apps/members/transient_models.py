@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import List
 
 from tt.apps.trips.enums import TripPermissionLevel
-from tt.apps.trips.models import TripMember
 
+from .models import TripMember
 
 @dataclass
 class TripMemberData:

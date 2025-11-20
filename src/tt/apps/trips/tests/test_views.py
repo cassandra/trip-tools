@@ -2,8 +2,9 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
+from tt.apps.members.models import TripMember
+from tt.apps.trips.enums import TripPermissionLevel, TripPage, TripStatus
 from tt.apps.trips.models import Trip
-from tt.apps.trips.enums import TripPage, TripStatus
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
 
@@ -155,8 +156,6 @@ class TripHomeViewTests(TestCase):
 
     def test_admin_can_view_trip(self):
         """User with ADMIN permission can view trip."""
-        from tt.apps.trips.models import TripMember
-        from tt.apps.trips.enums import TripPermissionLevel
 
         admin_user = User.objects.create_user(
             email='admin@test.com',
@@ -176,8 +175,6 @@ class TripHomeViewTests(TestCase):
 
     def test_editor_can_view_trip(self):
         """User with EDITOR permission can view trip."""
-        from tt.apps.trips.models import TripMember
-        from tt.apps.trips.enums import TripPermissionLevel
 
         editor_user = User.objects.create_user(
             email='editor@test.com',
@@ -197,8 +194,6 @@ class TripHomeViewTests(TestCase):
 
     def test_viewer_can_view_trip(self):
         """User with VIEWER permission can view trip."""
-        from tt.apps.trips.models import TripMember
-        from tt.apps.trips.enums import TripPermissionLevel
 
         viewer_user = User.objects.create_user(
             email='viewer@test.com',

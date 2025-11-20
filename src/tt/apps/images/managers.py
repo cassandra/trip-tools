@@ -1,5 +1,7 @@
 from django.db import models
 
+from tt.apps.members.models import TripMember
+
 
 class TripImageManager(models.Manager):
     """Manager for TripImage model."""
@@ -28,7 +30,6 @@ class TripImageManager(models.Manager):
             return self.none()
 
         # Get all current trip member user IDs
-        from tt.apps.trips.models import TripMember
         member_user_ids = TripMember.objects.filter(
             trip=trip
         ).values_list('user_id', flat=True)
@@ -81,7 +82,6 @@ class TripImageManager(models.Manager):
         Returns:
             QuerySet of TripImage instances from trip members
         """
-        from tt.apps.trips.models import TripMember
         member_user_ids = TripMember.objects.filter(
             trip=trip
         ).values_list('user_id', flat=True)

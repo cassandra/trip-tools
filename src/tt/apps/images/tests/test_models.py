@@ -3,13 +3,18 @@ Tests for TripImage model.
 
 Tests business logic, permissions, and model methods.
 """
+from datetime import datetime
 import logging
+import pytz
 import tempfile
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
 from tt.apps.images.models import TripImage
+from tt.apps.members.models import TripMember
+from tt.apps.trips.models import Trip
+from tt.apps.trips.enums import TripPermissionLevel, TripStatus
 
 User = get_user_model()
 logging.disable(logging.CRITICAL)
@@ -58,8 +63,6 @@ class TripImageTripPermissionTestCase(TestCase):
     """Test TripImage trip-context permissions."""
 
     def setUp(self):
-        from tt.apps.trips.models import Trip, TripMember
-        from tt.apps.trips.enums import TripPermissionLevel, TripStatus
 
         # Create users
         self.alice = User.objects.create_user(
@@ -109,10 +112,6 @@ class TripImageManagerTripContextTestCase(TestCase):
     """Test TripImageManager trip-context methods."""
 
     def setUp(self):
-        from datetime import datetime
-        from tt.apps.trips.models import Trip, TripMember
-        from tt.apps.trips.enums import TripPermissionLevel, TripStatus
-        import pytz
 
         # Create users
         self.alice = User.objects.create_user(

@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
+from tt.apps.members.models import TripMember
+
 from .enums import TripPage
-from .models import TripMember
 
 
 @dataclass

@@ -6,7 +6,8 @@ the project's synthetic_data.py pattern. It creates real database objects
 (never mocks) for use in Django tests.
 """
 
-from tt.apps.trips.models import Trip, TripMember
+from tt.apps.members.models import TripMember
+from tt.apps.trips.models import Trip
 from tt.apps.trips.enums import TripPermissionLevel, TripStatus
 
 

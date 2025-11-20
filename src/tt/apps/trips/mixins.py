@@ -2,8 +2,10 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import BadRequest, PermissionDenied
 from django.http import Http404, HttpRequest
 
+from tt.apps.members.models import TripMember
+
 from .enums import TripPermissionLevel
-from .models import Trip, TripMember
+from .models import Trip
 
 User = get_user_model()
 

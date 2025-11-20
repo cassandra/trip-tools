@@ -10,7 +10,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 
-from tt.apps.trips.models import Trip, TripMember
+from tt.apps.members.models import TripMember
+from tt.apps.trips.models import Trip
 from tt.apps.trips.enums import TripPermissionLevel
 from tt.apps.journal.models import Journal, JournalEntry
 from tt.apps.journal.autosave_helpers import JournalAutoSaveHelper

@@ -9,7 +9,9 @@ from django.urls import reverse
 from tt.apps.common.singleton import Singleton
 from tt.apps.notify.email_sender import EmailData, EmailSender
 from tt.apps.trips.enums import TripPermissionLevel
-from tt.apps.trips.models import Trip, TripMember
+from tt.apps.trips.models import Trip
+
+from .models import TripMember
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
