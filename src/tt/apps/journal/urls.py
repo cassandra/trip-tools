@@ -1,14 +1,51 @@
-from django.urls import re_path
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    re_path(r'^trip/(?P<trip_id>\d+)/$', views.JournalHomeView.as_view(), name='journal_home'),
-    re_path(r'^trip/(?P<trip_id>\d+)/create$', views.CreateJournalView.as_view(), name='journal_create'),
-    re_path(r'^trip/(?P<trip_id>\d+)/entry/new/$', views.JournalEntryView.as_view(), name='journal_entry_new'),
-    re_path(r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/$', views.JournalEntryView.as_view(), name='journal_entry'),
-    re_path(r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/save$', views.JournalEntryAutosaveView.as_view(), name='journal_entry_autosave'),
-    re_path(r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/delete$', views.JournalEntryDeleteModalView.as_view(), name='journal_entry_delete'),
-    re_path(r'^trip/(?P<trip_id>\d+)/entry/(?P<entry_pk>\d+)/images/$', views.JournalEntryImagePickerView.as_view(), name='journal_entry_images'),
-    re_path(r'^editor-help$', views.JournalEditorHelpView.as_view(), name='journal_editor_help'),
+    path(
+        r'trip/<uuid:trip_uuid>',
+        views.JournalHomeView.as_view(),
+        name='journal_home'
+    ),
+    path(
+        r'trip/<uuid:trip_uuid>/create',
+        views.JournalCreateView.as_view(),
+        name='journal_create'
+    ),
+    path(
+        r'<uuid:journal_uuid>',
+        views.JournalView.as_view(),
+        name='journal'
+    ),
+    path(
+        r'<uuid:journal_uuid>/entry/new/',
+        views.JournalEntryNewView.as_view(),
+        name='journal_entry_new'
+    ),
+    path(
+        r'entry/<uuid:entry_uuid>',
+        views.JournalEntryView.as_view(),
+        name='journal_entry'
+    ),
+    path(
+        r'entry/<uuid:entry_uuid>/save',
+        views.JournalEntryAutosaveView.as_view(),
+        name='journal_entry_autosave'
+    ),
+    path(
+        r'entry/<uuid:entry_uuid>/delete',
+        views.JournalEntryDeleteModalView.as_view(),
+        name='journal_entry_delete'
+    ),
+    path(
+        r'entry/<uuid:entry_uuid>/images/',
+        views.JournalEntryImagePickerView.as_view(),
+        name='journal_entry_images'
+    ),
+    path(
+        r'entry/editor-help',
+        views.JournalEditorHelpView.as_view(),
+        name='journal_editor_help'
+    ),
 ]

@@ -5,7 +5,7 @@
 {% block title_text %}Create Trip Journal{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'journal_create' trip_id=trip_id %}" data-async="modal">
+<form method="post" action="{% url 'journal_create' trip_uuid=trip.uuid %}" data-async="modal">
   {% csrf_token %}
 {% endblock %}
 

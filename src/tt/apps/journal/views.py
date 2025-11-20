@@ -1,10 +1,10 @@
 from datetime import date as date_class, timedelta
 import logging
+from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError, transaction
-from django.core.exceptions import BadRequest
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -12,6 +12,7 @@ from django.views.generic import View
 
 from tt.apps.common.antinode import http_response
 from tt.apps.console.console_helper import ConsoleSettingsHelper
+from tt.apps.members.models import TripMember
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
@@ -21,51 +22,56 @@ from .autosave_helpers import JournalAutoSaveHelper, JournalConflictHelper
 from .context import JournalPageContext
 from .enums import JournalVisibility, ImagePickerScope
 from .forms import JournalForm, JournalEntryForm
+from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry
 from .services import JournalImagePickerService, JournalEntrySeederService
 
 logger = logging.getLogger(__name__)
 
 
-class JournalHomeView(LoginRequiredMixin, TripViewMixin, View):
+class JournalHomeView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
 
-    def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
+    def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_viewer(request_member)
         trip = request_member.trip
 
         # Fetch journal for trip (MVP: get_primary_for_trip)
-        journal = Journal.objects.get_primary_for_trip(trip)
-        journal_entries = journal.entries.all() if journal else []
+        journal = Journal.objects.get_primary_for_trip( trip )
+        if journal:
+            redirect_url = reverse( 'journal', kwargs = { 'journal_uuid': journal.uuid })
+            return HttpResponseRedirect( redirect_url )
 
+        if not request_member.can_edit_trip:
+            return self.journal_permission_denied_response(
+                request = request,
+                request_member = request_member,
+                journal = None,
+            )
+        
         trip_page_context = TripPageContext(
             active_page = TripPage.JOURNAL,
             request_member = request_member,
         )
         journal_page_context = JournalPageContext(
-            journal = journal,
-            journal_entries = journal_entries
+            journal = None,
+            journal_entries = list(),
         )
         context = {
             'trip_page': trip_page_context,
             'journal_page': journal_page_context,
-            'journal': journal,
-            'journal_entries': journal_entries,
         }
-
-        if not request_member.can_edit_trip:
-            return render(request, 'journal/pages/journal_permission_denied.html', context)
-        
-        return render(request, 'journal/pages/journal_home.html', context)
+         
+        return render(request, 'journal/pages/journal_start.html', context)
 
 
-class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
+class JournalCreateView( LoginRequiredMixin, TripViewMixin, ModalView ):
 
     def get_template_name(self) -> str:
         return 'journal/modals/journal_create.html'
 
-    def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
+    def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_editor(request_member)
         trip = request_member.trip
 
@@ -80,12 +86,12 @@ class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
 
         context = {
             'form': form,
-            'trip_id': trip_id,
+            'trip': trip,
         }
         return self.modal_response(request, context=context)
 
-    def post(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
+    def post(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_editor(request_member)
         trip = request_member.trip
 
@@ -111,86 +117,137 @@ class CreateJournalView(LoginRequiredMixin, TripViewMixin, ModalView):
 
         context = {
             'form': form,
-            'trip_id': trip_id,
+            'trip': trip,
         }
         return self.modal_response(request, context=context, status=400)
 
 
-class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
+class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
 
-    def get(self, request, trip_id: int, entry_pk: int = None, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
+    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
         self.assert_is_viewer(request_member)
-        trip = request_member.trip
 
-        journal = Journal.objects.get_primary_for_trip(trip)
-        if not journal:
-            return redirect('journal_home', trip_id=trip.pk)
+        if not request_member.can_edit_trip:
+            return self.journal_permission_denied_response(
+                request = request,
+                request_member = request_member,
+                journal = journal,
+            )
+        
+        journal_entries = journal.entries.all() if journal else []
+
+        trip_page_context = TripPageContext(
+            active_page = TripPage.JOURNAL,
+            request_member = request_member,
+        )
+        journal_page_context = JournalPageContext(
+            journal = journal,
+            journal_entries = journal_entries
+        )
+        context = {
+            'trip_page': trip_page_context,
+            'journal_page': journal_page_context,
+            'journal': journal,
+            'journal_entries': journal_entries,
+        }
+
+        return render(request, 'journal/pages/journal.html', context)
+
+
+class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
+
+    def get(self, request, journal_uuid : UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_viewer(request_member)
+
+        if not request_member.can_edit_trip:
+            return self.journal_permission_denied_response(
+                request = request,
+                request_member = request_member,
+                journal = journal,
+            )
+        
+        # Only editors can create new entries
+        self.assert_is_editor(request_member)
+
+        # Calculate default date and timezone
+        latest_entry = journal.entries.order_by('-date').first()
+        if latest_entry:
+            # Subsequent entry: inherit from previous entry
+            default_date = latest_entry.date + timedelta(days=1)
+            default_timezone = latest_entry.timezone
+        else:
+            # First entry: use today and inherit from journal
+            default_date = date_class.today()
+            default_timezone = journal.timezone
+
+        # Create new entry (title will be auto-generated from date in model.save())
+        entry = JournalEntry.objects.create(
+            journal = journal,
+            date = default_date,
+            timezone = default_timezone,
+            text = '',
+            modified_by = request.user,
+        )
+        return redirect( 'journal_entry', entry_uuid = entry.uuid )
+
+
+class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
+
+    def get(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        entry = get_object_or_404(
+            JournalEntry,
+            uuid = entry_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = entry.journal.trip,
+            user = request.user,
+        )
+        self.assert_is_viewer(request_member)
+
+        if not request_member.can_edit_trip:
+            return self.journal_permission_denied_response(
+                request = request,
+                request_member = request_member,
+                journal = entry.journal,
+            )
+
+        accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
+            trip = entry.journal.trip,
+            user = request.user,
+            date = entry.date,
+            timezone = entry.timezone,
+            scope = ImagePickerScope.DEFAULT,
+        )
 
         trip_page_context = TripPageContext(
             active_page = TripPage.JOURNAL,
             request_member = request_member,
         )
         
-        if not request_member.can_edit_trip:
-            journal_entries = journal.entries.all() if journal else []
-            journal_page_context = JournalPageContext(
-                journal = journal,
-                journal_entries = journal_entries,
-            )
-            context = {
-                'trip_page': trip_page_context,
-                'journal_page': journal_page_context,
-                'journal': journal,
-            }
-            return render(request, 'journal/pages/journal_permission_denied.html', context)
-        
-        if entry_pk:
-            entry = get_object_or_404(
-                JournalEntry,
-                pk = entry_pk,
-                journal = journal,
-            )
-        else:
-            # New entry creation
-            # Only editors can create new entries
-            self.assert_is_editor(request_member)
-
-            # Calculate default date and timezone
-            latest_entry = journal.entries.order_by('-date').first()
-            if latest_entry:
-                # Subsequent entry: inherit from previous entry
-                default_date = latest_entry.date + timedelta(days=1)
-                default_timezone = latest_entry.timezone
-            else:
-                # First entry: use today and inherit from journal
-                default_date = date_class.today()
-                default_timezone = journal.timezone
-
-            # Create new entry (title will be auto-generated from date in model.save())
-            entry = JournalEntry.objects.create(
-                journal = journal,
-                date = default_date,
-                timezone = default_timezone,
-                text = '',
-                modified_by = request.user,
-            )
-
-            return redirect('journal_entry', trip_id=trip.pk, entry_pk=entry.pk)
-
-        accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
-            trip=trip,
-            user=request.user,
-            date=entry.date,
-            timezone=entry.timezone,
-            scope=ImagePickerScope.DEFAULT,
-        )
-
-        journal_entries = journal.entries.all()
+        journal_entries = entry.journal.entries.all()
         journal_page_context = JournalPageContext(
-            journal = journal,
+            journal = entry.journal,
             journal_entries = journal_entries,
-            journal_entry_pk = entry_pk,
+            journal_entry_pk = entry.pk,
         )
 
         # Create form for entry metadata fields
@@ -199,11 +256,11 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
         context = {
             'trip_page': trip_page_context,
             'journal_page': journal_page_context,
-            'journal': journal,
+            'journal': entry.journal,
             'entry': entry,
             'journal_entry_form': journal_entry_form,
             'accessible_images': accessible_images,
-            'trip': trip,
+            'trip': entry.journal.trip,
             'show_source_changed_warning': entry.has_source_notebook_changed,
         }
         return render(request, 'journal/pages/journal_entry.html', context)
@@ -211,32 +268,20 @@ class JournalEntryView(LoginRequiredMixin, TripViewMixin, View):
 
 class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
 
-    def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
-        return JsonResponse(
-            {'status': 'error', 'message': 'Method not allowed'},
-            status=405,
-        )
-
-    def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> JsonResponse:
-        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
-        self.assert_is_editor(request_member)
-        trip = request_member.trip
-
-        journal = Journal.objects.get_primary_for_trip(trip)
-        if not journal:
-            return JsonResponse(
-                {'status': 'error', 'message': 'No journal found for this trip'},
-                status=404
-            )
-
+    def post(self, request, entry_uuid: UUID, *args, **kwargs) -> JsonResponse:
         entry = get_object_or_404(
             JournalEntry,
-            pk=entry_pk,
-            journal=journal,
+            uuid = entry_uuid,
         )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = entry.journal.trip,
+            user = request.user,
+        )
+        self.assert_is_editor(request_member)
 
         autosave_request, error_response = JournalAutoSaveHelper.parse_autosave_request(
-            request_body=request.body
+            request_body = request.body
         )
         if error_response:
             return error_response
@@ -252,29 +297,29 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
                 if autosave_request.client_version is not None:
                     if locked_entry.edit_version != autosave_request.client_version:
                         return JournalConflictHelper.build_conflict_response(
-                            request=request,
-                            entry=locked_entry,
-                            client_text=autosave_request.text  # Show unsanitized version in diff
+                            request = request,
+                            entry = locked_entry,
+                            client_text = autosave_request.text  # Show unsanitized version in diff
                         )
 
                 # Check for date conflicts if date is changing (inside transaction for atomicity)
                 if autosave_request.new_date:
                     date_error = JournalAutoSaveHelper.validate_date_uniqueness(
-                        entry=locked_entry,
-                        new_date=autosave_request.new_date
+                        entry = locked_entry,
+                        new_date = autosave_request.new_date
                     )
                     if date_error:
                         return date_error
 
                 # Update fields and increment version atomically
                 updated_entry = JournalAutoSaveHelper.update_entry_atomically(
-                    entry=locked_entry,
-                    text=sanitized_text,  # Use sanitized HTML
-                    user=request.user,
-                    new_date=autosave_request.new_date,
-                    new_title=autosave_request.new_title,
-                    new_timezone=autosave_request.new_timezone,
-                    new_reference_image_id=autosave_request.new_reference_image_id
+                    entry = locked_entry,
+                    text = sanitized_text,  # Use sanitized HTML
+                    user = request.user,
+                    new_date = autosave_request.new_date,
+                    new_title = autosave_request.new_title,
+                    new_timezone = autosave_request.new_timezone,
+                    new_reference_image_id = autosave_request.new_reference_image_id
                 )
 
             return JsonResponse({
@@ -284,41 +329,82 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
             })
 
         except JournalEntry.DoesNotExist:
-            logger.error(f'Entry {entry_pk} not found during atomic update')
+            logger.error(f'Entry {entry.pk} not found during atomic update')
             return JsonResponse(
                 {'status': 'error', 'message': 'Entry not found'},
-                status=404
+                status = 404
             )
         except IntegrityError as e:
-            logger.warning(f'Integrity constraint violation for entry {entry_pk}: {e}')
+            logger.warning(f'Integrity constraint violation for entry {entry.pk}: {e}')
             return JsonResponse(
                 {'status': 'error', 'message': 'Unable to save - entry date conflicts with another entry'},
-                status=409
+                status = 409
             )
         except DatabaseError as e:
-            logger.error(f'Database error auto-saving journal entry {entry_pk}: {e}')
+            logger.error(f'Database error auto-saving journal entry {entry.pk}: {e}')
             return JsonResponse(
                 {'status': 'error', 'message': 'Database error occurred'},
-                status=500
+                status = 500
             )
 
 
-class JournalEntryImagePickerView(LoginRequiredMixin, TripViewMixin, View):
+class JournalEntryDeleteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
 
-    def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
-        self.assert_is_viewer(request_member)
-        trip = request_member.trip
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_entry_delete.html'
 
-        journal = Journal.objects.get_primary_for_trip(trip)
-        if not journal:
-            return http_response({'error': 'No journal found'}, status=404)
-
+    def get(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
         entry = get_object_or_404(
             JournalEntry,
-            pk = entry_pk,
-            journal = journal,
+            uuid = entry_uuid,
         )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = entry.journal.trip,
+            user = request.user,
+        )
+        self.assert_is_editor(request_member)
+        trip = request_member.trip
+        context = {
+            'trip': trip,
+            'journal': entry.journal,
+            'journal_entry': entry,
+        }
+        return self.modal_response(request, context=context)
+
+    def post(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        entry = get_object_or_404(
+            JournalEntry,
+            uuid = entry_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = entry.journal.trip,
+            user = request.user,
+        )
+        self.assert_is_editor(request_member)
+
+        with transaction.atomic():
+            entry.delete()
+
+        redirect_url = reverse( 'journal', kwargs = { 'journal_uuid': entry.journal.uuid })
+        return self.redirect_response( request, redirect_url )
+
+
+class JournalEntryImagePickerView( LoginRequiredMixin, TripViewMixin, View ):
+
+    def get(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        entry = get_object_or_404(
+            JournalEntry,
+            uuid = entry_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = entry.journal.trip,
+            user = request.user,
+        )
+        self.assert_is_viewer(request_member)
+        trip = request_member.trip
 
         selected_date_str = request.GET.get('date', None)
         if not selected_date_str:
@@ -359,52 +445,3 @@ class JournalEditorHelpView(LoginRequiredMixin, ModalView):
         # No context needed - help is generic
         context = {}
         return self.modal_response(request, context=context)
-
-
-class JournalEntryDeleteModalView(LoginRequiredMixin, TripViewMixin, ModalView):
-
-    def get_template_name(self) -> str:
-        return 'journal/modals/journal_entry_delete.html'
-
-    def get(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
-        self.assert_is_editor(request_member)
-        trip = request_member.trip
-
-        journal = Journal.objects.get_primary_for_trip( trip )
-        if not journal:
-            raise BadRequest('This trip has no Journal')
-
-        journal_entry = get_object_or_404(
-            JournalEntry,
-            pk = entry_pk,
-            journal = journal,
-        )
-        
-        context = {
-            'trip': trip,
-            'journal': journal,
-            'journal_entry': journal_entry,
-        }
-        return self.modal_response(request, context=context)
-
-    def post(self, request, trip_id: int, entry_pk: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY(request, trip_id=trip_id)
-        self.assert_is_editor(request_member)
-        trip = request_member.trip
-
-        journal = Journal.objects.get_primary_for_trip(trip)
-        if not journal:
-            raise BadRequest('This trip has no Journal')
-
-        journal_entry = get_object_or_404(
-            JournalEntry,
-            pk = entry_pk,
-            journal = journal,
-        )
-
-        with transaction.atomic():
-            journal_entry.delete()
-
-        redirect_url = reverse( 'journal_home', kwargs = { 'trip_id': trip_id })
-        return self.redirect_response( request, redirect_url )

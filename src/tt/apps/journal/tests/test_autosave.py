@@ -59,8 +59,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
     def test_autosave_basic_text_update(self):
         """Test basic autosave of text content."""
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         data = {
@@ -88,8 +87,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
     def test_autosave_sanitizes_malicious_html(self):
         """Test that malicious HTML is sanitized."""
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         data = {
@@ -114,8 +112,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
     def test_autosave_removes_event_handlers(self):
         """Test that event handlers are removed."""
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         data = {
@@ -139,8 +136,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
     def test_autosave_updates_title(self):
         """Test that title can be updated via autosave."""
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         data = {
@@ -163,8 +159,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
     def test_autosave_updates_date(self):
         """Test that date can be updated via autosave."""
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         new_date = '2024-01-02'
@@ -198,8 +193,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
         )
 
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         # Try to change entry date to Jan 2 (conflict)
@@ -223,8 +217,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
     def test_autosave_version_conflict_detection(self):
         """Test that version conflicts are detected."""
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         data = {
@@ -246,8 +239,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
     def test_autosave_invalid_json(self):
         """Test handling of invalid JSON."""
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         response = self.client.post(
@@ -263,8 +255,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
         self.client.logout()
 
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         data = {
@@ -298,8 +289,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
         self.client.login(email='viewer@example.com', password='testpass123')
 
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         data = {
@@ -318,8 +308,7 @@ class JournalEntryAutosaveBasicTests(TestCase):
     def test_autosave_get_method_not_allowed(self):
         """Test that GET method is not allowed."""
         url = reverse('journal_entry_autosave', kwargs={
-            'trip_id': self.trip.pk,
-            'entry_pk': self.entry.pk
+            'entry_uuid': self.entry.uuid
         })
 
         response = self.client.get(url)

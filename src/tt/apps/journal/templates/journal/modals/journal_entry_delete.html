@@ -4,7 +4,7 @@
 {% block title_text %}Delete Journal Entry{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'journal_entry_delete' trip_id=trip.pk entry_pk=journal_entry.pk %}" data-async="modal">
+<form method="post" action="{% url 'journal_entry_delete' entry_uuid=journal_entry.uuid %}" data-async="modal">
   {% csrf_token %}
 {% endblock %}
 

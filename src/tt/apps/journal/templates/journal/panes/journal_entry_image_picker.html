@@ -6,7 +6,7 @@
   <h5 class="mb-2">Images</h5>
 
   <!-- Date and Scope Filter Form -->
-  <form method="get" action="{% url 'journal_entry_images' trip_id=trip.id entry_pk=entry.id %}" data-async="#journal-image-gallery" data-mode="insert">
+  <form method="get" action="{% url 'journal_entry_images' entry_uuid=entry.uuid %}" data-async="#journal-image-gallery" data-mode="insert">
     <!-- Date Filter -->
     <input
         type="date"

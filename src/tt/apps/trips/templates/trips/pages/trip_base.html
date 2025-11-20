@@ -58,7 +58,7 @@
     </a>
   </li>
   <li>
-    <a href="{% url 'journal_home' trip_id=trip_page.trip.pk %}"{% if trip_page.active_page.value == 'journal' %} class="active" aria-current="page"{% endif %}>
+    <a href="{% url 'journal_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'journal' %} class="active" aria-current="page"{% endif %}>
       {% icon "collection" size="sm" %}
       <span>Journal</span>
     </a>

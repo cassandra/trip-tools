@@ -70,7 +70,7 @@
     contenteditable="true"
     data-{{ DIVID.JOURNAL_ENTRY_PK_ATTR }}="{{ entry.pk }}"
     data-{{ DIVID.JOURNAL_CURRENT_VERSION_ATTR }}="{{ entry.edit_version }}"
-    data-{{ DIVID.JOURNAL_AUTOSAVE_URL_ATTR }}="{% url 'journal_entry_autosave' trip_id=trip.id entry_pk=entry.pk %}"
+    data-{{ DIVID.JOURNAL_AUTOSAVE_URL_ATTR }}="{% url 'journal_entry_autosave' entry_uuid=entry.uuid %}"
     data-placeholder="Start writing your journal entry..."
     role="textbox"
     aria-label="Journal entry content"

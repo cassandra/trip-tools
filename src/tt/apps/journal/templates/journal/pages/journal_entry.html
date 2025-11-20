@@ -105,7 +105,7 @@
     <!-- Footer: Delete and Help Buttons -->
     <div class="d-flex justify-content-between m-2">
       <!-- Delete Button (left) -->
-      <a href="{% url 'journal_entry_delete' trip_id=trip.pk entry_pk=entry.pk %}"
+      <a href="{% url 'journal_entry_delete' entry_uuid=entry.uuid %}"
          class="btn btn-sm btn-outline-danger"
          data-async="modal"
          title="Delete this journal entry">
