@@ -93,6 +93,25 @@
 
     </form>
 
+    <!-- Footer: Delete and Help Buttons -->
+    <div class="d-flex justify-content-between m-2">
+      <!-- Delete Button (left) -->
+      <a href="{% url 'journal_entry_delete' trip_id=trip.pk entry_pk=entry.pk %}"
+         class="btn btn-sm btn-outline-danger"
+         data-async="modal"
+         title="Delete this journal entry">
+        {% icon "delete" size="sm" %} Delete Entry
+      </a>
+
+      <!-- Editing Help Button (right) -->
+      <a href="{% url 'journal_editor_help' %}"
+         class="btn btn-sm btn-outline-secondary"
+         data-async="modal"
+         title="Show keyboard shortcuts and editing help">
+        {% icon "question-circle" size="sm" %} Editing Help
+      </a>
+    </div>
+
   </div>
 
   <!-- ===========================================
