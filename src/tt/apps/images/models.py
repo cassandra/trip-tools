@@ -1,4 +1,5 @@
 import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -104,10 +105,17 @@ class TripImage(models.Model):
         default = False,
         help_text = 'Whether EXIF metadata was successfully extracted from the uploaded image',
     )
-    timezone_unknown = models.BooleanField(
-        default = False,
-        help_text = 'Whether datetime_utc timezone is uncertain (no EXIF offset found, assumed UTC)',
+    timezone = models.CharField(
+        max_length = 63,
+        null = True,
+        blank = True,
+        help_text = "IANA timezone name if detected from EXIF data (e.g., 'America/New_York')",
     )
+
+    @property
+    def timezone_unknown(self) -> bool:
+        """Whether datetime_utc timezone is uncertain (no timezone information available)."""
+        return self.timezone is None
 
     # Upload tracking
     uploaded_by = models.ForeignKey(
@@ -118,45 +126,21 @@ class TripImage(models.Model):
     )
     uploaded_datetime = models.DateTimeField(auto_now_add = True)
 
+    # Edit tracking
+    modified_datetime = models.DateTimeField(
+        auto_now = True,
+        help_text = 'Last modification timestamp (auto-updated)',
+    )
+    modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete = models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name = 'modified_images',
+        help_text = 'User who last modified this image metadata',
+    )
+
     def __str__(self):
         if self.datetime_utc:
             return f"TripImage {self.uuid} ({self.datetime_utc.strftime('%Y-%m-%d')})"
         return f"TripImage {self.uuid}"
-
-    def user_can_access(self, user, trip=None) -> bool:
-        """
-        Check if user has permission to access this image.
-
-        Permission granted when:
-        1. User is the uploader (always)
-        2. User is a current member of the specified trip (if trip provided)
-
-        Args:
-            user: User to check permission for
-            trip: Optional Trip instance for trip-context permission check
-
-        Returns:
-            True if user can access this image
-        """
-        if not user or not user.is_authenticated:
-            return False
-
-        # User can always access their own images
-        if self.uploaded_by == user:
-            return True
-
-        # If trip context provided, check trip membership
-        if trip:
-            from tt.apps.trips.models import TripMember
-            return TripMember.objects.filter(
-                trip=trip,
-                user=user
-            ).exists()
-
-        # No trip context, only uploader has access
-        return False
-
-    class Meta:
-        verbose_name = 'Trip Image'
-        verbose_name_plural = 'Trip Images'
-        ordering = ['-datetime_utc', '-uploaded_datetime']

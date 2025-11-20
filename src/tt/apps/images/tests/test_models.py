@@ -16,43 +16,6 @@ logging.disable(logging.CRITICAL)
 
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
-class TripImagePermissionTestCase(TestCase):
-    """Test TripImage permission methods."""
-
-    def setUp(self):
-        self.owner = User.objects.create_user(
-            email='owner@example.com',
-            password='password',
-        )
-        self.other_user = User.objects.create_user(
-            email='other@example.com',
-            password='password',
-        )
-        self.trip_image = TripImage.objects.create(
-            uploaded_by=self.owner,
-            caption='Test image',
-        )
-
-    def test_owner_can_access(self):
-        """Image owner should have access."""
-        self.assertTrue(self.trip_image.user_can_access(self.owner))
-
-    def test_other_user_cannot_access(self):
-        """Non-owner user should not have access."""
-        self.assertFalse(self.trip_image.user_can_access(self.other_user))
-
-    def test_unauthenticated_user_cannot_access(self):
-        """Unauthenticated user should not have access."""
-        from django.contrib.auth.models import AnonymousUser
-        anonymous = AnonymousUser()
-        self.assertFalse(self.trip_image.user_can_access(anonymous))
-
-    def test_none_user_cannot_access(self):
-        """None user should not have access."""
-        self.assertFalse(self.trip_image.user_can_access(None))
-
-
-@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class TripImageManagerTestCase(TestCase):
     """Test TripImage manager methods."""
 
@@ -138,49 +101,6 @@ class TripImageTripPermissionTestCase(TestCase):
         self.charlie_image = TripImage.objects.create(
             uploaded_by=self.charlie,
             caption='Charlie image',
-        )
-
-    def test_uploader_can_access_without_trip_context(self):
-        """Uploader has access without trip context."""
-        self.assertTrue(self.alice_image.user_can_access(self.alice))
-
-    def test_uploader_can_access_with_trip_context(self):
-        """Uploader has access with trip context."""
-        self.assertTrue(
-            self.alice_image.user_can_access(self.alice, trip=self.trip)
-        )
-
-    def test_trip_member_can_access_other_members_image(self):
-        """Trip member (Bob) can access another member's (Alice) image."""
-        self.assertTrue(
-            self.alice_image.user_can_access(self.bob, trip=self.trip)
-        )
-
-    def test_non_member_cannot_access_with_trip_context(self):
-        """Non-member (Charlie) cannot access trip member's image."""
-        self.assertFalse(
-            self.alice_image.user_can_access(self.charlie, trip=self.trip)
-        )
-
-    def test_trip_member_cannot_access_without_trip_context(self):
-        """Trip member cannot access other's image without trip context."""
-        self.assertFalse(self.alice_image.user_can_access(self.bob))
-
-    def test_former_member_loses_access(self):
-        """Former member loses access after removal from trip."""
-        from tt.apps.trips.models import TripMember
-
-        # Initially Bob has access
-        self.assertTrue(
-            self.alice_image.user_can_access(self.bob, trip=self.trip)
-        )
-
-        # Remove Bob from trip
-        TripMember.objects.filter(trip=self.trip, user=self.bob).delete()
-
-        # Bob no longer has access
-        self.assertFalse(
-            self.alice_image.user_can_access(self.bob, trip=self.trip)
         )
 
 

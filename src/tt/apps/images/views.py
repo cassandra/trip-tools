@@ -1,21 +1,29 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
 
 from tt.apps.dashboard.context import DashboardPageContext
 from tt.apps.dashboard.enums import DashboardPage
+from tt.apps.trips.context import TripPageContext
+from tt.apps.trips.enums import TripPage
+from tt.apps.trips.mixins import TripViewMixin
 from tt.async_view import ModalView
 
+from .context import ImagePageContext
+from .enums import ImageAccessRole
+from .forms import TripImageEditForm
+from .helpers import TripImageHelpers
 from .models import TripImage
 from .services import ImageUploadService, HEIF_SUPPORT_AVAILABLE
 
 logger = logging.getLogger(__name__)
 
 
-class TripImagesHomeView(LoginRequiredMixin, View):
+class TripImagesHomeView( LoginRequiredMixin, View ):
     """
     Home view for image management of images used for trips.
     """
@@ -44,7 +52,7 @@ class TripImagesHomeView(LoginRequiredMixin, View):
         uploaded_files = request.FILES.getlist('files')
 
         if not uploaded_files:
-            logger.info(
+            logger.debug(
                 f"Upload rejected: User {request.user.email} (ID: {request.user.id}) "
                 f"submitted request with no files"
             )
@@ -69,7 +77,7 @@ class TripImagesHomeView(LoginRequiredMixin, View):
                 error_count += 1
 
         # Log upload summary
-        logger.info(
+        logger.debug(
             f"Upload batch completed: User {request.user.email} (ID: {request.user.id}) - "
             f"{success_count} succeeded, {error_count} failed out of {len(uploaded_files)} files"
         )
@@ -78,7 +86,7 @@ class TripImagesHomeView(LoginRequiredMixin, View):
         return JsonResponse({'files': results})
 
 
-class TripImageInspectView(LoginRequiredMixin, ModalView):
+class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
     """
     Modal view for inspecting/previewing a trip image with full metadata.
 
@@ -90,42 +98,74 @@ class TripImageInspectView(LoginRequiredMixin, ModalView):
     2. Without trip context: Only uploader has access
     """
 
-    def get_template_name(self) -> str:
-        return 'images/modals/trip_image_inspect.html'
+    def get_template_name(self, image_access_role : ImageAccessRole ) -> str:
+        if image_access_role.can_edit:
+            return 'images/modals/trip_image_inspect_edit.html'
+        return 'images/modals/trip_image_inspect_view.html'
 
     def get(self, request, image_uuid: str, *args, **kwargs) -> HttpResponse:
-        # Fetch image by UUID
-        trip_image = get_object_or_404(TripImage, uuid=image_uuid)
 
-        # Determine trip context (optional)
-        trip = None
-        trip_id = request.GET.get('trip_id')
-        if trip_id:
-            try:
-                from tt.apps.trips.models import Trip
-                trip = Trip.objects.get(pk=int(trip_id))
-            except (ValueError, Trip.DoesNotExist):
-                pass  # Invalid trip_id, fall back to non-trip context
+        image_page_context = self.get_image_page_context( request, image_uuid, *args, **kwargs )
 
-        # Permission check with optional trip context
-        if not trip_image.user_can_access(request.user, trip=trip):
-            logger.warning(
-                f"Access denied: User {request.user.email} (ID: {request.user.id}) "
-                f"attempted to access TripImage {image_uuid} "
-                f"(trip_id: {trip_id if trip_id else 'none'}) "
-                f"owned by {trip_image.uploaded_by.email if trip_image.uploaded_by else 'unknown'}"
-            )
-            return JsonResponse(
-                {'error': 'You do not have permission to access this image.'},
-                status=403,
-            )
+        if not image_page_context.image_access_role.can_access:
+            raise PermissionDenied('You do not have permission to access this image.')
 
-        # Determine if user can edit metadata (only uploader)
-        can_edit_metadata = (trip_image.uploaded_by == request.user)
+        trip_image_form = None
+        if image_page_context.image_access_role.can_edit:
+            trip_image_form = TripImageEditForm( instance = image_page_context.trip_image )
 
         context = {
-            'image': trip_image,
-            'can_edit_metadata': can_edit_metadata,
-            'trip': trip,  # May be None
+            'image_page_context': image_page_context,
+            'trip_image_form': trip_image_form,
         }
-        return self.modal_response(request, context=context)
+        template_name = self.get_template_name( image_access_role = image_page_context.image_access_role )
+        return self.modal_response( request, context = context, template_name = template_name )
+
+    def post(self, request, image_uuid: str, *args, **kwargs) -> HttpResponse:
+
+        image_page_context = self.get_image_page_context( request, image_uuid, *args, **kwargs )
+            
+        if not image_page_context.image_access_role.can_edit:
+            raise PermissionDenied('You do not have permission to access this image.')
+
+        trip_image_form = TripImageEditForm( request.POST, instance = image_page_context.trip_image )
+
+        if trip_image_form.is_valid():
+            trip_image_form.save( user = request.user )
+            return self.refresh_response( request )
+
+        # Form has errors - re-render with errors
+        context = {
+            'image_page_context': image_page_context,
+            'trip_image_form': trip_image_form,
+        }
+        template_name = self.get_template_name( image_access_role = image_page_context.image_access_role )
+        return self.modal_response( request, context = context, template_name = template_name )
+
+    def get_image_page_context( self, request, image_uuid: str, *args, **kwargs ) -> ImagePageContext:
+
+        trip_image = get_object_or_404( TripImage, uuid = image_uuid )
+
+        # Determine trip context (optional - image can be accessed outside trip context)
+        trip_page_context = None
+        try:
+            trip_id = int( request.GET.get('trip_id') )
+            request_member = self.get_trip_member( request, trip_id = trip_id )
+            trip_page_context = TripPageContext(
+                active_page = TripPage.IMAGES,
+                request_member = request_member,
+            )
+        except ( TypeError, ValueError):
+            pass
+  
+        image_access_role = TripImageHelpers.get_image_access_mode(
+            user = request.user,
+            trip_image = trip_image,
+            trip_page_context = trip_page_context,
+        )
+        return ImagePageContext(
+            user = request.user,
+            trip_image = trip_image,
+            image_access_role = image_access_role,
+            trip_page_context = trip_page_context,
+        )

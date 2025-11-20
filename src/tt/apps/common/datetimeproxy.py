@@ -413,3 +413,52 @@ def is_time_of_day_in_interval( time_of_day_str  : str,
 
 def is_valid_timezone_name( tz_name : str ) -> bool:
     return tz_name in pytz.all_timezones_set
+
+
+def offset_to_timezone( offset_minutes : int, reference_datetime : datetime.datetime ):
+    """
+    Convert UTC offset in minutes to an IANA timezone name.
+
+    This is a best-effort mapping. Since multiple timezones can share the same
+    offset, we prioritize timezones from TIMEZONE_NAME_LIST (common, user-friendly names)
+    before falling back to other pytz timezones.
+
+    Args:
+        offset_minutes: UTC offset in minutes (e.g., -300 for UTC-5, 120 for UTC+2)
+        reference_datetime: The datetime to check against (needed for DST consideration)
+
+    Returns:
+        IANA timezone name (e.g., 'America/New_York') or fallback Etc/GMT format
+    """
+    from tt.constants import TIMEZONE_NAME_LIST
+
+    # Find timezone that has this offset at the given datetime
+    # This is important because DST changes which timezone has which offset
+    target_offset = datetime.timedelta(minutes=offset_minutes)
+
+    # First, try to match against our preferred short-list of common timezones
+    for tz_name in TIMEZONE_NAME_LIST:
+        try:
+            tz = pytz.timezone(tz_name)
+            # Check what offset this timezone has at the reference datetime
+            tz_dt = reference_datetime.astimezone(tz)
+            if tz_dt.utcoffset() == target_offset:
+                return tz_name
+        except Exception:
+            continue
+
+    # If no match in preferred list, fall back to any common timezone
+    for tz_name in pytz.common_timezones:
+        try:
+            tz = pytz.timezone(tz_name)
+            tz_dt = reference_datetime.astimezone(tz)
+            if tz_dt.utcoffset() == target_offset:
+                return tz_name
+        except Exception:
+            continue
+
+    # Final fallback: create a fixed offset timezone name if no match found
+    sign = '+' if offset_minutes >= 0 else '-'
+    hours = abs(int(offset_minutes / 60))
+    minutes = abs(offset_minutes % 60)
+    return f'Etc/GMT{sign}{hours}{":" + str(minutes) if minutes else ""}'

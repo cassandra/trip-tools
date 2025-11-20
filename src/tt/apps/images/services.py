@@ -12,6 +12,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone as django_timezone
 from PIL import Image, ImageOps, ExifTags
 
+from tt.apps.common import datetimeproxy
 from tt.apps.common.singleton import Singleton
 
 from .domain import (
@@ -143,8 +144,8 @@ class ImageUploadService(Singleton):
         - gps: GPS coordinates as GpsCoordinate value object
         - caption: Image description from EXIF
         - tags: Keyword tags from EXIF (as immutable tuple)
+        - timezone: IANA timezone name if detected from EXIF offset
         - has_exif: Whether any EXIF data was successfully extracted
-        - timezone_unknown: Whether datetime timezone is uncertain
 
         Args:
             image: PIL Image object (must be called BEFORE exif_transpose)
@@ -156,7 +157,7 @@ class ImageUploadService(Singleton):
         gps = None
         caption = None
         tags = []
-        timezone_unknown = False
+        detected_timezone = None
 
         try:
             exif_data = image._getexif()
@@ -189,15 +190,18 @@ class ImageUploadService(Singleton):
                             local_tz = timezone(timedelta(minutes=offset_minutes))
                             dt_aware = dt.replace(tzinfo=local_tz)
                             datetime_utc = dt_aware.astimezone(timezone.utc)
-                            timezone_unknown = False
+
+                            # Convert offset to IANA timezone name using the actual datetime
+                            # (important for DST consideration)
+                            detected_timezone = datetimeproxy.offset_to_timezone(offset_minutes, datetime_utc)
                         else:
-                            # Fallback: assume UTC and mark as unknown
+                            # Fallback: assume UTC and no timezone
                             datetime_utc = django_timezone.make_aware(dt, timezone=timezone.utc)
-                            timezone_unknown = True
+                            detected_timezone = None
                     else:
-                        # No timezone offset - assume UTC and mark as unknown
+                        # No timezone offset - assume UTC and no timezone
                         datetime_utc = django_timezone.make_aware(dt, timezone=timezone.utc)
-                        timezone_unknown = True
+                        detected_timezone = None
 
                 except (ValueError, AttributeError) as e:
                     logger.warning(f"Failed to parse EXIF datetime: {e}")
@@ -251,7 +255,7 @@ class ImageUploadService(Singleton):
             gps=gps,
             caption=caption,
             tags=tuple(tags),  # Convert to immutable tuple
-            timezone_unknown=timezone_unknown,
+            timezone=detected_timezone,
         )
 
     def resize_image(self, image: Image.Image, max_dimension: int) -> Image.Image:
@@ -362,7 +366,7 @@ class ImageUploadService(Singleton):
                 caption=caption,
                 tags=metadata_dict['tags'],
                 has_exif=metadata_dict['has_exif'],
-                timezone_unknown=metadata_dict['timezone_unknown'],
+                timezone=metadata_dict['timezone'],
             )
 
             # Save web image file

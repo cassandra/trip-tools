@@ -119,7 +119,8 @@ class ExifMetadataTestCase(TestCase):
         self.assertIsNone(metadata.caption)
         self.assertEqual((), metadata.tags)
         self.assertFalse(metadata.has_exif)
-        self.assertFalse(metadata.timezone_unknown)
+        self.assertIsNone(metadata.timezone)
+        self.assertTrue(metadata.timezone_unknown)  # Property should return True when timezone is None
 
     def test_create_metadata_with_datetime(self):
         """Metadata with only datetime should have has_exif=True."""
@@ -175,7 +176,7 @@ class ExifMetadataTestCase(TestCase):
             gps=gps,
             caption="Vienna",
             tags=('travel', 'austria'),
-            timezone_unknown=False,
+            timezone='Europe/Vienna',
         )
 
         result = metadata.to_dict()
@@ -186,7 +187,7 @@ class ExifMetadataTestCase(TestCase):
         self.assertEqual("Vienna", result['caption'])
         self.assertEqual(['travel', 'austria'], result['tags'])  # Converted to list
         self.assertTrue(result['has_exif'])
-        self.assertFalse(result['timezone_unknown'])
+        self.assertEqual('Europe/Vienna', result['timezone'])
 
     def test_to_dict_with_no_gps(self):
         """to_dict() with no GPS should have None lat/lon."""

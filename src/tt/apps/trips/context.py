@@ -1,10 +1,7 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from .enums import TripPage
-
-if TYPE_CHECKING:
-    from .models import TripMember
+from .models import TripMember
 
 
 @dataclass

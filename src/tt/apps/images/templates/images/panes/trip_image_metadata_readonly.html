@@ -1,0 +1,76 @@
+{% load icons %}
+{% load tz %}
+{% timezone USER_TIMEZONE %}
+
+{% if trip_image.caption %}
+<div class="row mb-2">
+  <div class="col-4 text-muted"><strong>Caption:</strong></div>
+  <div class="col-8">{{ trip_image.caption }}</div>
+</div>
+{% endif %}
+
+{% if trip_image.datetime_utc %}
+<div class="row mb-2">
+  <div class="col-4 text-muted"><strong>Photo Taken:</strong></div>
+  <div class="col-8">
+    {{ trip_image.datetime_utc|date:"F j, Y g:i A" }} {{ USER_TIMEZONE }}
+    {% if trip_image.timezone %}
+      {% timezone trip_image.timezone %}
+        <br><small class="text-muted">
+          ({{ trip_image.datetime_utc|date:"F j, Y g:i A" }} {{ trip_image.timezone }})
+        </small>
+      {% endtimezone %}
+    {% elif trip_image.timezone_unknown %}
+      <br><small class="text-warning">
+        {% icon "warning" size="sm" %} Timezone uncertain (no EXIF offset)
+      </small>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if trip_image.latitude and trip_image.longitude %}
+<div class="row mb-2">
+  <div class="col-4 text-muted"><strong>Geo Location:</strong></div>
+  <div class="col-8">
+    {{ trip_image.latitude|floatformat:6 }}, {{ trip_image.longitude|floatformat:6 }}
+    <br>{% include "images/panes/gps_display.html" %}
+  </div>
+</div>
+{% endif %}
+
+{% if trip_image.tags %}
+<div class="row mb-2">
+  <div class="col-4 text-muted"><strong>Tags:</strong></div>
+  <div class="col-8">
+    {% for tag in trip_image.tags %}
+      <span class="badge badge-secondary">{{ tag }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if trip_image.web_image %}
+<div class="row mb-2">
+  <div class="col-4 text-muted"><strong>Dimensions:</strong></div>
+  <div class="col-8">{{ trip_image.web_image.width }} × {{ trip_image.web_image.height }} px</div>
+</div>
+{% endif %}
+
+<div class="row mb-2">
+  <div class="col-4 text-muted"><strong>Image ID:</strong></div>
+  <div class="col-8"><small class="text-monospace">{{ trip_image.uuid }}</small></div>
+</div>
+
+<div class="row mb-0">
+  <div class="col-4 text-muted"><strong>Upload Info:</strong></div>
+  <div class="col-8">
+    <small>
+      {{ trip_image.uploaded_by.get_full_name|default:trip_image.uploaded_by.email }} on {{ trip_image.uploaded_datetime|date:"M j, Y g:i A" }}
+      {% if trip_image.has_exif %}
+        <span class="exif-badge ml-2">EXIF</span>
+      {% endif %}
+    </small>
+  </div>
+</div>
+{% endtimezone %}

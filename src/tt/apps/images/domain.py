@@ -161,7 +161,12 @@ class ExifMetadata:
     gps: Optional[GpsCoordinate] = None
     caption: Optional[str] = None
     tags: Tuple[str, ...] = ()  # Immutable tuple instead of list
-    timezone_unknown: bool = False
+    timezone: Optional[str] = None  # IANA timezone name if detected from EXIF
+
+    @property
+    def timezone_unknown(self) -> bool:
+        """Whether timezone is uncertain (no timezone information available)."""
+        return self.timezone is None
 
     @classmethod
     def empty(cls) -> 'ExifMetadata':
@@ -196,7 +201,7 @@ class ExifMetadata:
             'caption': self.caption,
             'tags': list(self.tags),  # Convert tuple back to list for JSON field
             'has_exif': self.has_any_data(),  # Use has_any_data() for determination
-            'timezone_unknown': self.timezone_unknown,
+            'timezone': self.timezone,
         }
 
 

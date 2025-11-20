@@ -127,7 +127,8 @@ class ExifExtractionTestCase(TestCase):
         self.assertIsNone(metadata.caption)
         self.assertEqual((), metadata.tags)
         self.assertFalse(metadata.has_exif)
-        self.assertFalse(metadata.timezone_unknown)
+        self.assertIsNone(metadata.timezone)
+        self.assertTrue(metadata.timezone_unknown)  # Property returns True when timezone is None
 
         image.close()
 
@@ -155,7 +156,7 @@ class ExifExtractionTestCase(TestCase):
         image.close()
 
     def test_extract_datetime_without_offset(self):
-        """EXIF datetime without offset should assume UTC and set timezone_unknown."""
+        """EXIF datetime without offset should assume UTC and leave timezone as None."""
         dt = datetime(2024, 6, 15, 10, 0, 0)
 
         image_bytes = create_test_image_with_exif(datetime_utc=dt)
@@ -167,7 +168,8 @@ class ExifExtractionTestCase(TestCase):
         # This test verifies the code path, actual EXIF persistence tested with real images
         if metadata.datetime_utc:
             self.assertIsNotNone(metadata.datetime_utc)
-            self.assertTrue(metadata.timezone_unknown)
+            self.assertIsNone(metadata.timezone)
+            self.assertTrue(metadata.timezone_unknown)  # Property returns True when timezone is None
             self.assertTrue(metadata.has_exif)
 
         image.close()
@@ -322,7 +324,7 @@ class TripImageCreationTestCase(TestCase):
             gps=gps,
             caption='Vienna cityscape',
             tags=('travel', 'austria'),
-            timezone_unknown=False,
+            timezone='Europe/Vienna',
         )
         # has_exif is now a calculated property
 
@@ -346,7 +348,8 @@ class TripImageCreationTestCase(TestCase):
         self.assertEqual(metadata.caption, trip_image.caption)
         self.assertEqual(list(metadata.tags), trip_image.tags)  # Convert tuple to list for comparison
         self.assertTrue(trip_image.has_exif)
-        self.assertFalse(trip_image.timezone_unknown)
+        self.assertEqual('Europe/Vienna', trip_image.timezone)
+        self.assertFalse(trip_image.timezone_unknown)  # Property returns False when timezone is set
 
         # Verify image files were saved
         self.assertTrue(trip_image.web_image)

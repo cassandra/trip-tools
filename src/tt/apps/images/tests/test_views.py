@@ -271,3 +271,113 @@ class TripImageInspectViewTestCase(TestCase):
         self.assertEqual(403, response.status_code)
         data = response.json()
         self.assertIn('permission', data['error'].lower())
+
+    def test_get_view_mode_by_default(self):
+        """GET without mode parameter should show view mode."""
+        response = self.client.get(self.url)
+
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(response.context.get('edit_mode', False))
+        self.assertIsNone(response.context.get('form'))
+
+    def test_get_edit_mode_with_parameter(self):
+        """GET with mode=edit should show edit mode with form."""
+        url = f"{self.url}?mode=edit"
+        response = self.client.get(url)
+
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(response.context.get('edit_mode', False))
+        self.assertIsNotNone(response.context.get('form'))
+
+    def test_get_edit_mode_requires_can_edit(self):
+        """GET with mode=edit should require edit permission."""
+        # Create another user without edit permission
+        User.objects.create_user(
+            email='other@example.com',
+            password='otherpass',
+        )
+        self.client.logout()
+        self.client.login(email='other@example.com', password='otherpass')
+
+        url = f"{self.url}?mode=edit"
+        response = self.client.get(url)
+
+        # Should return 403 since other_user cannot access this image
+        self.assertEqual(403, response.status_code)
+
+    def test_post_edit_success(self):
+        """POST with valid form should update image metadata."""
+        # Make AJAX request
+        response = self.client.post(
+            self.url,
+            {
+                'caption': 'Updated caption',
+                'tags_input': 'vacation, beach, sunset',
+                'gps_coordinates': '37.7749, -122.4194',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        # Should return refresh response
+        self.assertEqual(200, response.status_code)
+        data = response.json()
+        self.assertIn('refresh', data)
+        self.assertTrue(data['refresh'])
+
+        # Verify image was updated
+        self.trip_image.refresh_from_db()
+        self.assertEqual('Updated caption', self.trip_image.caption)
+        self.assertEqual(['vacation', 'beach', 'sunset'], self.trip_image.tags)
+        self.assertAlmostEqual(37.7749, float(self.trip_image.latitude), places=4)
+        self.assertAlmostEqual(-122.4194, float(self.trip_image.longitude), places=4)
+
+    def test_post_edit_tracks_modifier(self):
+        """POST should track who modified the image."""
+        response = self.client.post(
+            self.url,
+            {'caption': 'Modified'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.trip_image.refresh_from_db()
+        self.assertEqual(self.user, self.trip_image.modified_by)
+        self.assertIsNotNone(self.trip_image.modified_datetime)
+
+    def test_post_edit_validation_errors(self):
+        """POST with invalid data should re-render form with errors."""
+        # Invalid GPS coordinates
+        response = self.client.post(
+            self.url,
+            {
+                'caption': 'Test',
+                'gps_coordinates': 'invalid coordinates',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        # Should return modal with form errors
+        self.assertEqual(200, response.status_code)
+        data = response.json()
+        self.assertIn('modal', data)
+
+    def test_post_edit_requires_permission(self):
+        """POST should require edit permission."""
+        # Create another user without edit permission
+        User.objects.create_user(
+            email='other@example.com',
+            password='otherpass',
+        )
+        self.client.logout()
+        self.client.login(email='other@example.com', password='otherpass')
+
+        response = self.client.post(
+            self.url,
+            {'caption': 'Unauthorized edit'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        # Should return 403
+        self.assertEqual(403, response.status_code)
+        data = response.json()
+        self.assertIn('permission', data['error'].lower())
