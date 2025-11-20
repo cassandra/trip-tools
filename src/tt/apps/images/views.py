@@ -71,7 +71,9 @@ class TripImagesHomeView( LoginRequiredMixin, View ):
             result = service.process_uploaded_image(uploaded_file, request.user, request=request)
             results.append(result)
 
-            if result['status'] == 'success':
+            # Import UploadStatus for comparison
+            from tt.apps.images.enums import UploadStatus
+            if result.status == UploadStatus.SUCCESS:
                 success_count += 1
             else:
                 error_count += 1
@@ -82,8 +84,11 @@ class TripImagesHomeView( LoginRequiredMixin, View ):
             f"{success_count} succeeded, {error_count} failed out of {len(uploaded_files)} files"
         )
 
+        # Convert dataclass results to dicts for JSON response
+        results_dicts = [result.to_dict() for result in results]
+
         # Return 200 even if some files failed - client checks individual status
-        return JsonResponse({'files': results})
+        return JsonResponse({'files': results_dicts})
 
 
 class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):

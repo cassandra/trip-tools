@@ -19,6 +19,7 @@ from .domain import (
     GpsCoordinate,
     ExifMetadata,
     ImageDimensions,
+    ImageUploadResult,
     ValidationResult,
     ImageProcessingConfig,
 )
@@ -353,20 +354,17 @@ class ImageUploadService(Singleton):
         # Use filename as caption if no EXIF caption available
         caption = metadata.caption if metadata.caption else uploaded_file.name
 
-        # Convert ExifMetadata to dict for database storage
-        metadata_dict = metadata.to_dict()
-
         with transaction.atomic():
-            # Create TripImage instance
+            # Create TripImage instance using dataclass fields directly
             trip_image = TripImage.objects.create(
                 uploaded_by=user,
-                datetime_utc=metadata_dict['datetime_utc'],
-                latitude=metadata_dict['latitude'],
-                longitude=metadata_dict['longitude'],
+                datetime_utc=metadata.datetime_utc,
+                latitude=metadata.gps.latitude if metadata.gps else None,
+                longitude=metadata.gps.longitude if metadata.gps else None,
                 caption=caption,
-                tags=metadata_dict['tags'],
-                has_exif=metadata_dict['has_exif'],
-                timezone=metadata_dict['timezone'],
+                tags=list(metadata.tags),
+                has_exif=metadata.has_exif,
+                timezone=metadata.timezone,
             )
 
             # Save web image file
@@ -406,7 +404,7 @@ class ImageUploadService(Singleton):
             request=request,
         )
 
-    def process_uploaded_image(self, uploaded_file: UploadedFile, user: Any, request: Optional[HttpRequest] = None) -> Dict[str, Any]:
+    def process_uploaded_image(self, uploaded_file: UploadedFile, user: Any, request: Optional[HttpRequest] = None) -> ImageUploadResult:
         """
         Main orchestration method: validate, extract EXIF, process, and save uploaded image.
 
@@ -416,28 +414,15 @@ class ImageUploadService(Singleton):
             request: Optional HttpRequest object for rendering templates with context processors
 
         Returns:
-            Dict with keys:
-            - status: 'success' or 'error'
-            - uuid: TripImage UUID (if success)
-            - html: Rendered grid item HTML (if success)
-            - metadata: Extracted metadata (if success)
-            - error_message: Error description (if error)
-            - filename: Original filename
+            ImageUploadResult with success or error status
         """
-        result = {
-            'filename': uploaded_file.name,
-            'status': 'error',
-            'error_message': None,
-            'uuid': None,
-            'metadata': None,
-            'html': None,
-        }
-
         # Step 1: Validate file
         validation = self.validate_image_file(uploaded_file)
         if not validation.is_valid:
-            result['error_message'] = validation.error_message
-            return result
+            return ImageUploadResult.failure(
+                filename=uploaded_file.name,
+                error_message=validation.error_message,
+            )
 
         # Image objects to close for memory management
         original_image = None
@@ -475,38 +460,30 @@ class ImageUploadService(Singleton):
                 html = self.render_grid_item_html(trip_image, request)
 
             # Step 10: Build success response
-            result['status'] = 'success'
-            result['uuid'] = str(trip_image.uuid)
-            result['html'] = html
-
-            # Convert ExifMetadata to JSON-serializable format
-            metadata_dict = metadata.to_dict()
-            result['metadata'] = {
-                'datetime_utc': metadata_dict['datetime_utc'].isoformat() if metadata_dict['datetime_utc'] else None,
-                'latitude': float(metadata_dict['latitude']) if metadata_dict['latitude'] else None,
-                'longitude': float(metadata_dict['longitude']) if metadata_dict['longitude'] else None,
-                'caption': metadata_dict['caption'],
-                'tags': metadata_dict['tags'],
-                'has_exif': metadata_dict['has_exif'],
-                'timezone': metadata_dict['timezone'],
-            }
-
             logger.info(f'Successfully processed image upload: {uploaded_file.name} -> {trip_image.uuid}')
+
+            return ImageUploadResult.success(
+                filename=uploaded_file.name,
+                uuid=str(trip_image.uuid),
+                metadata=metadata,
+                html=html,
+            )
 
         except Exception as e:
             # Log detailed error for debugging
             logger.exception(
                 f'Unexpected error processing image {uploaded_file.name} for user {user.email}: {e}'
             )
-            result['error_message'] = (
-                f'Failed to process "{uploaded_file.name}". '
-                f'Please verify the file is not corrupted and try again. '
-                f'If the problem persists, contact support.'
+            return ImageUploadResult.failure(
+                filename=uploaded_file.name,
+                error_message=(
+                    f'Failed to process "{uploaded_file.name}". '
+                    f'Please verify the file is not corrupted and try again. '
+                    f'If the problem persists, contact support.'
+                ),
             )
 
         finally:
             # Clean up image objects to free memory
             if original_image:
                 original_image.close()
-
-        return result

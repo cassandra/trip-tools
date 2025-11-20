@@ -9,7 +9,7 @@ Following Domain-Driven Design principles:
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 
 
 # Configuration constants - centralized business rules
@@ -189,18 +189,18 @@ class ExifMetadata:
 
     def to_dict(self) -> dict:
         """
-        Convert to dictionary format for database storage.
+        Convert to JSON-serializable dictionary format.
 
         Returns:
-            Dictionary with fields compatible with TripImage model
+            Dictionary with JSON-compatible types for API responses
         """
         return {
-            'datetime_utc': self.datetime_utc,
-            'latitude': self.gps.latitude if self.gps else None,
-            'longitude': self.gps.longitude if self.gps else None,
+            'datetime_utc': self.datetime_utc.isoformat() if self.datetime_utc else None,
+            'latitude': float(self.gps.latitude) if self.gps else None,
+            'longitude': float(self.gps.longitude) if self.gps else None,
             'caption': self.caption,
-            'tags': list(self.tags),  # Convert tuple back to list for JSON field
-            'has_exif': self.has_any_data(),  # Use has_any_data() for determination
+            'tags': list(self.tags),
+            'has_exif': self.has_any_data(),
             'timezone': self.timezone,
         }
 
@@ -320,3 +320,88 @@ class ValidationResult:
     def to_tuple(self) -> Tuple[bool, Optional[str]]:
         """Return as (is_valid, error_message) tuple for backward compatibility."""
         return (self.is_valid, self.error_message)
+
+
+@dataclass(frozen=True)
+class ImageUploadResult:
+    """
+    Immutable result of image upload processing operation.
+
+    Represents the outcome of uploading and processing a single image file,
+    including success/error status, metadata, and optional rendered HTML.
+    """
+    status: 'UploadStatus'  # Forward reference to avoid circular import
+    filename: str
+    uuid: Optional[str] = None
+    error_message: Optional[str] = None
+    metadata: Optional[ExifMetadata] = None
+    html: Optional[str] = None
+
+    @classmethod
+    def success( cls,
+                 filename       : str,
+                 uuid           : str,
+                 metadata       : ExifMetadata,
+                 html           : Optional[str] = None ) -> 'ImageUploadResult':
+        """
+        Create successful upload result.
+
+        Args:
+            filename: Original uploaded filename
+            uuid: Created TripImage UUID (as string)
+            metadata: Extracted EXIF metadata
+            html: Optional rendered grid item HTML
+
+        Returns:
+            ImageUploadResult with SUCCESS status
+        """
+        from tt.apps.images.enums import UploadStatus
+        return cls(
+            status=UploadStatus.SUCCESS,
+            filename=filename,
+            uuid=uuid,
+            error_message=None,
+            metadata=metadata,
+            html=html,
+        )
+
+    @classmethod
+    def failure( cls,
+                 filename      : str,
+                 error_message : str ) -> 'ImageUploadResult':
+        """
+        Create failed upload result.
+
+        Args:
+            filename: Original uploaded filename
+            error_message: Human-readable error description
+
+        Returns:
+            ImageUploadResult with ERROR status
+        """
+        from tt.apps.images.enums import UploadStatus
+        return cls(
+            status=UploadStatus.ERROR,
+            filename=filename,
+            uuid=None,
+            error_message=error_message,
+            metadata=None,
+            html=None,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert to JSON-serializable dictionary for API responses.
+
+        Returns:
+            Dictionary with all fields in JSON-compatible format
+        """
+        from tt.apps.images.enums import UploadStatus
+        return {
+            'status': self.status.value,
+            'filename': self.filename,
+            'uuid': self.uuid,
+            'error_message': self.error_message,
+            'metadata': self.metadata.to_dict() if self.metadata else None,
+            'html': self.html,
+        }

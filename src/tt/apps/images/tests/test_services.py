@@ -391,25 +391,29 @@ class FullUploadIntegrationTestCase(TestCase):
 
     def test_process_uploaded_image_success(self):
         """Complete upload flow should process image and create TripImage."""
+        from tt.apps.images.enums import UploadStatus
+
         uploaded_file = create_uploaded_file(filename='test.jpg', width=2000, height=1500)
 
         # Don't pass request - HTML rendering tested separately
         result = self.service.process_uploaded_image(uploaded_file, self.user, request=None)
 
         # Verify success response
-        self.assertEqual('success', result['status'])
-        self.assertIsNone(result['error_message'])
-        self.assertIsNotNone(result['uuid'])
-        self.assertIn('test.jpg', result['filename'])
+        self.assertEqual(UploadStatus.SUCCESS, result.status)
+        self.assertIsNone(result.error_message)
+        self.assertIsNotNone(result.uuid)
+        self.assertIn('test.jpg', result.filename)
 
         # Verify TripImage was created
-        trip_image = TripImage.objects.get(uuid=result['uuid'])
+        trip_image = TripImage.objects.get(uuid=result.uuid)
         self.assertEqual(self.user, trip_image.uploaded_by)
         self.assertTrue(trip_image.web_image)
         self.assertTrue(trip_image.thumbnail_image)
 
     def test_process_uploaded_image_validation_failure(self):
         """Invalid image should return error response."""
+        from tt.apps.images.enums import UploadStatus
+
         corrupted_file = create_uploaded_file(
             filename='bad.jpg',
             content=b'NOT_AN_IMAGE',
@@ -418,9 +422,9 @@ class FullUploadIntegrationTestCase(TestCase):
         result = self.service.process_uploaded_image(corrupted_file, self.user)
 
         # Verify error response
-        self.assertEqual('error', result['status'])
-        self.assertIsNotNone(result['error_message'])
-        self.assertIsNone(result['uuid'])
+        self.assertEqual(UploadStatus.ERROR, result.status)
+        self.assertIsNotNone(result.error_message)
+        self.assertIsNone(result.uuid)
 
         # Verify no TripImage was created
         self.assertEqual(0, TripImage.objects.count())

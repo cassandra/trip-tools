@@ -1,4 +1,12 @@
+from enum import Enum
+
 from tt.apps.common.enums import LabeledEnum
+
+
+class UploadStatus( Enum ):
+    """Status of image upload processing."""
+    SUCCESS = 'success'
+    ERROR   = 'error'
 
 
 class ImageAccessRole( LabeledEnum ):

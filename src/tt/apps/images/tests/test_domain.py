@@ -168,7 +168,7 @@ class ExifMetadataTestCase(TestCase):
         self.assertTrue(metadata3.has_exif)
 
     def test_to_dict_conversion(self):
-        """to_dict() should convert to database-compatible format."""
+        """to_dict() should convert to JSON-serializable format."""
         gps = GpsCoordinate(latitude=Decimal('48.208176'), longitude=Decimal('16.373819'))
         dt = datetime(2024, 6, 15, 8, 38, 0, tzinfo=timezone.utc)
         metadata = ExifMetadata(
@@ -181,9 +181,10 @@ class ExifMetadataTestCase(TestCase):
 
         result = metadata.to_dict()
 
-        self.assertEqual(dt, result['datetime_utc'])
-        self.assertEqual(Decimal('48.208176'), result['latitude'])
-        self.assertEqual(Decimal('16.373819'), result['longitude'])
+        # Should return JSON-serializable types
+        self.assertEqual(dt.isoformat(), result['datetime_utc'])  # ISO string
+        self.assertEqual(48.208176, result['latitude'])  # Float
+        self.assertEqual(16.373819, result['longitude'])  # Float
         self.assertEqual("Vienna", result['caption'])
         self.assertEqual(['travel', 'austria'], result['tags'])  # Converted to list
         self.assertTrue(result['has_exif'])
