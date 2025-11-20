@@ -119,7 +119,7 @@ class MemberInvitationManager( Singleton ):
         acceptance_url = request.build_absolute_uri(
             reverse( 'members_accept_invitation',
                      kwargs = {
-                         'trip_id': trip.pk,
+                         'trip_uuid': trip.uuid,
                          'email': user.email,
                          'token': token,
                      })
@@ -161,7 +161,7 @@ class MemberInvitationManager( Singleton ):
         signup_url = request.build_absolute_uri(
             reverse( 'members_signup_and_accept',
                      kwargs = {
-                         'trip_id': trip.pk,
+                         'trip_uuid': trip.uuid,
                          'email': user.email,
                          'token': token,
                      })

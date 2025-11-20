@@ -11,7 +11,7 @@
     </div>
     {% if request_member.can_manage_members %}
     <div>
-      <a href="{% url 'members_invite' trip_id=trip_page.trip.pk %}" class="btn btn-primary" data-async="modal">
+      <a href="{% url 'members_invite' trip_uuid=trip_page.trip.uuid %}" class="btn btn-primary" data-async="modal">
         {% icon "plus" %}
         Invite Member
       </a>

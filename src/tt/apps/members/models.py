@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.conf import settings
 
@@ -15,6 +17,11 @@ class TripMember(models.Model):
     """
     objects = managers.TripMemberManager()
 
+    uuid = models.UUIDField(
+        default = uuid.uuid4,
+        unique = True,
+        editable = False,
+    )
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,

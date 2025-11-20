@@ -2,10 +2,10 @@
 URL configuration for itineraries app.
 """
 
-from django.urls import re_path
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    re_path(r'^trip/(?P<trip_id>\d+)/itinerary/$', views.ItineraryHomeView.as_view(), name='itineraries_home'),
+    path(r'<uuid:trip_uuid>', views.ItineraryHomeView.as_view(), name='itineraries_home'),
 ]

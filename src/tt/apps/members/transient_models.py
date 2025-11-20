@@ -5,6 +5,7 @@ from tt.apps.trips.enums import TripPermissionLevel
 
 from .models import TripMember
 
+
 @dataclass
 class TripMemberData:
 
@@ -16,6 +17,10 @@ class TripMemberData:
     @property
     def pk(self):
         return self.trip_member.pk
+    
+    @property
+    def uuid(self):
+        return self.trip_member.uuid
     
     @property
     def trip(self):

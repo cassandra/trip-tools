@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from django.contrib.auth import get_user_model, login as django_login
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -24,13 +25,13 @@ from .models import TripMember
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-# Error message constants
 INVALID_INVITATION_MESSAGE = 'This invitation link is invalid or has expired.'
 
 
 class MemberListView( LoginRequiredMixin, TripViewMixin, View ):
-    def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+
+    def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_viewer( request_member )
         trip = request_member.trip
         
@@ -61,8 +62,8 @@ class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
     def get_template_name(self) -> str:
         return 'members/modals/invite.html'
 
-    def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+    def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_admin( request_member )
         trip = request_member.trip
 
@@ -73,8 +74,8 @@ class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         }
         return self.modal_response( request, context = context )
 
-    def post(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+    def post(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_admin( request_member )
         trip = request_member.trip
 
@@ -117,12 +118,12 @@ class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
 
 class MemberPermissionChangeView( LoginRequiredMixin, TripViewMixin, View ):
 
-    def post(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+    def post(self, request, trip_uuid: UUID, member_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_admin( request_member )
         trip = request_member.trip
     
-        target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
+        target_member = get_object_or_404( TripMember, uuid = member_uuid, trip = trip )
 
         if target_member.permission_level > request_member.permission_level:
             raise PermissionDenied( 'Cannot modify a member with higher permissions than your own' )
@@ -169,11 +170,11 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
     def get_template_name(self) -> str:
         return 'members/modals/remove.html'
 
-    def get(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+    def get(self, request, trip_uuid: UUID, member_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         trip = request_member.trip
 
-        target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
+        target_member = get_object_or_404( TripMember, uuid = member_uuid, trip = trip )
         is_self_removal = bool( request_member.user == target_member.user )
 
         if not is_self_removal:
@@ -200,11 +201,11 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         }
         return self.modal_response( request, context = context )
 
-    def post(self, request, trip_id: int, member_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+    def post(self, request, trip_uuid: UUID, member_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         trip = request_member.trip
 
-        target_member = get_object_or_404( TripMember, pk = member_id, trip = trip )
+        target_member = get_object_or_404( TripMember, uuid = member_uuid, trip = trip )
         is_self_removal = bool( request_member.user == target_member.user )
 
         if not is_self_removal:
@@ -251,10 +252,10 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
 class MemberAcceptInvitationView( View ):
     """Accept invitation link for existing verified users."""
 
-    def get(self, request, trip_id: int, email: str, token: str, *args, **kwargs) -> HttpResponse:
+    def get(self, request, trip_uuid: UUID, email: str, token: str, *args, **kwargs) -> HttpResponse:
         from django.utils import timezone
 
-        trip = get_object_or_404( Trip, pk = trip_id )
+        trip = get_object_or_404( Trip, uuid = trip_uuid )
 
         try:
             user = User.objects.get( email = email )
@@ -322,10 +323,10 @@ class MemberAcceptInvitationView( View ):
 class MemberSignupAndAcceptView( View ):
     """Signup and accept invitation link for new/unverified users."""
 
-    def get(self, request, trip_id: int, email: str, token: str, *args, **kwargs) -> HttpResponse:
+    def get(self, request, trip_uuid: UUID, email: str, token: str, *args, **kwargs) -> HttpResponse:
         from django.utils import timezone
 
-        trip = get_object_or_404( Trip, pk = trip_id )
+        trip = get_object_or_404( Trip, uuid = trip_uuid )
 
         try:
             user = User.objects.get( email = email )

@@ -34,7 +34,7 @@
     </a>
   </li>
   <li>
-    <a href="{% url 'itineraries_home' trip_id=trip_page.trip.pk %}"{% if trip_page.active_page.value == 'itinerary' %} class="active" aria-current="page"{% endif %}>
+    <a href="{% url 'itineraries_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'itinerary' %} class="active" aria-current="page"{% endif %}>
       {% icon "clock" size="sm" %}
       <span>Itinerary</span>
     </a>
@@ -64,7 +64,7 @@
     </a>
   </li>
   <li>
-    <a href="{% url 'members_list' trip_id=trip_page.trip.pk %}"{% if trip_page.active_page.value == 'members' %} class="active" aria-current="page"{% endif %}>
+    <a href="{% url 'members_list' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'members' %} class="active" aria-current="page"{% endif %}>
       {% icon "collection" size="sm" %}
       <span>Members</span>
     </a>

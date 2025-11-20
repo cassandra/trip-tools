@@ -23,7 +23,7 @@ class ItineraryHomeViewTests(TestCase):
             description='Test Description',
             trip_status=TripStatus.UPCOMING
         )
-        self.itinerary_home_url = reverse('itineraries_home', kwargs={'trip_id': self.trip.pk})
+        self.itinerary_home_url = reverse('itineraries_home', kwargs={'trip_uuid': self.trip.uuid})
 
     def test_itinerary_home_requires_authentication(self):
         """Test that itinerary home redirects unauthenticated users."""
@@ -55,20 +55,20 @@ class ItineraryHomeViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        other_trip_url = reverse('itineraries_home', kwargs={'trip_id': other_trip.pk})
+        other_trip_url = reverse('itineraries_home', kwargs={'trip_uuid': other_trip.uuid})
         response = self.client.get(other_trip_url)
 
         self.assertEqual(response.status_code, 404)
 
     def test_itinerary_home_url_pattern(self):
         """Test that URL pattern resolves correctly."""
-        url = reverse('itineraries_home', kwargs={'trip_id': self.trip.pk})
+        url = reverse('itineraries_home', kwargs={'trip_uuid': self.trip.uuid})
         self.assertEqual(url, f'/itineraries/trip/{self.trip.pk}/itinerary/')
 
     def test_itinerary_home_nonexistent_trip(self):
         """Test that requesting nonexistent trip returns 404."""
         self.client.force_login(self.user)
-        url = reverse('itineraries_home', kwargs={'trip_id': 99999})
+        url = reverse('itineraries_home', kwargs={'trip_uuid': '32653d87-9b24-4c8f-adfb-8ab876418072'})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
