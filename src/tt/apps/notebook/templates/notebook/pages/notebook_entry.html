@@ -1,5 +1,6 @@
 {% extends "notebook/pages/notebook_base.html" %}
 {% load static %}
+{% load icons %}
 {% load pipeline %}
 
 {% block trip_extra_actions %}
@@ -47,6 +48,16 @@
       {% endif %}
     </div>
   </form>
+
+  <!-- Footer: Delete Button -->
+  <div class="d-flex justify-content-start m-2">
+    <a href="{% url 'notebook_entry_delete' entry_uuid=entry.uuid %}"
+       class="btn btn-sm btn-outline-danger"
+       data-async="modal"
+       title="Delete this notebook entry">
+      {% icon "delete" size="sm" %} Delete Note
+    </a>
+  </div>
 
 </div>
 {% endblock %}

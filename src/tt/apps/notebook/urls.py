@@ -23,4 +23,9 @@ urlpatterns = [
         views.NotebookAutoSaveView.as_view(),
         name='notebook_autosave'
     ),
+    path(
+        r'entry/<uuid:entry_uuid>/delete',
+        views.NotebookEntryDeleteModalView.as_view(),
+        name='notebook_entry_delete'
+    ),
 ]

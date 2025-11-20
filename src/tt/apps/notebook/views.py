@@ -7,7 +7,10 @@ from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Max
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.generic import View
+
+from tt.async_view import ModalView
 
 from tt.apps.members.models import TripMember
 from tt.apps.trips.context import TripPageContext
@@ -260,3 +263,47 @@ class NotebookAutoSaveView( LoginRequiredMixin, TripViewMixin, View ):
                 {'status': 'error', 'message': 'Database error occurred'},
                 status=500
             )
+
+
+class NotebookEntryDeleteModalView(LoginRequiredMixin, TripViewMixin, ModalView):
+    """Modal view for deleting notebook entries with confirmation."""
+
+    def get_template_name(self) -> str:
+        return 'notebook/modals/notebook_entry_delete.html'
+
+    def get(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        entry = get_object_or_404(
+            NotebookEntry,
+            uuid=entry_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip=entry.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+        trip = request_member.trip
+        context = {
+            'trip': trip,
+            'notebook_entry': entry,
+        }
+        return self.modal_response(request, context=context)
+
+    def post(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        entry = get_object_or_404(
+            NotebookEntry,
+            uuid=entry_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip=entry.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+        with transaction.atomic():
+            entry.delete()
+
+        redirect_url = reverse('notebook_list', kwargs={'trip_uuid': entry.trip.uuid})
+        return self.redirect_response(request, redirect_url)
+
