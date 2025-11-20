@@ -479,7 +479,7 @@ class NotebookEditViewTests(TestCase):
 
         self.client.force_login(self.user)
         edit_url = reverse('notebook_entry', kwargs={
-            'entry_uuidk': entry2.uuid
+            'entry_uuid': entry2.uuid
         })
         response = self.client.post(edit_url, {
             'date': entry1.date.strftime('%Y-%m-%d'),  # Try to change to entry1's date
@@ -564,8 +564,8 @@ class NotebookEditViewTests(TestCase):
         self.assertEqual(notebook_entries[0].pk, entry1.pk)
         self.assertEqual(notebook_entries[1].pk, entry2.pk)
 
-    def test_edit_includes_notebook_entry_pk_in_notebook_page(self):
-        """Test that notebook edit includes notebook_entry_pk in notebook_page context."""
+    def test_edit_includes_notebook_entry_uuid_in_notebook_page(self):
+        """Test that notebook edit includes notebook_entry_uuid in notebook_page context."""
         entry = NotebookEntry.objects.create(
             trip=self.trip,
             date=date(2024, 1, 15),
@@ -581,7 +581,7 @@ class NotebookEditViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('notebook_page', response.context)
         notebook_page = response.context['notebook_page']
-        self.assertEqual(int(notebook_page.notebook_entry_pk), entry.pk)
+        self.assertEqual(notebook_page.notebook_entry_uuid, entry.uuid)
 
     def test_edit_notebook_entries_ordered_by_date(self):
         """Test that notebook_entries in edit view are ordered by date."""
@@ -773,9 +773,11 @@ class NotebookAutoSaveViewTests(TestCase):
         """Test that auto-save requires an existing entry (can't create new)."""
         self.client.force_login(self.user)
 
-        # Try to auto-save with non-existent entry_pk
+        # Try to auto-save with non-existent entry_uuid
+        import uuid
+        fake_uuid = uuid.uuid4()
         fake_autosave_url = reverse('notebook_autosave', kwargs={
-            'entry_pk': 99999
+            'entry_uuid': fake_uuid
         })
         response = self.client.post(
             fake_autosave_url,
@@ -858,7 +860,7 @@ class NotebookAutoSaveViewTests(TestCase):
             text='Entry 2'
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'entry_pk': entry2.pk
+            'entry_uuid': entry2.uuid
         })
 
         self.client.force_login(self.user)
@@ -927,7 +929,7 @@ class NotebookAutoSaveViewTests(TestCase):
 
         self.client.force_login(self.user)
         other_trip_url = reverse('notebook_autosave', kwargs={
-            'entry_pk': other_entry.pk
+            'entry_uuid': other_entry.uuid
         })
         response = self.client.post(
             other_trip_url,
@@ -938,31 +940,11 @@ class NotebookAutoSaveViewTests(TestCase):
         # 404 (not 403) to avoid information disclosure about trip existence
         self.assertEqual(response.status_code, 404)
 
-    def test_autosave_validates_entry_belongs_to_trip(self):
-        """Test that auto-save validates entry belongs to the specified trip."""
-        other_trip = TripSyntheticData.create_test_trip(
-            user=self.user,
-            title='Other Trip',
-            trip_status=TripStatus.UPCOMING
-        )
-        entry_other_trip = NotebookEntry.objects.create(
-            trip=other_trip,
-            date=date(2024, 1, 15),
-            text='Entry for other trip'
-        )
-
-        self.client.force_login(self.user)
-        # Try to auto-save entry from other_trip using self.trip
-        wrong_trip_url = reverse('notebook_autosave', kwargs={
-            'entry_pk': entry_other_trip.pk
-        })
-        response = self.client.post(
-            wrong_trip_url,
-            json.dumps({'text': 'Should fail'}),
-            content_type='application/json'
-        )
-
-        self.assertEqual(response.status_code, 404)
+    # Removed test_autosave_validates_entry_belongs_to_trip
+    # This test is obsolete with UUID-based routing. The URL no longer includes
+    # trip context, so there's no "wrong trip" to validate against. The view
+    # simply validates that the user has permission to edit the entry's trip,
+    # which is the correct behavior.
 
     def test_autosave_invalid_json(self):
         """Test that auto-save handles invalid JSON gracefully."""

@@ -2,7 +2,7 @@ import logging
 from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import BadRequest, PermissionDenied
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
@@ -154,7 +154,7 @@ class ImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
         template_name = self.get_effective_template_name(
             image_access_role = image_page_context.image_access_role,
         )
-        return self.modal_response( request, context = context, template_name = template_name )
+        return self.modal_response( request, context = context, template_name = template_name, status = 400 )
 
     def get_image_page_context( self, request, image_uuid: UUID, *args, **kwargs ) -> ImagePageContext:
 
@@ -169,7 +169,7 @@ class ImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
                 active_page = TripPage.IMAGES,
                 request_member = request_member,
             )
-        except ( TypeError, ValueError):
+        except (TypeError, ValueError, BadRequest):
             pass
   
         image_access_role = TripImageHelpers.get_image_access_mode(

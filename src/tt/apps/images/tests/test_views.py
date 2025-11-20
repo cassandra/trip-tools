@@ -364,7 +364,7 @@ class TripImageInspectViewTestCase(TestCase):
         )
 
         # Should return modal with form errors
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(400, response.status_code)
         data = response.json()
         self.assertIn('modal', data)
 

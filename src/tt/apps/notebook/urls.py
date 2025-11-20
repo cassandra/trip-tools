@@ -9,7 +9,7 @@ urlpatterns = [
         name='notebook_list'
     ),
     path(
-        r'trip/<uuid:trip_uuid>/new/$',
+        r'trip/<uuid:trip_uuid>/new',
         views.NotebookEntryNewView.as_view(),
         name='notebook_entry_new'
     ),

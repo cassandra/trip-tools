@@ -82,7 +82,6 @@ class CollaborativeEditingVersionTrackingTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'trip_id': self.trip.pk,
             'entry_uuid': entry.uuid
         })
 
@@ -717,7 +716,7 @@ class CollaborativeEditingEdgeCasesTests(TestCase):
             edit_version=1
         )
         autosave_url = reverse('notebook_autosave', kwargs={
-            'entry_pk': entry2.pk
+            'entry_uuid': entry2.uuid
         })
 
         self.client.force_login(self.user)

@@ -13,7 +13,7 @@
 <ul class="app-sidebar-nav">
   {% for entry in notebook_page.notebook_entries %}
   <li>
-    <a href="{% url 'notebook_entry' entry_uuid=entry.uuid %}"{% if entry.pk == notebook_page.notebook_entry_pk %} class="active" aria-current="page"{% endif %}>
+    <a href="{% url 'notebook_entry' entry_uuid=entry.uuid %}"{% if entry.uuid == notebook_page.notebook_entry_uuid %} class="active" aria-current="page"{% endif %}>
       {{ entry.date|date:'D, M j' }}
     </a>
   </li>

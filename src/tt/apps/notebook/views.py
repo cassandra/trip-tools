@@ -94,7 +94,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
         )
         notebook_page_context = NotebookPageContext(
             notebook_entries = notebook_entries,
-            notebook_entry_pk = entry.pk
+            notebook_entry_uuid = entry.uuid
         )
 
         if request_member.can_edit_trip:
@@ -164,7 +164,7 @@ class NotebookEntryView( LoginRequiredMixin, TripViewMixin, View ):
         )
         notebook_page_context = NotebookPageContext(
             notebook_entries = notebook_entries,
-            notebook_entry_pk = entry.pk
+            notebook_entry_uuid = entry.uuid
         )
 
         context = {

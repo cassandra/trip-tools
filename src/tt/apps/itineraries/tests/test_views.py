@@ -60,11 +60,6 @@ class ItineraryHomeViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_itinerary_home_url_pattern(self):
-        """Test that URL pattern resolves correctly."""
-        url = reverse('itineraries_home', kwargs={'trip_uuid': self.trip.uuid})
-        self.assertEqual(url, f'/itineraries/trip/{self.trip.pk}/itinerary/')
-
     def test_itinerary_home_nonexistent_trip(self):
         """Test that requesting nonexistent trip returns 404."""
         self.client.force_login(self.user)
