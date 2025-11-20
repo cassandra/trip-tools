@@ -1214,7 +1214,6 @@
      * @param {string} uuid - Image UUID
      * @returns {Object|null} Image data object or null if not found
      *   {
-     *     pk: integer,
      *     uuid: string,
      *     url: string,
      *     caption: string,
@@ -1236,20 +1235,19 @@
       }
 
       // Extract all data from card in one pass
-      var pk = $card.data('image-pk');
+      var imageUuid = $card.data('image-uuid');
       var $img = $card.find('img');
       var url = $img.attr('src') || '';
       var caption = $img.attr('alt') || '';
       var inspectUrl = $card.data('inspect-url') || '';
 
-      if (!pk) {
-        console.error('[ImageDataService] Picker card missing data-image-pk for UUID:', uuid);
+      if (!imageUuid) {
+        console.error('[ImageDataService] Picker card missing data-image-uuid for UUID:', uuid);
         return null;
       }
 
       return {
-        pk: parseInt(pk, 10),
-        uuid: uuid,
+        uuid: imageUuid,
         url: url,
         caption: caption,
         inspectUrl: inspectUrl
@@ -1821,7 +1819,7 @@
     this.lastSavedTitle = this.editor.$titleInput.val() || '';
     this.lastSavedDate = this.editor.$dateInput.val() || '';
     this.lastSavedTimezone = this.editor.$timezoneInput.val() || '';
-    this.lastSavedReferenceImage = this.editor.getReferenceImageId();
+    this.lastSavedReferenceImage = this.editor.getReferenceImageUuid();
     this.hasUnsavedChanges = false;
   };
 
@@ -1834,7 +1832,7 @@
     var titleChanged = (this.editor.$titleInput.val() || '') !== this.lastSavedTitle;
     var dateChanged = (this.editor.$dateInput.val() || '') !== this.lastSavedDate;
     var timezoneChanged = (this.editor.$timezoneInput.val() || '') !== this.lastSavedTimezone;
-    var referenceImageChanged = this.editor.getReferenceImageId() !== this.lastSavedReferenceImage;
+    var referenceImageChanged = this.editor.getReferenceImageUuid() !== this.lastSavedReferenceImage;
 
     return htmlChanged || titleChanged || dateChanged || timezoneChanged || referenceImageChanged;
   };
@@ -1895,7 +1893,7 @@
       title: this.editor.$titleInput.val() || '',
       date: this.editor.$dateInput.val() || '',
       timezone: this.editor.$timezoneInput.val() || '',
-      referenceImageId: this.editor.getReferenceImageId()
+      referenceImageUuid: this.editor.getReferenceImageUuid()
     };
 
     var data = {
@@ -1904,7 +1902,7 @@
       new_title: snapshot.title,
       new_date: snapshot.date,
       new_timezone: snapshot.timezone,
-      reference_image_id: snapshot.referenceImageId
+      reference_image_uuid: snapshot.referenceImageUuid || ''
     };
 
     $.ajax({
@@ -1922,7 +1920,7 @@
           this.lastSavedTitle = snapshot.title;
           this.lastSavedDate = snapshot.date;
           this.lastSavedTimezone = snapshot.timezone;
-          this.lastSavedReferenceImage = snapshot.referenceImageId;
+          this.lastSavedReferenceImage = snapshot.referenceImageUuid;
 
           // Recheck if changes occurred during save
           this.hasUnsavedChanges = this.detectChanges();
@@ -2171,7 +2169,7 @@
     this.usedImageUUIDs = new Map();
 
     // Reference image state
-    this.currentReferenceImageId = null;
+    this.currentReferenceImageUuid = null;
     this.$referenceContainer = $('.journal-reference-image-container');
 
     // Initialize badge manager for editor selections
@@ -2272,13 +2270,13 @@
 
   /**
    * Initialize reference image state from server data
-   * Reads data-reference-image-id from container
+   * Reads data-reference-image-uuid from container
    */
   JournalEditor.prototype.initializeReferenceImage = function() {
     if (this.$referenceContainer.length) {
-      var refImageId = this.$referenceContainer.data('reference-image-id');
-      if (refImageId) {
-        this.currentReferenceImageId = parseInt(refImageId, 10);
+      var refImageUuid = this.$referenceContainer.data('reference-image-uuid');
+      if (refImageUuid) {
+        this.currentReferenceImageUuid = refImageUuid;
       }
     }
   };
@@ -2703,11 +2701,11 @@
   };
 
   /**
-   * Get current reference image ID
-   * Returns current reference image ID for autosave
+   * Get current reference image UUID
+   * Returns current reference image UUID for autosave
    */
-  JournalEditor.prototype.getReferenceImageId = function() {
-    return this.currentReferenceImageId;
+  JournalEditor.prototype.getReferenceImageUuid = function() {
+    return this.currentReferenceImageUuid;
   };
 
   /**
@@ -3177,7 +3175,7 @@
   /**
    * Get image data object from UUID by looking up picker card
    * @param {string} uuid - Image UUID
-   * @returns {Object|null} {uuid, pk, url, caption} or null if not found
+   * @returns {Object|null} {uuid, url, caption} or null if not found
    */
   JournalEditor.prototype.getImageDataFromUUID = function(uuid) {
     var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
@@ -3188,7 +3186,6 @@
 
     return {
       uuid: uuid,
-      pk: $card.data('image-pk'),
       url: $card.data('image-url'),
       caption: $card.data('caption') || 'Untitled'
     };
@@ -3197,7 +3194,7 @@
   /**
    * Get image data for currently dragged image(s)
    * Returns single image data or null (for reference area use - multi-select not allowed)
-   * @returns {Object|null} {uuid, pk, url, caption} or null if multi-select or no drag
+   * @returns {Object|null} {uuid, url, caption} or null if multi-select or no drag
    */
   JournalEditor.prototype.getDraggedImageData = function() {
     if (!this.draggedElement || !this.dragSource) {
@@ -3808,12 +3805,12 @@
 
   /**
    * Set reference image from image data
-   * @param {Object} imageData - {uuid, url, caption, pk (optional)}
+   * @param {Object} imageData - {uuid, url, caption, inspectUrl (optional)}
    */
   JournalEditor.prototype.setReferenceImage = function(imageData) {
     // Use ImageDataService to get complete data if needed
     var completeData = imageData;
-    if (!imageData.pk || !imageData.inspectUrl) {
+    if (!imageData.inspectUrl) {
       completeData = ImageDataService.getImageDataByUUID(imageData.uuid);
       if (!completeData) {
         console.error('[JournalEditor] Cannot set reference image: lookup failed for UUID', imageData.uuid);
@@ -3822,9 +3819,8 @@
     }
 
     // Update state
-    this.currentReferenceImageId = completeData.pk;
-    this.$referenceContainer.data('reference-image-id', this.currentReferenceImageId);
-    this.$referenceContainer.data('reference-image-uuid', completeData.uuid);
+    this.currentReferenceImageUuid = completeData.uuid;
+    this.$referenceContainer.data('reference-image-uuid', this.currentReferenceImageUuid);
 
     // Update preview image attributes
     var $preview = this.$referenceContainer.find('.journal-reference-image-preview');
@@ -3848,15 +3844,14 @@
    */
   JournalEditor.prototype.clearReferenceImage = function() {
     // Update state - set to null (matches title/date/timezone pattern)
-    this.currentReferenceImageId = null;
-    this.$referenceContainer.data('reference-image-id', '');
+    this.currentReferenceImageUuid = null;
     this.$referenceContainer.data('reference-image-uuid', '');
 
     // Hide preview, show placeholder
     this.$referenceContainer.find('.journal-reference-image-preview').addClass('d-none');
     this.$referenceContainer.find('.journal-reference-image-placeholder').removeClass('d-none');
 
-    // Trigger autosave (will send null to backend to clear the field)
+    // Trigger autosave (will send empty string to backend to clear the field)
     this.handleContentChange();
   };
 

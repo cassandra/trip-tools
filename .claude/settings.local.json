@@ -21,7 +21,8 @@
       "Bash(python manage.py shell:*)",
       "Bash(find:*)",
       "Bash(node --check:*)",
-      "Bash(readlink:*)"
+      "Bash(readlink:*)",
+      "Bash(./src/manage.py test:*)"
     ],
     "deny": [],
     "ask": []

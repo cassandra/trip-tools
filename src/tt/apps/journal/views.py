@@ -247,7 +247,7 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
         journal_page_context = JournalPageContext(
             journal = entry.journal,
             journal_entries = journal_entries,
-            journal_entry_pk = entry.pk,
+            journal_entry_uuid = entry.uuid,
         )
 
         # Create form for entry metadata fields
@@ -319,7 +319,7 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
                     new_date = autosave_request.new_date,
                     new_title = autosave_request.new_title,
                     new_timezone = autosave_request.new_timezone,
-                    new_reference_image_id = autosave_request.new_reference_image_id
+                    new_reference_image_uuid = autosave_request.new_reference_image_uuid
                 )
 
             return JsonResponse({

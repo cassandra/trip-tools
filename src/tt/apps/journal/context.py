@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
+from uuid import UUID
 
 from django.db.models import QuerySet
 
@@ -14,19 +15,21 @@ class JournalPageContext:
         journal: Current active journal
         journal_entries: QuerySet of JournalEntry objects for the journal,
                         ordered by date. Used for sidebar navigation.
-        journal_entry_pk: Primary key of the currently viewed JournalEntry.
-                         Used to highlight the active entry in sidebar.
-                         None when on the list view.
+        journal_entry_uuid: UUID of the currently viewed JournalEntry.
+                           Used to highlight the active entry in sidebar.
+                           None when on the list view.
     """
-    journal           : Journal
-    journal_entries   : Optional[QuerySet]  = None
-    journal_entry_pk  : Optional[int]       = None
+    journal            : Journal
+    journal_entries    : Optional[QuerySet]        = None
+    journal_entry_uuid : Optional[Union[UUID, str]] = None
 
     def __post_init__(self):
-        # Enforce int to ensure consistent type comparisons. This often comes from url params (str).
-        try:
-            self.journal_entry_pk = int(self.journal_entry_pk)
-        except (TypeError, ValueError):
-            pass
+        # Convert string to UUID if needed, validate format
+        if self.journal_entry_uuid:
+            if isinstance(self.journal_entry_uuid, str):
+                try:
+                    self.journal_entry_uuid = UUID(self.journal_entry_uuid)
+                except (ValueError, TypeError):
+                    self.journal_entry_uuid = None
         return
     

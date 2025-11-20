@@ -13,7 +13,7 @@
 <ul class="app-sidebar-nav">
   {% for entry in journal_page.journal_entries %}
   <li>
-    <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"{% if entry.pk == journal_page.journal_entry_pk %} class="active" aria-current="page"{% endif %}>
+    <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"{% if entry.uuid == journal_page.journal_entry_uuid %} class="active" aria-current="page"{% endif %}>
       {{ entry.date|date:'D, M j' }}
     </a>
   </li>

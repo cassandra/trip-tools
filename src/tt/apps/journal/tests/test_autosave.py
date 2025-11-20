@@ -341,7 +341,7 @@ class JournalEntryAutosaveHelperTests(TestCase):
             'new_date': '2024-01-15',
             'new_title': 'New Title',
             'new_timezone': 'Europe/London',
-            'reference_image_id': 42,
+            'reference_image_uuid': '550e8400-e29b-41d4-a716-446655440000',
         }
         request_body = json.dumps(data).encode('utf-8')
 
@@ -353,7 +353,7 @@ class JournalEntryAutosaveHelperTests(TestCase):
         self.assertEqual(autosave_request.new_date, date(2024, 1, 15))
         self.assertEqual(autosave_request.new_title, 'New Title')
         self.assertEqual(autosave_request.new_timezone, 'Europe/London')
-        self.assertEqual(autosave_request.new_reference_image_id, 42)
+        self.assertEqual(autosave_request.new_reference_image_uuid, '550e8400-e29b-41d4-a716-446655440000')
 
     def test_parse_autosave_request_invalid_json(self):
         """Test parsing invalid JSON."""

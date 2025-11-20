@@ -10,12 +10,14 @@ import logging
 from dataclasses import dataclass
 from datetime import date as date_class, datetime
 from typing import Optional, Tuple
+from uuid import UUID
 
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, JsonResponse
 
 from tt.apps.common.autosave_helpers import AutoSaveHelper as SharedAutoSaveHelper, ConflictHelper, DiffHelper
 from tt.apps.common.html_sanitizer import sanitize_rich_text_html
+from tt.apps.images.models import TripImage
 
 from .models import JournalEntry
 
@@ -26,12 +28,12 @@ logger = logging.getLogger(__name__)
 @dataclass
 class JournalAutoSaveRequest:
     """Parsed and validated auto-save request data for journal entries."""
-    text                   : str
-    client_version         : Optional[int]
-    new_date               : Optional[date_class]
-    new_title              : Optional[str]
-    new_timezone           : Optional[str]
-    new_reference_image_id : Optional[int]
+    text                     : str
+    client_version           : Optional[int]
+    new_date                 : Optional[date_class]
+    new_title                : Optional[str]
+    new_timezone             : Optional[str]
+    new_reference_image_uuid : Optional[str]
 
 
 class JournalDiffHelper:
@@ -114,7 +116,7 @@ class JournalAutoSaveHelper:
             date_str = data.get('new_date')
             title = data.get('new_title')
             timezone = data.get('new_timezone')
-            reference_image_id = data.get('reference_image_id')
+            reference_image_uuid = data.get('reference_image_uuid')
         except json.JSONDecodeError:
             logger.warning('Invalid JSON in auto-save request')
             return None, JsonResponse(
@@ -134,17 +136,23 @@ class JournalAutoSaveHelper:
                     status=400
                 )
 
-        # Parse reference_image_id if provided
-        new_reference_image_id = None
-        if reference_image_id is not None:
-            try:
-                new_reference_image_id = int(reference_image_id)
-            except (ValueError, TypeError):
-                logger.warning(f'Invalid reference_image_id: {reference_image_id}')
-                return None, JsonResponse(
-                    {'status': 'error', 'message': 'Invalid reference_image_id'},
-                    status=400
-                )
+        # Parse reference_image_uuid if provided
+        new_reference_image_uuid = None
+        if reference_image_uuid is not None:
+            if reference_image_uuid == '':
+                # Empty string means clear reference image
+                new_reference_image_uuid = ''
+            else:
+                # Validate UUID format
+                try:
+                    UUID(reference_image_uuid)
+                    new_reference_image_uuid = reference_image_uuid
+                except (ValueError, TypeError):
+                    logger.warning(f'Invalid reference_image_uuid: {reference_image_uuid}')
+                    return None, JsonResponse(
+                        {'status': 'error', 'message': 'Invalid reference_image_uuid format'},
+                        status=400
+                    )
 
         return JournalAutoSaveRequest(
             text = text,
@@ -152,7 +160,7 @@ class JournalAutoSaveHelper:
             new_date = new_date,
             new_title = title,
             new_timezone = timezone,
-            new_reference_image_id = new_reference_image_id
+            new_reference_image_uuid = new_reference_image_uuid
         ), None
 
     @classmethod
@@ -208,13 +216,13 @@ class JournalAutoSaveHelper:
 
     @classmethod
     def update_entry_atomically( cls,
-                                 entry                  : JournalEntry,
-                                 text                   : str,
-                                 user                   : User,
-                                 new_date               : Optional[date_class] = None,
-                                 new_title              : Optional[str]        = None,
-                                 new_timezone           : Optional[str]        = None,
-                                 new_reference_image_id : Optional[int]        = None) -> JournalEntry:
+                                 entry                    : JournalEntry,
+                                 text                     : str,
+                                 user                     : User,
+                                 new_date                 : Optional[date_class] = None,
+                                 new_title                : Optional[str]        = None,
+                                 new_timezone             : Optional[str]        = None,
+                                 new_reference_image_uuid : Optional[str]        = None) -> JournalEntry:
         """
         Update journal entry with atomic version increment.
 
@@ -227,7 +235,7 @@ class JournalAutoSaveHelper:
             new_date: Optional new date for entry
             new_title: Optional new title for entry
             new_timezone: Optional new timezone for entry
-            new_reference_image_id: Optional new reference image ID (None to clear, or valid ID)
+            new_reference_image_uuid: Optional new reference image UUID (empty string to clear, or valid UUID)
 
         Returns:
             Updated entry with refreshed version
@@ -243,10 +251,19 @@ class JournalAutoSaveHelper:
         if new_timezone is not None:
             extra_updates['timezone'] = new_timezone
 
-        # Handle reference_image_id: None means clear, valid ID means set
-        # Always update when present in request (matches title/date/timezone pattern)
-        if new_reference_image_id is not None:
-            extra_updates['reference_image_id'] = new_reference_image_id
+        # Handle reference_image by UUID
+        if new_reference_image_uuid is not None:
+            if new_reference_image_uuid == '':
+                # Empty string means clear reference image
+                extra_updates['reference_image_id'] = None
+            else:
+                # Look up TripImage by UUID and set FK with PK
+                try:
+                    trip_image = TripImage.objects.get(uuid=new_reference_image_uuid)
+                    extra_updates['reference_image_id'] = trip_image.pk
+                except TripImage.DoesNotExist:
+                    logger.warning(f'TripImage not found for UUID: {new_reference_image_uuid}')
+                    # Skip update - don't change reference_image
 
         return SharedAutoSaveHelper.update_entry_atomically(
             entry = entry,
