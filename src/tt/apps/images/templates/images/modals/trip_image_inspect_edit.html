@@ -6,11 +6,11 @@
 
 {% block preamble %}
 <form id="trip-image-edit-form" method="post"
-      action="{% url 'images_trip_image_inspect' image_uuid=image_page_context.trip_image.uuid %}{% if image_page_context.trip %}?trip_id={{ image_page_context.trip.id }}{% endif %}"
+      action="{% url 'images_image_inspect' image_uuid=image_page_context.trip_image.uuid %}{% if image_page_context.trip %}?trip_uuid={{ image_page_context.trip.uuid }}{% endif %}"
       data-async="modal">
   {% csrf_token %}
   {% if image_page_context.trip %}
-    <input type="hidden" name="trip_id" value="{{ image_page_context.trip.id }}">
+    <input type="hidden" name="trip_uuid" value="{{ image_page_context.trip.uuid }}">
   {% endif %}
 {% endblock %}
 

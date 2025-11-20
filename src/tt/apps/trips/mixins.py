@@ -66,31 +66,3 @@ class TripViewMixin:
             trip_member = trip_member,
             required_level = TripPermissionLevel.ADMIN,
         )    
-
-
-
-
-    def get_trip_member_LEGACY( self,
-                                 request  : HttpRequest,
-                                 trip_id  : int = None,
-                                 *args, **kwargs ) -> TripMember:
-        if not trip_id:
-            for arg_name in [ 'trip_id', 'trip_pk', 'trip' ]:
-                try:
-                    trip_id = int( request.kwargs.get( arg_name ))
-                    break
-                except ( TypeError, ValueError):
-                    pass
-                continue
-
-        if not trip_id:
-            raise BadRequest()
-        try:
-            trip = Trip.objects.get( pk = trip_id )
-            return TripMember.objects.get( trip = trip, user = request.user )
-        except Trip.DoesNotExist:
-            raise Http404()
-        except TripMember.DoesNotExist:
-            raise Http404()
-
-        

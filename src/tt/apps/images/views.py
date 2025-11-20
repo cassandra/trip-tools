@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
@@ -23,7 +24,7 @@ from .services import ImageUploadService, HEIF_SUPPORT_AVAILABLE
 logger = logging.getLogger(__name__)
 
 
-class TripImagesHomeView( LoginRequiredMixin, View ):
+class ImagesHomeView( LoginRequiredMixin, View ):
     """
     Home view for image management of images used for trips.
     """
@@ -91,7 +92,7 @@ class TripImagesHomeView( LoginRequiredMixin, View ):
         return JsonResponse({'files': results_dicts})
 
 
-class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
+class ImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
     """
     Modal view for inspecting/previewing a trip image with full metadata.
 
@@ -99,7 +100,7 @@ class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
     EXIF data, upload information, and GPS coordinates if available.
 
     Supports two access modes:
-    1. With trip context (?trip_id=X): Check trip membership permission
+    1. With trip context (?trip_uuid=X): Check trip membership permission
     2. Without trip context: Only uploader has access
     """
 
@@ -112,7 +113,7 @@ class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
             return 'images/modals/trip_image_inspect_edit.html'
         return self.get_template_name()
 
-    def get(self, request, image_uuid: str, *args, **kwargs) -> HttpResponse:
+    def get(self, request, image_uuid: UUID, *args, **kwargs) -> HttpResponse:
 
         image_page_context = self.get_image_page_context( request, image_uuid, *args, **kwargs )
 
@@ -132,7 +133,7 @@ class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
         )
         return self.modal_response( request, context = context, template_name = template_name )
 
-    def post(self, request, image_uuid: str, *args, **kwargs) -> HttpResponse:
+    def post(self, request, image_uuid: UUID, *args, **kwargs) -> HttpResponse:
 
         image_page_context = self.get_image_page_context( request, image_uuid, *args, **kwargs )
             
@@ -155,15 +156,15 @@ class TripImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
         )
         return self.modal_response( request, context = context, template_name = template_name )
 
-    def get_image_page_context( self, request, image_uuid: str, *args, **kwargs ) -> ImagePageContext:
+    def get_image_page_context( self, request, image_uuid: UUID, *args, **kwargs ) -> ImagePageContext:
 
         trip_image = get_object_or_404( TripImage, uuid = image_uuid )
 
         # Determine trip context (optional - image can be accessed outside trip context)
         trip_page_context = None
         try:
-            trip_id = int( request.GET.get('trip_id') )
-            request_member = self.get_trip_member_LEGACY( request, trip_id = trip_id )
+            trip_uuid_str = request.GET.get('trip_uuid')
+            request_member = self.get_trip_member( request, trip_uuid = trip_uuid_str )
             trip_page_context = TripPageContext(
                 active_page = TripPage.IMAGES,
                 request_member = request_member,

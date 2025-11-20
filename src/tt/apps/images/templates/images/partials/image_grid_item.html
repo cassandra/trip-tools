@@ -1,7 +1,7 @@
 {% load icons %}
 {% load tz %}
 {% timezone USER_TIMEZONE %}
-<a href="{% url 'images_trip_image_inspect' image_uuid=trip_image.uuid %}" data-async="modal" class="uploaded-item-link">
+<a href="{% url 'images_image_inspect' image_uuid=trip_image.uuid %}" data-async="modal" class="uploaded-item-link">
   <div class="uploaded-item">
     <div class="uploaded-thumbnail">
       {% if trip_image.thumbnail_image %}

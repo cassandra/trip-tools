@@ -19,8 +19,8 @@ logging.disable(logging.CRITICAL)
 
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
-class TripImagesHomeViewTestCase(TestCase):
-    """Test TripImagesHomeView GET and POST endpoints."""
+class ImagesHomeViewTestCase(TestCase):
+    """Test ImagesHomeView GET and POST endpoints."""
 
     def setUp(self):
         self.client = Client()
@@ -31,7 +31,7 @@ class TripImagesHomeViewTestCase(TestCase):
             last_name='User',
         )
         self.client.login(email='test@example.com', password='testpass123')
-        self.url = reverse('images_trip_home')
+        self.url = reverse('images_home')
 
     def test_get_requires_authentication(self):
         """GET request without authentication should redirect to login."""
@@ -200,7 +200,7 @@ class TripImagesHomeViewTestCase(TestCase):
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class TripImageInspectViewTestCase(TestCase):
-    """Test TripImageInspectView modal endpoint."""
+    """Test ImageInspectView modal endpoint."""
 
     def setUp(self):
         self.client = Client()
@@ -215,7 +215,7 @@ class TripImageInspectViewTestCase(TestCase):
             uploaded_by=self.user,
             caption="Test image for inspection",
         )
-        self.url = reverse('images_trip_image_inspect', kwargs={'image_uuid': str(self.trip_image.uuid)})
+        self.url = reverse('images_image_inspect', kwargs={'image_uuid': str(self.trip_image.uuid)})
 
     def test_get_requires_authentication(self):
         """GET without authentication should redirect."""
@@ -235,7 +235,7 @@ class TripImageInspectViewTestCase(TestCase):
 
     def test_get_nonexistent_image_404(self):
         """GET with non-existent UUID should return 404."""
-        url = reverse('images_trip_image_inspect', kwargs={'image_uuid': '12345678-1234-1234-1234-123456789012'})
+        url = reverse('images_image_inspect', kwargs={'image_uuid': '12345678-1234-1234-1234-123456789012'})
 
         response = self.client.get(url)
 
@@ -273,7 +273,7 @@ class TripImageInspectViewTestCase(TestCase):
         )
 
         # Try to access it with AJAX header (modal requests use AJAX)
-        url = reverse('images_trip_image_inspect', kwargs={'image_uuid': str(other_image.uuid)})
+        url = reverse('images_image_inspect', kwargs={'image_uuid': str(other_image.uuid)})
         response = self.client.get(
             url,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'

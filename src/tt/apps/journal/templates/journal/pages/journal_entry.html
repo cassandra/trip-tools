@@ -40,7 +40,7 @@
                 <img src="{% if entry.reference_image %}{{ entry.reference_image.thumbnail_image.url }}{% endif %}"
                      alt="{% if entry.reference_image %}{{ entry.reference_image.caption|default:'Reference' }}{% endif %}"
                      class="journal-reference-image-thumbnail"
-                     data-inspect-url="{% if entry.reference_image %}{% url 'images_trip_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_id={{ trip.id }}{% endif %}">
+                     data-inspect-url="{% if entry.reference_image %}{% url 'images_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_uuid={{ trip.uuid }}{% endif %}">
                 <button type="button"
                         class="journal-reference-image-clear"
                         title="Clear reference image">&times;</button>

@@ -9,7 +9,7 @@
   {% for trip in trips %}
   <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-4">
     <a href="{% url 'trips_home' trip_uuid=trip.uuid %}" class="text-decoration-none">
-      <div class="card card-hover h-100" data-trip-id="{{ trip.id }}">
+      <div class="card card-hover h-100" data-trip-uuid="{{ trip.uuid }}">
         <div class="card-img-top bg-light d-flex align-items-center justify-content-center trip-card-image{% if icon_type == 'past' %} trip-card-image--past{% endif %}">
           <img src="{% static 'img/tt-icon-196x196.png' %}" alt="Trip icon" class="trip-card-icon{% if icon_type == 'past' %} trip-card-icon--past{% endif %}">
         </div>
