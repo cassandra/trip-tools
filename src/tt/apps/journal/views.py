@@ -27,6 +27,8 @@ from .models import Journal, JournalEntry
 from .transient_models import PublishingStatusHelper
 from .services import JournalImagePickerService, JournalEntrySeederService
 
+from tt.apps.travelog.services import PublishingService
+
 logger = logging.getLogger(__name__)
 
 
@@ -572,3 +574,118 @@ class JournalEditorHelpView(LoginRequiredMixin, ModalView):
         # No context needed - help is generic
         context = {}
         return self.modal_response(request, context=context)
+
+
+class JournalPublishModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_publish.html'
+
+    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_admin(request_member)
+
+        # Get publishing status for display
+        publishing_status = PublishingStatusHelper.get_publishing_status(journal)
+
+        # Create visibility form for optional visibility changes during publish
+        visibility_form = JournalVisibilityForm(journal=journal)
+
+        context = {
+            'journal': journal,
+            'trip': journal.trip,
+            'publishing_status': publishing_status,
+            'visibility_form': visibility_form,
+        }
+        return self.modal_response(request, context=context)
+
+    def post(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_admin(request_member)
+
+        # Get publishing status to check for edge cases
+        publishing_status = PublishingStatusHelper.get_publishing_status(journal)
+
+        # Validate visibility form (if visibility changes are included)
+        visibility_form = JournalVisibilityForm(request.POST, journal=journal)
+
+        if not visibility_form.is_valid():
+            context = {
+                'journal': journal,
+                'trip': journal.trip,
+                'publishing_status': publishing_status,
+                'visibility_form': visibility_form,
+            }
+            return self.modal_response(request, context=context, status=400)
+
+        try:
+            with transaction.atomic():
+                # Publish the journal
+                travelog = PublishingService.publish_journal(
+                    journal=journal,
+                    user=request.user
+                )
+
+                # Apply visibility changes if form was submitted
+                visibility_name = visibility_form.cleaned_data['visibility']
+                visibility = JournalVisibility[visibility_name]
+
+                journal.visibility = visibility
+
+                # Handle password setting based on form state
+                if visibility_form.should_update_password():
+                    password = visibility_form.cleaned_data.get('password')
+                    journal.set_password(password)
+
+                journal.modified_by = request.user
+                journal.save()
+
+            logger.info(
+                f"Journal {journal.uuid} published as Travelog v{travelog.version_number} "
+                f"by user {request.user}"
+            )
+
+            return self.refresh_response(request)
+
+        except ValueError as e:
+            # Handle validation errors (e.g., no entries to publish)
+            logger.warning(f"Failed to publish journal {journal.uuid}: {e}")
+
+            # Re-display modal with error message
+            visibility_form.add_error(None, str(e))
+            context = {
+                'journal': journal,
+                'trip': journal.trip,
+                'publishing_status': publishing_status,
+                'visibility_form': visibility_form,
+            }
+            return self.modal_response(request, context=context, status=400)
+
+        except Exception as e:
+            # Handle unexpected errors
+            logger.error(f"Error publishing journal {journal.uuid}: {e}", exc_info=True)
+
+            visibility_form.add_error(None, "An unexpected error occurred while publishing.")
+            context = {
+                'journal': journal,
+                'trip': journal.trip,
+                'publishing_status': publishing_status,
+                'visibility_form': visibility_form,
+            }
+            return self.modal_response(request, context=context, status=500)

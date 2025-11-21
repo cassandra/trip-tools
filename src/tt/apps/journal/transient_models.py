@@ -50,17 +50,24 @@ class PublishingStatusHelper:
         """
         Check if journal has been modified since publication.
 
-        Compares modification timestamps on the journal and its entries
-        against the travelog's publication datetime.
-        """
-        published_datetime = travelog.published_datetime
+        For Journal metadata (title, description): compares content directly since
+        Journal.modified_datetime updates during publish transaction.
 
-        if journal.modified_datetime > published_datetime:
+        For JournalEntries: compares modification timestamps since entries aren't
+        modified during publish.
+        """
+        # Compare Journal content directly (title and description are published fields)
+        if journal.title != travelog.title:
+            return True
+        if journal.description != travelog.description:
             return True
 
+        # Compare JournalEntry timestamps (entries modified after publish)
+        published_datetime = travelog.published_datetime
         if journal.entries.filter(modified_datetime__gt=published_datetime).exists():
             return True
 
+        # Check if entry count changed (entries added or deleted)
         journal_entry_count = journal.entries.count()
         travelog_entry_count = travelog.entries.count()
         if journal_entry_count != travelog_entry_count:

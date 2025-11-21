@@ -22,6 +22,7 @@ AVAILABLE_ICONS = {
     'audio-disabled',
     'audio-enabled',
     'bold',
+    'book',
     'camera',
     'cancel',
     'check-circle',

@@ -71,6 +71,11 @@
                     {% icon "exclamation-circle" size="sm" css_class="tt-icon-left" %}
                     Unpublished changes
                   </small>
+                {% else %}
+                  <small class="text-success d-block mt-1">
+                    {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
+                    Up to date
+                  </small>
                 {% endif %}
               </div>
             {% else %}
@@ -95,12 +100,14 @@
                 {% icon "eye" size="sm" css_class="tt-icon-left" %}
                 Preview
               </button>
-              <button class="btn btn-sm btn-primary mb-2"
-                      title="Publish your latest changes as a new version"
-                      {% if not trip_page.request_member.permission_level.is_admin %}disabled{% elif publishing_status.is_published_without_changes %}disabled{% endif %}>
+              <a class="btn btn-sm btn-primary mb-2"
+                 href="{% url 'journal_publish' journal_uuid=journal.uuid %}"
+                 data-async="modal"
+                 title="Publish your latest changes as a new version"
+                 {% if not trip_page.request_member.permission_level.is_admin %}disabled{% elif publishing_status.is_published_without_changes %}disabled{% endif %}>
                 {% icon "upload" size="sm" css_class="tt-icon-left" %}
                 Publish
-              </button>
+              </a>
             </div>
           </div>
         </div>
