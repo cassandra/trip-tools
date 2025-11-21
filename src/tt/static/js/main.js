@@ -299,14 +299,63 @@
             }
         }
         
-        console.log( `${label}: 
-    Name: ${elementTag}, 
+        console.log( `${label}:
+    Name: ${elementTag},
     Id: ${elementId},
     Classes: ${elementClasses},
     ${svgStr},
     ${offsetStr},
     ${rectStr}`) ;
-        
+
     }
-    
-})();    
+
+})();
+
+// Radio button show/hide utility
+// Uses data-show-when-checked and data-hide-when-checked attributes
+(function() {
+    'use strict';
+
+    function updateRadioVisibility($context) {
+        // If no context provided, search entire document
+        $context = $context || $(document);
+
+        // Find all radios with show/hide data attributes in this context
+        // Only process CHECKED radios - unchecked radios should not affect visibility
+        $context.find('input[type="radio"][data-show-when-checked]:checked, input[type="radio"][data-hide-when-checked]:checked').each(function() {
+            const $radio = $(this);
+
+            // Handle data-show-when-checked (this radio is checked, so show target)
+            const showSelector = $radio.data('show-when-checked');
+            if (showSelector) {
+                $(showSelector).show();
+            }
+
+            // Handle data-hide-when-checked (this radio is checked, so hide target)
+            const hideSelector = $radio.data('hide-when-checked');
+            if (hideSelector) {
+                $(hideSelector).hide();
+            }
+        });
+    }
+
+    // Event delegation for radio changes (works for all radios, including in modals)
+    $(document).on('change', 'input[type="radio"][data-show-when-checked], input[type="radio"][data-hide-when-checked]', function() {
+        updateRadioVisibility();
+    });
+
+    // Initialize on page load
+    $(document).ready(function() {
+        updateRadioVisibility();
+    });
+
+    // Initialize when modals are about to be shown (before animation)
+    $('body').on('show.bs.modal', '.modal', function() {
+        updateRadioVisibility($(this));
+    });
+
+    // Also initialize after modals are fully shown (handles edge cases)
+    $('body').on('shown.bs.modal', '.modal', function() {
+        updateRadioVisibility($(this));
+    });
+})();

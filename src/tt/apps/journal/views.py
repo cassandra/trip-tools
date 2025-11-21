@@ -21,7 +21,7 @@ from tt.async_view import ModalView
 from .autosave_helpers import JournalAutoSaveHelper, JournalConflictHelper
 from .context import JournalPageContext
 from .enums import JournalVisibility, ImagePickerScope
-from .forms import JournalForm, JournalEntryForm
+from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry
 from .services import JournalImagePickerService, JournalEntrySeederService
@@ -164,6 +164,73 @@ class JournalEditView( LoginRequiredMixin, TripViewMixin, ModalView ):
 
         if form.is_valid():
             journal = form.save(commit=False)
+            journal.modified_by = request.user
+            journal.save()
+
+            return self.refresh_response(request)
+
+        context = {
+            'form': form,
+            'journal': journal,
+            'trip': journal.trip,
+        }
+        return self.modal_response(request, context=context, status=400)
+
+
+class JournalVisibilityChangeView( LoginRequiredMixin, TripViewMixin, ModalView ):
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_visibility.html'
+
+    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_admin(request_member)
+
+        form = JournalVisibilityForm(journal=journal)
+
+        context = {
+            'form': form,
+            'journal': journal,
+            'trip': journal.trip,
+        }
+        return self.modal_response(request, context=context)
+
+    def post(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_admin(request_member)
+
+        form = JournalVisibilityForm(request.POST, journal=journal)
+
+        if form.is_valid():
+            # Get visibility enum value from string name
+            visibility_name = form.cleaned_data['visibility']
+            visibility = JournalVisibility[visibility_name]
+
+            # Update journal visibility
+            journal.visibility = visibility
+
+            # Handle password setting based on form state
+            if form.should_update_password():
+                password = form.cleaned_data.get('password')
+                journal.set_password(password)
+            # If should_update_password() is False, existing password is preserved
+
             journal.modified_by = request.user
             journal.save()
 

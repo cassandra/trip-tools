@@ -43,6 +43,7 @@ AVAILABLE_ICONS = {
     'eye',
     'eye-off',
     'forecast',
+    'globe',
     'heading',
     'history',
     'home',

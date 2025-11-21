@@ -1,4 +1,5 @@
 {% extends "journal/pages/journal_base.html" %}
+{% load icons %}
 
 {% block trip_content %}
 <div class="m-3">
@@ -6,21 +7,70 @@
   {# Journal Metadata Card #}
   <div class="card mb-3">
     <div class="card-body">
-      <div class="d-flex justify-content-between align-items-start">
+      <div class="d-flex justify-content-between align-items-start mb-3">
         <div class="flex-grow-1">
-          <h3>{{ journal.title }}</h3>
+          <h3 class="mb-2">{{ journal.title }}</h3>
           {% if journal.description %}
-          <p class="text-muted">{{ journal.description }}</p>
+          <p class="text-muted mb-2">{{ journal.description }}</p>
           {% endif %}
-          <small class="text-muted">Timezone: {{ journal.timezone }}</small>
+          <div class="d-flex align-items-center flex-wrap">
+            <small class="text-muted mr-3">
+              {% icon "globe" size="sm" css_class="tt-icon-left" %}
+              Timezone: {{ journal.timezone }}
+            </small>
+            <small class="text-muted">
+              {% icon "clock" size="sm" css_class="tt-icon-left" %}
+              Created {{ journal.created_datetime|date:"N j, Y" }}
+            </small>
+          </div>
         </div>
         <a class="btn btn-sm btn-outline-secondary ml-3"
            href="{% url 'journal_edit' journal_uuid=journal.uuid %}"
            data-async="modal"
            {% if not trip_page.request_member.can_edit_trip %}disabled{% endif %}>
-          <i class="fas fa-edit tt-icon-left"></i>
+          {% icon "edit" size="sm" css_class="tt-icon-left" %}
           Edit Journal
         </a>
+      </div>
+
+      {# Publishing and Visibility Section #}
+      <div class="border-top pt-3">
+        <div class="row">
+          <div class="col-md-6 mb-3 mb-md-0">
+            <h6 class="font-weight-bold mb-2">Publishing Status</h6>
+            <div class="d-flex align-items-center mb-2">
+              <span class="badge badge-{{ journal.visibility.badge_color }}">
+                {% icon journal.visibility.icon_name size="sm" css_class="tt-icon-left" %}
+                {{ journal.visibility.label }}
+              </span>
+              <a class="btn btn-sm btn-outline-warning ml-2"
+                 href="{% url 'journal_visibility' journal_uuid=journal.uuid %}"
+                 data-async="modal"
+                 {% if not trip_page.request_member.permission_level.is_admin %}disabled{% endif %}>
+                {% icon "shield" size="sm" css_class="tt-icon-left" %}
+                Change Visibility
+              </a>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <h6 class="font-weight-bold mb-2">Actions</h6>
+            <div class="d-flex flex-wrap">
+              <button class="btn btn-sm btn-outline-primary mr-2 mb-2"
+                      title="Preview how your journal will appear to readers"
+                      {% if not trip_page.request_member.can_edit_trip %}disabled{% endif %}>
+                {% icon "eye" size="sm" css_class="tt-icon-left" %}
+                Preview
+              </button>
+              <button class="btn btn-sm btn-primary mb-2"
+                      title="Publish your latest changes as a new version"
+                      {% if not trip_page.request_member.permission_level.is_admin %}disabled{% endif %}>
+                {% icon "upload" size="sm" css_class="tt-icon-left" %}
+                Publish
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

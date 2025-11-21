@@ -24,6 +24,11 @@ urlpatterns = [
         name='journal_edit'
     ),
     path(
+        '<uuid:journal_uuid>/visibility',
+        views.JournalVisibilityChangeView.as_view(),
+        name='journal_visibility'
+    ),
+    path(
         '<uuid:journal_uuid>/entry/new/',
         views.JournalEntryNewView.as_view(),
         name='journal_entry_new'
