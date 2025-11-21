@@ -55,9 +55,9 @@ Execute design-focused work session for planning and mockup creation:
    - Validate against design requirements
    - Ensure consistency with existing design patterns
    - Get feedback and iterate as needed
-   - Finalize mockup before proceeding to interaction docs
+   - **MUST** Stop for review and iterate until finalize mockup before proceeding to interaction docs
 
-8. **Create interaction documentation** - After mockup is finalized:
+8. **Create interaction documentation** - **ONLY AFTER** mockup is finalized:
    - Document in `data/design/issue-$1/interaction-patterns.md`
    - Specify user interaction flows and behaviors
    - Define component states and transitions
