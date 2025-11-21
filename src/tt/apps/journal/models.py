@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import uuid
 from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
@@ -12,7 +13,84 @@ from .enums import JournalVisibility
 from . import managers
 
 
-class Journal(models.Model):
+class JournalContent( models.Model ):
+    """
+    Abstract base for journal-like containers (e.g., Journal and Travelog).
+    Defines the common interface needed for unified content rendering.
+    """
+    
+    uuid = models.UUIDField(
+        default = uuid.uuid4,
+        editable = False,
+        unique = True,
+    )
+    title = models.CharField(
+        max_length = 200,
+    )
+    description = models.TextField(
+        blank = True,
+    )
+    
+    class Meta:
+        abstract = True
+        
+    @abstractmethod
+    def get_entries(self):
+        """
+        Return queryset of entries for rendering.
+          
+        Returns:
+            QuerySet of instances (e.g., JournalEntry, TravelogEntry)
+        """
+        raise NotImplementedError
+
+    def __str__(self):
+        return self.title
+
+    
+class JournalEntryContent(models.Model):
+    """
+    Abstract base for journal entry content (JournalEntry and TravelogEntry).
+      Defines the common interface needed for unified entry rendering.
+      """
+
+    uuid = models.UUIDField(
+        default = uuid.uuid4,
+        unique = True,
+        editable = False,
+    )    
+    date = models.DateField()
+    timezone = models.CharField(
+        max_length = 63,
+        default = 'UTC',
+        help_text = 'Timezone for this entry (pytz timezone name)',
+    )
+
+    # Content
+    title = models.CharField(
+        max_length = 200,
+        blank = True,
+    )
+    text = models.TextField(
+        blank = True,
+        help_text = 'HTML formatted journal entry text (sanitized on save)',
+    )
+    reference_image = models.ForeignKey(
+        TripImage,
+        on_delete = models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name = '%(class)s_entries',  # Must be dynamic in abstract models
+    )
+   
+    class Meta:
+        abstract = True
+        
+    def __str__(self):
+        return f"{self.title} ({self.date})"
+
+
+class Journal( JournalContent ):
     """
     Database supports multiple journals per trip for future flexibility.
     MVP will create/use a single journal per trip, but the schema allows
@@ -20,20 +98,12 @@ class Journal(models.Model):
     """
     objects = managers.JournalManager()
 
-    uuid = models.UUIDField(
-        default = uuid.uuid4,
-        unique = True,
-        editable = False,
-    )
-
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,
         related_name = 'journals',
     )
 
-    title = models.CharField(max_length = 200)
-    description = models.TextField(blank = True)
     timezone = models.CharField(
         max_length = 63,
         default = 'UTC',
@@ -70,6 +140,9 @@ class Journal(models.Model):
         verbose_name_plural = 'Journals'
         ordering = ['-created_datetime']
 
+    def get_entries(self):
+        return self.entries.all()
+
     def set_password(self, raw_password):
         if raw_password:
             self._password = make_password(raw_password)
@@ -86,43 +159,15 @@ class Journal(models.Model):
         return bool(self._password)
 
 
-class JournalEntry(models.Model):
+class JournalEntry( JournalEntryContent ):
 
     objects = managers.JournalEntryManager()
 
-    uuid = models.UUIDField(
-        default = uuid.uuid4,
-        unique = True,
-        editable = False,
-    )
     journal = models.ForeignKey(
         Journal,
         on_delete = models.CASCADE,
         related_name = 'entries',
     )
-
-    reference_image = models.ForeignKey(
-        TripImage,
-        on_delete = models.SET_NULL,
-        null = True,
-        blank = True,
-        related_name = 'journal_entries_as_reference',
-    )
-
-    date = models.DateField()
-    timezone = models.CharField(
-        max_length = 63,
-        default = 'UTC',
-        help_text = 'Timezone for this entry (pytz timezone name)',
-    )
-
-    # Content
-    title = models.CharField(max_length = 200, blank = True)
-    text = models.TextField(
-        blank = True,
-        help_text = 'HTML formatted journal entry text (sanitized on save)',
-    )
-
     # Source tracking (for seeding from notebook)
     source_notebook_entry = models.ForeignKey(
         NotebookEntry,
