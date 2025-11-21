@@ -38,6 +38,8 @@
         <div class="row">
           <div class="col-md-6 mb-3 mb-md-0">
             <h6 class="font-weight-bold mb-2">Publishing Status</h6>
+
+            {# Visibility Badge #}
             <div class="d-flex align-items-center mb-2">
               <span class="badge badge-{{ journal.visibility.badge_color }}">
                 {% icon journal.visibility.icon_name size="sm" css_class="tt-icon-left" %}
@@ -51,6 +53,37 @@
                 Change Visibility
               </a>
             </div>
+
+            {# Publishing Status Display #}
+            {% if publishing_status.has_published_version %}
+              {# Published Journal - Show Version Info #}
+              <div class="mt-2">
+                <small class="text-muted d-block">
+                  <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+                  &bull;
+                  Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
+                  {% if publishing_status.current_published_version.published_by %}
+                    by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
+                  {% endif %}
+                </small>
+                {% if publishing_status.has_unpublished_changes %}
+                  <small class="text-warning d-block mt-1">
+                    {% icon "exclamation-circle" size="sm" css_class="tt-icon-left" %}
+                    Unpublished changes
+                  </small>
+                {% endif %}
+              </div>
+            {% else %}
+              {# Unpublished Journal #}
+              <div class="mt-2">
+                <small class="text-muted d-block">
+                  <strong>Status: Unpublished</strong>
+                </small>
+                <small class="text-muted d-block">
+                  Ready to publish
+                </small>
+              </div>
+            {% endif %}
           </div>
 
           <div class="col-md-6">
@@ -58,13 +91,13 @@
             <div class="d-flex flex-wrap">
               <button class="btn btn-sm btn-outline-primary mr-2 mb-2"
                       title="Preview how your journal will appear to readers"
-                      {% if not trip_page.request_member.can_edit_trip %}disabled{% endif %}>
+                      {% if not trip_page.request_member.can_edit_trip %}disabled{% elif not publishing_status.has_published_version %}disabled{% endif %}>
                 {% icon "eye" size="sm" css_class="tt-icon-left" %}
                 Preview
               </button>
               <button class="btn btn-sm btn-primary mb-2"
                       title="Publish your latest changes as a new version"
-                      {% if not trip_page.request_member.permission_level.is_admin %}disabled{% endif %}>
+                      {% if not trip_page.request_member.permission_level.is_admin %}disabled{% elif publishing_status.is_published_without_changes %}disabled{% endif %}>
                 {% icon "upload" size="sm" css_class="tt-icon-left" %}
                 Publish
               </button>

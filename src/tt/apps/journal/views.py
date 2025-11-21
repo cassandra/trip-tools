@@ -24,6 +24,7 @@ from .enums import JournalVisibility, ImagePickerScope
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry
+from .transient_models import PublishingStatusHelper
 from .services import JournalImagePickerService, JournalEntrySeederService
 
 logger = logging.getLogger(__name__)
@@ -120,6 +121,51 @@ class JournalCreateView( LoginRequiredMixin, TripViewMixin, ModalView ):
             'trip': trip,
         }
         return self.modal_response(request, context=context, status=400)
+
+
+class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
+
+    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_viewer(request_member)
+
+        if not request_member.can_edit_trip:
+            return self.journal_permission_denied_response(
+                request = request,
+                request_member = request_member,
+                journal = journal,
+            )
+
+        journal_entries = journal.entries.all() if journal else []
+
+        # Get publishing status
+        publishing_status = PublishingStatusHelper.get_publishing_status(journal)
+
+        trip_page_context = TripPageContext(
+            active_page = TripPage.JOURNAL,
+            request_member = request_member,
+        )
+        journal_page_context = JournalPageContext(
+            journal = journal,
+            journal_entries = journal_entries
+        )
+        context = {
+            'trip_page': trip_page_context,
+            'journal_page': journal_page_context,
+            'journal': journal,
+            'journal_entries': journal_entries,
+            'publishing_status': publishing_status,
+        }
+
+        return render(request, 'journal/pages/journal.html', context)
 
 
 class JournalEditView( LoginRequiredMixin, TripViewMixin, ModalView ):
@@ -242,47 +288,6 @@ class JournalVisibilityChangeView( LoginRequiredMixin, TripViewMixin, ModalView 
             'trip': journal.trip,
         }
         return self.modal_response(request, context=context, status=400)
-
-
-class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
-
-    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
-        journal = get_object_or_404(
-            Journal,
-            uuid = journal_uuid,
-        )
-        request_member = get_object_or_404(
-            TripMember,
-            trip = journal.trip,
-            user = request.user,
-        )
-        self.assert_is_viewer(request_member)
-
-        if not request_member.can_edit_trip:
-            return self.journal_permission_denied_response(
-                request = request,
-                request_member = request_member,
-                journal = journal,
-            )
-        
-        journal_entries = journal.entries.all() if journal else []
-
-        trip_page_context = TripPageContext(
-            active_page = TripPage.JOURNAL,
-            request_member = request_member,
-        )
-        journal_page_context = JournalPageContext(
-            journal = journal,
-            journal_entries = journal_entries
-        )
-        context = {
-            'trip_page': trip_page_context,
-            'journal_page': journal_page_context,
-            'journal': journal,
-            'journal_entries': journal_entries,
-        }
-
-        return render(request, 'journal/pages/journal.html', context)
 
 
 class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
