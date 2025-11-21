@@ -78,6 +78,16 @@
                   </small>
                 {% endif %}
               </div>
+
+              {# Version History Link #}
+              <div class="mt-2">
+                <a href="{% url 'journal_versions' journal_uuid=journal.uuid %}"
+                   data-async="modal"
+                   class="btn btn-sm btn-outline-info">
+                  {% icon "history" size="sm" css_class="tt-icon-left" %}
+                  View Version History
+                </a>
+              </div>
             {% else %}
               {# Unpublished Journal #}
               <div class="mt-2">

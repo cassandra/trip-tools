@@ -34,6 +34,11 @@ urlpatterns = [
         name='journal_publish'
     ),
     path(
+        '<uuid:journal_uuid>/versions',
+        views.JournalVersionHistoryView.as_view(),
+        name='journal_versions'
+    ),
+    path(
         '<uuid:journal_uuid>/entry/new/',
         views.JournalEntryNewView.as_view(),
         name='journal_entry_new'

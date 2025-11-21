@@ -27,6 +27,7 @@ from .models import Journal, JournalEntry
 from .transient_models import PublishingStatusHelper
 from .services import JournalImagePickerService, JournalEntrySeederService
 
+from tt.apps.travelog.models import Travelog
 from tt.apps.travelog.services import PublishingService
 
 logger = logging.getLogger(__name__)
@@ -689,3 +690,30 @@ class JournalPublishModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
                 'visibility_form': visibility_form,
             }
             return self.modal_response(request, context=context, status=500)
+
+
+class JournalVersionHistoryView( LoginRequiredMixin, TripViewMixin, ModalView ):
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/version_history.html'
+
+    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_viewer(request_member)
+
+        # Get all published versions ordered by version number (newest first)
+        travelogs = Travelog.objects.for_journal(journal).order_by('-version_number')
+
+        context = {
+            'journal': journal,
+            'travelogs': travelogs,
+        }
+        return self.modal_response(request, context=context)

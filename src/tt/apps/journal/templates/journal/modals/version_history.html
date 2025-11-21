@@ -1,0 +1,88 @@
+{% extends "modals/action_ok.html" %}
+{% load icons %}
+
+{% block modal_dialog_id %}journal-version-history-modal{% endblock %}
+{% block modal_dialog_class %}tt-modal-dialog-800{% endblock %}
+
+{% block title_text %}Version History{% endblock %}
+
+{% block body %}
+
+  {# Version History Table #}
+  {% if travelogs %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Version</th>
+          <th>Published</th>
+          <th>Published By</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for travelog in travelogs %}
+        <tr {% if travelog.is_current %}class="bg-highlighted"{% endif %}>
+          <td class="align-middle">
+            {% if travelog.is_current %}
+            <span class="badge badge-success">
+              {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
+              Current
+            </span>
+            {% else %}
+            <span class="badge badge-secondary">
+              {% icon "layers" size="sm" css_class="tt-icon-left" %}
+              Archived
+            </span>
+            {% endif %}
+          </td>
+          <td class="align-middle">
+            <strong>{{ travelog.version_number }}</strong>
+          </td>
+          <td class="align-middle">
+            <small>{{ travelog.published_datetime|date:"N j, Y" }}</small>
+            <br>
+            <small class="text-muted">{{ travelog.published_datetime|date:"g:i A" }}</small>
+          </td>
+          <td class="align-middle">
+            {% if travelog.published_by %}
+              {% if travelog.published_by.get_full_name %}
+                {{ travelog.published_by.get_full_name }}
+              {% else %}
+                {{ travelog.published_by.email }}
+              {% endif %}
+            {% else %}
+              <em class="text-muted">Unknown</em>
+            {% endif %}
+          </td>
+          <td class="align-middle">
+            <a href="{% url 'travelog_toc' journal_uuid=travelog.uuid %}"
+               target="_blank"
+               class="btn btn-sm btn-outline-primary mr-1">
+              {% icon "eye" size="sm" css_class="tt-icon-left" %}
+              View
+            </a>
+            <button class="btn btn-sm btn-outline-secondary" disabled title="Revert functionality coming soon">
+              {% icon "history" size="sm" css_class="tt-icon-left" %}
+              Revert
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-warning mb-0">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">
+        {% icon "exclamation-circle" size="sm" %}
+      </div>
+      <div>
+        No published versions found.
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
