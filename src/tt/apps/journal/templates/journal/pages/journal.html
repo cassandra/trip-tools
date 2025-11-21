@@ -3,6 +3,28 @@
 {% block trip_content %}
 <div class="m-3">
 
+  {# Journal Metadata Card #}
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="flex-grow-1">
+          <h3>{{ journal.title }}</h3>
+          {% if journal.description %}
+          <p class="text-muted">{{ journal.description }}</p>
+          {% endif %}
+          <small class="text-muted">Timezone: {{ journal.timezone }}</small>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary ml-3"
+           href="{% url 'journal_edit' journal_uuid=journal.uuid %}"
+           data-async="modal"
+           {% if not trip_page.request_member.can_edit_trip %}disabled{% endif %}>
+          <i class="fas fa-edit tt-icon-left"></i>
+          Edit Journal
+        </a>
+      </div>
+    </div>
+  </div>
+
   {% if journal_entries %}
   <div class="list-group">
     {% for entry in journal_entries %}
