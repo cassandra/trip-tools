@@ -72,6 +72,8 @@ Execute design-focused work session for planning and mockup creation:
    - Note any dependencies or technical requirements
 
 10. **Post design deliverables to GitHub issue** - Share for review:
+    - **NEVER** Use references to locally stored files in GitHub comments: this does not scale.
+    - **ALWAYS** post full content to GitHub as comments and attachements.
     - Attach HTML mockup file to GitHub issue
     - Post interaction patterns as issue comment
     - Post design summary as issue comment
