@@ -65,6 +65,13 @@
                   {% if publishing_status.current_published_version.published_by %}
                     by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
                   {% endif %}
+
+                  <button class="btn btn-sm btn-outline-primary mr-2 mb-2"
+                          title="View the current published version of this journal."
+                          {% icon "eye" size="sm" css_class="tt-icon-left" %}
+                    View Published
+                  </button>
+                  
                 </small>
                 {% if publishing_status.has_unpublished_changes %}
                   <small class="text-warning d-block mt-1">
@@ -126,28 +133,55 @@
   </div>
 
   {% if journal_entries %}
-  <div class="list-group">
-    {% for entry in journal_entries %}
-    <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"
-       class="list-group-item list-group-item-action">
-      <div class="d-flex w-100 justify-content-between">
-        <h5 class="mb-1">
-          {% if entry.title %}
-          {{ entry.title }}
-          {% else %}
-          {{ entry.date|date:'l, F j, Y' }}
-          {% endif %}
-        </h5>
-        <small class="text-muted">Modified {{ entry.modified_datetime|timesince }} ago</small>
+  {% for entry in journal_entries %}
+  <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"
+     class="card mb-3 text-decoration-none text-dark d-block">
+    <div class="row no-gutters">
+      {# Left side: Reference image or placeholder #}
+      <div class="col-3 col-md-2">
+        {% if entry.reference_image %}
+        <img src="{{ entry.reference_image.thumbnail_image.url }}"
+             alt="{{ entry.reference_image.caption|default:'Reference' }}"
+             class="img-fluid w-100"
+             style="object-fit: cover; height: 150px;">
+        {% else %}
+        <div class="bg-light d-flex align-items-center justify-content-center text-muted border-right"
+             style="height: 150px;">
+          {% icon "camera" size="lg" %}
+        </div>
+        {% endif %}
       </div>
-      {% if entry.text %}
-      <p class="mb-1 text-truncate">{{ entry.text|truncatewords:20 }}</p>
-      {% else %}
-      <p class="mb-1 text-muted"><em>Empty entry</em></p>
-      {% endif %}
-    </a>
-    {% endfor %}
-  </div>
+
+      {# Right side: Entry content #}
+      <div class="col-9 col-md-10">
+        <div class="card-body">
+          <div class="d-flex w-100 justify-content-between align-items-start">
+            <div>
+              <h5 class="mb-1">
+                {% if entry.title %}
+                {{ entry.title }}
+                {% else %}
+                {{ entry.date|date:'l, F j, Y' }}
+                {% endif %}
+              </h5>
+              {% if entry.text %}
+              <small class="text-muted">{{ entry.date|date:'l, F j, Y' }}</small>
+              {% else %}
+              <p class="mb-0 text-muted"><em>Empty entry</em></p>
+              {% endif %}
+            </div>
+            <div class="text-right ml-2 flex-shrink-0">
+              <small class="text-muted d-block">Modified {{ entry.modified_datetime|timesince }} ago</small>
+              {% if entry.modified_by %}
+              <small class="text-muted d-block">by {{ entry.modified_by.first_name|default:entry.modified_by.email }}</small>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
   {% else %}
   <div class="alert alert-info">
     <h4>No journal entries yet</h4>
