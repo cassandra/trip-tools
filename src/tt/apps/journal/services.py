@@ -1,12 +1,16 @@
 """
 Journal service layer for business logic.
 """
+from datetime import date as date_type
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import QuerySet
 
 from tt.apps.common.html_sanitizer import sanitize_rich_text_html
 from tt.apps.images.models import TripImage
 from tt.apps.travelog.models import Travelog, TravelogEntry
+from tt.apps.trips.models import Trip
 
 from .enums import ImagePickerScope
 from .models import Journal, JournalEntry
@@ -24,7 +28,13 @@ class JournalImagePickerService:
     """Service for journal image picker operations."""
 
     @staticmethod
-    def get_accessible_images_for_image_picker(trip, user, date, timezone, scope=ImagePickerScope.DEFAULT):
+    def get_accessible_images_for_image_picker(
+        trip     : Trip,
+        user     : User,
+        date     : date_type,
+        timezone : str,
+        scope    : ImagePickerScope = ImagePickerScope.DEFAULT
+    ) -> QuerySet:
         """
         Get images accessible for journal image picker, ordered chronologically.
 
@@ -37,7 +47,7 @@ class JournalImagePickerService:
         Args:
             trip: Trip instance
             user: User instance for permission checking
-            date: Date to fetch images for (date object)
+            date: Date to fetch images for (datetime.date object)
             timezone: Timezone string for date boundary calculation
             scope: ImagePickerScope enum value (default: ImagePickerScope.DEFAULT)
 

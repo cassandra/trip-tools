@@ -1,16 +1,20 @@
 """
 Utility functions for journal operations.
 """
-from datetime import datetime, timedelta
+from datetime import date as date_type, datetime, timedelta
+from typing import Tuple
 import pytz
 
 
-def get_entry_date_boundaries(entry_date, timezone_str):
+def get_entry_date_boundaries(
+    entry_date   : date_type,
+    timezone_str : str
+) -> Tuple[datetime, datetime]:
     """
     Calculate timezone-aware datetime boundaries for a journal entry's day.
 
     Args:
-        entry_date: date object for the journal entry
+        entry_date: datetime.date object for the journal entry
         timezone_str: pytz timezone string (e.g., 'America/New_York')
 
     Returns:

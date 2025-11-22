@@ -1,3 +1,4 @@
+from datetime import date as date_type
 from uuid import UUID
 
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
@@ -85,7 +86,7 @@ class TravelogDayView(TravelogViewMixin, View):
     def get( self,
              request       : HttpRequest,
              journal_uuid  : UUID,
-             date          : str,
+             date          : date_type,
              *args, **kwargs             ) -> HttpResponse:
         try:
             travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
@@ -235,7 +236,7 @@ class TravelogPasswordEntryView(TravelogViewMixin, View):
             'form': form,
             'next_url': next_url,
         }
-        return render(request, 'travelog/password_entry.html', context)
+        return render(request, 'travelog/pages/password_entry.html', context)
 
     def post( self, request: HttpRequest, journal_uuid: UUID, *args, **kwargs ) -> HttpResponse:
         journal = get_object_or_404(Journal, uuid=journal_uuid)
@@ -272,4 +273,4 @@ class TravelogPasswordEntryView(TravelogViewMixin, View):
             'form': form,
             'next_url': next_url,
         }
-        return render(request, 'travelog/password_entry.html', context)
+        return render(request, 'travelog/pages/password_entry.html', context)

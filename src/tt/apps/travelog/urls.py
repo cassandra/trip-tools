@@ -1,6 +1,10 @@
-from django.urls import path
+from django.urls import path, register_converter
 
 from . import views
+from .converters import ISODateConverter
+
+# Register custom URL converter for ISO date format (YYYY-MM-DD)
+register_converter(ISODateConverter, 'isodate')
 
 
 urlpatterns = [
@@ -20,7 +24,7 @@ urlpatterns = [
         name='travelog_toc'
     ),
     path(
-        '<uuid:journal_uuid>/day/<str:date>',
+        '<uuid:journal_uuid>/day/<isodate:date>',
         views.TravelogDayView.as_view(),
         name='travelog_day'
     ),

@@ -237,10 +237,8 @@ class TravelogViewMixin:
 
         Returns validated next_url if provided and safe, otherwise default TOC URL.
         """
-        fallback_url = reverse('travelog_toc', kwargs={
-            'content_type': 'view',
-            'journal_uuid': journal.uuid
-        })
+        # Build fallback URL: travelog TOC (defaults to current published version)
+        fallback_url = reverse('travelog_toc', kwargs={'journal_uuid': journal.uuid})
 
         return self.get_safe_redirect_url(request, next_url, fallback_url)
 
