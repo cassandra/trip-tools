@@ -5,6 +5,11 @@ from tt.apps.journal.models import Journal
 from .models import Travelog, TravelogEntry
 
 
+class PublishingError(Exception):
+    """Exception raised when publishing operations fail."""
+    pass
+
+
 class PublishingService:
 
     @classmethod
@@ -54,3 +59,32 @@ class PublishingService:
             )
 
         return travelog
+
+    @staticmethod
+    @transaction.atomic
+    def set_as_current( journal: Journal, travelog: Travelog ) -> Travelog:
+        """
+        Set a specific travelog version as the current published version.
+
+        This operation only changes which version is publicly visible.
+        It does not affect the journal's working entries.
+
+        Raises:
+            PublishingError: If validation fails
+        """
+        if travelog.journal_id != journal.id:
+            raise PublishingError(
+                "Cannot set as current: Travelog does not belong to this journal"
+            )
+
+        if travelog.is_current:
+            raise PublishingError(
+                "This version is already the current published version"
+            )
+
+        Travelog.objects.filter( journal=journal ).update( is_current = False )
+        travelog.is_current = True
+        travelog.save(update_fields=['is_current'])
+
+        return travelog
+    

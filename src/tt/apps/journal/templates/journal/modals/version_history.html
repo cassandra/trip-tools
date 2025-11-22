@@ -26,15 +26,29 @@
         <tr {% if travelog.is_current %}class="bg-highlighted"{% endif %}>
           <td class="align-middle">
             {% if travelog.is_current %}
-            <span class="badge badge-success">
-              {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
-              Current
-            </span>
+            <div>
+              <span class="badge badge-success">
+                {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
+                Current
+              </span>
+            </div>
             {% else %}
-            <span class="badge badge-secondary">
-              {% icon "layers" size="sm" css_class="tt-icon-left" %}
-              Archived
-            </span>
+            <div>
+              <span class="badge badge-secondary">
+                {% icon "layers" size="sm" css_class="tt-icon-left" %}
+                Archived
+              </span>
+            </div>
+            {% if request_member.can_manage_versions %}
+            <div class="mt-1">
+              <a href="{% url 'journal_set_current' journal_uuid=journal.uuid travelog_uuid=travelog.uuid %}"
+                 class="btn btn-sm btn-outline-info mr-1 mb-1"
+                 data-async="modal">
+                {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
+                Set as Current
+              </a>
+            </div>
+            {% endif %}
             {% endif %}
           </td>
           <td class="align-middle">
@@ -59,14 +73,23 @@
           <td class="align-middle">
             <a href="{% url 'travelog_toc' journal_uuid=travelog.uuid %}"
                target="_blank"
-               class="btn btn-sm btn-outline-primary mr-1">
+               class="btn btn-sm btn-outline-primary mr-1 mb-1">
               {% icon "eye" size="sm" css_class="tt-icon-left" %}
               View
             </a>
-            <button class="btn btn-sm btn-outline-secondary" disabled title="Revert functionality coming soon">
-              {% icon "history" size="sm" css_class="tt-icon-left" %}
-              Revert
-            </button>
+
+            {% if request_member.can_manage_versions %}
+
+            <br><a href="{% url 'journal_restore' journal_uuid=journal.uuid travelog_uuid=travelog.uuid %}"
+               class="btn btn-sm btn-outline-danger mb-1"
+               data-async="modal">
+              {% icon "download" size="sm" css_class="tt-icon-left" %}
+              Restore Content
+            </a>
+            {% endif %}
+
+
+            
           </td>
         </tr>
         {% endfor %}

@@ -25,7 +25,11 @@ from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry
 from .transient_models import PublishingStatusHelper
-from .services import JournalImagePickerService, JournalEntrySeederService
+from .services import (
+    JournalImagePickerService,
+    JournalEntrySeederService,
+    JournalRestoreService,
+)
 
 from tt.apps.travelog.models import Travelog
 from tt.apps.travelog.services import PublishingService
@@ -713,7 +717,123 @@ class JournalVersionHistoryView( LoginRequiredMixin, TripViewMixin, ModalView ):
         travelogs = Travelog.objects.for_journal(journal).order_by('-version_number')
 
         context = {
+            'request_member': request_member,
             'journal': journal,
             'travelogs': travelogs,
         }
         return self.modal_response(request, context=context)
+
+
+class JournalSetCurrentVersionView( LoginRequiredMixin, TripViewMixin, ModalView ):
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_set_current_confirm.html'
+
+    def get(self, request, journal_uuid: UUID, travelog_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_admin(request_member)
+
+        travelog = get_object_or_404(
+            Travelog,
+            uuid = travelog_uuid,
+        )
+        context = {
+            'request_member': request_member,
+            'journal': journal,
+            'travelog': travelog,
+        }
+        return self.modal_response( request, context = context )
+
+    def post(self, request, journal_uuid: UUID, travelog_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        """
+        Set a travelog version as the current published version.
+
+        This only changes which version is publicly visible.
+        Does not affect the journal's working entries.
+        """
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_admin(request_member)
+
+        travelog = get_object_or_404(
+            Travelog,
+            uuid = travelog_uuid,
+        )
+        PublishingService.set_as_current(
+            journal=journal,
+            travelog=travelog
+        )
+        return self.refresh_response( request )
+
+
+class JournalRestoreView( LoginRequiredMixin, TripViewMixin, ModalView ):
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_restore_confirm.html'
+
+    def get(self, request, journal_uuid: UUID, travelog_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_admin(request_member)
+
+        travelog = get_object_or_404(
+            Travelog,
+            uuid = travelog_uuid,
+        )
+        context = {
+            'request_member': request_member,
+            'journal': journal,
+            'travelog': travelog,
+        }
+        return self.modal_response( request, context = context )
+
+    def post(self, request, journal_uuid: UUID, travelog_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        """
+        Restore journal working copy from a published version.
+
+        This DELETES all current journal entries and replaces them
+        with entries from the selected version. DESTRUCTIVE operation.
+        """
+        journal = get_object_or_404(
+            Journal,
+            uuid = journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = request.user,
+        )
+        self.assert_is_admin(request_member)
+
+        travelog = get_object_or_404(
+            Travelog,
+            uuid = travelog_uuid,
+        )
+        _ = JournalRestoreService.restore_from_version(
+            journal = journal,
+            travelog = travelog,
+            user = request.user
+        )
+        return self.refresh_response( request )

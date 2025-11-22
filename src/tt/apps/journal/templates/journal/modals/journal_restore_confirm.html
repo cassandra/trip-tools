@@ -1,0 +1,53 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load icons %}
+
+{% block modal_dialog_id %}journal-restore-modal{% endblock %}
+
+{% block title_text %}Restore Journal from Version{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'journal_restore' journal_uuid=journal.uuid travelog_uuid=travelog.uuid %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+  <div class="alert alert-danger">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">
+        {% icon "warning" size="sm" %}
+      </div>
+      <div>
+        <strong>Warning: This is a destructive operation</strong>
+        <p class="mb-0 mt-2">
+          This will <strong>DELETE ALL</strong> your current journal entries and replace them
+          with {{ travelog.entries.count }} entr{{ travelog.entries.count|pluralize:"y,ies" }} from version {{ travelog.version_number }}.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-warning">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">
+        {% icon "info-circle" size="sm" %}
+      </div>
+      <div>
+        <strong>This action cannot be undone.</strong>
+        <p class="mb-0 mt-2">
+          After restoring, you will need to publish again to make the changes visible to readers.
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-danger">
+  {% icon "download" size="sm" css_class="tt-icon-left" %}
+  CONFIRM RESTORE
+</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

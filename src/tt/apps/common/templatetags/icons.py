@@ -39,6 +39,7 @@ AVAILABLE_ICONS = {
     'collection',
     'delete',
     'disabled',
+    'download',
     'edit',
     'exclamation-circle',
     'eye',

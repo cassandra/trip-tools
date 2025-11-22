@@ -39,6 +39,16 @@ urlpatterns = [
         name='journal_versions'
     ),
     path(
+        '<uuid:journal_uuid>/set-current/<uuid:travelog_uuid>',
+        views.JournalSetCurrentVersionView.as_view(),
+        name='journal_set_current'
+    ),
+    path(
+        '<uuid:journal_uuid>/restore/<uuid:travelog_uuid>',
+        views.JournalRestoreView.as_view(),
+        name='journal_restore'
+    ),
+    path(
         '<uuid:journal_uuid>/entry/new/',
         views.JournalEntryNewView.as_view(),
         name='journal_entry_new'
