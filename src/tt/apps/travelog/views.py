@@ -16,17 +16,82 @@ from .mixins import TravelogViewMixin
 from .services import ContentResolutionService, TravelogImageCacheService
 
 
-class TravelogUserListView(View):
+class TravelogUserListView(TravelogViewMixin, View):
     """
-    Index page of all travelogs for a given user.  Filter by request user's permissions.
+    Index page of all published travelogs for a given user.
+
+    Shows journals owned by the target user, filtered by visibility and request user's permissions.
+    Leverages TravelogViewMixin._check_journal_access() to determine which journals are accessible.
+
+    Only journals with published travelogs (is_current=True) are displayed.
+    PROTECTED journals appear in list with lock icon when password not verified.
     """
     def get(self, request: HttpRequest, user_uuid: UUID, *args, **kwargs) -> HttpResponse:
-        # TODO: Implement view logic
-        # - Get user's journal by user UUID (404 if not found)
-        # - Filter out private/unpublished journals
-        # - Render page of trips
+        from django.contrib.auth import get_user_model
+        from tt.apps.trips.models import Trip
+        from .transient_models import TravelogListItemData
 
-        return HttpResponse(f"TODO: Implement TravelogTableOfContentsView for journal {user_uuid}")
+        User = get_user_model()
+
+        # Get target user (404 if not found)
+        target_user = get_object_or_404( User, uuid = user_uuid )
+
+        # Get trips owned by target user
+        trips = Trip.objects.owned_by( target_user )
+
+        # Get journals for these trips that have published travelogs
+        journals = Journal.objects.filter(
+            trip__in = trips,
+            travelogs__is_current = True
+        ).distinct().select_related('trip').prefetch_related('entries', 'entries__reference_image')
+
+        # Build list items with access metadata
+        travelog_items = []
+        for journal in journals:
+            requires_password = False
+
+            try:
+                # Check access using existing mixin logic
+                self._check_journal_access( request, journal )
+            except PasswordRequiredException:
+                # PROTECTED journal without password verification - show with lock icon
+                requires_password = True
+            except ( Http404, PermissionDenied ):
+                # User doesn't have access - exclude from list
+                continue
+
+            # Get date range from entries
+            entries = journal.entries.order_by('date')
+            earliest_date = entries.first().date.strftime('%Y-%m-%d') if entries.exists() else None
+            latest_date = entries.last().date.strftime('%Y-%m-%d') if entries.exists() else None
+
+            # Get first reference image for display
+            display_image = None
+            for entry in entries:
+                if entry.reference_image:
+                    display_image = entry.reference_image
+                    break
+
+            travelog_items.append( TravelogListItemData(
+                journal = journal,
+                requires_password = requires_password,
+                earliest_entry_date = earliest_date,
+                latest_entry_date = latest_date,
+                display_image = display_image
+            ))
+
+        # Sort by latest entry date (reverse chronological)
+        travelog_items.sort(
+            key = lambda item: item.latest_entry_date or '',
+            reverse = True
+        )
+
+        context = {
+            'target_user': target_user,
+            'travelog_items': travelog_items,
+        }
+
+        return render(request, 'travelog/pages/travelog_user_list.html', context)
 
 
 class TravelogTableOfContentsView(TravelogViewMixin, View):

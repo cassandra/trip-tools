@@ -71,3 +71,17 @@ class TravelogImageMetadata:
             layout = data['layout'],
             document_order = data['document_order'],
         )
+
+
+@dataclass
+class TravelogListItemData:
+    """
+    Display data for a journal/travelog in the user list view.
+
+    Encapsulates the journal along with access metadata and display information.
+    """
+    journal             : 'Journal'     # The Journal model instance
+    requires_password   : bool          # True if PROTECTED and password not verified
+    earliest_entry_date : Optional[str] = None  # YYYY-MM-DD format
+    latest_entry_date   : Optional[str] = None  # YYYY-MM-DD format
+    display_image       : Optional['TripImage'] = None  # First reference_image from entries

@@ -260,6 +260,14 @@ PIPELINE = {
             ),
             'output_filename': 'css/journal_editor.css',
         },
+        'travelog_css_head': {
+            'source_filenames': (
+                'bootstrap/css/bootstrap.css',
+                'css/travelog.css',
+                'css/journal.css',
+            ),
+            'output_filename': 'css/travelog_css_head.css',
+        },
     },
     'JAVASCRIPT': {
         'js_before_content': {
@@ -304,6 +312,21 @@ PIPELINE = {
                 'js/notebook.js',
             ),
             'output_filename': 'js/notebook.js',
+        },
+        'travelog_js_top': {
+            'source_filenames': (
+                'js/jquery-3.7.0.min.js',
+                'js/cookie.js',
+                'js/journal.js',
+            ),
+            'output_filename': 'js/travelog_js_top.js',
+        },
+        'travelog_js_bottom': {
+            'source_filenames': (
+                'js/popper.min.js',
+                'bootstrap/js/bootstrap.js',
+            ),
+            'output_filename': 'js/travelog_js_bottom.js',
         },
     }
 }

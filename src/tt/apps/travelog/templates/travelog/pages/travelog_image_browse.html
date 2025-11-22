@@ -1,86 +1,82 @@
+{% extends "travelog/pages/base.html" %}
 {% load travelog_tags %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ content.title }} - Browse Image</title>
-</head>
-<body>
-  <div>
-    <h1>{{ content.title }} - Browse Image</h1>
 
-    <p>
-      {{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}
-    </p>
+{% block head_title %}{{ content.title }} - {{ trip_image.caption }}{% endblock %}
 
-    <hr>
+{% block content %}
+<div class="container">
+  <h1>{{ content.title }} - Browse Image</h1>
 
-    {% if trip_image %}
-      <p>Image {{ current_index|add:1 }} of {{ total_images }}</p>
+  <p>
+    {{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}
+  </p>
 
-      <!-- Main image - clicking opens full image in new tab -->
-      <div style="margin: 20px 0;">
-        <a href="{{ trip_image.web_image.url }}" target="_blank">
-          <img src="{{ trip_image.web_image.url }}" alt="Image" style="max-width: 100%; height: auto;">
-        </a>
-      </div>
+  <hr>
 
-      <!-- Image metadata -->
-      <div style="margin: 20px 0; padding: 10px; border: 1px solid #ccc;">
-        <p><strong>Date:</strong> {{ image_metadata.entry_date }}</p>
-        <p><strong>Layout:</strong> {{ image_metadata.layout }}</p>
-        <p><strong>Order:</strong> {{ image_metadata.document_order }}</p>
-        {% if trip_image.caption %}
-          <p><strong>Caption:</strong> {{ trip_image.caption }}</p>
-        {% endif %}
-      </div>
+  {% if trip_image %}
+  <p>Image {{ current_index|add:1 }} of {{ total_images }}</p>
 
-      <hr>
+  <!-- Main image - clicking opens full image in new tab -->
+  <div style="margin: 20px 0;">
+    <a href="{{ trip_image.web_image.url }}" target="_blank">
+      <img src="{{ trip_image.web_image.url }}" alt="Image" style="max-width: 100%; height: auto;">
+    </a>
+  </div>
 
-      <!-- Navigation controls -->
-      <nav>
-        {% if prev_image %}
-          <a href="{% travelog_url 'travelog_image_browse' journal.uuid travelog_page.get_version_param image_uuid=prev_image.uuid %}">
-            &larr; Previous Image
-          </a>
-        {% else %}
-          <span style="color: #999;">&larr; Previous Image</span>
-        {% endif %}
-
-        |
-
-        {% if next_image %}
-          <a href="{% travelog_url 'travelog_image_browse' journal.uuid travelog_page.get_version_param image_uuid=next_image.uuid %}">
-            Next Image &rarr;
-          </a>
-        {% else %}
-          <span style="color: #999;">Next Image &rarr;</span>
-        {% endif %}
-      </nav>
-
-      <hr>
-
-      <nav>
-        <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}">
-          &larr; Back to Gallery
-        </a>
-        |
-        <a href="{% travelog_url 'travelog_toc' journal.uuid travelog_page.get_version_param %}">
-          &larr; Back to Table of Contents
-        </a>
-      </nav>
-    {% else %}
-      <p>Image not found.</p>
-
-      <hr>
-
-      <nav>
-        <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}">
-          &larr; Back to Gallery
-        </a>
-      </nav>
+  <!-- Image metadata -->
+  <div style="margin: 20px 0; padding: 10px; border: 1px solid #ccc;">
+    <p><strong>Date:</strong> {{ image_metadata.entry_date }}</p>
+    <p><strong>Layout:</strong> {{ image_metadata.layout }}</p>
+    <p><strong>Order:</strong> {{ image_metadata.document_order }}</p>
+    {% if trip_image.caption %}
+    <p><strong>Caption:</strong> {{ trip_image.caption }}</p>
     {% endif %}
   </div>
-</body>
-</html>
+
+  <hr>
+
+  <!-- Navigation controls -->
+  <nav>
+    {% if prev_image %}
+    <a href="{% travelog_url 'travelog_image_browse' journal.uuid travelog_page.get_version_param image_uuid=prev_image.uuid %}">
+      &larr; Previous Image
+    </a>
+    {% else %}
+    <span style="color: #999;">&larr; Previous Image</span>
+    {% endif %}
+
+    |
+
+    {% if next_image %}
+    <a href="{% travelog_url 'travelog_image_browse' journal.uuid travelog_page.get_version_param image_uuid=next_image.uuid %}">
+      Next Image &rarr;
+    </a>
+    {% else %}
+    <span style="color: #999;">Next Image &rarr;</span>
+    {% endif %}
+  </nav>
+
+  <hr>
+
+  <nav>
+    <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}">
+      &larr; Back to Gallery
+    </a>
+    |
+    <a href="{% travelog_url 'travelog_toc' journal.uuid travelog_page.get_version_param %}">
+      &larr; Back to Table of Contents
+    </a>
+  </nav>
+  {% else %}
+  <p>Image not found.</p>
+
+  <hr>
+
+  <nav>
+    <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}">
+      &larr; Back to Gallery
+    </a>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,58 +1,53 @@
+{% extends "travelog/pages/base.html" %}
 {% load travelog_tags %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ content.title }} - {{ entry.date }}</title>
-  <!-- TODO: Add public-facing stylesheets -->
-</head>
-<body>
-  <div class="container">
-    <nav>
-      <a href="{% travelog_url 'travelog_toc' journal.uuid version=request.GET.version %}">
-        &larr; Back to Table of Contents
-      </a>
-    </nav>
 
-    <hr>
+{% block head_title %}{{ content.title }} - {{ entry.date }}{% endblock %}
 
-    <h1>{{ entry.date }}</h1>
-    {% if entry.title %}
-    <h2>{{ entry.title }}</h2>
-    {% endif %}
+{% block content %}
+<div class="container">
+  <nav>
+    <a href="{% travelog_url 'travelog_toc' journal.uuid version=request.GET.version %}">
+      &larr; Back to Table of Contents
+    </a>
+  </nav>
 
-    <p class="text-muted">
-      From: {{ content.title }}
-      ({{ travelog_page.content_type.label }}{% if travelog_page.version_number %} - Version {{ travelog_page.version_number }}{% endif %})
-    </p>
+  <hr>
 
-    <hr>
+  <h1>{{ entry.date }}</h1>
+  {% if entry.title %}
+  <h2>{{ entry.title }}</h2>
+  {% endif %}
 
-    <div class="entry-content">
-      {{ entry.text|safe }}
-    </div>
+  <p class="text-muted">
+    From: {{ content.title }}
+    ({{ travelog_page.content_type.label }}{% if travelog_page.version_number %} - Version {{ travelog_page.version_number }}{% endif %})
+  </p>
 
-    <hr>
+  <hr>
 
-    <nav>
-      <div style="display: flex; justify-content: space-between;">
-        <div>
-          {% if prev_entry %}
-          <a href="{% travelog_url 'travelog_day' journal.uuid date=prev_entry.date version=request.GET.version %}">
-            &larr; Previous: {{ prev_entry.date }}
-          </a>
-          {% endif %}
-        </div>
-        <div>
-          {% if next_entry %}
-          <a href="{% travelog_url 'travelog_day' journal.uuid date=next_entry.date version=request.GET.version %}">
-            Next: {{ next_entry.date }} &rarr;
-          </a>
-          {% endif %}
-        </div>
-      </div>
-    </nav>
+  <div class="entry-content">
+    {{ entry.text|safe }}
   </div>
-</body>
-</html>
+
+  <hr>
+
+  <nav>
+    <div style="display: flex; justify-content: space-between;">
+      <div>
+        {% if prev_entry %}
+        <a href="{% travelog_url 'travelog_day' journal.uuid date=prev_entry.date version=request.GET.version %}">
+          &larr; Previous: {{ prev_entry.date }}
+        </a>
+        {% endif %}
+      </div>
+      <div>
+        {% if next_entry %}
+        <a href="{% travelog_url 'travelog_day' journal.uuid date=next_entry.date version=request.GET.version %}">
+          Next: {{ next_entry.date }} &rarr;
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+</div>
+{% endblock %}

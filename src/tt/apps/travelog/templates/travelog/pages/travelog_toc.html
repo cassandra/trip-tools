@@ -1,55 +1,55 @@
+{% extends "travelog/pages/base.html" %}
 {% load travelog_tags %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ content.title }} - Table of Contents</title>
-  <!-- TODO: Add public-facing stylesheets -->
-</head>
-<body>
-  <div class="container">
-    <h1>{{ content.title }}</h1>
 
-    {% if content.description %}
-    <p>{{ content.description }}</p>
-    {% endif %}
+{% block head_title %}{{ content.title }} - Table of Contents{% endblock %}
 
-    <p class="text-muted">
-      Viewing: {{ travelog_page.content_type.label }}
-      {% if travelog_page.version_number %}(Version {{ travelog_page.version_number }}){% endif %}
-    </p>
+{% block content %}
+<div class="container">
+  <h1>{{ content.title }}</h1>
 
-    <hr>
+  {% if content.description %}
+  <p>{{ content.description }}</p>
+  {% endif %}
 
-    <h2>Journal Entries</h2>
+  <p class="text-muted">
+    Viewing: {{ travelog_page.content_type.label }}
+    {% if travelog_page.version_number %}(Version {{ travelog_page.version_number }}){% endif %}
+  </p>
 
-    {% if entries %}
+  <hr>
+
+  <h2>Journal Entries</h2>
+
+  {% if entries %}
+  <ul>
+    {% for entry in entries %}
+    <li>
+      <a href="{% travelog_url 'travelog_day' journal.uuid date=entry.date version=request.GET.version %}">
+        {{ entry.date }}{% if entry.title %} - {{ entry.title }}{% endif %}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>No journal entries yet.</p>
+  {% endif %}
+
+  <hr>
+
+  <nav>
+    <h3>More</h3>
     <ul>
-      {% for entry in entries %}
       <li>
-        <a href="{% travelog_url 'travelog_day' journal.uuid date=entry.date version=request.GET.version %}">
-          {{ entry.date }}{% if entry.title %} - {{ entry.title }}{% endif %}
+        <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}">
+          Image Gallery
         </a>
       </li>
-      {% endfor %}
+      <li>
+        <a href="{% url 'travelog_user_list' user_uuid=journal.trip.owner.uuid %}">
+          &larr; See all {{ journal.trip.owner.get_full_name }}'s Travelogs
+        </a>
+      </li>
     </ul>
-    {% else %}
-    <p>No journal entries yet.</p>
-    {% endif %}
-
-    <hr>
-
-    <nav>
-      <h3>More</h3>
-      <ul>
-        <li>
-          <a href="{% travelog_url 'travelog_gallery' journal.uuid version=request.GET.version %}">
-            Image Gallery
-          </a>
-        </li>
-      </ul>
-    </nav>
-  </div>
-</body>
-</html>
+  </nav>
+</div>
+{% endblock %}

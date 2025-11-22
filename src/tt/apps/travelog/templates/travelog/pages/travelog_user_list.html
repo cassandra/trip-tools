@@ -1,20 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Journal List</title>
-  <!-- TODO: Add public-facing stylesheets -->
-</head>
-<body>
-  <div class="container">
-    <h1>Journal List</h1>
+{% extends "travelog/pages/base.html" %}
+{% load travelog_tags %}
+{% load icons %}
 
-    <!-- TODO: Implement journal list view -->
+{% block head_title %}{{ target_user.get_full_name }}'s Travelogs{% endblock %}
 
-    <div class="alert alert-info">
-      <strong>Coming Soon:</strong> Public journal list view
+{% block content %}
+<div class="container mt-4">
+  <h1>{{ target_user.get_full_name }}'s Travelogs</h1>
+
+  <hr>
+
+  {% if travelog_items %}
+  <div class="row">
+    {% for item in travelog_items %}
+    <div class="col-12 col-sm-6 col-lg-4 mb-4">
+      <a href="{% travelog_url 'travelog_toc' item.journal.uuid %}" class="text-decoration-none">
+        <div class="card h-100">
+          <!-- Card Image -->
+          {% if item.display_image %}
+          <img src="{{ item.display_image.thumbnail_image.url }}" class="card-img-top" alt="{{ item.journal.title }}" style="height: 200px; object-fit: cover;">
+          {% else %}
+          <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+            <div style="width: 64px; height: 64px;">
+              {% icon "book" css_class="text-muted" %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Card Body -->
+          <div class="card-body">
+            <h5 class="card-title">
+              {{ item.journal.title }}
+              {% if item.requires_password %}
+              <span style="display: inline-block; width: 16px; height: 16px; vertical-align: middle;">
+                {% icon "shield" css_class="text-warning" aria_label="Password Required" %}
+              </span>
+              {% endif %}
+            </h5>
+
+            {% if item.journal.description %}
+            <p class="card-text text-muted small">{{ item.journal.description|truncatewords:20 }}</p>
+            {% endif %}
+
+            <!-- Date Range -->
+            {% if item.earliest_entry_date and item.latest_entry_date %}
+            <p class="card-text">
+              <small class="text-muted">
+                {% if item.earliest_entry_date == item.latest_entry_date %}
+                {{ item.earliest_entry_date }}
+                {% else %}
+                {{ item.earliest_entry_date }} - {{ item.latest_entry_date }}
+                {% endif %}
+              </small>
+            </p>
+            {% endif %}
+          </div>
+        </div>
+      </a>
     </div>
+    {% endfor %}
   </div>
-</body>
-</html>
+  {% else %}
+  <div class="alert alert-info">
+    <p>No published travelogs found for this user.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

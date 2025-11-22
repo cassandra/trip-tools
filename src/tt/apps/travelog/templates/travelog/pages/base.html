@@ -1,0 +1,14 @@
+{% extends "pages/base_public.html" %}
+{% load pipeline %}
+
+{% block head_css %}
+{% stylesheet 'travelog_css_head' %}
+{% endblock %}
+
+{% block body_pre_javascript %}
+{% javascript 'travelog_js_top' %}
+{% endblock %}
+
+{% block body_post_javascript %}
+{% javascript 'travelog_js_bottom' %}
+{% endblock %}
