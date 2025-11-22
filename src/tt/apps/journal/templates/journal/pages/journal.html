@@ -6,129 +6,197 @@
 
   {# Journal Metadata Card #}
   <div class="card mb-3">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-start mb-3">
-        <div class="flex-grow-1">
-          <h3 class="mb-2">{{ journal.title }}</h3>
-          {% if journal.description %}
-          <p class="text-muted mb-2">{{ journal.description }}</p>
-          {% endif %}
-          <div class="d-flex align-items-center flex-wrap">
-            <small class="text-muted mr-3">
-              {% icon "globe" size="sm" css_class="tt-icon-left" %}
-              Timezone: {{ journal.timezone }}
-            </small>
-            <small class="text-muted">
-              {% icon "clock" size="sm" css_class="tt-icon-left" %}
-              Created {{ journal.created_datetime|date:"N j, Y" }}
-            </small>
-          </div>
-        </div>
-        <a class="btn btn-sm btn-outline-secondary ml-3"
-           href="{% url 'journal_edit' journal_uuid=journal.uuid %}"
+    {# Card Header: Title and Metadata #}
+    <div class="card-header bg-white">
+      <div class="d-flex align-items-start mb-2">
+        <h3 class="mb-0 mr-2">{{ journal.title }}</h3>
+        <a href="{% url 'journal_edit' journal_uuid=journal.uuid %}"
            data-async="modal"
-           {% if not trip_page.request_member.can_edit_trip %}disabled{% endif %}>
-          {% icon "edit" size="sm" css_class="tt-icon-left" %}
-          Edit Journal
+           class="text-muted"
+           style="opacity: 0.6; transition: opacity 0.2s;"
+           onmouseover="this.style.opacity='1'"
+           onmouseout="this.style.opacity='0.6'"
+           title="Edit journal title and description"
+           {% if not trip_page.request_member.can_edit_trip %}style="display:none;"{% endif %}>
+          {% icon "edit" size="sm" %}
         </a>
       </div>
+      {% if journal.description %}
+      <p class="text-muted mb-2">{{ journal.description }}</p>
+      {% endif %}
+      <div class="d-flex align-items-center flex-wrap">
+        <small class="text-muted mr-3">
+          {% icon "globe" size="sm" css_class="tt-icon-left" %}
+          Timezone: {{ journal.timezone }}
+        </small>
+        <small class="text-muted">
+          {% icon "clock" size="sm" css_class="tt-icon-left" %}
+          Created {{ journal.created_datetime|date:"N j, Y" }}
+        </small>
+      </div>
+    </div>
 
-      {# Publishing and Visibility Section #}
-      <div class="border-top pt-3">
-        <div class="row">
-          <div class="col-md-6 mb-3 mb-md-0">
-            <h6 class="font-weight-bold mb-2">Publishing Status</h6>
-
-            {# Visibility Badge #}
-            <div class="d-flex align-items-center mb-2">
-              <span class="badge badge-{{ journal.visibility.badge_color }}">
-                {% icon journal.visibility.icon_name size="sm" css_class="tt-icon-left" %}
-                {{ journal.visibility.label }}
-              </span>
-              <a class="btn btn-sm btn-outline-warning ml-2"
-                 href="{% url 'journal_visibility' journal_uuid=journal.uuid %}"
-                 data-async="modal"
-                 {% if not trip_page.request_member.permission_level.is_admin %}disabled{% endif %}>
-                {% icon "shield" size="sm" css_class="tt-icon-left" %}
-                Change Visibility
-              </a>
-            </div>
-
-            {# Publishing Status Display #}
-            {% if publishing_status.has_published_version %}
-              {# Published Journal - Show Version Info #}
-              <div class="mt-2">
-                <small class="text-muted d-block">
-                  <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
-                  &bull;
-                  Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
-                  {% if publishing_status.current_published_version.published_by %}
-                    by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
-                  {% endif %}
-
-                  <button class="btn btn-sm btn-outline-primary mr-2 mb-2"
-                          title="View the current published version of this journal."
-                          {% icon "eye" size="sm" css_class="tt-icon-left" %}
-                    View Published
-                  </button>
-                  
-                </small>
-                {% if publishing_status.has_unpublished_changes %}
-                  <small class="text-warning d-block mt-1">
-                    {% icon "exclamation-circle" size="sm" css_class="tt-icon-left" %}
-                    Unpublished changes
-                  </small>
-                {% else %}
-                  <small class="text-success d-block mt-1">
-                    {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
-                    Up to date
-                  </small>
-                {% endif %}
-              </div>
-
-              {# Version History Link #}
-              <div class="mt-2">
-                <a href="{% url 'journal_versions' journal_uuid=journal.uuid %}"
-                   data-async="modal"
-                   class="btn btn-sm btn-outline-info">
-                  {% icon "history" size="sm" css_class="tt-icon-left" %}
-                  View Version History
-                </a>
-              </div>
-            {% else %}
-              {# Unpublished Journal #}
-              <div class="mt-2">
-                <small class="text-muted d-block">
-                  <strong>Status: Unpublished</strong>
-                </small>
-                <small class="text-muted d-block">
-                  Ready to publish
-                </small>
-              </div>
-            {% endif %}
-          </div>
-
-          <div class="col-md-6">
-            <h6 class="font-weight-bold mb-2">Actions</h6>
-            <div class="d-flex flex-wrap">
-              <button class="btn btn-sm btn-outline-primary mr-2 mb-2"
-                      title="Preview how your journal will appear to readers"
-                      {% if not trip_page.request_member.can_edit_trip %}disabled{% elif not publishing_status.has_published_version %}disabled{% endif %}>
-                {% icon "eye" size="sm" css_class="tt-icon-left" %}
-                Preview
-              </button>
-              <a class="btn btn-sm btn-primary mb-2"
-                 href="{% url 'journal_publish' journal_uuid=journal.uuid %}"
-                 data-async="modal"
-                 title="Publish your latest changes as a new version"
-                 {% if not trip_page.request_member.permission_level.is_admin %}disabled{% elif publishing_status.is_published_without_changes %}disabled{% endif %}>
-                {% icon "upload" size="sm" css_class="tt-icon-left" %}
-                Publish
-              </a>
-            </div>
+    <div class="card-body">
+      {# Primary Actions: Large and Prominent #}
+      <div class="mb-3">
+        <div class="btn-toolbar justify-content-between" role="toolbar">
+          <div class="btn-group" role="group">
+            <a class="btn btn-success btn-lg"
+               href="{% url 'journal_publish' journal_uuid=journal.uuid %}"
+               data-async="modal"
+               title="Publish your latest changes as a new version"
+               {% if not trip_page.request_member.permission_level.is_admin %}disabled{% elif publishing_status.is_published_without_changes %}disabled{% endif %}>
+              {% icon "upload" size="sm" css_class="tt-icon-left" %}
+              {% if publishing_status.has_published_version %}Publish Changes{% else %}Publish First Version{% endif %}
+            </a>
+            <button class="btn btn-outline-primary btn-lg"
+                    title="Preview how your journal will appear to readers"
+                    {% if not trip_page.request_member.can_edit_trip %}disabled{% endif %}>
+              {% icon "eye" size="sm" css_class="tt-icon-left" %}
+              Preview
+            </button>
           </div>
         </div>
       </div>
+
+      {# Publishing Status: Color-Coded Alert Box #}
+      {% if publishing_status.has_published_version %}
+        {% if publishing_status.has_unpublished_changes %}
+          {# State 1: Has Unpublished Changes #}
+          <div class="alert alert-warning mb-0" role="alert">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <div class="d-flex align-items-start">
+                  <div class="mr-2">
+                    {% icon "exclamation-circle" %}
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-1">
+                      <span class="badge badge-{{ journal.visibility.badge_color }} mr-2">
+                        {% icon journal.visibility.icon_name size="sm" css_class="tt-icon-left" %}
+                        {{ journal.visibility.label }}
+                      </span>
+                      <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+                      <span class="text-muted ml-2">
+                        &bull; Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
+                        {% if publishing_status.current_published_version.published_by %}
+                          by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
+                        {% endif %}
+                      </span>
+                    </div>
+                    <small><strong>You have unpublished changes</strong> that are not yet visible to readers.</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 text-right">
+                <div class="btn-group-vertical btn-group-sm" role="group">
+                  <button type="button" class="btn btn-outline-dark">
+                    {% icon "eye" size="sm" css_class="tt-icon-left" %}
+                    View Published
+                  </button>
+                  <a href="{% url 'journal_versions' journal_uuid=journal.uuid %}"
+                     data-async="modal"
+                     class="btn btn-outline-dark">
+                    {% icon "history" size="sm" css_class="tt-icon-left" %}
+                    Version History
+                  </a>
+                  <a href="{% url 'journal_visibility' journal_uuid=journal.uuid %}"
+                     data-async="modal"
+                     class="btn btn-outline-dark"
+                     {% if not trip_page.request_member.permission_level.is_admin %}disabled{% endif %}>
+                    {% icon "shield" size="sm" css_class="tt-icon-left" %}
+                    Change Visibility
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          {# State 2: Up to Date #}
+          <div class="alert alert-success mb-0" role="alert">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <div class="d-flex align-items-start">
+                  <div class="mr-2">
+                    {% icon "check-circle" %}
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-1">
+                      <span class="badge badge-{{ journal.visibility.badge_color }} mr-2">
+                        {% icon journal.visibility.icon_name size="sm" css_class="tt-icon-left" %}
+                        {{ journal.visibility.label }}
+                      </span>
+                      <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+                      <span class="text-muted ml-2">
+                        &bull; Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
+                        {% if publishing_status.current_published_version.published_by %}
+                          by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
+                        {% endif %}
+                      </span>
+                    </div>
+                    <small><strong>Up to date</strong> — your published version matches your working copy.</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 text-right">
+                <div class="btn-group-vertical btn-group-sm" role="group">
+                  <button type="button" class="btn btn-outline-dark">
+                    {% icon "eye" size="sm" css_class="tt-icon-left" %}
+                    View Published
+                  </button>
+                  <a href="{% url 'journal_versions' journal_uuid=journal.uuid %}"
+                     data-async="modal"
+                     class="btn btn-outline-dark">
+                    {% icon "history" size="sm" css_class="tt-icon-left" %}
+                    Version History
+                  </a>
+                  <a href="{% url 'journal_visibility' journal_uuid=journal.uuid %}"
+                     data-async="modal"
+                     class="btn btn-outline-dark"
+                     {% if not trip_page.request_member.permission_level.is_admin %}disabled{% endif %}>
+                    {% icon "shield" size="sm" css_class="tt-icon-left" %}
+                    Change Visibility
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% else %}
+        {# State 3: Not Yet Published #}
+        <div class="alert alert-info mb-0" role="alert">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <div class="d-flex align-items-start">
+                <div class="mr-2">
+                  {% icon "info-circle" %}
+                </div>
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="badge badge-{{ journal.visibility.badge_color }} mr-2">
+                      {% icon journal.visibility.icon_name size="sm" css_class="tt-icon-left" %}
+                      {{ journal.visibility.label }}
+                    </span>
+                    <strong>Not yet published</strong>
+                  </div>
+                  <small>Create some journal entries and publish your first version when ready.</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 text-right">
+              <div class="btn-group-vertical btn-group-sm" role="group">
+                <a href="{% url 'journal_visibility' journal_uuid=journal.uuid %}"
+                   data-async="modal"
+                   class="btn btn-outline-dark"
+                   {% if not trip_page.request_member.permission_level.is_admin %}disabled{% endif %}>
+                  {% icon "shield" size="sm" css_class="tt-icon-left" %}
+                  Change Visibility
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
     </div>
   </div>
 
