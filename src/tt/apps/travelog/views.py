@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views.generic import View
 
 from .enums import ContentType
+from .mixins import TravelogViewMixin
 
 
 class TravelogUserListView(View):
@@ -19,7 +20,7 @@ class TravelogUserListView(View):
         return HttpResponse(f"TODO: Implement TravelogTableOfContentsView for journal {journal_uuid}")
 
     
-class TravelogTableOfContentsView(View):
+class TravelogTableOfContentsView(TravelogViewMixin, View):
     """
     Public table of contents view for a journal.
     No authentication required - access controlled by journal visibility and password.
@@ -34,17 +35,16 @@ class TravelogTableOfContentsView(View):
     """
 
     def get(self, request, content_type: ContentType, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
-        # TODO: Implement view logic
-        # - Get journal by UUID (404 if not found)
-        # - Resolve content based on content_type (DRAFT, VIEW, or VERSION)
-        # - Check visibility/password
-        # - Fetch entries
-        # - Render TOC template
+        journal = self.get_journal(request, journal_uuid, content_type)
+
+        # TODO: Resolve content based on content_type (DRAFT, VIEW, or VERSION)
+        # TODO: Fetch entries
+        # TODO: Render TOC template
 
         return HttpResponse(f"TODO: Implement TravelogTableOfContentsView for {content_type.name} journal {journal_uuid}")
 
 
-class TravelogDayView(View):
+class TravelogDayView(TravelogViewMixin, View):
     """
     Public view for a single day's journal entry.
     No authentication required - access controlled by journal visibility and password.
@@ -59,19 +59,18 @@ class TravelogDayView(View):
     """
 
     def get(self, request, content_type: ContentType, journal_uuid: UUID, date: str, *args, **kwargs) -> HttpResponse:
-        # TODO: Implement view logic
-        # - Get journal by UUID
-        # - Resolve content based on content_type (DRAFT, VIEW, or VERSION)
-        # - Check visibility/password
-        # - Get entry for date (404 if not found)
-        # - Render markdown
-        # - Get previous/next entries for navigation
-        # - Render day template
+        journal = self.get_journal(request, journal_uuid, content_type)
+
+        # TODO: Resolve content based on content_type (DRAFT, VIEW, or VERSION)
+        # TODO: Get entry for date (404 if not found)
+        # TODO: Render markdown
+        # TODO: Get previous/next entries for navigation
+        # TODO: Render day template
 
         return HttpResponse(f"TODO: Implement TravelogDayView for {content_type.name} journal {journal_uuid}, date {date}")
 
 
-class TravelogImageGalleryView(View):
+class TravelogImageGalleryView(TravelogViewMixin, View):
     """
     Public paginated image gallery for a journal.
     No authentication required - access controlled by journal visibility and password.
@@ -87,18 +86,17 @@ class TravelogImageGalleryView(View):
     """
 
     def get(self, request, content_type: ContentType, journal_uuid: UUID, page_num: int = 1, *args, **kwargs) -> HttpResponse:
-        # TODO: Implement view logic
-        # - Get journal by UUID
-        # - Resolve content based on content_type (DRAFT, VIEW, or VERSION)
-        # - Check visibility/password
-        # - Fetch images for journal entries
-        # - Paginate
-        # - Render gallery template
+        journal = self.get_journal(request, journal_uuid, content_type)
+
+        # TODO: Resolve content based on content_type (DRAFT, VIEW, or VERSION)
+        # TODO: Fetch images for journal entries
+        # TODO: Paginate
+        # TODO: Render gallery template
 
         return HttpResponse(f"TODO: Implement TravelogImageGalleryView for {content_type.name} journal {journal_uuid}, page {page_num}")
 
 
-class TravelogImageBrowseView(View):
+class TravelogImageBrowseView(TravelogViewMixin, View):
     """
     Public image browser view (single image with navigation).
     No authentication required - access controlled by journal visibility and password.
@@ -114,12 +112,11 @@ class TravelogImageBrowseView(View):
     """
 
     def get(self, request, content_type: ContentType, journal_uuid: UUID, image_uuid: UUID, *args, **kwargs) -> HttpResponse:
-        # TODO: Implement view logic
-        # - Get journal by UUID
-        # - Resolve content based on content_type (DRAFT, VIEW, or VERSION)
-        # - Check visibility/password
-        # - Get image by UUID
-        # - Get previous/next images
-        # - Render browse template
+        journal = self.get_journal(request, journal_uuid, content_type)
+
+        # TODO: Resolve content based on content_type (DRAFT, VIEW, or VERSION)
+        # TODO: Get image by UUID
+        # TODO: Get previous/next images
+        # TODO: Render browse template
 
         return HttpResponse(f"TODO: Implement TravelogImageBrowseView for {content_type.name} journal {journal_uuid}, image {image_uuid}")
