@@ -27,3 +27,8 @@ class ContentType(LabeledEnum):
         'Historical Version',
         'Specific published version'
     )
+
+    @classmethod
+    def default(cls):
+        return ContentType.VIEW
+    
