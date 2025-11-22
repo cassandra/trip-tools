@@ -13,22 +13,55 @@ from tt.apps.members.models import TripMember
 
 from .enums import ContentType
 from .exceptions import PasswordRequiredException
+from .transient_models import TravelogPageContext
 
 
 class TravelogViewMixin:
 
-    def get_journal( self,
-                     request       : HttpRequest,
-                     journal_uuid  : UUID,
-                     content_type  : ContentType ) -> Journal:
+    def get_travelog_page_context( self,
+                                   request       : HttpRequest,
+                                   journal_uuid  : UUID ) -> TravelogPageContext:
         """
-        Get journal and assert access based on content type and visibility.
+        Parse request to determine content type and get authorized journal.
 
-        Raises Http404 if journal not found or PermissionDenied if access denied.
+        Parses the 'version' query parameter to determine content type:
+        - version=draft -> DRAFT content
+        - version=view or version=current or no param -> VIEW content (current published)
+        - version={number} -> VERSION content with specific version number
+
+        Returns TravelogPageContext with journal, content_type, and version_number.
+        Raises PasswordRequiredException, Http404, or PermissionDenied if access denied.
         """
         journal = get_object_or_404( Journal, uuid = journal_uuid )
-        self.assert_has_journal_access(request, journal, content_type)
-        return journal
+
+        version_param = request.GET.get('version', '')
+
+        if version_param == 'draft':
+            content_type = ContentType.DRAFT
+            version_number = None
+        elif version_param == 'view' or version_param == 'current' or not version_param:
+            # Default to current published version
+            content_type = ContentType.VIEW
+            version_number = None
+        else:
+            try:
+                version_number = int(version_param)
+                content_type = ContentType.VERSION
+            except ValueError:
+                # Invalid version param - default to VIEW
+                content_type = ContentType.VIEW
+                version_number = None
+
+        self.assert_has_journal_access(
+            request = request,
+            journal = journal,
+            content_type = content_type,
+        )
+        return TravelogPageContext(
+            journal = journal,
+            content_type = content_type,
+            version_number = version_number
+        )
 
     def assert_has_journal_access( self,
                                    request       : HttpRequest,
