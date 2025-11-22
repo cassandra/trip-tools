@@ -15,24 +15,27 @@ def travelog_url(
     journal_uuid : UUID,
     version      : Optional[Union[str, int]] = None,
     date         : Optional[Union[date_type, str]] = None,
+    refresh      : Optional[bool] = None,
     **kwargs
 ) -> str:
     """
-    Build travelog URL with version query parameter preserved.
+    Build travelog URL with version and optional query parameters.
 
     Args:
         url_name: Django URL name (e.g., 'travelog_day', 'travelog_toc')
         journal_uuid: Journal UUID
         version: Version parameter - 'draft', 'view', or integer version number
         date: Entry date - datetime.date object or 'YYYY-MM-DD' string (for travelog_day)
+        refresh: If True, add refresh=true query parameter to force cache refresh
         **kwargs: Additional URL kwargs (e.g., page_num=2, image_uuid=...)
 
     Returns:
-        URL string with version query parameter if provided
+        URL string with query parameters if provided
 
     Examples:
         {% travelog_url 'travelog_toc' journal.uuid %}
         {% travelog_url 'travelog_toc' journal.uuid version='draft' %}
+        {% travelog_url 'travelog_toc' journal.uuid version='draft' refresh=True %}
         {% travelog_url 'travelog_day' journal.uuid date=entry.date version='draft' %}
         {% travelog_url 'travelog_day' journal.uuid date='2024-01-15' version=2 %}
     """
@@ -47,8 +50,15 @@ def travelog_url(
     kwargs['journal_uuid'] = journal_uuid
     base_url = reverse( url_name, kwargs = kwargs )
 
+    # Build query parameters
+    query_params = {}
     if version:
-        query = urlencode({ 'version': version })
+        query_params['version'] = version
+    if refresh:
+        query_params['refresh'] = 'true'
+
+    if query_params:
+        query = urlencode(query_params)
         return f"{base_url}?{query}"
 
     return base_url

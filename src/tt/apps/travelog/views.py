@@ -5,13 +5,15 @@ from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
 
+from tt.apps.common.pagination import compute_pagination
+from tt.apps.images.models import TripImage
 from tt.apps.journal.models import Journal
 from tt.apps.journal.enums import JournalVisibility
 
 from .exceptions import PasswordRequiredException
 from .forms import TravelogPasswordForm
 from .mixins import TravelogViewMixin
-from .services import ContentResolutionService
+from .services import ContentResolutionService, TravelogImageCacheService
 
 
 class TravelogUserListView(View):
@@ -65,7 +67,6 @@ class TravelogTableOfContentsView(TravelogViewMixin, View):
             'travelog_page': travelog_page_context,
             'journal': travelog_page_context.journal,
         }
-
         return render(request, 'travelog/pages/travelog_toc.html', context)
 
 
@@ -126,13 +127,11 @@ class TravelogImageGalleryView(TravelogViewMixin, View):
 
     Content type determined by ?version= query parameter.
 
-    TODO: Implement public image gallery functionality.
-    - Fetch images associated with journal entries
-    - Paginate images (e.g., 20 per page)
-    - Display thumbnail grid
-    - Link to image browse view
-    - Pagination controls
+    Displays paginated grid of images from journal entries with links to browse view.
+    Supports cache refresh via ?refresh=true parameter (handled in mixin).
     """
+
+    IMAGES_PER_PAGE = 60
 
     def get( self,
              request       : HttpRequest,
@@ -148,14 +147,38 @@ class TravelogImageGalleryView(TravelogViewMixin, View):
             travelog_page_context = travelog_page_context,
         )
 
-        # TODO: Fetch images for journal entries (stub for now)
-        # TODO: Paginate images
-        images = []  # Stub - no images yet
+        # Get cached images (cache already invalidated in mixin if refresh=true)
+        all_images = TravelogImageCacheService.get_images(
+            travelog_page_context = travelog_page_context
+        )
+
+        # Compute pagination
+        pagination = compute_pagination(
+            page_number = page_num,
+            page_size = self.IMAGES_PER_PAGE,
+            item_count = len(all_images)
+        )
+
+        # Get image metadata for current page
+        page_image_metadata = all_images[pagination.start_offset:pagination.end_offset + 1]
+
+        # Fetch TripImage objects for the page
+        image_uuids = [ img.uuid for img in page_image_metadata ]
+        trip_images_map = { str(img.uuid): img for img in TripImage.objects.filter(uuid__in=image_uuids) }
+
+        # Pair metadata with TripImage objects
+        page_images = [
+            {
+                'metadata': metadata,
+                'trip_image': trip_images_map.get(metadata.uuid)
+            }
+            for metadata in page_image_metadata
+        ]
 
         context = {
             'content': content,
-            'images': images,
-            'page_num': page_num,
+            'images': page_images,
+            'pagination': pagination,
             'travelog_page': travelog_page_context,
             'journal': travelog_page_context.journal,
         }
@@ -170,12 +193,9 @@ class TravelogImageBrowseView(TravelogViewMixin, View):
 
     Content type determined by ?version= query parameter.
 
-    TODO: Implement public image browse functionality.
-    - Display single image (web size)
-    - Show image metadata (caption, date, location)
-    - Previous/next image navigation
-    - Back to gallery link
-    - Link to journal entry for this image's date
+    Displays single image with metadata and prev/next navigation.
+    Image navigation order matches chronological appearance in journal entries.
+    Supports cache refresh via ?refresh=true parameter (handled in mixin).
     """
 
     def get( self,
@@ -192,15 +212,45 @@ class TravelogImageBrowseView(TravelogViewMixin, View):
             travelog_page_context = travelog_page_context,
         )
 
-        # TODO: Get image by UUID
-        # TODO: Get previous/next images
-        # Stub for now - just pass the UUID
-        image = None  # Stub - no image fetching yet
+        # Get cached images (cache already invalidated in mixin if refresh=true)
+        all_images = TravelogImageCacheService.get_images(
+            travelog_page_context = travelog_page_context
+        )
+
+        # Find current image and calculate navigation
+        current_image = None
+        current_index = None
+        prev_image = None
+        next_image = None
+
+        image_uuid_str = str(image_uuid)
+
+        for idx, img in enumerate(all_images):
+            if img.uuid == image_uuid_str:
+                current_image = img
+                current_index = idx
+                if idx > 0:
+                    prev_image = all_images[idx - 1]
+                if idx < len(all_images) - 1:
+                    next_image = all_images[idx + 1]
+                break
+
+        # If image not found in list, return 404
+        if current_image is None:
+            raise Http404(f"Image {image_uuid} not found in this journal")
+
+        # Fetch the TripImage object
+        trip_image = TripImage.objects.filter(uuid=current_image.uuid).first()
 
         context = {
             'content': content,
-            'image': image,
+            'image_metadata': current_image,
+            'trip_image': trip_image,
             'image_uuid': image_uuid,
+            'current_index': current_index,
+            'total_images': len(all_images),
+            'prev_image': prev_image,
+            'next_image': next_image,
             'travelog_page': travelog_page_context,
             'journal': travelog_page_context.journal,
         }

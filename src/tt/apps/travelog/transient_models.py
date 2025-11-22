@@ -23,3 +23,51 @@ class TravelogPageContext:
 
     def is_historical_version(self) -> bool:
         return self.content_type == ContentType.VERSION
+
+    def get_version_param(self) -> Optional[str]:
+        """
+        Get version parameter for URL generation.
+
+        Returns:
+            'draft' for DRAFT content
+            str(version_number) for VERSION content
+            None for VIEW content (current published version)
+        """
+        if self.content_type == ContentType.DRAFT:
+            return 'draft'
+        elif self.content_type == ContentType.VERSION:
+            return str(self.version_number) if self.version_number else None
+        else:  # VIEW
+            return None
+
+
+@dataclass
+class TravelogImageMetadata:
+    """
+    Metadata for a single image in a travelog.
+
+    Extracted from HTML content and used for gallery/browse navigation.
+    """
+    uuid            : str  # TripImage UUID
+    entry_date      : str  # Date of the journal entry (YYYY-MM-DD)
+    layout          : str  # Image layout: 'float-right' or 'full-width'
+    document_order  : int  # Order within the entire travelog (chronological)
+
+    def to_dict(self) -> dict:
+        """Serialize to dictionary for JSON caching."""
+        return {
+            'uuid': self.uuid,
+            'entry_date': self.entry_date,
+            'layout': self.layout,
+            'document_order': self.document_order,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'TravelogImageMetadata':
+        """Deserialize from dictionary (from JSON cache)."""
+        return cls(
+            uuid = data['uuid'],
+            entry_date = data['entry_date'],
+            layout = data['layout'],
+            document_order = data['document_order'],
+        )

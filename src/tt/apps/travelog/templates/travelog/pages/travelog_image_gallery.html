@@ -5,27 +5,93 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ content.title }} - Image Gallery</title>
-  <!-- TODO: Add public-facing stylesheets -->
 </head>
 <body>
-  <div class="container">
+  <div>
     <h1>{{ content.title }} - Image Gallery</h1>
 
-    <p class="text-muted">
+    <p>
       {{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}
     </p>
 
     <hr>
 
-    <div class="alert alert-info">
-      <strong>Coming Soon:</strong> Image gallery implementation
-      <p>TODO: Display images from journal entries with thumbnail grid and pagination</p>
-    </div>
+    <p>Total images: {{ pagination.item_count }}</p>
+
+    {% if images %}
+      <!-- Image gallery - linear list with thumbnails -->
+      <div>
+        {% for img in images %}
+          <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+            {% if img.trip_image %}
+              <a href="{% travelog_url 'travelog_image_browse' journal.uuid travelog_page.get_version_param image_uuid=img.metadata.uuid %}">
+                <img src="{{ img.trip_image.thumbnail_image.url }}" alt="Image {{ forloop.counter }}">
+              </a>
+              <p>
+                <strong>Date:</strong> {{ img.metadata.entry_date }}<br>
+                <strong>Layout:</strong> {{ img.metadata.layout }}<br>
+                <strong>Order:</strong> {{ img.metadata.document_order }}
+              </p>
+            {% else %}
+              <p>Image not found: {{ img.metadata.uuid }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <hr>
+
+      <!-- Pagination controls -->
+      {% if pagination.required %}
+        <div>
+          <p>Page {{ pagination.page_number }} of {{ pagination.page_count }}</p>
+
+          {% if pagination.has_previous_page %}
+            <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=pagination.previous_page_number %}">
+              &larr; Previous
+            </a>
+          {% endif %}
+
+          {% if pagination.has_previous_page and pagination.has_next_page %}
+            |
+          {% endif %}
+
+          {% if pagination.has_next_page %}
+            <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=pagination.next_page_number %}">
+              Next &rarr;
+            </a>
+          {% endif %}
+
+          <p>
+            Pages:
+            {% if pagination.has_pages_before %}
+              <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=1 %}">1</a>
+              ...
+            {% endif %}
+
+            {% for page_num in pagination.page_number_list %}
+              {% if page_num == pagination.page_number %}
+                <strong>{{ page_num }}</strong>
+              {% else %}
+                <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=page_num %}">{{ page_num }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_pages_after %}
+              ...
+              <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=pagination.page_count %}">{{ pagination.page_count }}</a>
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+    {% else %}
+      <p>No images in this travelog.</p>
+    {% endif %}
 
     <hr>
 
     <nav>
-      <a href="{% travelog_url 'travelog_toc' journal.uuid version=request.GET.version %}">
+      <a href="{% travelog_url 'travelog_toc' journal.uuid travelog_page.get_version_param %}">
         &larr; Back to Table of Contents
       </a>
     </nav>

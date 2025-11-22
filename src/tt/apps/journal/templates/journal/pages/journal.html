@@ -67,7 +67,7 @@
               {% icon "upload" size="sm" css_class="tt-icon-left" %}
               {% if publishing_status.has_published_version %}Publish Changes{% else %}Publish First Version{% endif %}
             </a>
-            <a href="{% travelog_url 'travelog_toc' journal.uuid version='draft' %}"
+            <a href="{% travelog_url 'travelog_toc' journal.uuid version='draft' refresh=True %}"
                target="_blank"
                class="btn btn-outline-primary btn-lg"
                title="Preview how your journal will appear to readers"

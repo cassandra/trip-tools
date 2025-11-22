@@ -29,6 +29,8 @@ class TravelogViewMixin:
         - version=view or version=current or no param -> VIEW content (current published)
         - version={number} -> VERSION content with specific version number
 
+        Also handles 'refresh' query parameter to invalidate image cache.
+
         Returns TravelogPageContext with journal, content_type, and version_number.
         Raises PasswordRequiredException, Http404, or PermissionDenied if access denied.
         """
@@ -57,6 +59,17 @@ class TravelogViewMixin:
             journal = journal,
             content_type = content_type,
         )
+
+        # Handle cache refresh request
+        refresh_param = request.GET.get('refresh', '').lower()
+        if refresh_param == 'true':
+            from .services import TravelogImageCacheService
+            TravelogImageCacheService.invalidate_cache(
+                journal_uuid = journal.uuid,
+                content_type = content_type,
+                version_number = version_number
+            )
+
         return TravelogPageContext(
             journal = journal,
             content_type = content_type,
