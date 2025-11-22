@@ -104,7 +104,7 @@ class TravelogViewMixin:
             return
 
         elif journal.visibility == JournalVisibility.PROTECTED:
-            if self.check_journal_password_verified( request, journal.uuid ):
+            if self.check_journal_password_verified( request, journal ):
                 return
             # Raise exception to trigger redirect to password entry
             raise PasswordRequiredException( journal.uuid )
@@ -125,44 +125,48 @@ class TravelogViewMixin:
         
     def check_journal_password_verified( self,
                                          request        : HttpRequest,
-                                         journal_uuid   : UUID,
-                                         timeout_hours  : int = 24 ) -> bool:
+                                         journal        : Journal,
+                                         timeout_hours  : int = 720 ) -> bool:
         """
-        Returns True if verified within timeout window, False otherwise.
-        """
-        session_key = self._get_session_key( journal_uuid )
-        verification_timestamp = request.session.get( session_key )
+        Returns True if verified within timeout window and password version matches.
 
-        if not verification_timestamp:
+        Session data format: {'timestamp': '2025-11-22T...', 'version': 3}
+        """
+        session_key = self._get_session_key( journal.uuid )
+        session_data = request.session.get( session_key )
+
+        if not session_data:
+            return False
+
+        if (( not isinstance(session_data, dict))
+            or ( 'timestamp' not in session_data )
+            or ( 'version' not in session_data )):
             return False
 
         try:
-            verified_at = datetime.fromisoformat( verification_timestamp )
+            verified_at = datetime.fromisoformat( session_data['timestamp'] )
             timeout = timedelta( hours = timeout_hours )
-            return datetime.now() - verified_at < timeout
-        except ( ValueError, TypeError ):
-            # Invalid timestamp format, treat as not verified
+            if datetime.now() - verified_at >= timeout:
+                return False
+
+            return session_data['version'] == journal.password_version
+
+        except ( ValueError, TypeError, KeyError ):
             return False
-
-    def password_redirect_response( self,
-                                    request       : HttpRequest,
-                                    journal_uuid  : UUID ) -> HttpResponse:
-        """
-        Redirect to password entry page with current URL as 'next' parameter.
-
-        The current URL is already validated as it comes from request.get_full_path()
-        which returns the path portion of the URL (not an arbitrary user input).
-        """
-        password_url = reverse('travelog_password_entry', kwargs = { 'journal_uuid': journal_uuid })
-        next_url = request.get_full_path()
-        # URL-encode the next parameter to handle special characters
-        from urllib.parse import urlencode
-        query_string = urlencode({'next': next_url})
-        return HttpResponseRedirect( f'{password_url}?{query_string}' )
         
-    def set_journal_password_verified( self, request: HttpRequest, journal_uuid: UUID ) -> None:
-        session_key = self._get_session_key( journal_uuid )
-        request.session[session_key] = datetime.now().isoformat()
+    def set_journal_password_verified( self, request: HttpRequest, journal: 'Journal' ) -> None:
+        """
+        Store password verification in session with timestamp and password version.
+
+        Args:
+            request: HTTP request with session
+            journal: Journal object (not UUID) - needed to get current password_version
+        """
+        session_key = self._get_session_key( journal.uuid )
+        request.session[session_key] = {
+            'timestamp': datetime.now().isoformat(),
+            'version': journal.password_version,
+        }
         return
     
     def clear_journal_password_verified( self, request: HttpRequest, journal_uuid: UUID ) -> None:
@@ -195,6 +199,22 @@ class TravelogViewMixin:
 
         # Unknown visibility setting
         raise Http404()
+
+    def password_redirect_response( self,
+                                    request       : HttpRequest,
+                                    journal_uuid  : UUID ) -> HttpResponse:
+        """
+        Redirect to password entry page with current URL as 'next' parameter.
+
+        The current URL is already validated as it comes from request.get_full_path()
+        which returns the path portion of the URL (not an arbitrary user input).
+        """
+        password_url = reverse('travelog_password_entry', kwargs = { 'journal_uuid': journal_uuid })
+        next_url = request.get_full_path()
+        # URL-encode the next parameter to handle special characters
+        from urllib.parse import urlencode
+        query_string = urlencode({'next': next_url})
+        return HttpResponseRedirect( f'{password_url}?{query_string}' )
 
     def get_password_redirect_url( self, request: HttpRequest, journal: Journal, next_url: str ) -> str:
         """

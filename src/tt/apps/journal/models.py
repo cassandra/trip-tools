@@ -121,6 +121,10 @@ class Journal( JournalContent ):
         db_column = 'password',
         help_text = 'Hashed password for PROTECTED visibility mode',
     )
+    password_version = models.IntegerField(
+        default = 1,
+        help_text = 'Version number incremented on each password change for session invalidation',
+    )
 
     created_datetime = models.DateTimeField(auto_now_add = True)
     modified_datetime = models.DateTimeField(auto_now = True)
@@ -146,6 +150,8 @@ class Journal( JournalContent ):
     def set_password(self, raw_password):
         if raw_password:
             self._password = make_password(raw_password)
+            # Increment version to invalidate all existing sessions
+            self.password_version = (self.password_version or 0) + 1
         else:
             self._password = None
 

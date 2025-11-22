@@ -225,7 +225,7 @@ class TravelogPasswordEntryView(TravelogViewMixin, View):
             # Validate password against journal
             if journal.check_password(password):
                 # Store verification in session
-                self.set_journal_password_verified(request, journal.uuid)
+                self.set_journal_password_verified(request, journal)
 
                 # Redirect to next URL or default to journal TOC
                 redirect_url = self.get_password_redirect_url( request, journal, next_url )
