@@ -104,6 +104,18 @@ class TravelogViewMixin:
             return
 
         elif journal.visibility == JournalVisibility.PROTECTED:
+            # Edge case: PROTECTED without password should behave like PRIVATE
+            if not journal.has_password:
+                # Treat as PRIVATE - must be authenticated trip member
+                if not request.user.is_authenticated:
+                    raise Http404()  # Don't reveal existence
+                try:
+                    TripMember.objects.get( trip = journal.trip, user = request.user )
+                except TripMember.DoesNotExist:
+                    raise Http404()  # Don't reveal existence
+                return
+
+            # Normal PROTECTED behavior with password
             if self.check_journal_password_verified( request, journal ):
                 return
             # Raise exception to trigger redirect to password entry
@@ -186,6 +198,9 @@ class TravelogViewMixin:
         Raises Http404 for unknown visibility settings.
         """
         if journal.visibility == JournalVisibility.PROTECTED:
+            # Edge case: PROTECTED without password should raise Http404 (like PRIVATE)
+            if not journal.has_password:
+                raise Http404()
             return
         
         if journal.visibility == JournalVisibility.PUBLIC:

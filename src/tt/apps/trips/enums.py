@@ -55,6 +55,20 @@ class TripPermissionLevel( LabeledEnum ):
             raise NotImplementedError()
         return bool( self.priority == other.priority )
 
+    @property
+    def is_owner(self):
+        return bool( self in [ TripPermissionLevel.OWNER ])
+
+    @property
+    def is_admin(self):
+        return bool( self in [ TripPermissionLevel.OWNER,
+                               TripPermissionLevel.ADMIN ])
+
+    @property
+    def is_editor(self):
+        return bool( self in [ TripPermissionLevel.OWNER,
+                               TripPermissionLevel.ADMIN,
+                               TripPermissionLevel.EDITOR ])
 
 class TripStatus( LabeledEnum ):
 

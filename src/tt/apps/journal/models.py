@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.db import models
 
 from tt.apps.common.model_fields import LabeledEnumField
+from tt.apps.common.utils import is_blank
 from tt.apps.trips.models import Trip
 from tt.apps.notebook.models import NotebookEntry
 from tt.apps.images.models import TripImage
@@ -147,22 +148,32 @@ class Journal( JournalContent ):
     def get_entries(self):
         return self.entries.all()
 
-    def set_password(self, raw_password):
+    def set_password( self, raw_password ):
         if raw_password:
-            self._password = make_password(raw_password)
+            self._password = make_password( raw_password )
             # Increment version to invalidate all existing sessions
-            self.password_version = (self.password_version or 0) + 1
+            self.password_version = ( self.password_version or 0 ) + 1
         else:
             self._password = None
 
     def check_password(self, raw_password):
         if not self._password:
             return False
-        return check_password(raw_password, self._password)
+        return check_password( raw_password, self._password )
 
     @property
     def has_password(self):
-        return bool(self._password)
+        return not is_blank( self._password )
+
+    @property
+    def is_misconfigured_protected(self):
+        """
+        Returns True if journal is set to PROTECTED visibility but has no password.
+        This is a misconfiguration - PROTECTED journals should always have a password.
+        When this occurs, the journal behaves as PRIVATE in authorization logic.
+        """
+        return bool(( self.visibility == JournalVisibility.PROTECTED )
+                    and not self.has_password )
 
 
 class JournalEntry( JournalEntryContent ):

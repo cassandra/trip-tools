@@ -36,6 +36,23 @@
       </div>
     </div>
 
+    {% if journal.is_misconfigured_protected and trip_page.request_member.permission_level.is_admin %}
+    <div class="alert alert-warning mx-3 mt-2 mb-0" role="alert">
+      <div class="d-flex align-items-start">
+        <div class="mr-2">
+          {% icon "warning" size="md" %}
+        </div>
+        <div>
+          <strong>Configuration Warning:</strong> This journal is set to PROTECTED visibility but has no password.
+          It is currently being treated as PRIVATE (only trip members can access).
+          <a href="{% url 'journal_visibility' journal_uuid=journal.uuid %}"
+             data-async="modal"
+             class="alert-link">Set a password</a> to allow password-protected public access.
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="card-body">
       {# Primary Actions: Large and Prominent #}
       <div class="mb-3">
