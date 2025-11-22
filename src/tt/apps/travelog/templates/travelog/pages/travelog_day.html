@@ -1,31 +1,58 @@
+{% load travelog_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Journal - Day Entry</title>
+  <title>{{ content.title }} - {{ entry.date }}</title>
   <!-- TODO: Add public-facing stylesheets -->
 </head>
 <body>
   <div class="container">
-    <h1>Journal Entry</h1>
+    <nav>
+      <a href="{% travelog_url 'travelog_toc' journal.uuid version=request.GET.version %}">
+        &larr; Back to Table of Contents
+      </a>
+    </nav>
 
-    <!-- TODO: Implement journal day view -->
-    <!--
-      Features to implement:
-      - Entry date with day of week
-      - Entry title (if present)
-      - Rendered markdown text
-      - Inline images (from reference_image or embedded in markdown)
-      - Previous/next day navigation
-      - Back to TOC link
-      - Share buttons (optional)
-      - Location map if GPS data available
-     -->
+    <hr>
 
-    <div class="alert alert-info">
-      <strong>Coming Soon:</strong> Public journal day view
+    <h1>{{ entry.date }}</h1>
+    {% if entry.title %}
+    <h2>{{ entry.title }}</h2>
+    {% endif %}
+
+    <p class="text-muted">
+      From: {{ content.title }}
+      ({{ travelog_page.content_type.label }}{% if travelog_page.version_number %} - Version {{ travelog_page.version_number }}{% endif %})
+    </p>
+
+    <hr>
+
+    <div class="entry-content">
+      {{ entry.text|safe }}
     </div>
+
+    <hr>
+
+    <nav>
+      <div style="display: flex; justify-content: space-between;">
+        <div>
+          {% if prev_entry %}
+          <a href="{% travelog_url 'travelog_day' journal.uuid date=prev_entry.date version=request.GET.version %}">
+            &larr; Previous: {{ prev_entry.date }}
+          </a>
+          {% endif %}
+        </div>
+        <div>
+          {% if next_entry %}
+          <a href="{% travelog_url 'travelog_day' journal.uuid date=next_entry.date version=request.GET.version %}">
+            Next: {{ next_entry.date }} &rarr;
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
   </div>
 </body>
 </html>

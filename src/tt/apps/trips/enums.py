@@ -70,6 +70,7 @@ class TripPermissionLevel( LabeledEnum ):
                                TripPermissionLevel.ADMIN,
                                TripPermissionLevel.EDITOR ])
 
+    
 class TripStatus( LabeledEnum ):
 
     UPCOMING  = ( 'Upcoming', '' )

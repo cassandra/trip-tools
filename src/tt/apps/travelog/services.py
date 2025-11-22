@@ -1,8 +1,11 @@
 from django.contrib.auth.models import User as UserType
 from django.db import transaction
+from django.http import Http404
 
-from tt.apps.journal.models import Journal
+from tt.apps.journal.models import Journal, JournalContent
 from .models import Travelog, TravelogEntry
+from .transient_models import TravelogPageContext
+from .enums import ContentType
 
 
 class PublishingError(Exception):
@@ -87,4 +90,38 @@ class PublishingService:
         travelog.save(update_fields=['is_current'])
 
         return travelog
-    
+
+
+class ContentResolutionService:
+
+    @staticmethod
+    def resolve_content(travelog_page_context: TravelogPageContext) -> JournalContent:
+        """
+        Returns:
+            JournalContent instance - either Journal (for DRAFT) or Travelog (for VIEW/VERSION)
+
+        Raises:
+            Http404: If requested version doesn't exist
+        """
+        if travelog_page_context.content_type == ContentType.DRAFT:
+            return travelog_page_context.journal
+
+        elif travelog_page_context.content_type == ContentType.VIEW:
+            travelog = Travelog.objects.get_current(travelog_page_context.journal)
+            if not travelog:
+                raise Http404()
+            return travelog
+
+        elif travelog_page_context.content_type == ContentType.VERSION:
+            travelog = Travelog.objects.get_version(
+                travelog_page_context.journal,
+                travelog_page_context.version_number
+            )
+            if not travelog:
+                raise Http404()
+            return travelog
+
+        else:
+            # This should never happen with proper enum handling
+            raise ValueError(f"Unknown content type: {travelog_page_context.content_type}")
+

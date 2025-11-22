@@ -1,35 +1,35 @@
+{% load travelog_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Journal - Browse Image</title>
+  <title>{{ content.title }} - Browse Image</title>
   <!-- TODO: Add public-facing stylesheets -->
 </head>
 <body>
   <div class="container">
-    <h1>Browse Image</h1>
+    <h1>{{ content.title }} - Browse Image</h1>
 
-    <!-- TODO: Implement image browse view -->
-    <!--
-      Features to implement:
-      - Large image display (web size, max 1600px)
-      - Image metadata sidebar:
-        - Caption
-        - Date taken (with timezone)
-        - Location (map if GPS available)
-        - Tags
-      - Previous/next image navigation (keyboard arrows support)
-      - Back to gallery link
-      - Link to journal entry for this date
-      - Download button (optional)
-      - Share button (optional)
-      - Swipe gesture support on mobile
-     -->
+    <p class="text-muted">
+      {{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}
+    </p>
+
+    <hr>
 
     <div class="alert alert-info">
-      <strong>Coming Soon:</strong> Public image browser
+      <strong>Coming Soon:</strong> Image browser implementation
+      <p>TODO: Display single image with metadata, prev/next navigation, and link to journal entry</p>
+      <p>Image UUID: {{ image_uuid }}</p>
     </div>
+
+    <hr>
+
+    <nav>
+      <a href="{% travelog_url 'travelog_gallery' journal.uuid version=request.GET.version %}">
+        &larr; Back to Gallery
+      </a>
+    </nav>
   </div>
 </body>
 </html>

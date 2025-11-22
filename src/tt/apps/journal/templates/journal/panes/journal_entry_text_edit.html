@@ -1,7 +1,9 @@
+{% load travelog_tags %}
 {% load icons %}
 <div class="journal-editor-container">
   <!-- Formatting Toolbar -->
-  <div class="journal-editor-toolbar">
+  <div class="journal-editor-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; gap: 0.5rem;">
     <!-- Text Formatting Group -->
     <div class="btn-group" role="group" aria-label="Text formatting">
       <button type="button" class="btn btn-sm btn-outline-secondary" data-command="bold" title="Bold (Ctrl+B)">
@@ -60,6 +62,17 @@
       <button type="button" class="btn btn-sm btn-outline-secondary" data-command="code" title="Code block">
         {% icon "code" size="sm" aria_label="Code" %}
       </button>
+    </div>
+    </div>
+
+    <!-- Preview Button (right side) -->
+    <div>
+      <a href="{% travelog_url 'travelog_day' entry.journal.uuid date=entry.date version='draft' %}"
+         target="_blank"
+         class="btn btn-sm btn-outline-primary"
+         title="Preview this entry in the draft travelog">
+        {% icon "eye" size="sm" aria_label="Preview" %} Preview
+      </a>
     </div>
   </div>
 

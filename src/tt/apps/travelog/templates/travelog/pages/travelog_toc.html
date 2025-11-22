@@ -1,31 +1,55 @@
+{% load travelog_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Journal - Table of Contents</title>
+  <title>{{ content.title }} - Table of Contents</title>
   <!-- TODO: Add public-facing stylesheets -->
 </head>
 <body>
   <div class="container">
-    <h1>Trip Journal - Table of Contents</h1>
+    <h1>{{ content.title }}</h1>
 
-    <!-- TODO: Implement journal TOC -->
-    <!--
-      Features to implement:
-      - Journal title and description
-      - Password form (if PROTECTED visibility and not yet authenticated)
-      - List of journal entries grouped by month/year
-      - Entry dates with preview text
-      - Link to each day's entry
-      - Link to image gallery
-      - Navigation breadcrumbs
-      - Social sharing buttons (optional)
-     -->
+    {% if content.description %}
+    <p>{{ content.description }}</p>
+    {% endif %}
 
-    <div class="alert alert-info">
-      <strong>Coming Soon:</strong> Public journal table of contents
-    </div>
+    <p class="text-muted">
+      Viewing: {{ travelog_page.content_type.label }}
+      {% if travelog_page.version_number %}(Version {{ travelog_page.version_number }}){% endif %}
+    </p>
+
+    <hr>
+
+    <h2>Journal Entries</h2>
+
+    {% if entries %}
+    <ul>
+      {% for entry in entries %}
+      <li>
+        <a href="{% travelog_url 'travelog_day' journal.uuid date=entry.date version=request.GET.version %}">
+          {{ entry.date }}{% if entry.title %} - {{ entry.title }}{% endif %}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No journal entries yet.</p>
+    {% endif %}
+
+    <hr>
+
+    <nav>
+      <h3>More</h3>
+      <ul>
+        <li>
+          <a href="{% travelog_url 'travelog_gallery' journal.uuid version=request.GET.version %}">
+            Image Gallery
+          </a>
+        </li>
+      </ul>
+    </nav>
   </div>
 </body>
 </html>

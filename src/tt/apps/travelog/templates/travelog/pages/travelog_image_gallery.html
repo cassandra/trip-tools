@@ -1,31 +1,34 @@
+{% load travelog_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Journal - Image Gallery</title>
+  <title>{{ content.title }} - Image Gallery</title>
   <!-- TODO: Add public-facing stylesheets -->
 </head>
 <body>
   <div class="container">
-    <h1>Image Gallery</h1>
+    <h1>{{ content.title }} - Image Gallery</h1>
 
-    <!-- TODO: Implement image gallery -->
-    <!--
-      Features to implement:
-      - Responsive thumbnail grid (3-4 columns on desktop, 2 on tablet, 1 on mobile)
-      - Image thumbnails with lazy loading
-      - Click to browse individual image
-      - Pagination controls (prev/next page)
-      - Page indicator (Page X of Y)
-      - Back to journal link
-      - Filter by date range (optional)
-      - Lightbox/modal view (optional)
-     -->
+    <p class="text-muted">
+      {{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}
+    </p>
+
+    <hr>
 
     <div class="alert alert-info">
-      <strong>Coming Soon:</strong> Public image gallery
+      <strong>Coming Soon:</strong> Image gallery implementation
+      <p>TODO: Display images from journal entries with thumbnail grid and pagination</p>
     </div>
+
+    <hr>
+
+    <nav>
+      <a href="{% travelog_url 'travelog_toc' journal.uuid version=request.GET.version %}">
+        &larr; Back to Table of Contents
+      </a>
+    </nav>
   </div>
 </body>
 </html>

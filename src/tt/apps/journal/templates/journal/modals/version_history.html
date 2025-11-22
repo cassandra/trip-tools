@@ -1,5 +1,6 @@
 {% extends "modals/action_ok.html" %}
 {% load icons %}
+{% load travelog_tags %}
 
 {% block modal_dialog_id %}journal-version-history-modal{% endblock %}
 {% block modal_dialog_class %}tt-modal-dialog-800{% endblock %}
@@ -71,7 +72,7 @@
             {% endif %}
           </td>
           <td class="align-middle">
-            <a href="{% url 'travelog_toc' journal_uuid=travelog.uuid %}"
+            <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog.version_number %}"
                target="_blank"
                class="btn btn-sm btn-outline-primary mr-1 mb-1">
               {% icon "eye" size="sm" css_class="tt-icon-left" %}

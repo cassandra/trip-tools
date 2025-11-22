@@ -1,5 +1,6 @@
 {% extends "journal/pages/journal_base.html" %}
 {% load icons %}
+{% load travelog_tags %}
 
 {% block trip_content %}
 <div class="m-3">
@@ -66,12 +67,14 @@
               {% icon "upload" size="sm" css_class="tt-icon-left" %}
               {% if publishing_status.has_published_version %}Publish Changes{% else %}Publish First Version{% endif %}
             </a>
-            <button class="btn btn-outline-primary btn-lg"
-                    title="Preview how your journal will appear to readers"
-                    {% if not trip_page.request_member.can_edit_trip %}disabled{% endif %}>
+            <a href="{% travelog_url 'travelog_toc' journal.uuid version='draft' %}"
+               target="_blank"
+               class="btn btn-outline-primary btn-lg"
+               title="Preview how your journal will appear to readers"
+               {% if not trip_page.request_member.can_edit_trip %}onclick="return false;" style="pointer-events: none; opacity: 0.65;"{% endif %}>
               {% icon "eye" size="sm" css_class="tt-icon-left" %}
               Preview
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -107,10 +110,12 @@
               </div>
               <div class="col-md-4 text-right">
                 <div class="btn-group-vertical btn-group-sm" role="group">
-                  <button type="button" class="btn btn-outline-dark">
+                  <a href="{% travelog_url 'travelog_toc' journal.uuid %}"
+                     target="_blank"
+                     class="btn btn-outline-dark">
                     {% icon "eye" size="sm" css_class="tt-icon-left" %}
                     View Published
-                  </button>
+                  </a>
                   <a href="{% url 'journal_versions' journal_uuid=journal.uuid %}"
                      data-async="modal"
                      class="btn btn-outline-dark">
@@ -157,10 +162,12 @@
               </div>
               <div class="col-md-4 text-right">
                 <div class="btn-group-vertical btn-group-sm" role="group">
-                  <button type="button" class="btn btn-outline-dark">
+                  <a href="{% travelog_url 'travelog_toc' journal.uuid %}"
+                     target="_blank"
+                     class="btn btn-outline-dark">
                     {% icon "eye" size="sm" css_class="tt-icon-left" %}
                     View Published
-                  </button>
+                  </a>
                   <a href="{% url 'journal_versions' journal_uuid=journal.uuid %}"
                      data-async="modal"
                      class="btn btn-outline-dark">

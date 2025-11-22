@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
 
@@ -10,6 +10,7 @@ from tt.apps.journal.enums import JournalVisibility
 from .exceptions import PasswordRequiredException
 from .forms import TravelogPasswordForm
 from .mixins import TravelogViewMixin
+from .services import ContentResolutionService
 
 
 class TravelogUserListView(View):
@@ -46,20 +47,25 @@ class TravelogTableOfContentsView(TravelogViewMixin, View):
              journal_uuid  : UUID,
              *args, **kwargs             ) -> HttpResponse:
         try:
-            travelog_context = self.get_travelog_page_context(request, journal_uuid)
+            travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
         except PasswordRequiredException:
             return self.password_redirect_response( request = request, journal_uuid = journal_uuid )
 
-        # TODO: Resolve content based on travelog_context.content_type (DRAFT, VIEW, or VERSION)
-        # TODO: If VERSION, use travelog_context.version_number to fetch specific version
-        # TODO: Fetch entries
-        # TODO: Render TOC template
-
-        return HttpResponse(
-            f"TODO: Implement TravelogTableOfContentsView for {travelog_context.content_type.name} "
-            f"journal {journal_uuid}"
-            f"{f' version {travelog_context.version_number}' if travelog_context.version_number else ''}"
+        content = ContentResolutionService.resolve_content(
+            travelog_page_context = travelog_page_context,
         )
+
+        # Get entries (works for both Journal and Travelog)
+        entries = content.get_entries().order_by('date')
+
+        context = {
+            'content': content,
+            'entries': entries,
+            'travelog_page': travelog_page_context,
+            'journal': travelog_page_context.journal,
+        }
+
+        return render(request, 'travelog/pages/travelog_toc.html', context)
 
 
 class TravelogDayView(TravelogViewMixin, View):
@@ -82,21 +88,34 @@ class TravelogDayView(TravelogViewMixin, View):
              date          : str,
              *args, **kwargs             ) -> HttpResponse:
         try:
-            travelog_context = self.get_travelog_page_context(request, journal_uuid)
+            travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
         except PasswordRequiredException:
             return self.password_redirect_response( request = request, journal_uuid = journal_uuid )
 
-        # TODO: Resolve content based on travelog_context.content_type (DRAFT, VIEW, or VERSION)
-        # TODO: Get entry for date (404 if not found)
-        # TODO: Render markdown
-        # TODO: Get previous/next entries for navigation
-        # TODO: Render day template
-
-        return HttpResponse(
-            f"TODO: Implement TravelogDayView for {travelog_context.content_type.name} "
-            f"journal {journal_uuid}, date {date}"
-            f"{f' version {travelog_context.version_number}' if travelog_context.version_number else ''}"
+        content = ContentResolutionService.resolve_content(
+            travelog_page_context = travelog_page_context,
         )
+
+        # Get all entries ordered by date
+        entries = content.get_entries().order_by('date')
+
+        entry = entries.filter( date = date ).first()
+        if not entry:
+            raise Http404()
+
+        prev_entry = entries.filter( date__lt = date ).order_by('-date').first()
+        next_entry = entries.filter( date__gt = date ).order_by('date').first()
+
+        context = {
+            'content': content,
+            'entry': entry,
+            'prev_entry': prev_entry,
+            'next_entry': next_entry,
+            'travelog_page': travelog_page_context,
+            'journal': travelog_page_context.journal,
+        }
+
+        return render(request, 'travelog/pages/travelog_day.html', context)
 
 
 class TravelogImageGalleryView(TravelogViewMixin, View):
@@ -120,20 +139,27 @@ class TravelogImageGalleryView(TravelogViewMixin, View):
              page_num      : int         = 1,
              *args, **kwargs                 ) -> HttpResponse:
         try:
-            travelog_context = self.get_travelog_page_context(request, journal_uuid)
+            travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
         except PasswordRequiredException:
             return self.password_redirect_response( request = request, journal_uuid = journal_uuid )
 
-        # TODO: Resolve content based on travelog_context.content_type (DRAFT, VIEW, or VERSION)
-        # TODO: Fetch images for journal entries
-        # TODO: Paginate
-        # TODO: Render gallery template
-
-        return HttpResponse(
-            f"TODO: Implement TravelogImageGalleryView for {travelog_context.content_type.name} "
-            f"journal {journal_uuid}, page {page_num}"
-            f"{f' version {travelog_context.version_number}' if travelog_context.version_number else ''}"
+        content = ContentResolutionService.resolve_content(
+            travelog_page_context = travelog_page_context,
         )
+
+        # TODO: Fetch images for journal entries (stub for now)
+        # TODO: Paginate images
+        images = []  # Stub - no images yet
+
+        context = {
+            'content': content,
+            'images': images,
+            'page_num': page_num,
+            'travelog_page': travelog_page_context,
+            'journal': travelog_page_context.journal,
+        }
+
+        return render(request, 'travelog/pages/travelog_image_gallery.html', context)
 
 
 class TravelogImageBrowseView(TravelogViewMixin, View):
@@ -157,21 +183,28 @@ class TravelogImageBrowseView(TravelogViewMixin, View):
              image_uuid    : UUID,
              *args, **kwargs             ) -> HttpResponse:
         try:
-            travelog_context = self.get_travelog_page_context(request, journal_uuid)
+            travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
         except PasswordRequiredException:
             return self.password_redirect_response( request = request, journal_uuid = journal_uuid )
 
-        # TODO: Resolve content based on travelog_context.content_type (DRAFT, VIEW, or VERSION)
-        # TODO: If VERSION, use travelog_context.version_number to fetch specific version
+        content = ContentResolutionService.resolve_content(
+            travelog_page_context = travelog_page_context,
+        )
+
         # TODO: Get image by UUID
         # TODO: Get previous/next images
-        # TODO: Render browse template
+        # Stub for now - just pass the UUID
+        image = None  # Stub - no image fetching yet
 
-        return HttpResponse(
-            f"TODO: Implement TravelogImageBrowseView for {travelog_context.content_type.name} "
-            f"journal {journal_uuid}, image {image_uuid}"
-            f"{f' version {travelog_context.version_number}' if travelog_context.version_number else ''}"
-        )
+        context = {
+            'content': content,
+            'image': image,
+            'image_uuid': image_uuid,
+            'travelog_page': travelog_page_context,
+            'journal': travelog_page_context.journal,
+        }
+
+        return render(request, 'travelog/pages/travelog_image_browse.html', context)
 
 
 class TravelogPasswordEntryView(TravelogViewMixin, View):
