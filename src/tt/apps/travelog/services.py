@@ -56,6 +56,7 @@ class PublishingService:
             # Copy journal content
             title = locked_journal.title,
             description = locked_journal.description,
+            reference_image = locked_journal.reference_image,
         )
 
         for journal_entry in journal_entries:

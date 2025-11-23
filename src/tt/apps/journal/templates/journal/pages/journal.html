@@ -5,35 +5,52 @@
 {% block trip_content %}
 <div class="m-3">
 
-  {# Journal Metadata Card #}
+
   <div class="card mb-3">
-    {# Card Header: Title and Metadata #}
-    <div class="card-header bg-white">
-      <div class="d-flex align-items-start mb-2">
-        <h3 class="mb-0 mr-2">{{ journal.title }}</h3>
-        <a href="{% url 'journal_edit' journal_uuid=journal.uuid %}"
-           data-async="modal"
-           class="text-muted"
-           style="opacity: 0.6; transition: opacity 0.2s;"
-           onmouseover="this.style.opacity='1'"
-           onmouseout="this.style.opacity='0.6'"
-           title="Edit journal title and description"
-           {% if not trip_page.request_member.can_edit_trip %}style="display:none;"{% endif %}>
-          {% icon "edit" size="sm" %}
-        </a>
+    <div class="row no-gutters">
+      <div class="col-3 col-md-2">
+        {% if journal.reference_image %}
+        <img src="{{ journal.reference_image.thumbnail_image.url }}"
+             alt="{{ journal.reference_image.caption|default:'Reference' }}"
+             class="img-fluid w-100"
+             style="object-fit: cover; height: 120px;">
+        {% else %}
+        <div class="bg-light d-flex align-items-center justify-content-center text-muted border-right"
+             style="height: 120px;">
+          {% icon "camera" size="lg" %}
+        </div>
+        {% endif %}
       </div>
-      {% if journal.description %}
-      <p class="text-muted mb-2">{{ journal.description }}</p>
-      {% endif %}
-      <div class="d-flex align-items-center flex-wrap">
-        <small class="text-muted mr-3">
-          {% icon "globe" size="sm" css_class="tt-icon-left" %}
-          Timezone: {{ journal.timezone }}
-        </small>
-        <small class="text-muted">
-          {% icon "clock" size="sm" css_class="tt-icon-left" %}
-          Created {{ journal.created_datetime|date:"N j, Y" }}
-        </small>
+
+      <div class="col-9 col-md-10">
+        <div class="card-header bg-white">
+          <div class="d-flex w-100 align-items-start mb-2">
+            <h3 class="mb-0 mr-2">{{ journal.title }}</h3>
+            <a href="{% url 'journal_edit' journal_uuid=journal.uuid %}"
+               data-async="modal"
+               class="text-muted"
+               style="opacity: 0.6; transition: opacity 0.2s;"
+               onmouseover="this.style.opacity='1'"
+               onmouseout="this.style.opacity='0.6'"
+               title="Edit journal title and description"
+               {% if not trip_page.request_member.can_edit_trip %}style="display:none;"{% endif %}>
+              {% icon "edit" size="sm" %}
+            </a>
+          </div>
+          {% if journal.description %}
+          <p class="text-muted mb-2">{{ journal.description }}</p>
+          {% endif %}
+          <div class="d-flex align-items-center flex-wrap">
+            <small class="text-muted mr-3">
+              {% icon "globe" size="sm" css_class="tt-icon-left" %}
+              Timezone: {{ journal.timezone }}
+            </small>
+            <small class="text-muted">
+              {% icon "clock" size="sm" css_class="tt-icon-left" %}
+              Created {{ journal.created_datetime|date:"N j, Y" }}
+            </small>
+          </div>
+        </div>
       </div>
     </div>
 

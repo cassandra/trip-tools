@@ -1,6 +1,7 @@
 from datetime import date as date_type
 from uuid import UUID
 
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
@@ -65,12 +66,13 @@ class TravelogUserListView(TravelogViewMixin, View):
             earliest_date = entries.first().date.strftime('%Y-%m-%d') if entries.exists() else None
             latest_date = entries.last().date.strftime('%Y-%m-%d') if entries.exists() else None
 
-            # Get first reference image for display
-            display_image = None
-            for entry in entries:
-                if entry.reference_image:
-                    display_image = entry.reference_image
-                    break
+            display_image = journal.reference_image
+            # Use first reference image for display if none explicitly set
+            if not display_image:
+                for entry in entries:
+                    if entry.reference_image:
+                        display_image = entry.reference_image
+                        break
 
             travelog_items.append( TravelogListItemData(
                 journal = journal,

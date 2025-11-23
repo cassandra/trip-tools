@@ -29,6 +29,7 @@ class JournalAdmin(admin.ModelAdmin):
         'trip_link',
         'visibility',
         'has_password',
+        'reference_image',
         'created_datetime',
         'modified_datetime',
     )
@@ -67,10 +68,12 @@ class JournalEntryAdmin(admin.ModelAdmin):
 
     def has_reference_image(self, obj):
         return bool(obj.reference_image)
+    
     has_reference_image.short_description = 'Ref Image'
     has_reference_image.boolean = True
 
     def has_source_notebook(self, obj):
         return bool(obj.source_notebook_entry)
+    
     has_source_notebook.short_description = 'From Notebook'
     has_source_notebook.boolean = True

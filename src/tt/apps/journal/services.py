@@ -202,7 +202,7 @@ class JournalRestoreService:
         JournalEntry.objects.bulk_create( entries_to_create )
 
         locked_journal.title = travelog.title
-        locked_journal.description = travelog.description
+        locked_journal.reference_image = travelog.reference_image,
         locked_journal.modified_by = user
         locked_journal.save(
             update_fields = [ 'modified_by',

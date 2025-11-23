@@ -31,6 +31,13 @@ class JournalContent( models.Model ):
     description = models.TextField(
         blank = True,
     )
+    reference_image = models.ForeignKey(
+        TripImage,
+        on_delete = models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name = '%(class)s_entries',  # Must be dynamic in abstract models
+    )
     
     class Meta:
         abstract = True
