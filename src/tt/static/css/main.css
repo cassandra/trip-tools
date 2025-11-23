@@ -1151,4 +1151,11 @@ body {
     border-top: 1px solid #dee2e6;
 }
 
+/* Journal image gallery - drag-to-remove drop target */
+.journal-image-gallery.drop-target-active {
+    background-color: #f8d7da; /* Light red tint indicates removal */
+    border: 2px dashed #dc3545; /* Red dashed border */
+    transition: background-color 0.2s, border 0.2s;
+}
+
 

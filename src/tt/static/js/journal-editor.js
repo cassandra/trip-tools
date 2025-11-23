@@ -2900,6 +2900,34 @@
         self.dragSource = null;
       }
     });
+
+    // Make picker panel a drop target for editor and reference images (drag-to-remove)
+    var $pickerGallery = $('.journal-image-gallery');
+    if ($pickerGallery.length) {
+      $pickerGallery.on('dragover', function(e) {
+        // Allow drops from editor or reference (removal), not from picker (no-op)
+        if (self.dragSource === 'editor' || self.dragSource === 'reference') {
+          e.preventDefault();
+          e.originalEvent.dataTransfer.dropEffect = 'move';
+          $(this).addClass('drop-target-active'); // Visual feedback
+        }
+      });
+
+      $pickerGallery.on('dragleave', function(e) {
+        // Only remove if we're leaving the gallery completely
+        if (!$(e.relatedTarget).closest('.journal-image-gallery').length) {
+          $(this).removeClass('drop-target-active');
+        }
+      });
+
+      $pickerGallery.on('drop', function(e) {
+        if (self.dragSource === 'editor' || self.dragSource === 'reference') {
+          e.preventDefault();
+          $(this).removeClass('drop-target-active');
+          self.handleImageRemovalDrop(e);
+        }
+      });
+    }
   };
 
   /**
@@ -3674,6 +3702,43 @@
   };
 
   /**
+   * Handle dropping editor or reference images onto picker panel (drag-to-remove)
+   * Supports multi-image removal if multiple images selected
+   *
+   * This provides an intuitive UX: dragging from picker to editor inserts,
+   * so dragging from editor back to picker should remove (reverse operation)
+   */
+  JournalEditor.prototype.handleImageRemovalDrop = function(e) {
+    if (!this.draggedElement) {
+      return;
+    }
+
+    if (this.dragSource === 'editor') {
+      // Get wrappers to remove (1 or many, based on selection)
+      var wrappersToRemove = this.getEditorWrappersToMove();
+
+      // Remove each wrapper (reuses existing removal logic)
+      for (var i = 0; i < wrappersToRemove.length; i++) {
+        var $wrapper = wrappersToRemove[i];
+        var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+        this.removeImage($img);
+      }
+
+      // Clear editor selections if multiple images were removed
+      if (wrappersToRemove.length > 1) {
+        this.clearEditorImageSelections();
+      }
+    } else if (this.dragSource === 'reference') {
+      // Clear reference image
+      this.clearReferenceImage();
+    }
+
+    // Clean up drag state
+    this.draggedElement = null;
+    this.dragSource = null;
+  };
+
+  /**
    * Setup image removal
    */
   JournalEditor.prototype.setupImageRemoval = function() {
@@ -3843,6 +3908,21 @@
       if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
         AN.get(inspectUrl);
       }
+    });
+
+    // Setup reference image dragging (for drag-to-remove)
+    this.$referenceContainer.on('dragstart', '.journal-reference-image-thumbnail', function(e) {
+      self.draggedElement = this;
+      self.dragSource = 'reference';
+
+      e.originalEvent.dataTransfer.effectAllowed = 'move';
+      e.originalEvent.dataTransfer.setData('text/plain', '');
+    });
+
+    this.$referenceContainer.on('dragend', '.journal-reference-image-thumbnail', function(e) {
+      // Visual cleanup happens in drop handlers
+      self.draggedElement = null;
+      self.dragSource = null;
     });
   };
 
