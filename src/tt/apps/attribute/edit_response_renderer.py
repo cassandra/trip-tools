@@ -11,7 +11,7 @@ from .forms import AttributeUploadForm
 from .models import AttributeModel, AttributeValueHistoryModel
 from .response_helpers import AttributeResponseBuilder, UpdateMode
 from .response_constants import DefaultMessages
-from .transient_models import AttributeEditFormData, AttributeMultiEditFormData
+from .schemas import AttributeEditFormData, AttributeMultiEditFormData
 
 logger = logging.getLogger(__name__)
 

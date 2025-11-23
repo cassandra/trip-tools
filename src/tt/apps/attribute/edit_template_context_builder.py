@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from .edit_context import AttributeItemEditContext, AttributePageEditContext
 from .edit_form_handler import AttributeEditFormHandler
-from .transient_models import AttributeEditFormData, AttributeMultiEditFormData
+from .schemas import AttributeEditFormData, AttributeMultiEditFormData
 
 logger = logging.getLogger(__name__)
 

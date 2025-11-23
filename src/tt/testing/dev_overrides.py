@@ -4,7 +4,7 @@ import random
 from django.conf import settings
 from django.forms.utils import ErrorList
 
-from tt.apps.attribute.transient_models import AttributeEditFormData
+from tt.apps.attribute.schemas import AttributeEditFormData
 
 logger = logging.getLogger(__name__)
 

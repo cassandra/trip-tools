@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from tt.apps.journal.models import Journal, JournalEntry
-from tt.apps.journal.transient_models import PublishingStatusHelper, PublishingStatus
+from tt.apps.journal.schemas import PublishingStatusHelper, PublishingStatus
 from tt.apps.journal.enums import JournalVisibility
 from tt.apps.trips.enums import TripStatus
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData

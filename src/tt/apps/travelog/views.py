@@ -30,7 +30,7 @@ class TravelogUserListView(TravelogViewMixin, View):
     def get(self, request: HttpRequest, user_uuid: UUID, *args, **kwargs) -> HttpResponse:
         from django.contrib.auth import get_user_model
         from tt.apps.trips.models import Trip
-        from .transient_models import TravelogListItemData
+        from .schemas import TravelogListItemData
 
         User = get_user_model()
 

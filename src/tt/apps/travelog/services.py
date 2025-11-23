@@ -12,7 +12,7 @@ from tt.apps.common.redis_client import get_redis_client
 from tt.apps.journal.models import Journal, JournalContent
 from .models import Travelog, TravelogEntry
 from .context import TravelogPageContext
-from .transient_models import TravelogImageMetadata
+from .schemas import TravelogImageMetadata
 from .enums import ContentType
 
 logger = logging.getLogger(__name__)

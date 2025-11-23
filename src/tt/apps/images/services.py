@@ -15,7 +15,7 @@ from PIL import Image, ImageOps, ExifTags
 from tt.apps.common import datetimeproxy
 from tt.apps.common.singleton import Singleton
 
-from .domain import (
+from .schemas import (
     GpsCoordinate,
     ExifMetadata,
     ImageDimensions,

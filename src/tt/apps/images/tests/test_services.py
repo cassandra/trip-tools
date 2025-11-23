@@ -16,7 +16,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, RequestFactory, override_settings
 from PIL import Image
 
-from tt.apps.images.domain import ExifMetadata, GpsCoordinate
+from tt.apps.images.schemas import ExifMetadata, GpsCoordinate
 from tt.apps.images.models import TripImage
 from tt.apps.images.services import ImageUploadService
 from tt.apps.images.tests.synthetic_data import (

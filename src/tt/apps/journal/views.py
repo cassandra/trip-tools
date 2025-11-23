@@ -26,7 +26,7 @@ from .enums import JournalVisibility, ImagePickerScope
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry
-from .transient_models import PublishingStatusHelper
+from .schemas import PublishingStatusHelper
 from .services import (
     JournalImagePickerService,
     JournalRestoreService,

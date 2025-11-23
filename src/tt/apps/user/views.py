@@ -18,7 +18,7 @@ from .context import AccountPageContext
 from .enums import AccountPage, SigninErrorType
 from .magic_code_generator import MagicCodeStatus, MagicCodeGenerator
 from .signin_manager import SigninManager
-from .transient_models import UserAuthenticationData
+from .schemas import UserAuthenticationData
 
 logger = logging.getLogger(__name__)
 

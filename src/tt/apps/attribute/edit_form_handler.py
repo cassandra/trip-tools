@@ -14,7 +14,7 @@ from .forms import AttributeUploadForm
 from .edit_context import AttributeItemEditContext
 from .enums import AttributeValueType
 from .models import AttributeModel
-from .transient_models import AttributeEditFormData, AttributeMultiEditFormData
+from .schemas import AttributeEditFormData, AttributeMultiEditFormData
 
 logger = logging.getLogger(__name__)
 

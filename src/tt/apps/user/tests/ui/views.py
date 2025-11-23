@@ -7,7 +7,7 @@ from django.views.generic import View
 
 from tt.apps.notify.email_sender import EmailSender
 from tt.apps.user.signin_manager import SigninManager
-from tt.apps.user.transient_models import UserAuthenticationData
+from tt.apps.user.schemas import UserAuthenticationData
 
 from tt.testing.ui.email_test_views import EmailTestViewView
 

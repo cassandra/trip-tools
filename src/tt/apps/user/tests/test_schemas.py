@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from custom.models import CustomUser
 from django.test import RequestFactory
 
-from tt.apps.user.transient_models import UserAuthenticationData
+from tt.apps.user.schemas import UserAuthenticationData
 from tt.testing.base_test_case import BaseTestCase
 
 logging.disable(logging.CRITICAL)
@@ -20,8 +20,8 @@ class TestUserAuthenticationData(BaseTestCase):
             password='testpass'
         )
 
-    @patch('tt.apps.user.transient_models.MagicCodeGenerator')
-    @patch('tt.apps.user.transient_models.PasswordResetTokenGenerator')
+    @patch('tt.apps.user.schemas.MagicCodeGenerator')
+    @patch('tt.apps.user.schemas.PasswordResetTokenGenerator')
     def test_user_authentication_data_initialization_with_request_user(self, mock_token_gen_class, mock_magic_gen_class):
         """Test UserAuthenticationData initializes correctly with request user."""
         # Mock the generators
@@ -49,8 +49,8 @@ class TestUserAuthenticationData(BaseTestCase):
         mock_token_generator.make_token.assert_called_once_with(user=self.user)
         mock_magic_generator.make_magic_code.assert_called_once_with(request)
 
-    @patch('tt.apps.user.transient_models.MagicCodeGenerator')
-    @patch('tt.apps.user.transient_models.PasswordResetTokenGenerator')
+    @patch('tt.apps.user.schemas.MagicCodeGenerator')
+    @patch('tt.apps.user.schemas.PasswordResetTokenGenerator')
     def test_user_authentication_data_initialization_with_override_user(self, mock_token_gen_class, mock_magic_gen_class):
         """Test UserAuthenticationData uses override_user when provided."""
         mock_token_generator = Mock()
@@ -80,8 +80,8 @@ class TestUserAuthenticationData(BaseTestCase):
         # Verify token was generated for override user
         mock_token_generator.make_token.assert_called_once_with(user=override_user)
 
-    @patch('tt.apps.user.transient_models.MagicCodeGenerator')
-    @patch('tt.apps.user.transient_models.PasswordResetTokenGenerator')
+    @patch('tt.apps.user.schemas.MagicCodeGenerator')
+    @patch('tt.apps.user.schemas.PasswordResetTokenGenerator')
     def test_user_authentication_data_initialization_with_override_email(self, mock_token_gen_class, mock_magic_gen_class):
         """Test UserAuthenticationData uses override_email when provided."""
         mock_token_generator = Mock()
@@ -106,9 +106,9 @@ class TestUserAuthenticationData(BaseTestCase):
         # Verify token was still generated for the actual user
         mock_token_generator.make_token.assert_called_once_with(user=self.user)
 
-    @patch('tt.apps.user.transient_models.forms.SigninMagicCodeForm')
-    @patch('tt.apps.user.transient_models.MagicCodeGenerator')
-    @patch('tt.apps.user.transient_models.PasswordResetTokenGenerator')
+    @patch('tt.apps.user.schemas.forms.SigninMagicCodeForm')
+    @patch('tt.apps.user.schemas.MagicCodeGenerator')
+    @patch('tt.apps.user.schemas.PasswordResetTokenGenerator')
     def test_user_authentication_data_creates_magic_code_form(self, mock_token_gen_class, mock_magic_gen_class, mock_form_class):
         """Test UserAuthenticationData creates SigninMagicCodeForm with correct initial data."""
         mock_token_generator = Mock()
@@ -136,8 +136,8 @@ class TestUserAuthenticationData(BaseTestCase):
         # Verify magic_code_form property returns the form
         self.assertEqual(auth_data.magic_code_form, mock_form)
 
-    @patch('tt.apps.user.transient_models.MagicCodeGenerator')
-    @patch('tt.apps.user.transient_models.PasswordResetTokenGenerator')
+    @patch('tt.apps.user.schemas.MagicCodeGenerator')
+    @patch('tt.apps.user.schemas.PasswordResetTokenGenerator')
     def test_user_authentication_data_properties_are_readonly(self, mock_token_gen_class, mock_magic_gen_class):
         """Test UserAuthenticationData properties provide read-only access."""
         mock_token_generator = Mock()
@@ -171,8 +171,8 @@ class TestUserAuthenticationData(BaseTestCase):
         with self.assertRaises(AttributeError):
             auth_data.magic_code = 'new-code'
 
-    @patch('tt.apps.user.transient_models.MagicCodeGenerator')
-    @patch('tt.apps.user.transient_models.PasswordResetTokenGenerator')
+    @patch('tt.apps.user.schemas.MagicCodeGenerator')
+    @patch('tt.apps.user.schemas.PasswordResetTokenGenerator')
     def test_user_authentication_data_with_both_overrides(self, mock_token_gen_class, mock_magic_gen_class):
         """Test UserAuthenticationData handles both user and email overrides correctly."""
         mock_token_generator = Mock()

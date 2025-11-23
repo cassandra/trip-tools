@@ -18,7 +18,7 @@ from tt.apps.journal.enums import JournalVisibility
 from ..enums import ContentType
 from ..services import TravelogImageCacheService, PublishingService
 from ..context import TravelogPageContext
-from ..transient_models import TravelogImageMetadata
+from ..schemas import TravelogImageMetadata
 
 logging.disable(logging.CRITICAL)
 

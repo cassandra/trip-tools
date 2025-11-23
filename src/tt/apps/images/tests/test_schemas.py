@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from tt.apps.images.domain import (
+from tt.apps.images.schemas import (
     GpsCoordinate,
     ExifMetadata,
     ImageDimensions,
