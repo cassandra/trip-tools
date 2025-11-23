@@ -575,3 +575,20 @@
     padding: 0;
   }
 }
+
+/* Reference image picker grid - always 3 columns */
+.reference-image-picker-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1rem;
+}
+
+.reference-image-picker-grid .journal-image-card {
+  display: block !important;
+}
+
+.reference-image-picker-grid .journal-image-thumbnail {
+  width: 100% !important;
+  aspect-ratio: 1 !important;
+  margin-bottom: 0.25rem !important;
+}

@@ -3,7 +3,7 @@
 
 {% block head_title %}{{ content.title }} - {{ entry.date }}{% endblock %}
 
-{% block content %}
+{% block travelog_content %}
 <div class="container">
   <nav class="nav-breadcrumb">
     <a href="{% travelog_url 'travelog_toc' journal.uuid version=request.GET.version %}" class="nav-link">

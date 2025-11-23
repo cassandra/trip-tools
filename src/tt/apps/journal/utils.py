@@ -6,37 +6,39 @@ from typing import Tuple
 import pytz
 
 
-def get_entry_date_boundaries(
-    entry_date   : date_type,
-    timezone_str : str
-) -> Tuple[datetime, datetime]:
-    """
-    Calculate timezone-aware datetime boundaries for a journal entry's day.
+class JournalUtils:
 
-    Args:
-        entry_date: datetime.date object for the journal entry
-        timezone_str: pytz timezone string (e.g., 'America/New_York')
+    @classmethod
+    def get_entry_date_boundaries( cls,
+                                   entry_date   : date_type,
+                                   timezone_str : str       ) -> Tuple[datetime, datetime]:
+        """
+        Calculate timezone-aware datetime boundaries for a journal entry's day.
 
-    Returns:
-        tuple: (start_datetime, end_datetime) as timezone-aware datetimes
+        Args:
+            entry_date: datetime.date object for the journal entry
+            timezone_str: pytz timezone string (e.g., 'America/New_York')
 
-    Example:
-        date = date(2025, 1, 15)
-        tz = 'America/New_York'
-        start, end = get_entry_date_boundaries(date, tz)
-        # start = 2025-01-15 00:00:00-05:00
-        # end = 2025-01-16 00:00:00-05:00
-    """
-    tz = pytz.timezone(timezone_str)
+        Returns:
+            tuple: (start_datetime, end_datetime) as timezone-aware datetimes
 
-    # Start of day in entry timezone
-    start_datetime = tz.localize(
-        datetime.combine(entry_date, datetime.min.time())
-    )
+        Example:
+            date = date(2025, 1, 15)
+            tz = 'America/New_York'
+            start, end = get_entry_date_boundaries(date, tz)
+            # start = 2025-01-15 00:00:00-05:00
+            # end = 2025-01-16 00:00:00-05:00
+        """
+        tz = pytz.timezone(timezone_str)
 
-    # End of day (start of next day)
-    end_datetime = tz.localize(
-        datetime.combine(entry_date + timedelta(days=1), datetime.min.time())
-    )
+        # Start of day in entry timezone
+        start_datetime = tz.localize(
+            datetime.combine(entry_date, datetime.min.time())
+        )
 
-    return start_datetime, end_datetime
+        # End of day (start of next day)
+        end_datetime = tz.localize(
+            datetime.combine(entry_date + timedelta(days=1), datetime.min.time())
+        )
+
+        return start_datetime, end_datetime

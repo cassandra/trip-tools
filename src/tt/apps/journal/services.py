@@ -14,7 +14,7 @@ from tt.apps.trips.models import Trip
 
 from .enums import ImagePickerScope
 from .models import Journal, JournalEntry
-from .utils import get_entry_date_boundaries
+from .utils import JournalUtils
 
 User = get_user_model()
 
@@ -54,12 +54,12 @@ class JournalImagePickerService:
         Returns:
             QuerySet of TripImage objects ordered by datetime_utc
         """
-        start_dt, end_dt = get_entry_date_boundaries(date, timezone)
+        start_dt, end_dt = JournalUtils.get_entry_date_boundaries(date, timezone)
         images = TripImage.objects.accessible_to_user_in_trip_for_date_range(
-            user=user,
-            trip=trip,
-            start_datetime=start_dt,
-            end_datetime=end_dt,
+            user = user,
+            trip = trip,
+            start_datetime = start_dt,
+            end_datetime = end_dt,
         ).order_by('datetime_utc')
 
         return images
@@ -96,13 +96,13 @@ class JournalEntrySeederService:
 
         # Create the journal entry
         return JournalEntry.objects.create(
-            journal=journal,
-            date=notebook_entry.date,
-            timezone=journal.timezone,
-            text=sanitized_html,
-            source_notebook_entry=notebook_entry,
-            source_notebook_version=notebook_entry.edit_version,
-            modified_by=user,
+            journal = journal,
+            date = notebook_entry.date,
+            timezone = journal.timezone,
+            text = sanitized_html,
+            source_notebook_entry = notebook_entry,
+            source_notebook_version = notebook_entry.edit_version,
+            modified_by = user,
         )
 
     @staticmethod

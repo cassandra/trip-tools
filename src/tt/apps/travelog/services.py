@@ -11,7 +11,8 @@ from django.http import Http404
 from tt.apps.common.redis_client import get_redis_client
 from tt.apps.journal.models import Journal, JournalContent
 from .models import Travelog, TravelogEntry
-from .transient_models import TravelogPageContext, TravelogImageMetadata
+from .context import TravelogPageContext
+from .transient_models import TravelogImageMetadata
 from .enums import ContentType
 
 logger = logging.getLogger(__name__)

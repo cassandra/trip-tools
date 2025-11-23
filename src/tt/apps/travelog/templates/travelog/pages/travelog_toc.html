@@ -4,7 +4,7 @@
 
 {% block head_title %}{{ content.title }} - Table of Contents{% endblock %}
 
-{% block content %}
+{% block travelog_content %}
 <div class="container">
   <nav class="nav-breadcrumb">
     <a href="{% url 'travelog_user_list' user_uuid=journal.trip.owner.uuid %}" class="nav-link">

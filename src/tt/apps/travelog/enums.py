@@ -14,7 +14,7 @@ class ContentType(LabeledEnum):
     """
 
     DRAFT = (
-        'Draft',
+        'Preview',
         'Working copy with unpublished changes'
     )
 
@@ -24,11 +24,10 @@ class ContentType(LabeledEnum):
     )
 
     VERSION = (
-        'Historical Version',
+        'Archived',
         'Specific published version'
     )
 
     @classmethod
     def default(cls):
         return ContentType.VIEW
-

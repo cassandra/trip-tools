@@ -13,7 +13,7 @@ from tt.apps.members.models import TripMember
 
 from .enums import ContentType
 from .exceptions import PasswordRequiredException
-from .transient_models import TravelogPageContext
+from .context import TravelogPageContext
 
 
 class TravelogViewMixin:
