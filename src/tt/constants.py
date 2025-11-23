@@ -128,4 +128,24 @@ DIVID = {
     'JOURNAL_FLOAT_MARKER_CLASS': 'has-float-image',
     'JOURNAL_LAYOUT_ATTR': 'layout',
     'JOURNAL_UUID_ATTR': 'uuid',
+    'JOURNAL_TEXT_BLOCK_CLASS': 'text-block',
+    'JOURNAL_CONTENT_BLOCK_CLASS': 'content-block',
+
+    # Journal Image Picker - UI Elements
+    'JOURNAL_IMAGE_PANEL_HEADER_CLASS': 'journal-image-panel-header',
+
+    # Journal Image Picker - Data Attributes
+    'JOURNAL_INSPECT_URL_ATTR': 'inspect-url',
+    'JOURNAL_IMAGE_URL_ATTR': 'image-url',
+    'JOURNAL_CAPTION_ATTR': 'caption',
+
+    # Journal Reference Image - UI Elements
+    'JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS': 'journal-reference-image-container',
+    'JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS': 'journal-reference-image-placeholder',
+    'JOURNAL_REFERENCE_IMAGE_PREVIEW_CLASS': 'journal-reference-image-preview',
+    'JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS': 'journal-reference-image-clear',
+    'JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS': 'journal-reference-image-thumbnail',
+
+    # Journal Reference Image - Data Attributes
+    'JOURNAL_REFERENCE_IMAGE_UUID_ATTR': 'reference-image-uuid',
 }

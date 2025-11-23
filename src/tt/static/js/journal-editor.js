@@ -64,10 +64,12 @@
     CSS_DRAGGING: 'dragging',
     CSS_DRAG_OVER: 'drag-over',
     CSS_SELECTED: 'selected',
+    CSS_JOURNAL_IMAGE_PANEL: 'journal-image-panel',
 
     // Transient element selectors
     SEL_DELETE_BTN: '.trip-image-delete-btn',
     SEL_DROP_ZONE_BETWEEN: '.drop-zone-between',
+    SEL_JOURNAL_IMAGE_PANEL: '.journal-image-panel',
   };
 
   /**
@@ -78,6 +80,26 @@
   const LAYOUT_VALUES = {
     FLOAT_RIGHT: 'float-right',
     FULL_WIDTH: 'full-width',
+  };
+
+  /**
+   * DRAG SOURCE IDENTIFIERS
+   * Identifies where a drag operation originated from.
+   */
+  const DRAG_SOURCE = {
+    PICKER: 'picker',
+    EDITOR: 'editor',
+    REFERENCE: 'reference',
+  };
+
+  /**
+   * STATUS VALUES
+   * Status messages for the save status indicator.
+   */
+  const STATUS = {
+    SAVED: 'saved',
+    SAVING: 'saving',
+    ERROR: 'error',
   };
 
   /**
@@ -394,17 +416,17 @@
         // Check if element is allowed at top level
         if (tagName === 'p') {
           // Paragraph: ensure it has text-block class
-          if (!$node.hasClass('text-block')) {
+          if (!$node.hasClass(Tt.JOURNAL_TEXT_BLOCK_CLASS)) {
             nodesToProcess.push({type: 'addTextBlockClass', node: node});
           }
         } else if (tagName === 'div') {
           // Div: must be text-block or content-block
-          var hasTextBlock = $node.hasClass('text-block');
-          var hasContentBlock = $node.hasClass('content-block');
+          var hasTextBlock = $node.hasClass(Tt.JOURNAL_TEXT_BLOCK_CLASS);
+          var hasContentBlock = $node.hasClass(Tt.JOURNAL_CONTENT_BLOCK_CLASS);
 
           if (!hasTextBlock && !hasContentBlock) {
             // Check if it's an image wrapper (legacy or malformed)
-            if ($node.hasClass('trip-image-wrapper') || $node.hasClass('full-width-image-group')) {
+            if ($node.hasClass(Tt.JOURNAL_IMAGE_WRAPPER_CLASS) || $node.hasClass(Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS)) {
               // Will be handled by wrapFullWidthImageGroups()
               // For now, skip processing
             } else {
@@ -421,7 +443,7 @@
         } else if (['ul', 'ol', 'blockquote', 'pre'].indexOf(tagName) !== -1) {
           // Block elements - will be wrapped by wrapOrphanBlockElements()
           // No action needed here
-        } else if (tagName === 'span' && $node.hasClass('trip-image-wrapper')) {
+        } else if (tagName === 'span' && $node.hasClass(Tt.JOURNAL_IMAGE_WRAPPER_CLASS)) {
           // Image wrapper spans are allowed
           // No action needed
         } else {
@@ -449,7 +471,7 @@
 
         case 'addTextBlockClass':
           // Add text-block class to paragraph
-          $node.addClass('text-block');
+          $node.addClass(Tt.JOURNAL_TEXT_BLOCK_CLASS);
           break;
 
         case 'unwrapDiv':
@@ -686,7 +708,7 @@
 
         // Check if already wrapped in text-block
         var $parent = $blockElement.parent();
-        if ($parent.hasClass('text-block')) {
+        if ($parent.hasClass(Tt.JOURNAL_TEXT_BLOCK_CLASS)) {
           return; // Already properly wrapped
         }
 
@@ -752,9 +774,9 @@
           $newAfterBlock.append($after);
 
           // Preserve float-right image in first block
-          var hasFloatImage = $currentTextBlock.hasClass('has-float-image');
+          var hasFloatImage = $currentTextBlock.hasClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
           if (hasFloatImage) {
-            $newBeforeBlock.addClass('has-float-image');
+            $newBeforeBlock.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
           }
 
           // Replace text-block with 3 elements
@@ -769,8 +791,8 @@
           $beforeBlock.append($before);
 
           // Preserve float-right image class
-          if ($currentTextBlock.hasClass('has-float-image')) {
-            $beforeBlock.addClass('has-float-image');
+          if ($currentTextBlock.hasClass(Tt.JOURNAL_FLOAT_MARKER_CLASS)) {
+            $beforeBlock.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
           }
 
           $currentTextBlock.before($beforeBlock);
@@ -833,7 +855,7 @@
       }
 
       // Has multiple block elements - need to split
-      var hasFloatImage = $div.hasClass('has-float-image');
+      var hasFloatImage = $div.hasClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
       var $floatImage = null;
 
       // Find float-right image if exists
@@ -854,7 +876,7 @@
 
           // First block gets float-right image
           if (isFirst && hasFloatImage && $floatImage) {
-            $newP.addClass('has-float-image');
+            $newP.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
             $newP.prepend($floatImage);
           }
 
@@ -866,7 +888,7 @@
 
           // First block gets float-right image
           if (isFirst && hasFloatImage && $floatImage) {
-            $newDiv.addClass('has-float-image');
+            $newDiv.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
             $newDiv.prepend($floatImage);
           }
 
@@ -1235,11 +1257,11 @@
       }
 
       // Extract all data from card in one pass
-      var imageUuid = $card.data('image-uuid');
+      var imageUuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
       var $img = $card.find('img');
       var url = $img.attr('src') || '';
       var caption = $img.attr('alt') || '';
-      var inspectUrl = $card.data('inspect-url') || '';
+      var inspectUrl = $card.data(Tt.JOURNAL_INSPECT_URL_ATTR) || '';
 
       if (!imageUuid) {
         console.error('[ImageDataService] Picker card missing data-image-uuid for UUID:', uuid);
@@ -1958,7 +1980,7 @@
           if (this.hasUnsavedChanges) {
             this.editor.updateStatus('unsaved');
           } else {
-            this.editor.updateStatus('saved', response.modified_datetime);
+            this.editor.updateStatus(STATUS.SAVED, response.modified_datetime);
           }
         } else {
           this.editor.updateStatus('error', response.message);
@@ -2018,7 +2040,7 @@
     this.filterScope = 'unused'; // Default filter: 'unused' | 'used' | 'all'
 
     // Initialize badge manager
-    var $headerTitle = this.$panel.find('.journal-image-panel-header h5');
+    var $headerTitle = this.$panel.find(Tt.JOURNAL_IMAGE_PANEL_HEADER_SELECTOR + ' h5');
     this.badgeManager = new SelectionBadgeManager($headerTitle, 'selected-images-count');
 
     // Register with coordinator
@@ -2132,7 +2154,7 @@
    */
   JournalImagePicker.prototype.handleImageDoubleClick = function(card) {
     var $card = $(card);
-    var inspectUrl = $card.data('inspect-url');
+    var inspectUrl = $card.data(Tt.JOURNAL_INSPECT_URL_ATTR);
 
     if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
       AN.get(inspectUrl);
@@ -2192,7 +2214,7 @@
 
     // Reference image state
     this.currentReferenceImageUuid = null;
-    this.$referenceContainer = $('.journal-reference-image-container');
+    this.$referenceContainer = $(Tt.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR);
 
     // Initialize badge manager for editor selections
     this.editorBadgeManager = new SelectionBadgeManager(this.$statusElement, 'selected-editor-images-count');
@@ -2209,7 +2231,7 @@
 
     // Initialize image picker (if panel exists)
     // IMPORTANT: Must initialize AFTER usedImageUUIDs is created
-    var $imagePanel = $('.journal-image-panel');
+    var $imagePanel = $(EDITOR_TRANSIENT.SEL_JOURNAL_IMAGE_PANEL);
     if ($imagePanel.length > 0) {
       this.imagePicker = new JournalImagePicker($imagePanel, this);
     }
@@ -2238,7 +2260,7 @@
 
     // Initialize autosave baseline with current content
     this.autoSaveManager.initializeBaseline();
-    this.updateStatus('saved');
+    this.updateStatus(STATUS.SAVED);
 
     // Initialize ContentEditable
     this.initContentEditable();
@@ -2299,7 +2321,7 @@
    */
   JournalEditor.prototype.initializeReferenceImage = function() {
     if (this.$referenceContainer.length) {
-      var refImageUuid = this.$referenceContainer.data('reference-image-uuid');
+      var refImageUuid = this.$referenceContainer.data(Tt.JOURNAL_REFERENCE_IMAGE_UUID_ATTR);
       if (refImageUuid) {
         this.currentReferenceImageUuid = refImageUuid;
       }
@@ -2950,7 +2972,7 @@
     // Handle dragstart from picker
     $(document).on('dragstart', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
       self.draggedElement = this;
-      self.dragSource = 'picker';
+      self.dragSource = DRAG_SOURCE.PICKER;
 
       // Update visual feedback (handles multi-image .dragging and count badge)
       self.updateDraggingVisuals(true);
@@ -2972,20 +2994,20 @@
       e.preventDefault();
 
       // Set appropriate drop effect based on drag source
-      if (self.dragSource === 'editor') {
+      if (self.dragSource === DRAG_SOURCE.EDITOR) {
         e.originalEvent.dataTransfer.dropEffect = 'move';
       } else {
         e.originalEvent.dataTransfer.dropEffect = 'copy';
       }
 
       // Show drop zones for both picker and editor drags
-      if (self.dragSource === 'picker' || self.dragSource === 'editor') {
+      if (self.dragSource === DRAG_SOURCE.PICKER || self.dragSource === DRAG_SOURCE.EDITOR) {
         self.showDropZones(e);
       }
     });
 
     this.$editor.on('dragenter', function(e) {
-      if (self.dragSource === 'picker' || self.dragSource === 'editor') {
+      if (self.dragSource === DRAG_SOURCE.PICKER || self.dragSource === DRAG_SOURCE.EDITOR) {
         $(this).addClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
       }
     });
@@ -3001,7 +3023,7 @@
     this.$editor.on('drop', function(e) {
       // Check if drop is actually on reference container - if so, let it handle the drop
       var $target = $(e.target);
-      if ($target.closest('.journal-reference-image-container').length) {
+      if ($target.closest(Tt.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR).length) {
         return; // Don't preventDefault, don't stopPropagation - let reference handler get it
       }
 
@@ -3010,9 +3032,9 @@
 
       $(this).removeClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
 
-      if (self.dragSource === 'picker' && self.draggedElement) {
+      if (self.dragSource === DRAG_SOURCE.PICKER && self.draggedElement) {
         self.handleImageDrop(e);
-      } else if (self.dragSource === 'editor' && self.draggedElement) {
+      } else if (self.dragSource === DRAG_SOURCE.EDITOR && self.draggedElement) {
         self.handleImageReorder(e);
       }
 
@@ -3038,7 +3060,7 @@
     if ($pickerGallery.length) {
       $pickerGallery.on('dragover', function(e) {
         // Allow drops from editor or reference (removal), not from picker (no-op)
-        if (self.dragSource === 'editor' || self.dragSource === 'reference') {
+        if (self.dragSource === DRAG_SOURCE.EDITOR || self.dragSource === DRAG_SOURCE.REFERENCE) {
           e.preventDefault();
           e.originalEvent.dataTransfer.dropEffect = 'move';
           $(this).addClass('drop-target-active'); // Visual feedback
@@ -3053,7 +3075,7 @@
       });
 
       $pickerGallery.on('drop', function(e) {
-        if (self.dragSource === 'editor' || self.dragSource === 'reference') {
+        if (self.dragSource === DRAG_SOURCE.EDITOR || self.dragSource === DRAG_SOURCE.REFERENCE) {
           e.preventDefault();
           $(this).removeClass('drop-target-active');
           self.handleImageRemovalDrop(e);
@@ -3303,7 +3325,7 @@
 
       // Get inspect URL from the corresponding picker card
       var $pickerCard = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
-      var inspectUrl = $pickerCard.data('inspect-url');
+      var inspectUrl = $pickerCard.data(Tt.JOURNAL_INSPECT_URL_ATTR);
 
       if (inspectUrl) {
         AN.get(inspectUrl);
@@ -3390,8 +3412,8 @@
 
     return {
       uuid: uuid,
-      url: $card.data('image-url'),
-      caption: $card.data('caption') || 'Untitled'
+      url: $card.data(Tt.JOURNAL_IMAGE_URL_ATTR),
+      caption: $card.data(Tt.JOURNAL_CAPTION_ATTR) || 'Untitled'
     };
   };
 
@@ -3405,11 +3427,11 @@
       return null;
     }
 
-    if (this.dragSource === 'picker') {
+    if (this.dragSource === DRAG_SOURCE.PICKER) {
       // Use existing helper that handles picker selection logic
       var imagesToInsert = this.getPickerImagesToInsert();
       return (imagesToInsert.length === 1) ? imagesToInsert[0] : null;
-    } else if (this.dragSource === 'editor') {
+    } else if (this.dragSource === DRAG_SOURCE.EDITOR) {
       // Use existing helper that handles editor selection logic
       var wrappersToMove = this.getEditorWrappersToMove();
       if (wrappersToMove.length !== 1) {
@@ -3503,7 +3525,7 @@
       var count = 0;
       var $elementsToMark = [];
 
-      if (this.dragSource === 'picker' && this.imagePicker) {
+      if (this.dragSource === DRAG_SOURCE.PICKER && this.imagePicker) {
         var draggedUuid = $(this.draggedElement).data(Tt.JOURNAL_IMAGE_UUID_ATTR);
         var isDraggedSelected = this.imagePicker.selectedImages.has(draggedUuid);
 
@@ -3522,7 +3544,7 @@
           count = 1;
           $elementsToMark.push($(this.draggedElement));
         }
-      } else if (this.dragSource === 'editor') {
+      } else if (this.dragSource === DRAG_SOURCE.EDITOR) {
         var $draggedWrapper = $(this.draggedElement);
         var $draggedImg = $draggedWrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
         var draggedUuid = $draggedImg.data(Tt.JOURNAL_UUID_ATTR);
@@ -3672,7 +3694,7 @@
       var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
 
       self.draggedElement = $wrapper[0]; // Store wrapper, not image
-      self.dragSource = 'editor';
+      self.dragSource = DRAG_SOURCE.EDITOR;
 
       // Update visual feedback (handles multi-image .dragging and count badge)
       self.updateDraggingVisuals(true);
@@ -3847,7 +3869,7 @@
       return;
     }
 
-    if (this.dragSource === 'editor') {
+    if (this.dragSource === DRAG_SOURCE.EDITOR) {
       // Get wrappers to remove (1 or many, based on selection)
       var wrappersToRemove = this.getEditorWrappersToMove();
 
@@ -3862,7 +3884,7 @@
       if (wrappersToRemove.length > 1) {
         this.clearEditorImageSelections();
       }
-    } else if (this.dragSource === 'reference') {
+    } else if (this.dragSource === DRAG_SOURCE.REFERENCE) {
       // Clear reference image
       this.clearReferenceImage();
     }
@@ -3985,7 +4007,7 @@
 
       // Set dropEffect based on drag source
       // Editor drags are 'move', picker drags are 'copy'
-      if (self.dragSource === 'editor') {
+      if (self.dragSource === DRAG_SOURCE.EDITOR) {
         e.originalEvent.dataTransfer.dropEffect = 'move';
       } else {
         e.originalEvent.dataTransfer.dropEffect = 'copy';
@@ -3998,7 +4020,7 @@
 
     this.$referenceContainer.on('dragleave', function(e) {
       // Only remove if we're leaving the container completely
-      if (!$(e.relatedTarget).closest('.journal-reference-image-container').length) {
+      if (!$(e.relatedTarget).closest(Tt.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR).length) {
         self.setReferenceDropZoneVisible(false);
       }
     });
@@ -4030,31 +4052,31 @@
     });
 
     // Setup clear button click
-    this.$referenceContainer.on('click', '.journal-reference-image-clear', function(e) {
+    this.$referenceContainer.on('click', Tt.JOURNAL_REFERENCE_IMAGE_CLEAR_SELECTOR, function(e) {
       e.preventDefault();
       e.stopPropagation();
       self.clearReferenceImage();
     });
 
     // Setup double-click to open inspector
-    this.$referenceContainer.on('dblclick', '.journal-reference-image-thumbnail', function(e) {
+    this.$referenceContainer.on('dblclick', Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
       e.preventDefault();
-      var inspectUrl = $(this).data('inspect-url');
+      var inspectUrl = $(this).data(Tt.JOURNAL_INSPECT_URL_ATTR);
       if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
         AN.get(inspectUrl);
       }
     });
 
     // Setup reference image dragging (for drag-to-remove)
-    this.$referenceContainer.on('dragstart', '.journal-reference-image-thumbnail', function(e) {
+    this.$referenceContainer.on('dragstart', Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
       self.draggedElement = this;
-      self.dragSource = 'reference';
+      self.dragSource = DRAG_SOURCE.REFERENCE;
 
       e.originalEvent.dataTransfer.effectAllowed = 'move';
       e.originalEvent.dataTransfer.setData('text/plain', '');
     });
 
-    this.$referenceContainer.on('dragend', '.journal-reference-image-thumbnail', function(e) {
+    this.$referenceContainer.on('dragend', Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
       // Visual cleanup happens in drop handlers
       self.draggedElement = null;
       self.dragSource = null;
@@ -4078,12 +4100,12 @@
 
     // Update state
     this.currentReferenceImageUuid = completeData.uuid;
-    this.$referenceContainer.data('reference-image-uuid', this.currentReferenceImageUuid);
+    this.$referenceContainer.data(Tt.JOURNAL_REFERENCE_IMAGE_UUID_ATTR, this.currentReferenceImageUuid);
 
     // Update preview image attributes
-    var $preview = this.$referenceContainer.find('.journal-reference-image-preview');
-    var $placeholder = this.$referenceContainer.find('.journal-reference-image-placeholder');
-    var $img = $preview.find('.journal-reference-image-thumbnail');
+    var $preview = this.$referenceContainer.find(Tt.JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR);
+    var $placeholder = this.$referenceContainer.find(Tt.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR);
+    var $img = $preview.find(Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR);
 
     $img.attr('src', completeData.url);
     $img.attr('alt', completeData.caption || 'Reference');
@@ -4103,11 +4125,11 @@
   JournalEditor.prototype.clearReferenceImage = function() {
     // Update state - set to null (matches title/date/timezone pattern)
     this.currentReferenceImageUuid = null;
-    this.$referenceContainer.data('reference-image-uuid', '');
+    this.$referenceContainer.data(Tt.JOURNAL_REFERENCE_IMAGE_UUID_ATTR, '');
 
     // Hide preview, show placeholder
-    this.$referenceContainer.find('.journal-reference-image-preview').addClass('d-none');
-    this.$referenceContainer.find('.journal-reference-image-placeholder').removeClass('d-none');
+    this.$referenceContainer.find(Tt.JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR).addClass('d-none');
+    this.$referenceContainer.find(Tt.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR).removeClass('d-none');
 
     // Trigger autosave (will send empty string to backend to clear the field)
     this.handleContentChange();
@@ -4162,7 +4184,7 @@
     }
 
     // PICKER IMAGES CONTEXT shortcuts
-    if (context === 'picker') {
+    if (context === DRAG_SOURCE.PICKER) {
       // Escape - Clear all selections
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -4230,7 +4252,7 @@
   JournalEditor.prototype.determineActiveContext = function() {
     // Check if picker has selections
     if (this.imagePicker && this.imagePicker.selectedImages.size > 0) {
-      return 'picker';
+      return DRAG_SOURCE.PICKER;
     }
 
     // Check if editor has image selections
