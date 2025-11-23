@@ -31,4 +31,4 @@ class ContentType(LabeledEnum):
     @classmethod
     def default(cls):
         return ContentType.VIEW
-    
+

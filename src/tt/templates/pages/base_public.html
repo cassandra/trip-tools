@@ -38,7 +38,7 @@
     <link rel="apple-touch-icon" href="{% static 'img/tt-icon-512x512.png' %}" sizes="512x512">
     {% block head_css %}{% endblock %}
   </head>
-  <body>
+  <body class="{% block body_class %}{% endblock %}">
     {% block body_pre_javascript %}{% endblock %}
     {% block content %}{% endblock %}
     {% block body_post_javascript %}{% endblock %}

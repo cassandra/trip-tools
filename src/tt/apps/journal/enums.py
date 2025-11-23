@@ -28,3 +28,56 @@ class ImagePickerScope(LabeledEnum):
     Phase 1: Single DEFAULT value - all filtering done client-side.
     """
     DEFAULT = ('All Images', 'Show all images for the selected date')
+
+
+class JournalTheme(LabeledEnum):
+    """
+    Visual theme for travelog display.
+
+    Each theme defines a color scheme via CSS class in travelog.css.
+    """
+
+    def __init__(self, label: str, description: str, css_classname: str):
+        super().__init__(label, description)
+        self.css_classname = css_classname
+
+    DEFAULT = (
+        'Default',
+        'Teal & Coral - Default theme with teal primary and coral secondary colors',
+        'theme-current'
+    )
+
+    SUNSET = (
+        'Warm Sunset',
+        'Amber & Red - Warm, inviting theme with sunset-inspired colors',
+        'theme-sunset'
+    )
+
+    OCEAN = (
+        'Ocean Blue',
+        'Sky & Cyan - Cool, refreshing theme with ocean-inspired blues',
+        'theme-ocean'
+    )
+
+    FOREST = (
+        'Forest Green',
+        'Emerald & Lime - Natural, earthy theme with green tones',
+        'theme-forest'
+    )
+
+    PURPLE = (
+        'Purple Dreams',
+        'Violet & Pink - Bold, creative theme with purple and pink accents',
+        'theme-purple'
+    )
+
+    EARTH = (
+        'Earthy Terracotta',
+        'Brown & Red - Warm, rustic theme with terracotta and brown tones',
+        'theme-earth'
+    )
+
+    @classmethod
+    def default(cls):
+        """Default theme for new journals."""
+        return JournalTheme.DEFAULT

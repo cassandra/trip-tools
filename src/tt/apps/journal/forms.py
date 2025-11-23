@@ -2,7 +2,7 @@ from django import forms
 
 from tt.constants import TIMEZONE_NAME_LIST
 
-from .enums import JournalVisibility
+from .enums import JournalVisibility, JournalTheme
 from .models import Journal, JournalEntry
 
 
@@ -16,9 +16,15 @@ class JournalForm(forms.ModelForm):
         })
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Customize help text for theme field
+        if 'theme' in self.fields:
+            self.fields['theme'].help_text = 'Color theme for published travelog pages'
+
     class Meta:
         model = Journal
-        fields = ('title', 'description', 'timezone')
+        fields = ('title', 'description', 'timezone', 'theme')
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -29,6 +35,9 @@ class JournalForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Enter optional description',
                 'rows': 3,
+            }),
+            'theme': forms.Select(attrs={
+                'class': 'form-control',
             }),
         }
 

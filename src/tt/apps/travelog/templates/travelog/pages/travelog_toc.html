@@ -1,55 +1,65 @@
 {% extends "travelog/pages/base.html" %}
 {% load travelog_tags %}
+{% load icons %}
 
 {% block head_title %}{{ content.title }} - Table of Contents{% endblock %}
 
 {% block content %}
 <div class="container">
+  <nav class="nav-breadcrumb">
+    <a href="{% url 'travelog_user_list' user_uuid=journal.trip.owner.uuid %}" class="nav-link">
+      &larr; Back to {{ journal.trip.owner.get_full_name }}'s Travelogs
+    </a>
+  </nav>
+
   <h1>{{ content.title }}</h1>
 
   {% if content.description %}
-  <p>{{ content.description }}</p>
+  <p class="subtitle">{{ content.description }}</p>
   {% endif %}
 
   <p class="text-muted">
-    Viewing: {{ travelog_page.content_type.label }}
-    {% if travelog_page.version_number %}(Version {{ travelog_page.version_number }}){% endif %}
+    Viewing: {{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}
   </p>
 
-  <hr>
+  <!-- Gallery Link Near Top -->
+  <div class="gallery-link-top">
+    <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}" class="nav-link">
+      <span class="icon-wrapper">{% icon "camera" size="sm" css_class="tt-icon-left" %}</span>
+      View Image Gallery
+    </a>
+  </div>
 
   <h2>Journal Entries</h2>
 
   {% if entries %}
-  <ul>
+  <div class="card-grid">
     {% for entry in entries %}
-    <li>
-      <a href="{% travelog_url 'travelog_day' journal.uuid date=entry.date version=request.GET.version %}">
-        {{ entry.date }}{% if entry.title %} - {{ entry.title }}{% endif %}
+    <div>
+      <a href="{% travelog_url 'travelog_day' journal.uuid date=entry.date version=request.GET.version %}" class="clickable-card">
+        <div class="card">
+          {% if entry.reference_image and entry.reference_image.thumbnail_image %}
+          <img src="{{ entry.reference_image.thumbnail_image.url }}" alt="{{ entry.title }}" class="card-image">
+          {% else %}
+          <div class="card-image placeholder-image"></div>
+          {% endif %}
+          <div class="card-content">
+            <h3 class="card-title">
+              {{ entry.date|date:"F j" }}{% if entry.title %} - {{ entry.title }}{% endif %}
+            </h3>
+            {% if entry.text %}
+            <p class="card-description">
+              {{ entry.text|striptags|truncatewords:15 }}
+            </p>
+            {% endif %}
+          </div>
+        </div>
       </a>
-    </li>
+    </div>
     {% endfor %}
-  </ul>
+  </div>
   {% else %}
   <p>No journal entries yet.</p>
   {% endif %}
-
-  <hr>
-
-  <nav>
-    <h3>More</h3>
-    <ul>
-      <li>
-        <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}">
-          Image Gallery
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'travelog_user_list' user_uuid=journal.trip.owner.uuid %}">
-          &larr; See all {{ journal.trip.owner.get_full_name }}'s Travelogs
-        </a>
-      </li>
-    </ul>
-  </nav>
 </div>
 {% endblock %}

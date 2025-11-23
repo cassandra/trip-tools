@@ -46,6 +46,19 @@
     </div>
     {% endif %}
   </div>
+
+  <div class="form-group">
+    <label for="{{ form.theme.id_for_label }}" class="font-weight-bold">
+      Travelog Theme <span class="text-danger">*</span>
+    </label>
+    {{ form.theme }}
+    {% if form.theme.errors %}
+    <div class="text-danger small mt-1">
+      {{ form.theme.errors }}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted">{{ form.theme.help_text }}</small>
+  </div>
 {% endblock %}
 
 {% block action_right %}

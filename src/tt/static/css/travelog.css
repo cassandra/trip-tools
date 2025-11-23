@@ -1,85 +1,58 @@
 /*  Trip Tools - Travelog CSS
     Copyright 2025 by POMDP, Inc.
-    All Rights Reserved.  
+    All Rights Reserved.
 */
+
+/* ===========================================
+   GLOBAL CONSTANTS
+   Universal colors that don't change with themes
+   =========================================== */
 :root {
+  /* Universal constants */
   --white: #fdfdfd;
   --black: #020204;
+
+  /* Semantic colors (not theme-specific) */
+  --tertiary-color: #020204;
+  --on-tertiary-color: #ffffff;
+  --tertiary-highlight-color: #7e7e81;
+  --success-color: #177219;
+  --on-success-color: #ffffff;
+  --success-bg-light: #e8f5e8;
+  --warning-color: #ECA500;
+  --on-warning-color: #ffffff;
+  --warning-bg-light: #fef7e6;
+  --error-color: #721817;
+  --on-error-color: #ffffff;
+  --error-highlight-color: #a01111;
+  --muted-color: #7e7e81;
+  --on-muted-color: #ffffff;
+  --muted-bg-light: #f8f9fa;
+  --line-color: #cccccc;
+
+  /* Default theme colors (overridden by .theme-* classes) */
   --primary-color: #177072;
   --on-primary-color: #ffffff;
   --primary-highlight-color: #115354;
   --secondary-color: #F45F36;
   --on-secondary-color: #ffffff;
   --secondary-highlight-color: #F8AD98;
-  --tertiary-color: #020204;
-  --on-tertiary-color: #ffffff;
-  --tertiary-highlight-color: #7e7e81;
-  --success-color: #177219;
-  --info-color: #177072;
-  --on-success-color: #ffffff;
-  --success-bg-light: #e8f5e8;
-  --warning-color: #ECA500;
-  --on-warning-color: #ffffff;
-  --error-color: #721817;
-  --on-error-color: #ffffff;
-  --error-highlight-color: #a01111;
-  --muted-color: #7e7e81;
-  --on-muted-color: #ffffff;
-  --line-color: #cccccc;
-
-  --edit-primary-bg-color: #dffeff;
-  --edit-secondary-bg-color: #ffd0c3;
-  --edit-tertiary-bg-color: #f0f0f0;
-
-  /* Add missing semantic background variants */
-  --warning-bg-light: #fef7e6;
-  --info-bg-light: #e8f4f4;
-  --muted-bg-light: #f8f9fa;
-
-  /* Edit Mode Variables (for global edit mode styling) */
-  --edit-mode-primary-bg: #FAD4C8;    /* Side panel background */
-  --edit-mode-secondary-bg: #F5E6E1;  /* Main screen background */
-  --edit-mode-tertiary-bg: #F5E6E1;   /* Top/bottom backgrounds */
-  --edit-mode-border-color: #C65D3C;  /* Border color */
-  --edit-mode-dash-color: #A94A32;    /* Dashed line color */
-  --edit-hr-color: #a0a0a0;
-  
-  --status-highlighted-color: red;
-  --status-hover-color: blue;
-
-  --status-off-color: #aaaaaa;
-  --status-on-color: yellow;
-  --on-status-off-color: black;
-  --on-status-on-color: black;
-  
-  /* These should match those in tt.apps.monitor.StatusStyle */
-  --status-active-color: #DC3545;
-  --status-recent-color: #FD7E14;
-  --status-past-color: #FFD700;
-  --status-ok-color: #177219;
-  --status-bad-color: #a01111;
-  --status-idle-color: #aaaaaa;
-
-  --on-status-active-color: white;
-  --on-status-recent-color: white;
-  --on-status-past-color: black;
-  --on-status-ok-color: white;
-  --on-status-bad-color: white;
-  --on-status-idle-color: black;
-
-  --top-buttons-height: 2.5rem;
-  --bottom-buttons-height: 2.5rem;
-  --secondary-nav-height: 50px;
-  --secondary-page-header-height: 4rem;
-  --app-sidebar-width: 250px;
-  --app-topbar-height: 60px;
+  --background-gradient-start: #f5f7fa;
+  --background-gradient-end: #c3cfe2;
 }
 
-html, body {
+html {
     font-size: 1rem;
     margin: 0;
     padding: 0;
-    height: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
     color: #222233;
     background-color: var(--white);
 }
@@ -202,119 +175,6 @@ a.clickable-card:active {
     color: var(--on-muted-color) !important;
     background-color: var(--muted-color) !important;
 }
-.bg-highlighted, .btn-highlighted {
-    color: var(--primary-color) !important;
-    background-color: var(--edit-primary-bg-color) !important;
-}
-
-/* Outline Button Overrides */
-.btn-outline-primary {
-    color: var(--primary-color) !important;
-    border-color: var(--primary-color) !important;
-    background-color: transparent !important;
-}
-.btn-outline-primary:hover,
-.btn-outline-primary:focus,
-.btn-outline-primary:active,
-.btn-outline-primary.active {
-    color: var(--on-primary-color) !important;
-    background-color: var(--primary-color) !important;
-    border-color: var(--primary-highlight-color) !important;
-}
-.btn-outline-primary:focus {
-    box-shadow: 0 0 0 0.2rem rgba(23, 112, 114, 0.25) !important;
-}
-
-.btn-outline-secondary {
-    color: var(--secondary-color) !important;
-    border-color: var(--secondary-color) !important;
-    background-color: transparent !important;
-}
-.btn-outline-secondary:hover,
-.btn-outline-secondary:focus,
-.btn-outline-secondary:active,
-.btn-outline-secondary.active {
-    color: var(--on-secondary-color) !important;
-    background-color: var(--secondary-color) !important;
-    border-color: var(--secondary-highlight-color) !important;
-}
-.btn-outline-secondary:focus {
-    box-shadow: 0 0 0 0.2rem rgba(244, 95, 54, 0.25) !important;
-}
-
-.btn-outline-tertiary {
-    color: var(--tertiary-color) !important;
-    border-color: var(--tertiary-highlight-color) !important;
-    background-color: var(--muted-bg-light) !important;
-}
-.btn-outline-tertiary:hover,
-.btn-outline-tertiary:focus,
-.btn-outline-tertiary:active,
-.btn-outline-tertiary.active {
-    color: var(--on-tertiary-color) !important;
-    background-color: var(--tertiary-color) !important;
-    border-color: var(--tertiary-highlight-color) !important;
-}
-.btn-outline-tertiary:focus {
-    box-shadow: 0 0 0 0.2rem rgba(244, 95, 54, 0.25) !important;
-}
-
-.btn-outline-danger {
-    color: var(--error-color) !important;
-    border-color: var(--error-color) !important;
-    background-color: transparent !important;
-}
-.btn-outline-danger:hover,
-.btn-outline-danger:focus,
-.btn-outline-danger:active,
-.btn-outline-danger.active {
-    color: var(--on-error-color) !important;
-    background-color: var(--error-color) !important;
-    border-color: var(--error-highlight-color) !important;
-}
-.btn-outline-danger:focus {
-    box-shadow: 0 0 0 0.2rem var(--error-highlight-color) !important;
-}
-
-.interstitial-page {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    min-height: 100vh;
-    max-width: 1200px;
-    margin: auto;
-    padding: 1rem;
-    box-sizing: border-box;
-}
-
-.interstitial-body {
-    padding: 1rem;
-    text-align: center;
-    border: 1px solid #ccc;
-    background-color: #f4f4f4;
-}
-
-.start-form-container {
-    max-width: 600px;
-}
-
-/* Phone Landscape (Side-by-Side) */
-@media (min-aspect-ratio: 16/9) and (max-height: 600px) {
-    .interstitial-page {
-        flex-direction: row;
-        gap: 2rem;
-    }
-    .interstitial-header {
-        flex: 0 0 auto;
-        padding: 0.5rem;
-    }
-    .interstitial-body {
-        flex: 1;
-        display: flex;
-        align-items: center;
-    }
-}
 
 /* Pagination styling overrides for app theming */
 .pagination-lg .page-link {
@@ -371,4 +231,581 @@ a.clickable-card:active {
 
 .text-muted-custom {
     color: var(--muted-color);
+}
+
+/* ===========================================
+   TRAVELOG THEME SYSTEM
+   Six color schemes for published travelogs
+   Usage: Add theme class to container element
+   Example: <div class="theme-current">...</div>
+   =========================================== */
+
+/* Theme 1: Current (Teal & Coral) - DEFAULT */
+.theme-current {
+  --primary-color: #177072;
+  --on-primary-color: #ffffff;
+  --primary-highlight-color: #115354;
+  --secondary-color: #F45F36;
+  --on-secondary-color: #ffffff;
+  --secondary-highlight-color: #F8AD98;
+  --background-gradient-start: #f5f7fa;
+  --background-gradient-end: #c3cfe2;
+}
+
+/* Theme 2: Warm Sunset (Amber & Red) */
+.theme-sunset {
+  --primary-color: #D97706;
+  --on-primary-color: #ffffff;
+  --primary-highlight-color: #B45309;
+  --secondary-color: #DC2626;
+  --on-secondary-color: #ffffff;
+  --secondary-highlight-color: #F87171;
+  --background-gradient-start: #fef3c7;
+  --background-gradient-end: #fed7aa;
+}
+
+/* Theme 3: Ocean Blue (Sky & Cyan) */
+.theme-ocean {
+  --primary-color: #0369A1;
+  --on-primary-color: #ffffff;
+  --primary-highlight-color: #075985;
+  --secondary-color: #0891B2;
+  --on-secondary-color: #ffffff;
+  --secondary-highlight-color: #67E8F9;
+  --background-gradient-start: #e0f2fe;
+  --background-gradient-end: #bae6fd;
+}
+
+/* Theme 4: Forest Green (Emerald & Lime) */
+.theme-forest {
+  --primary-color: #047857;
+  --on-primary-color: #ffffff;
+  --primary-highlight-color: #065f46;
+  --secondary-color: #84CC16;
+  --on-secondary-color: #ffffff;
+  --secondary-highlight-color: #BEF264;
+  --background-gradient-start: #ecfdf5;
+  --background-gradient-end: #d1fae5;
+}
+
+/* Theme 5: Purple Dreams (Violet & Pink) */
+.theme-purple {
+  --primary-color: #7C3AED;
+  --on-primary-color: #ffffff;
+  --primary-highlight-color: #6D28D9;
+  --secondary-color: #EC4899;
+  --on-secondary-color: #ffffff;
+  --secondary-highlight-color: #F9A8D4;
+  --background-gradient-start: #fae8ff;
+  --background-gradient-end: #e9d5ff;
+}
+
+/* Theme 6: Earthy Terracotta (Brown & Red) */
+.theme-earth {
+  --primary-color: #92400E;
+  --on-primary-color: #ffffff;
+  --primary-highlight-color: #78350F;
+  --secondary-color: #B91C1C;
+  --on-secondary-color: #ffffff;
+  --secondary-highlight-color: #FCA5A5;
+  --background-gradient-start: #fef2f2;
+  --background-gradient-end: #fed7aa;
+}
+
+/* ===========================================
+   TRAVELOG PAGE LAYOUT & STYLING
+   Styles for public-facing travelog pages
+   =========================================== */
+
+/* Apply gradient background to themed body */
+body[class*="theme-"] {
+  background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%) fixed;
+  background-size: cover;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Typography */
+h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 2rem 0 1.5rem 0;
+  color: var(--primary-color);
+  position: relative;
+}
+
+h2:after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: var(--secondary-color);
+  border-radius: 2px;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem 0;
+  color: var(--secondary-color);
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #555;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-style: italic;
+  font-weight: 300;
+}
+
+.text-muted {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Navigation */
+.nav-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.8);
+  transition: all 0.3s ease;
+  display: inline-block;
+  margin: 0.25rem;
+}
+
+.nav-link:hover {
+  background: var(--primary-color);
+  color: var(--on-primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.nav-breadcrumb {
+  background: rgba(255,255,255,0.9);
+  padding: 1rem 1.5rem;
+  border-radius: 15px;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Card Grid - 3 COLUMNS */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.card-grid > div {
+  min-width: 0; /* Prevent grid blowout */
+}
+
+.card {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.4s ease;
+  height: 100%;
+}
+
+.card:hover {
+  box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+  transform: translateY(-8px) scale(1.02);
+}
+
+.card-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.placeholder-image {
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-primary-color);
+  font-weight: 600;
+  text-align: center;
+  padding: 1rem;
+}
+
+.card-content {
+  padding: 2rem;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--primary-color);
+}
+
+.lock-icon {
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.lock-icon-svg {
+  color: var(--secondary-color);
+}
+
+.card-date {
+  font-size: 0.95rem;
+  color: var(--secondary-color);
+  margin-bottom: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-description {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Image Gallery - 3 COLUMNS */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.image-gallery > div {
+  min-width: 0; /* Prevent grid blowout */
+}
+
+.gallery-item {
+  border-radius: 15px;
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.gallery-item:hover {
+  transform: scale(1.05) rotate(1deg);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Journal Content */
+.journal-content {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  padding: 3rem;
+  margin: 2rem 0;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  line-height: 1.8;
+  font-size: 1.1rem;
+}
+
+.journal-content p {
+  margin-bottom: 1.8rem;
+}
+
+.journal-content .trip-image-wrapper[data-layout="float-right"] {
+  float: right;
+  margin: 0 0 1.5rem 2rem;
+  max-width: 350px;
+}
+
+.journal-content .trip-image {
+  width: 100%;
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.journal-content .full-width-image-group {
+  margin: 3rem -3rem;
+  padding: 0;
+}
+
+.journal-content .full-width-image-group .trip-image {
+  width: 100%;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.journal-content ul {
+  margin-left: 2rem;
+  margin-bottom: 1.8rem;
+}
+
+.journal-content li {
+  margin-bottom: 0.5rem;
+}
+
+.journal-content blockquote {
+  border-left: 4px solid var(--secondary-color);
+  padding-left: 2rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #666;
+}
+
+/* Page Navigation */
+.page-navigation {
+  margin: 3rem 0;
+  padding: 2rem 0;
+  border-top: 2px solid rgba(255,255,255,0.5);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-navigation a {
+  flex: 1;
+  text-align: center;
+  min-width: 200px;
+}
+
+/* Image Browser - BIGGER IMAGE */
+.image-browser-view {
+  text-align: center;
+  margin: 3rem 0;
+  position: relative;
+}
+
+.image-browser-main {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  margin: 2rem auto;
+  max-width: 1000px;
+  backdrop-filter: blur(10px);
+}
+
+.browser-image-container {
+  width: 100%;
+  height: 600px;
+  margin: 0 auto;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.15);
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.browser-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.image-metadata {
+  background: rgba(0,0,0,0.05);
+  padding: 2rem;
+  border-radius: 12px;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.image-metadata p {
+  margin-bottom: 0.75rem;
+}
+
+/* Image Navigation Arrows */
+.image-nav-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 120px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.image-nav-prev {
+  left: 2rem;
+}
+
+.image-nav-next {
+  right: 2rem;
+}
+
+.image-nav-arrow:hover {
+  background: var(--primary-color);
+  color: var(--on-primary-color);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+}
+
+.image-nav-arrow span {
+  display: block;
+  line-height: 1;
+}
+
+/* Gallery Link Near Top */
+.gallery-link-top {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: rgba(255,255,255,0.8);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.gallery-link-top a {
+  font-size: 1.2rem;
+  padding: 1rem 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gallery-link-top .icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.gallery-link-top .icon-wrapper svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .card-grid,
+  .image-gallery {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  .journal-content {
+    padding: 2rem;
+  }
+
+  .journal-content .full-width-image-group {
+    margin: 2rem -2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .card-grid,
+  .image-gallery {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  .journal-content {
+    padding: 1.5rem;
+    font-size: 1rem;
+  }
+
+  .journal-content .trip-image-wrapper[data-layout="float-right"] {
+    float: none;
+    margin: 1rem 0;
+    max-width: 100%;
+  }
+
+  .journal-content .full-width-image-group {
+    margin: 1.5rem -1.5rem;
+  }
+
+  .page-navigation {
+    flex-direction: column;
+  }
+
+  .page-navigation a {
+    min-width: 100%;
+  }
+
+  .browser-image-container {
+    height: 400px;
+  }
+
+  .image-browser-main {
+    padding: 1rem;
+  }
+
+  .image-metadata {
+    padding: 1rem;
+  }
+
+  .image-nav-arrow {
+    width: 50px;
+    height: 80px;
+    font-size: 2rem;
+  }
+
+  .image-nav-prev {
+    left: 0.5rem;
+  }
+
+  .image-nav-next {
+    right: 0.5rem;
+  }
 }

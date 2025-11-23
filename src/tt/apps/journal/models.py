@@ -10,7 +10,7 @@ from tt.apps.trips.models import Trip
 from tt.apps.notebook.models import NotebookEntry
 from tt.apps.images.models import TripImage
 
-from .enums import JournalVisibility
+from .enums import JournalVisibility, JournalTheme
 from . import managers
 
 
@@ -125,6 +125,12 @@ class Journal( JournalContent ):
     password_version = models.IntegerField(
         default = 1,
         help_text = 'Version number incremented on each password change for session invalidation',
+    )
+
+    theme = LabeledEnumField(
+        JournalTheme,
+        'Travelog Theme',
+        help_text = 'Visual color theme for published travelog pages',
     )
 
     created_datetime = models.DateTimeField(auto_now_add = True)

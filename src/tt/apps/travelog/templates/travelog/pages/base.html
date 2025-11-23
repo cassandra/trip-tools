@@ -5,6 +5,8 @@
 {% stylesheet 'travelog_css_head' %}
 {% endblock %}
 
+{% block body_class %}{{ journal.theme.css_classname }}{% endblock %}
+
 {% block body_pre_javascript %}
 {% javascript 'travelog_js_top' %}
 {% endblock %}

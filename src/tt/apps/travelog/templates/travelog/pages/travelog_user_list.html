@@ -1,58 +1,57 @@
-{% extends "travelog/pages/base.html" %}
+{% extends "pages/base_public.html" %}
+{% load pipeline %}
 {% load travelog_tags %}
 {% load icons %}
 
 {% block head_title %}{{ target_user.get_full_name }}'s Travelogs{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-  <h1>{{ target_user.get_full_name }}'s Travelogs</h1>
+{% block head_css %}
+{% stylesheet 'travelog_css_head' %}
+{% endblock %}
 
-  <hr>
+{% block body_class %}theme-current{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>{{ target_user.get_full_name }}'s Travelogs</h1>
+  <p class="subtitle">Journey through my adventures around the world</p>
 
   {% if travelog_items %}
-  <div class="row">
+  <div class="card-grid">
     {% for item in travelog_items %}
-    <div class="col-12 col-sm-6 col-lg-4 mb-4">
-      <a href="{% travelog_url 'travelog_toc' item.journal.uuid %}" class="text-decoration-none">
-        <div class="card h-100">
-          <!-- Card Image -->
-          {% if item.display_image %}
-          <img src="{{ item.display_image.thumbnail_image.url }}" class="card-img-top" alt="{{ item.journal.title }}" style="height: 200px; object-fit: cover;">
+    <div>
+      <a href="{% travelog_url 'travelog_toc' item.journal.uuid %}" class="clickable-card">
+        <div class="card">
+          {% if item.display_image and item.display_image.thumbnail_image %}
+          <img src="{{ item.display_image.thumbnail_image.url }}" alt="{{ item.journal.title }}" class="card-image">
           {% else %}
-          <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-            <div style="width: 64px; height: 64px;">
-              {% icon "book" css_class="text-muted" %}
-            </div>
-          </div>
+          <div class="card-image placeholder-image"></div>
           {% endif %}
 
-          <!-- Card Body -->
-          <div class="card-body">
-            <h5 class="card-title">
+          <div class="card-content">
+            <h3 class="card-title">
               {{ item.journal.title }}
               {% if item.requires_password %}
-              <span style="display: inline-block; width: 16px; height: 16px; vertical-align: middle;">
-                {% icon "shield" css_class="text-warning" aria_label="Password Required" %}
+              <span class="lock-icon" title="Password Required">
+                <span style="display: inline-block; width: 20px; height: 20px; vertical-align: middle;">
+                  {% icon "shield" css_class="lock-icon-svg" aria_label="Password Required" %}
+                </span>
               </span>
               {% endif %}
-            </h5>
+            </h3>
 
-            {% if item.journal.description %}
-            <p class="card-text text-muted small">{{ item.journal.description|truncatewords:20 }}</p>
+            {% if item.earliest_entry_date and item.latest_entry_date %}
+            <div class="card-date">
+              {% if item.earliest_entry_date == item.latest_entry_date %}
+              {{ item.earliest_entry_date|date:"F j, Y" }}
+              {% else %}
+              {{ item.earliest_entry_date|date:"F j" }} - {{ item.latest_entry_date|date:"F j, Y" }}
+              {% endif %}
+            </div>
             {% endif %}
 
-            <!-- Date Range -->
-            {% if item.earliest_entry_date and item.latest_entry_date %}
-            <p class="card-text">
-              <small class="text-muted">
-                {% if item.earliest_entry_date == item.latest_entry_date %}
-                {{ item.earliest_entry_date }}
-                {% else %}
-                {{ item.earliest_entry_date }} - {{ item.latest_entry_date }}
-                {% endif %}
-              </small>
-            </p>
+            {% if item.journal.description %}
+            <p class="card-description">{{ item.journal.description|truncatewords:20 }}</p>
             {% endif %}
           </div>
         </div>
@@ -61,9 +60,7 @@
     {% endfor %}
   </div>
   {% else %}
-  <div class="alert alert-info">
-    <p>No published travelogs found for this user.</p>
-  </div>
+  <p>No published travelogs found for this user.</p>
   {% endif %}
 </div>
 {% endblock %}
