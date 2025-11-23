@@ -4213,31 +4213,6 @@
       return;
     }
 
-    // EDITOR IMAGES CONTEXT shortcuts
-    if (context === 'editor-images') {
-      // Escape - Clear selections
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        this.clearEditorImageSelections();
-        return;
-      }
-
-      // Delete/Backspace - Remove from editor
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        e.preventDefault();
-        this.batchRemoveEditorImages(this.selectedEditorImages);
-        return;
-      }
-
-      // Ctrl/Cmd+R - Set representative image (STUB)
-      if (isCtrlOrCmd && e.key === 'r') {
-        e.preventDefault();
-        this.setReferenceImageFromEditor();
-        return;
-      }
-
-      return;
-    }
   };
 
   /**
