@@ -29,13 +29,15 @@ class ImagesHomeView( LoginRequiredMixin, View ):
     Home view for image management of images used for trips.
     """
 
+    MAX_LATEST_IMAGES = 50
+    
     def get(self, request, *args, **kwargs) -> HttpResponse:
         dashboard_page_context = DashboardPageContext(
             active_page=DashboardPage.IMAGES,
         )
 
         # Query uploaded images for the current user
-        uploaded_images = TripImage.objects.for_user(request.user)
+        uploaded_images = TripImage.objects.for_user( request.user )[0:self.MAX_LATEST_IMAGES]
 
         context = {
             'dashboard_page': dashboard_page_context,

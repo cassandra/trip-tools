@@ -2324,11 +2324,138 @@
       this.$editor.html('<p><br></p>');
     }
 
-    // Handle paste - strip formatting and sanitize
+    // Handle paste - strip formatting and convert newlines to paragraphs
     this.$editor.on('paste', function(e) {
       e.preventDefault();
       var text = (e.originalEvent.clipboardData || window.clipboardData).getData('text/plain');
-      document.execCommand('insertText', false, text);
+
+      // If empty, do nothing
+      if (!text || text.trim().length === 0) {
+        return;
+      }
+
+      // Split on newlines (handle both \n and \r\n)
+      var lines = text.split(/\r?\n/);
+
+      // Filter out empty lines (per spec: multiple blank lines = single paragraph break)
+      var nonEmptyLines = lines.filter(function(line) {
+        return line.trim().length > 0;
+      });
+
+      // If only one line, use simple insertText (no paragraph creation needed)
+      if (nonEmptyLines.length === 1) {
+        document.execCommand('insertText', false, nonEmptyLines[0]);
+        return;
+      }
+
+      // Multiple lines: create paragraphs
+      var selection = window.getSelection();
+      if (!selection.rangeCount) {
+        return;
+      }
+
+      var range = selection.getRangeAt(0);
+      range.deleteContents(); // Remove any selected text first
+
+      // Create paragraph elements for each line
+      var $paragraphs = [];
+      for (var i = 0; i < nonEmptyLines.length; i++) {
+        var $p = $('<p class="text-block"></p>').text(nonEmptyLines[i]);
+        $paragraphs.push($p[0]);
+      }
+
+      // Insert paragraphs at cursor position
+      // We need to handle different insertion scenarios:
+      // 1. Cursor in empty paragraph -> replace it
+      // 2. Cursor at start of paragraph -> insert before
+      // 3. Cursor at end of paragraph -> insert after
+      // 4. Cursor in middle of paragraph -> split it
+
+      var $currentBlock = $(range.startContainer).closest('.text-block, h1, h2, h3, h4, h5, h6');
+
+      if ($currentBlock.length === 0) {
+        // Not in a block, find insertion point
+        var $editor = $(self.$editor);
+        var insertionPoint = range.startContainer;
+
+        // If we're in the editor itself, append paragraphs
+        if (insertionPoint === self.$editor[0]) {
+          for (var i = 0; i < $paragraphs.length; i++) {
+            $editor.append($paragraphs[i]);
+          }
+        } else {
+          // Insert before closest block element
+          var $closestBlock = $(insertionPoint).closest('.text-block, h1, h2, h3, h4, h5, h6');
+          if ($closestBlock.length) {
+            $closestBlock.before($paragraphs);
+          } else {
+            $editor.append($paragraphs);
+          }
+        }
+      } else {
+        // We're in a block element
+        var blockEl = $currentBlock[0];
+        var textContent = $currentBlock.text().trim();
+
+        // Check if block is empty (or only has <br>)
+        if (textContent.length === 0) {
+          // Replace empty block with pasted paragraphs
+          $currentBlock.before($paragraphs);
+          $currentBlock.remove();
+        } else {
+          // Block has content - we need to split it
+          // Extract content before and after cursor
+          var beforeRange = document.createRange();
+          beforeRange.setStart(blockEl, 0);
+          beforeRange.setEnd(range.startContainer, range.startOffset);
+          var beforeText = beforeRange.toString().trim();
+
+          var afterRange = document.createRange();
+          afterRange.setStart(range.startContainer, range.startOffset);
+          afterRange.setEnd(blockEl, blockEl.childNodes.length);
+          var afterText = afterRange.toString().trim();
+
+          if (beforeText.length === 0) {
+            // Cursor at start - insert before
+            $currentBlock.before($paragraphs);
+          } else if (afterText.length === 0) {
+            // Cursor at end - insert after
+            $currentBlock.after($paragraphs);
+          } else {
+            // Cursor in middle - split the paragraph
+            // Keep 'before' content in current block
+            $currentBlock.text(beforeText);
+
+            // Insert pasted paragraphs
+            $currentBlock.after($paragraphs);
+
+            // Create new paragraph for 'after' content
+            var $afterP = $('<p class="text-block"></p>').text(afterText);
+            $($paragraphs[$paragraphs.length - 1]).after($afterP);
+          }
+        }
+      }
+
+      // Place cursor at end of last inserted paragraph
+      if ($paragraphs.length > 0) {
+        var lastParagraph = $paragraphs[$paragraphs.length - 1];
+        var newRange = document.createRange();
+        var textNode = lastParagraph.firstChild;
+
+        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+          newRange.setStart(textNode, textNode.length);
+          newRange.setEnd(textNode, textNode.length);
+        } else {
+          newRange.selectNodeContents(lastParagraph);
+          newRange.collapse(false);
+        }
+
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      }
+
+      // Trigger autosave (normalization will run at idle time)
+      self.handleContentChange();
     });
 
     // Prevent dropping files directly into editor (would show file:// URLs)
