@@ -2,7 +2,7 @@ import io
 import logging
 import re
 from datetime import datetime, timezone, timedelta
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Any
 
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile

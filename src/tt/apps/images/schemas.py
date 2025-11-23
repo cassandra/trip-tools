@@ -11,6 +11,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional, Tuple, Dict, Any
 
+from .enums import UploadStatus
+
 
 # Configuration constants - centralized business rules
 class ImageProcessingConfig:
@@ -330,12 +332,12 @@ class ImageUploadResult:
     Represents the outcome of uploading and processing a single image file,
     including success/error status, metadata, and optional rendered HTML.
     """
-    status: 'UploadStatus'  # Forward reference to avoid circular import
-    filename: str
-    uuid: Optional[str] = None
-    error_message: Optional[str] = None
-    metadata: Optional[ExifMetadata] = None
-    html: Optional[str] = None
+    status         : UploadStatus
+    filename       : str
+    uuid           : Optional[str]           = None
+    error_message  : Optional[str]           = None
+    metadata       : Optional[ExifMetadata]  = None
+    html           : Optional[str]           = None
 
     @classmethod
     def success( cls,
@@ -357,12 +359,12 @@ class ImageUploadResult:
         """
         from tt.apps.images.enums import UploadStatus
         return cls(
-            status=UploadStatus.SUCCESS,
-            filename=filename,
-            uuid=uuid,
-            error_message=None,
-            metadata=metadata,
-            html=html,
+            status = UploadStatus.SUCCESS,
+            filename = filename,
+            uuid = uuid,
+            error_message = None,
+            metadata = metadata,
+            html = html,
         )
 
     @classmethod
@@ -381,12 +383,12 @@ class ImageUploadResult:
         """
         from tt.apps.images.enums import UploadStatus
         return cls(
-            status=UploadStatus.ERROR,
-            filename=filename,
-            uuid=None,
-            error_message=error_message,
-            metadata=None,
-            html=None,
+            status = UploadStatus.ERROR,
+            filename = filename,
+            uuid = None,
+            error_message = error_message,
+            metadata = None,
+            html = None,
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -396,7 +398,6 @@ class ImageUploadResult:
         Returns:
             Dictionary with all fields in JSON-compatible format
         """
-        from tt.apps.images.enums import UploadStatus
         return {
             'status': self.status.value,
             'filename': self.filename,

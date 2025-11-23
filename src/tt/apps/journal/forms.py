@@ -2,7 +2,7 @@ from django import forms
 
 from tt.constants import TIMEZONE_NAME_LIST
 
-from .enums import JournalVisibility, JournalTheme
+from .enums import JournalVisibility
 from .models import Journal, JournalEntry
 
 

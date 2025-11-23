@@ -7,7 +7,6 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import QuerySet
 
-from tt.apps.common.html_sanitizer import sanitize_rich_text_html
 from tt.apps.images.models import TripImage
 from tt.apps.travelog.models import Travelog, TravelogEntry
 from tt.apps.trips.models import Trip
