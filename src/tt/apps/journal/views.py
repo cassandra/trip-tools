@@ -29,7 +29,6 @@ from .models import Journal, JournalEntry
 from .transient_models import PublishingStatusHelper
 from .services import (
     JournalImagePickerService,
-    JournalEntrySeederService,
     JournalRestoreService,
 )
 
@@ -114,15 +113,6 @@ class JournalCreateView( LoginRequiredMixin, TripViewMixin, ModalView ):
             journal.visibility = JournalVisibility.PRIVATE
             journal.modified_by = request.user
             journal.save()
-
-            # Seed journal entries from notebook entries
-            notebook_entries = trip.notebook_entries.all()
-            for notebook_entry in notebook_entries:
-                JournalEntrySeederService.create_from_notebook_entry(
-                    notebook_entry=notebook_entry,
-                    journal=journal,
-                    user=request.user,
-                )
 
             return self.refresh_response(request)
 
@@ -398,7 +388,6 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
             'journal_entry_form': journal_entry_form,
             'accessible_images': accessible_images,
             'trip': entry.journal.trip,
-            'show_source_changed_warning': entry.has_source_notebook_changed,
         }
         return render(request, 'journal/pages/journal_entry.html', context)
 

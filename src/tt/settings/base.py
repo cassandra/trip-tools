@@ -115,7 +115,6 @@ INSTALLED_APPS = [
     'tt.apps.candidates',
     'tt.apps.itineraries',
     'tt.apps.bookings',
-    'tt.apps.notebook',
     'tt.apps.images',
     'tt.apps.journal',
     'tt.apps.travelog',
@@ -306,12 +305,6 @@ PIPELINE = {
                 'js/journal-editor.js',
             ),
             'output_filename': 'js/journal_editor.js',
-        },
-        'notebook': {
-            'source_filenames': (
-                'js/notebook.js',
-            ),
-            'output_filename': 'js/notebook.js',
         },
         'travelog_js_top': {
             'source_filenames': (

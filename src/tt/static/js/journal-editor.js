@@ -1874,6 +1874,27 @@
   };
 
   /**
+   * Save immediately without debouncing
+   * Called when user clicks manual "Save" button
+   * Clears any pending timeouts and executes save right away
+   */
+  AutoSaveManager.prototype.saveNow = function() {
+    // Clear any pending save timers
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
+    if (this.maxTimeout) {
+      clearTimeout(this.maxTimeout);
+      this.maxTimeout = null;
+    }
+
+    // Execute save immediately
+    // executeSave() has guards to prevent duplicate saves
+    this.executeSave();
+  };
+
+  /**
    * Execute save to server
    */
   AutoSaveManager.prototype.executeSave = function() {
@@ -2152,6 +2173,7 @@
     this.$dateInput = this.$form.find('#' + Tt.JOURNAL_DATE_INPUT_ID);
     this.$timezoneInput = this.$form.find('#' + Tt.JOURNAL_TIMEZONE_INPUT_ID);
     this.$statusElement = this.$form.find('.' + Tt.JOURNAL_SAVE_STATUS_CLASS);
+    this.$manualSaveBtn = this.$form.find('.journal-manual-save-btn');
 
     this.entryPk = $editor.data(Tt.JOURNAL_ENTRY_PK_ATTR);
     this.currentVersion = $editor.data(Tt.JOURNAL_CURRENT_VERSION_ATTR) || 1;
@@ -2226,6 +2248,9 @@
 
     // Setup autosave handlers
     this.setupAutosave();
+
+    // Setup manual save button
+    this.setupManualSaveButton();
 
     // Setup drag-and-drop for image insertion
     this.setupImageDragDrop();
@@ -2374,6 +2399,19 @@
     this.$timezoneInput.on('change', function() {
       self.handleContentChange();
     });
+  };
+
+  /**
+   * Setup manual save button click handler
+   */
+  JournalEditor.prototype.setupManualSaveButton = function() {
+    var self = this;
+
+    if (this.$manualSaveBtn.length) {
+      this.$manualSaveBtn.on('click', function() {
+        self.autoSaveManager.saveNow();
+      });
+    }
   };
 
   /**
@@ -2763,6 +2801,11 @@
       .removeClass('badge-secondary badge-success badge-warning badge-info badge-danger')
       .addClass(statusClass)
       .text(statusText);
+
+    // Show manual save button only when there are unsaved changes
+    if (this.$manualSaveBtn.length) {
+      this.$manualSaveBtn.toggle(status === 'unsaved');
+    }
   };
 
   /**
@@ -4129,7 +4172,6 @@
    * Warns user before navigating away from page with unsaved changes
    *
    * Browser will display standard warning message (cannot be customized)
-   * Pattern matches NotebookEntry implementation
    */
   $(window).on('beforeunload', function(e) {
     if (editorInstance && editorInstance.hasUnsavedContent()) {

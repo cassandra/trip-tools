@@ -993,21 +993,6 @@ body {
   padding-top: 1rem; /* Compensate for -1rem top margin on secondary-page-header */
 }
 
-/* Notebook Editor Sticky Header */
-.notebook-editor-header {
-  position: sticky;
-  top: calc(var(--app-topbar-height) + var(--secondary-page-header-height));
-  background-color: #ffffff;
-  border-bottom: 1px solid var(--line-color);
-  z-index: 1005;
-  padding: 0.5rem 0;
-  margin-bottom: 1rem;
-}
-
-.notebook-status {
-    padding: 0.5rem;
-}
-
 /* Mobile Responsive for Secondary Pages */
 @media (max-width: 768px) {
 
@@ -1085,7 +1070,7 @@ body {
 
 /* ========================================
    Unified Diff Display Styles
-   For notebook conflict resolution
+   For text conflict resolution
    ======================================== */
 
 .diff-container {

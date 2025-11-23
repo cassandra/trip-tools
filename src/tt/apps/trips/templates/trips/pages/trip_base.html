@@ -11,7 +11,7 @@
     {% if trip_page.request_member.can_edit_trip %}
     <a class="dropdown-item" href="#">New Location</a>
     <a class="dropdown-item" href="#">New Booking</a>
-    <a class="dropdown-item" href="{% url 'notebook_entry_new' trip_uuid=trip_page.trip.uuid %}">New Note</a>
+    <a class="dropdown-item" href="#">New Review</a>
     <div class="dropdown-divider"></div>
     {% endif %}
     <a class="dropdown-item" href="{% url 'trips_create' %}" data-async="modal">New Trip</a>
@@ -52,15 +52,15 @@
     </a>
   </li>
   <li>
-    <a href="{% url 'notebook_list' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'notes' %} class="active" aria-current="page"{% endif %}>
-      {% icon "edit" size="sm" %}
-      <span>Notes</span>
-    </a>
-  </li>
-  <li>
     <a href="{% url 'journal_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'journal' %} class="active" aria-current="page"{% endif %}>
       {% icon "collection" size="sm" %}
       <span>Journal</span>
+    </a>
+  </li>
+  <li>
+    <a href="#"{% if trip_page.active_page.value == 'reviews' %} class="active" aria-current="page"{% endif %}>
+      {% icon "edit" size="sm" %}
+      <span>Reviews</span>
     </a>
   </li>
   <li>

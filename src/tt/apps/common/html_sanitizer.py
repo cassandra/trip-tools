@@ -160,7 +160,7 @@ def sanitize_rich_text_html( html_content: str ) -> str:
     Sanitize HTML content for rich text entries.
 
     Convenience function that uses the pre-configured RICH_TEXT_SANITIZER.
-    Suitable for journal entries, notebook entries, or any rich text content.
+    Suitable for journal entries or any rich text content.
 
     Args:
         html_content: Raw HTML content to sanitize

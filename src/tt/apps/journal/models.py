@@ -7,7 +7,6 @@ from django.db import models
 from tt.apps.common.model_fields import LabeledEnumField
 from tt.apps.common.utils import is_blank
 from tt.apps.trips.models import Trip
-from tt.apps.notebook.models import NotebookEntry
 from tt.apps.images.models import TripImage
 
 from .enums import JournalVisibility, JournalTheme
@@ -198,19 +197,6 @@ class JournalEntry( JournalEntryContent ):
         on_delete = models.CASCADE,
         related_name = 'entries',
     )
-    # Source tracking (for seeding from notebook)
-    source_notebook_entry = models.ForeignKey(
-        NotebookEntry,
-        on_delete = models.SET_NULL,
-        null = True,
-        blank = True,
-        related_name = 'journal_entries',
-    )
-    source_notebook_version = models.IntegerField(
-        null = True,
-        blank = True,
-        help_text = 'Version of source notebook entry when last synced',
-    )
 
     # Version control for optimistic locking
     edit_version = models.IntegerField(default = 1, editable = False)
@@ -225,16 +211,6 @@ class JournalEntry( JournalEntryContent ):
         related_name = 'modified_journal_entries',
         editable = False,
     )
-
-    @property
-    def is_synced_with_source(self) -> bool:
-        if not self.source_notebook_entry:
-            return True  # No source, nothing to sync
-        return bool( self.source_notebook_version == self.source_notebook_entry.edit_version )
-
-    @property
-    def has_source_notebook_changed(self) -> bool:
-        return bool(bool(self.source_notebook_entry) and not self.is_synced_with_source)
 
     def save(self, *args, **kwargs):
         """Override save to auto-generate title from date if empty."""

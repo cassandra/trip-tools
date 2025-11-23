@@ -14,7 +14,6 @@ class JournalEntryInline(admin.TabularInline):
         'date',
         'title',
         'reference_image',
-        'source_notebook_entry',
         'edit_version',
         'modified_datetime',
     )
@@ -53,7 +52,6 @@ class JournalEntryAdmin(admin.ModelAdmin):
         'journal_link',
         'title',
         'has_reference_image',
-        'has_source_notebook',
         'modified_datetime',
     )
 
@@ -71,9 +69,3 @@ class JournalEntryAdmin(admin.ModelAdmin):
     
     has_reference_image.short_description = 'Ref Image'
     has_reference_image.boolean = True
-
-    def has_source_notebook(self, obj):
-        return bool(obj.source_notebook_entry)
-    
-    has_source_notebook.short_description = 'From Notebook'
-    has_source_notebook.boolean = True
