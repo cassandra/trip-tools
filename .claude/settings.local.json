@@ -22,7 +22,8 @@
       "Bash(find:*)",
       "Bash(node --check:*)",
       "Bash(readlink:*)",
-      "Bash(./src/manage.py test:*)"
+      "Bash(./src/manage.py test:*)",
+      "Bash(sort:*)"
     ],
     "deny": [],
     "ask": []
