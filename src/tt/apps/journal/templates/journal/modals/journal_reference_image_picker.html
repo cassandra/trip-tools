@@ -2,7 +2,7 @@
 {% load icons %}
 
 {% block modal_dialog_id %}journal-reference-image-picker-modal{% endblock %}
-{% block modal_dialog_class %}tt-modal-dialog-900{% endblock %}
+{% block modal_dialog_class %}tt-modal-dialog-800{% endblock %}
 
 {% block title_text %}Select Reference Image{% endblock %}
 
@@ -75,9 +75,11 @@
   </div>
 
   <!-- Image Gallery Container -->
-  <div id="reference-image-gallery-container" style="max-height: 400px; overflow-y: auto;">
+  <div id="reference-image-gallery-container" style="max-height: 400px; overflow-y: auto; padding: 1rem;">
     {% if accessible_images %}
-      {% include "journal/components/journal_image_gallery_grid.html" %}
+      <div class="reference-image-picker-grid" style="display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 1rem;">
+        {% include "journal/components/journal_image_gallery_grid.html" %}
+      </div>
     {% else %}
       <div class="alert alert-info">
         <p class="mb-0">No images found for {{ selected_date|date:"F j, Y" }}. Try selecting a different date.</p>
