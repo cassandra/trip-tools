@@ -2542,15 +2542,20 @@
   };
 
   /**
-   * Handle content change (fired on every keystroke)
-   * Note: Does NOT run normalization - that happens at idle time (see runNormalizationAtIdle)
+   * Refresh image layout (wrapping and float markers)
+   * Only called when images are added, removed, or moved
    */
-  JournalEditor.prototype.handleContentChange = function() {
-    // Refresh layout (groups and float markers, but NOT delete buttons - they already exist)
-    // Note: We skip delete buttons here since they're only needed on initial load
+  JournalEditor.prototype.refreshImageLayout = function() {
     this.editorLayoutManager.wrapFullWidthImageGroups();
     this.editorLayoutManager.markFloatParagraphs();
+  };
 
+  /**
+   * Handle content change (fired on every keystroke)
+   * Note: Does NOT run normalization - that happens at idle time (see runNormalizationAtIdle)
+   * Note: Does NOT refresh layout - only schedules autosave
+   */
+  JournalEditor.prototype.handleContentChange = function() {
     // Schedule autosave (handles change detection and debouncing)
     this.autoSaveManager.scheduleSave();
   };
@@ -3214,7 +3219,8 @@
       }
     }
 
-    // Trigger layout refresh + autosave (ONCE, not per image)
+    // Refresh layout (images changed) + trigger autosave
+    this.refreshImageLayout();
     this.handleContentChange();
 
     // Clear picker selections if multiple images were inserted
@@ -3819,7 +3825,8 @@
       }
     }
 
-    // Trigger layout refresh + autosave (ONCE, not per wrapper)
+    // Refresh layout (images removed) + trigger autosave
+    this.refreshImageLayout();
     this.handleContentChange();
 
     // Clear editor selections if multiple wrappers were moved
@@ -3956,7 +3963,8 @@
       this.imagePicker.applyFilter(this.imagePicker.filterScope);
     }
 
-    // Trigger autosave
+    // Refresh layout (image removed) + trigger autosave
+    this.refreshImageLayout();
     this.handleContentChange();
   };
 
@@ -4273,7 +4281,8 @@
     // Clear selections
     this.clearEditorImageSelections();
 
-    // Trigger autosave
+    // Refresh layout (images removed) + trigger autosave
+    this.refreshImageLayout();
     this.handleContentChange();
   };
 
