@@ -1,0 +1,102 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load icons %}
+
+{% block modal_dialog_id %}journal-reference-image-picker-modal{% endblock %}
+{% block modal_dialog_class %}tt-modal-dialog-900{% endblock %}
+
+{% block title_text %}Select Reference Image{% endblock %}
+
+{% block preamble %}
+<!-- Hidden form for date filter async submission (outside main form) -->
+<form id="date-filter-form"
+      method="get"
+      data-async="modal"
+      action="{% url 'journal_reference_image_picker' journal_uuid=journal.uuid %}">
+  <input type="hidden" name="async_gallery" value="1">
+</form>
+
+<form method="post"
+      action="{% url 'journal_reference_image_picker' journal_uuid=journal.uuid %}"
+      data-async="modal"
+      id="reference-image-picker-form">
+  {% csrf_token %}
+  <input type="hidden" name="image_uuid" id="reference-image-uuid-input" value="">
+{% endblock %}
+
+{% block body %}
+  <!-- Sticky Header Section -->
+  <div style="position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #dee2e6;">
+    <!-- Current Selection Preview -->
+    <div class="mb-3">
+      <label class="font-weight-bold d-block mb-2">Selected Reference Image:</label>
+      <div class="d-flex align-items-center">
+        <div id="reference-image-preview"
+             style="width: 120px; height: 120px; border: 2px solid #dee2e6; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+          {% if journal.reference_image and journal.reference_image.thumbnail_image %}
+          <img src="{{ journal.reference_image.thumbnail_image.url }}"
+               alt="Current reference"
+               style="width: 100%; height: 100%; object-fit: cover;">
+          {% else %}
+          <div class="bg-light d-flex align-items-center justify-content-center text-muted h-100">
+            {% icon "camera" size="lg" %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="ml-3">
+          <p class="mb-1 text-muted small">
+            <strong>Current:</strong>
+            <span id="reference-image-caption">
+              {% if journal.reference_image %}
+                {{ journal.reference_image.caption|default:"No caption" }}
+              {% else %}
+                No reference image set
+              {% endif %}
+            </span>
+          </p>
+          <p class="mb-0 text-muted small">Click an image below to change</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date Filter Section -->
+    <div class="form-group mb-0">
+      <label for="date-filter" class="font-weight-bold">
+        {% icon "calendar" size="sm" css_class="tt-icon-left" %}
+        Filter by Date
+      </label>
+      <input type="date"
+             id="date-filter"
+             name="date"
+             value="{{ selected_date|date:'Y-m-d' }}"
+             class="form-control"
+             onchange-async="true"
+             form="date-filter-form">
+    </div>
+  </div>
+
+  <!-- Image Gallery Container -->
+  <div id="reference-image-gallery-container" style="max-height: 400px; overflow-y: auto;">
+    {% if accessible_images %}
+      {% include "journal/components/journal_image_gallery_grid.html" %}
+    {% else %}
+      <div class="alert alert-info">
+        <p class="mb-0">No images found for {{ selected_date|date:"F j, Y" }}. Try selecting a different date.</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block action_right %}
+<button type="submit"
+        class="btn btn-primary"
+        id="reference-image-set-btn"
+        form="reference-image-picker-form"
+        disabled>
+  {% icon "save" size="sm" css_class="tt-icon-left" %}
+  SET
+</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

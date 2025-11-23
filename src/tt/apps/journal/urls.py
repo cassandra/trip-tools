@@ -49,6 +49,11 @@ urlpatterns = [
         name='journal_restore'
     ),
     path(
+        '<uuid:journal_uuid>/reference-image-picker/',
+        views.JournalReferenceImagePickerView.as_view(),
+        name='journal_reference_image_picker'
+    ),
+    path(
         '<uuid:journal_uuid>/entry/new/',
         views.JournalEntryNewView.as_view(),
         name='journal_entry_new'

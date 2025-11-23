@@ -11,6 +11,7 @@ Context variables:
      data-{{ DIVID.JOURNAL_IMAGE_UUID_ATTR }}="{{ image.uuid }}"
      data-image-uuid="{{ image.uuid }}"
      data-image-url="{{ image.web_image.url }}"
+     data-thumbnail-url="{{ image.thumbnail_image.url }}"
      data-inspect-url="{% url 'images_image_inspect' image_uuid=image.uuid %}?trip_uuid={{ trip.uuid }}"
      data-caption="{{ image.caption|default:'Untitled' }}"
      title="{{ image.caption|default:'Untitled' }} - {% if image.datetime_utc %}{{ image.datetime_utc|date:'g:i A' }}{% else %}Unknown time{% endif %}">

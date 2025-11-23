@@ -4144,6 +4144,114 @@
     }
   });
 
+  // ========================================
+  // JOURNAL REFERENCE IMAGE PICKER
+  // ========================================
+
+  /**
+   * Initialize the journal reference image picker modal.
+   * Handles image selection and form submission.
+   */
+  function initJournalReferenceImagePicker() {
+    // Use MutationObserver to detect when modal is added to DOM
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1 && node.id === 'journal-reference-image-picker-modal') {
+            setupReferenceImagePickerHandlers(node);
+          }
+        });
+      });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  /**
+   * Set up handlers for the reference image picker modal.
+   * @param {HTMLElement} modal - The modal element
+   */
+  function setupReferenceImagePickerHandlers(modal) {
+    const hiddenInput = modal.querySelector('#reference-image-uuid-input');
+    const submitButton = modal.querySelector('#reference-image-set-btn');
+    const galleryContainer = modal.querySelector('#reference-image-gallery-container');
+    const previewContainer = modal.querySelector('#reference-image-preview');
+    const captionElement = modal.querySelector('#reference-image-caption');
+
+    if (!hiddenInput || !submitButton || !galleryContainer || !previewContainer || !captionElement) {
+      console.error('Reference image picker: Required elements not found');
+      return;
+    }
+
+    // Function to update the preview thumbnail
+    function updatePreview(imageUrl, caption) {
+      previewContainer.innerHTML = '';
+
+      if (imageUrl) {
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.alt = 'Selected reference';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        previewContainer.appendChild(img);
+
+        captionElement.textContent = caption || 'No caption';
+      } else {
+        // Show placeholder
+        const placeholder = document.createElement('div');
+        placeholder.className = 'bg-light d-flex align-items-center justify-content-center text-muted h-100';
+        placeholder.innerHTML = '<svg class="tt-icon tt-icon-lg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-1.5c0-2.33-4.67-3.5-7-3.5z"/></svg>';
+        previewContainer.appendChild(placeholder);
+
+        captionElement.textContent = 'No reference image set';
+      }
+    }
+
+    // Function to attach click handlers to image cards
+    function attachImageCardHandlers() {
+      const imageCards = galleryContainer.querySelectorAll('.journal-image-card');
+
+      imageCards.forEach(function(card) {
+        card.addEventListener('click', function(e) {
+          e.preventDefault();
+
+          // Get image data from card
+          const imageUuid = this.dataset.imageUuid;
+          const thumbnailUrl = this.dataset.thumbnailUrl;
+          const imageCaption = this.dataset.caption || '';
+
+          if (imageUuid && thumbnailUrl) {
+            // Update preview thumbnail
+            updatePreview(thumbnailUrl, imageCaption);
+
+            // Update hidden input
+            hiddenInput.value = imageUuid;
+
+            // Enable submit button
+            submitButton.disabled = false;
+          }
+        });
+      });
+    }
+
+    // Initial setup
+    attachImageCardHandlers();
+
+    // Re-attach handlers when gallery is updated via async reload (date change)
+    const galleryObserver = new MutationObserver(function() {
+      attachImageCardHandlers();
+      // Don't reset selection when gallery changes - keep preview as is
+    });
+
+    galleryObserver.observe(galleryContainer, { childList: true, subtree: true });
+  }
+
+  // Initialize on DOM ready
+  $(document).ready(function() {
+    initJournalReferenceImagePicker();
+  });
+
   // Expose for debugging
   window.JournalEditor = {
     getInstance: function() {

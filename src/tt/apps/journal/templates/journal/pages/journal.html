@@ -1,6 +1,7 @@
 {% extends "journal/pages/journal_base.html" %}
 {% load icons %}
 {% load travelog_tags %}
+{% load pipeline %}
 
 {% block trip_content %}
 <div class="m-3">
@@ -8,18 +9,8 @@
 
   <div class="card mb-3">
     <div class="row no-gutters">
-      <div class="col-3 col-md-2">
-        {% if journal.reference_image %}
-        <img src="{{ journal.reference_image.thumbnail_image.url }}"
-             alt="{{ journal.reference_image.caption|default:'Reference' }}"
-             class="img-fluid w-100"
-             style="object-fit: cover; height: 120px;">
-        {% else %}
-        <div class="bg-light d-flex align-items-center justify-content-center text-muted border-right"
-             style="height: 120px;">
-          {% icon "camera" size="lg" %}
-        </div>
-        {% endif %}
+      <div class="col-3 col-md-2" id="journal-reference-image-container">
+        {% include "journal/components/journal_reference_image_display.html" %}
       </div>
 
       <div class="col-9 col-md-10">
@@ -300,4 +291,9 @@
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block footer_post_javascript %}
+{{ block.super }}
+{% javascript 'journal_editor' %}
 {% endblock %}

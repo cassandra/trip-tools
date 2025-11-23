@@ -1,8 +1,10 @@
 from datetime import date as date_class, timedelta
 import logging
+import pytz
 from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import BadRequest
 from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -31,6 +33,7 @@ from .services import (
     JournalRestoreService,
 )
 
+from tt.apps.images.models import TripImage
 from tt.apps.travelog.models import Travelog
 from tt.apps.travelog.services import PublishingService
 
@@ -837,3 +840,110 @@ class JournalRestoreView( LoginRequiredMixin, TripViewMixin, ModalView ):
             user = request.user
         )
         return self.refresh_response( request )
+
+
+class JournalReferenceImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView):
+    """Modal for selecting and setting a reference image for the Journal."""
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_reference_image_picker.html'
+
+    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid=journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip=journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+        trip = request_member.trip
+
+        selected_date, selected_timezone = self._get_accessible_images_date_and_timezone(
+            journal = journal,
+            request_date_str = request.GET.get('date'),
+        )
+        # Get accessible images for the selected date/timezone
+        accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
+            trip = trip,
+            user = request.user,
+            date = selected_date,
+            timezone = selected_timezone,
+            scope = ImagePickerScope.DEFAULT,
+        )
+
+        context = {
+            'journal': journal,
+            'accessible_images': accessible_images,
+            'trip': trip,
+            'selected_date': selected_date,
+        }
+        return self.modal_response(request, context)
+
+    def post(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        journal = get_object_or_404(
+            Journal,
+            uuid=journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip=journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+        image_uuid_str = request.POST.get('image_uuid')
+        if not image_uuid_str:
+            return http_response({'error': 'Image UUID required'}, status=400)
+
+        try:
+            image_uuid = UUID(image_uuid_str)
+        except ValueError:
+            return http_response({'error': 'Invalid UUID format'}, status=400)
+
+        # Get and validate image (verify it was uploaded by a trip member)
+        trip_image = get_object_or_404(TripImage, uuid=image_uuid)
+
+        # Security check: ensure image was uploaded by a current trip member
+        member_user_ids = TripMember.objects.filter(
+            trip=journal.trip
+        ).values_list('user_id', flat=True)
+
+        if trip_image.uploaded_by_id not in member_user_ids:
+            return http_response({'error': 'Image not accessible'}, status=403)
+
+        # Update journal reference image
+        journal.reference_image = trip_image
+        journal.save(update_fields=['reference_image'])
+
+        return self.refresh_response( request )
+
+    def _get_accessible_images_date_and_timezone( self, journal : Journal, request_date_str: str ):
+        if request_date_str:
+            try:
+                selected_date = date_class.fromisoformat( request_date_str )
+                return ( selected_date, journal.timezone )
+            except ( TypeError, ValueError ):
+                raise BadRequest('Invalid date format')
+
+        if journal.reference_image and journal.reference_image.datetime_utc:
+            ref_img = journal.reference_image
+            # Use image's timezone if available, otherwise fall back to journal timezone
+            selected_timezone = ref_img.timezone if ref_img.timezone else journal.timezone
+            # Convert UTC datetime to the selected timezone to get the correct date
+            tz = pytz.timezone(selected_timezone)
+            selected_date = ref_img.datetime_utc.astimezone(tz).date()
+            return ( selected_date, selected_timezone )
+
+        for journal_entry in journal.entries.order_by('date'):
+            if journal_entry.reference_image:
+                selected_date = journal_entry.date if journal_entry else date_class.today()
+                selected_timezone = journal_entry.timezone
+                return ( selected_date, selected_timezone )
+            continue
+        
+        selected_date = date_class.today()
+        selected_timezone = journal.timezone
+        return ( selected_date, selected_timezone )
