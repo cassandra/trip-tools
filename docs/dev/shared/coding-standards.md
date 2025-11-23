@@ -75,6 +75,8 @@ We do not use "magic" or hard-coded strings when needing multiple references. An
 
 All DOM ids and class strings that are shared between client and server must adhere to our `DIVID` pattern. See "Client-Server Namespace Sharing" in [Front End Guidelines](../frontend/frontend-guidelines.md).
 
+Any string used multiple times but only in client/javascript should be constants defined inside the module, or in `main.js` if shared across Javascript modules.
+
 ### Type Hints
 
 - We add type hints to dataclass fields, method parameters and method return values.

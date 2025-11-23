@@ -6,14 +6,14 @@
 
 {% block body %}
 <div class="container-fluid p-0">
-  {% include "images/panes/trip_image_display.html" with trip_image=image_page_context.trip_image %}
+  {% include "images/components/trip_image_display.html" with trip_image=image_page_context.trip_image %}
 
   <div class="card">
     <div class="card-header bg-light d-flex justify-content-between align-items-center">
       <strong>Image Information</strong>
     </div>
     <div class="card-body">
-      {% include "images/panes/trip_image_metadata_readonly.html" with trip_image=image_page_context.trip_image %}
+      {% include "images/components/trip_image_metadata_readonly.html" with trip_image=image_page_context.trip_image %}
     </div>
   </div>
 </div>

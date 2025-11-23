@@ -11,7 +11,7 @@
   <form method="post" action="{% url 'start' %}" class="text-left">
     {% csrf_token %}
 
-    {% include "trips/panes/trip-form.html" with show_help_text=True %}
+    {% include "trips/components/trip-form.html" with show_help_text=True %}
 
     <div class="text-center mt-4">
       <button type="submit" class="btn btn-lg btn-primary px-5">

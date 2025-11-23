@@ -399,7 +399,7 @@ class ImageUploadService(Singleton):
             Rendered HTML string
         """
         return render_to_string(
-            'images/partials/image_grid_item.html',
+            'images/components/image_grid_item.html',
             {'trip_image': trip_image},
             request=request,
         )

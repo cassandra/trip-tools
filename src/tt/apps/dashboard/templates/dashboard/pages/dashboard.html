@@ -37,14 +37,14 @@
       <a href="{% url 'trips_create' %}" class="btn btn-primary" data-async="modal">+ Add New Trip</a>
     </div>
   
-    {% include "trips/panes/trip-cards-grid.html" with trips=upcoming_trips icon_type="upcoming" %}
+    {% include "trips/components/trip-cards-grid.html" with trips=upcoming_trips icon_type="upcoming" %}
   </section>
   
   <!-- Past Trips Section -->
   {% if past_trips %}
   <section class="mt-5">
     <h2 class="h3 mb-3">Past Trips</h2>
-    {% include "trips/panes/trip-cards-grid.html" with trips=past_trips icon_type="past" %}
+    {% include "trips/components/trip-cards-grid.html" with trips=past_trips icon_type="past" %}
   </section>
   {% endif %}
 </div>

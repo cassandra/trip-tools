@@ -58,7 +58,7 @@
     <div class="uploaded-grid" id="{{ DIVID.IMAGES_UPLOADED_GRID_ID }}">
       {% if uploaded_images %}
         {% for image in uploaded_images %}
-        {% include "images/partials/image_grid_item.html" with trip_image=image %}
+        {% include "images/components/image_grid_item.html" with trip_image=image %}
         {% endfor %}
       {% else %}
         <div class="empty-state">

@@ -162,7 +162,7 @@ class MemberPermissionChangeView( LoginRequiredMixin, TripViewMixin, View ):
             'request_member': request_member,
             'member_data': member_data,
         }
-        return render( request, 'members/snippets/member_card.html', context )
+        return render( request, 'members/components/member_card.html', context )
 
 
 class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):

@@ -60,7 +60,7 @@
   {% endif %}
   {% if image_page_context.trip_image.latitude and image_page_context.trip_image.longitude %}
   <div class="form-control-plaintext small mb-1">
-    <strong>Current:</strong> {% include "images/panes/gps_display.html" with trip_image=image_page_context.trip_image %}
+    <strong>Current:</strong> {% include "images/components/gps_display.html" with trip_image=image_page_context.trip_image %}
   </div>
   {% endif %}
 </div>

@@ -8,7 +8,7 @@ class ProcessingResult:
     Generic class for use in reporting the outcome of processing. 
     Has two companion templates for rendering:
 
-        common/panes/processing_result.html
+        common/components/processing_result.html
         common/modals/processing_result.html
 
     Provide this as 'processing_result' in the template context.
