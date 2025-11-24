@@ -1,7 +1,7 @@
 asgiref==3.9.1
 attrs==24.2.0
 bleach==6.3.0
-tinycss2==1.4.0
+boto3==1.41.2
 cachetools==5.5.0
 certifi==2025.8.3
 charset-normalizer==3.4.3
@@ -12,6 +12,7 @@ django-constance==4.3.2
 django-csp==3.8
 django-picklefield==3.3
 django-pipeline==4.1.0
+django-storages==1.14.6
 frozenlist==1.4.1
 gunicorn==23.0.0
 idna==3.10
@@ -30,6 +31,7 @@ redis==5.2.0
 requests==2.32.5
 six==1.17.0
 sqlparse==0.5.3
+tinycss2==1.4.0
 typing_extensions==4.15.0
 tzlocal==5.3.1
 urllib3==2.5.0

@@ -36,6 +36,13 @@ class EnvironmentSettings:
     DATABASE_PASSWORD          : str           = None
     DATABASES_NAME_PATH        : str           = None
     MEDIA_ROOT                 : str           = None
+    STORAGE_ENDPOINT_URL       : str           = ''
+    STORAGE_REGION_NAME        : str           = ''
+    STORAGE_BUCKET_NAME        : str           = ''
+    STORAGE_ACCESS_KEY_ID      : str           = ''
+    STORAGE_SECRET_ACCESS_KEY  : str           = ''
+    STORAGE_LOCATION_PREFIX    : str           = ''
+    STORAGE_CUSTOM_DOMAIN      : str           = ''
     REDIS_HOST                 : str           = 'localhost'
     REDIS_PORT                 : int           = 6379
     REDIS_KEY_PREFIX           : str           = ''
@@ -144,6 +151,38 @@ class EnvironmentSettings:
         env_settings.MEDIA_ROOT = cls.get_env_variable(
             'TT_MEDIA_PATH',
             env_settings.MEDIA_ROOT,
+        )
+
+        ###########
+        # Object Storage (DigitalOcean Spaces)
+
+        env_settings.STORAGE_ENDPOINT_URL = cls.get_env_variable(
+            'TT_STORAGE_ENDPOINT_URL',
+            env_settings.STORAGE_ENDPOINT_URL,
+        )
+        env_settings.STORAGE_REGION_NAME = cls.get_env_variable(
+            'TT_STORAGE_REGION_NAME',
+            env_settings.STORAGE_REGION_NAME,
+        )
+        env_settings.STORAGE_BUCKET_NAME = cls.get_env_variable(
+            'TT_STORAGE_BUCKET_NAME',
+            env_settings.STORAGE_BUCKET_NAME,
+        )
+        env_settings.STORAGE_ACCESS_KEY_ID = cls.get_env_variable(
+            'TT_STORAGE_ACCESS_KEY_ID',
+            env_settings.STORAGE_ACCESS_KEY_ID,
+        )
+        env_settings.STORAGE_SECRET_ACCESS_KEY = cls.get_env_variable(
+            'TT_STORAGE_SECRET_ACCESS_KEY',
+            env_settings.STORAGE_SECRET_ACCESS_KEY,
+        )
+        env_settings.STORAGE_LOCATION_PREFIX = cls.get_env_variable(
+            'TT_STORAGE_LOCATION_PREFIX',
+            env_settings.STORAGE_LOCATION_PREFIX,
+        )
+        env_settings.STORAGE_CUSTOM_DOMAIN = cls.get_env_variable(
+            'TT_STORAGE_CUSTOM_DOMAIN',
+            env_settings.STORAGE_CUSTOM_DOMAIN,
         )
 
         ###########

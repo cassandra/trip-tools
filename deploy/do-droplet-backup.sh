@@ -5,8 +5,8 @@ set -e
 . /root/env.prod.sh
 
 # Config
-S3_BUCKET='triptools'
-S3_PREFIX='mysql-backups'
+S3_BUCKET='pomdp'
+S3_PREFIX='triptools/mysql-backups'
 
 TODAY=$(date +%A)         # e.g., Monday, Tuesday
 DAY=$(date +%d)           # e.g., 01, 15

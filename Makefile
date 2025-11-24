@@ -1,6 +1,10 @@
 NOW_DATE := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 
-SCRIPTS = deploy/env-generate.py deploy/run_container.sh
+SCRIPTS = deploy/env-generate.py deploy/run_container.sh deploy/docker-compose-env-convert.py
+
+# Production deployment configuration
+PRODUCTION_DEPLOY_HOST := root@triptools.net
+PRODUCTION_DEPLOY_PATH := /opt/triptools
 
 .SECONDARY:
 
@@ -53,5 +57,35 @@ env-build-dev:	.private/env/development.sh fix-permissions
 fix-permissions:
 	@echo "Setting execute permissions for $(SCRIPTS)"
 	chmod +x $(SCRIPTS)
+
+# Pattern rule: Convert bash env files to docker-compose .env format
+.private/env/docker-compose.%.env:	.private/env/%.sh deploy/docker-compose-env-convert.py
+	@echo "Converting $< to docker-compose format..."
+	./deploy/docker-compose-env-convert.py $< $@
+
+# Docker deployment targets
+docker-push:
+	@TT_VERSION=$$(cat TT_VERSION); \
+	echo "Saving Docker image tt:$$TT_VERSION to tar.gz..."; \
+	docker save tt:$$TT_VERSION | gzip > /tmp/tt-docker-image-$$TT_VERSION.tar.gz; \
+	echo "Image saved: $$(du -h /tmp/tt-docker-image-$$TT_VERSION.tar.gz | cut -f1)"
+
+deploy-prod:	.private/env/docker-compose.production.env
+	@TT_VERSION=$$(cat TT_VERSION); \
+	echo "Deploying version $$TT_VERSION to production..."; \
+	echo "Copying environment file to droplet..."; \
+	scp .private/env/docker-compose.production.env $(PRODUCTION_DEPLOY_HOST):$(PRODUCTION_DEPLOY_PATH)/.env; \
+	echo "Copying Docker image to droplet..."; \
+	scp /tmp/tt-docker-image-$$TT_VERSION.tar.gz $(PRODUCTION_DEPLOY_HOST):/tmp/; \
+	echo "Loading image and restarting services on droplet..."; \
+	ssh $(PRODUCTION_DEPLOY_HOST) '\
+		gunzip -c /tmp/tt-docker-image-'$$TT_VERSION'.tar.gz | docker load && \
+		cd $(PRODUCTION_DEPLOY_PATH) && \
+		docker-compose down && \
+		docker-compose up -d && \
+		rm /tmp/tt-docker-image-'$$TT_VERSION'.tar.gz \
+	'; \
+	rm /tmp/tt-docker-image-$$TT_VERSION.tar.gz; \
+	echo "Deployment complete!"
 
 
