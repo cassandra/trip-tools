@@ -167,10 +167,15 @@ WSGI_APPLICATION = 'tt.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join( ENV.DATABASES_NAME_PATH, 'tt.sqlite3' ),
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': ENV.DATABASE_HOST,
+        'PORT': ENV.DATABASE_PORT,
+        'NAME': ENV.DATABASE_NAME,
+        'USER': ENV.DATABASE_USER,
+        'PASSWORD': ENV.DATABASE_PASSWORD,
     }
 }
+
 
 
 # Password validation

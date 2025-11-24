@@ -26,6 +26,11 @@ class TestEnvironmentHomeView(SyncViewTestCase):
         # Check for expected configuration keys
         expected_keys = [
             'ALLOWED_HOSTS',
+            'DATABASE_HOST',
+            'DATABASE_PORT',
+            'DATABASE_NAME',
+            'DATABASE_USER',
+            'DATABASE_PASSWORD',
             'DATABASES_NAME_PATH',
             'REDIS_HOST',
             'REDIS_PORT',

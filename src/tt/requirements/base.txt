@@ -16,6 +16,7 @@ frozenlist==1.4.1
 gunicorn==23.0.0
 idna==3.10
 multidict==6.0.5
+mysqlclient==2.2.7
 numpy==2.1.0
 pillow==10.4.0
 pillow-heif==0.20.0

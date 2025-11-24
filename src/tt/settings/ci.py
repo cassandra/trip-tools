@@ -4,6 +4,13 @@ from .base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join( ENV.DATABASES_NAME_PATH, 'tt.sqlite3' ),
+    }
+}
+
 STATIC_ROOT = '/tmp/tt/static'
 
 LOGGING = {

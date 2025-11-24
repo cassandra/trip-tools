@@ -29,6 +29,11 @@ class EnvironmentSettings:
     ALLOWED_HOSTS              : Tuple[ str ]  = field( default_factory = tuple )
     CORS_ALLOWED_ORIGINS       : Tuple[ str ]  = field( default_factory = tuple )
     EXTRA_CSP_URLS             : Tuple[ str ]  = field( default_factory = tuple )
+    DATABASE_HOST              : str           = None
+    DATABASE_PORT              : str           = None
+    DATABASE_NAME              : str           = None
+    DATABASE_USER              : str           = None
+    DATABASE_PASSWORD          : str           = None
     DATABASES_NAME_PATH        : str           = None
     MEDIA_ROOT                 : str           = None
     REDIS_HOST                 : str           = 'localhost'
@@ -103,12 +108,39 @@ class EnvironmentSettings:
             env_settings.DJANGO_SUPERUSER_PASSWORD )
 
         ###########
-        # Database and Media paths
+        # Databases
         
+        # Current: For server based DB (e.g., MySQL, Postgres)
+        env_settings.DATABASE_HOST = cls.get_env_variable(
+            'TT_DB_HOST',
+            env_settings.DATABASE_HOST,
+        )
+        env_settings.DATABASE_PORT = cls.get_env_variable(
+            'TT_DB_PORT',
+            env_settings.DATABASE_PORT,
+        )
+        env_settings.DATABASE_NAME = cls.get_env_variable(
+            'TT_DB_NAME',
+            env_settings.DATABASE_NAME,
+        )
+        env_settings.DATABASE_USER = cls.get_env_variable(
+            'TT_DB_USER',
+            env_settings.DATABASE_USER,
+        )
+        env_settings.DATABASE_PASSWORD = cls.get_env_variable(
+            'TT_DB_PASSWORD',
+            env_settings.DATABASE_PASSWORD,
+        )
+
+        # Previous: For file-base DB (e.g., SQLite)
         env_settings.DATABASES_NAME_PATH = cls.get_env_variable(
             'TT_DB_PATH',
             env_settings.DATABASES_NAME_PATH,
         )
+
+        ###########
+        # Media
+        
         env_settings.MEDIA_ROOT = cls.get_env_variable(
             'TT_MEDIA_PATH',
             env_settings.MEDIA_ROOT,
@@ -133,6 +165,7 @@ class EnvironmentSettings:
         ###########
         # Email-related
 
+        # General email settings
         env_settings.EMAIL_SUBJECT_PREFIX = "%s " % cls.get_env_variable(
             'TT_EMAIL_SUBJECT_PREFIX',
             env_settings.EMAIL_SUBJECT_PREFIX,
@@ -145,13 +178,17 @@ class EnvironmentSettings:
             'TT_SERVER_EMAIL',
             env_settings.SERVER_EMAIL,
         )
-        env_settings.EMAIL_HOST = cls.get_env_variable(
-            'TT_EMAIL_HOST',
-            env_settings.EMAIL_HOST,
-        )
+
+        # Current: API-based emails (e.g., Resend, Mailgun)
         env_settings.EMAIL_API_KEY = cls.get_env_variable(
             'TT_EMAIL_API_KEY',
             env_settings.EMAIL_API_KEY,
+        )
+
+        # Previous: Direct SMTP settings (e.g., GMail)
+        env_settings.EMAIL_HOST = cls.get_env_variable(
+            'TT_EMAIL_HOST',
+            env_settings.EMAIL_HOST,
         )
         try:
             env_settings.EMAIL_PORT = int( cls.get_env_variable(
