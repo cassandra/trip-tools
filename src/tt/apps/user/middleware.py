@@ -21,6 +21,7 @@ class AuthenticationMiddleware(object):
     # Path prefixes that are publicly accessible without authentication
     EXEMPT_PATH_PREFIXES = (
         '/travelog/',
+        '/media/',  # Needed for local development when Django serves these directly
     )
 
     def __init__(self, get_response):

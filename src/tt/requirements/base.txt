@@ -7,6 +7,7 @@ certifi==2025.8.3
 charset-normalizer==3.4.3
 dateparser==1.2.2
 Django==5.2.7
+django-anymail==13.1
 django-constance==4.3.2
 django-csp==3.8
 django-picklefield==3.3

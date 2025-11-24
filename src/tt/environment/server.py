@@ -43,6 +43,7 @@ class EnvironmentSettings:
     EMAIL_HOST_PASSWORD        : str           = ''
     EMAIL_USE_TLS              : bool          = False
     EMAIL_USE_SSL              : bool          = False
+    EMAIL_API_KEY              : str           = ''
     
     @property
     def environment_name(self) -> str:
@@ -147,6 +148,10 @@ class EnvironmentSettings:
         env_settings.EMAIL_HOST = cls.get_env_variable(
             'TT_EMAIL_HOST',
             env_settings.EMAIL_HOST,
+        )
+        env_settings.EMAIL_API_KEY = cls.get_env_variable(
+            'TT_EMAIL_API_KEY',
+            env_settings.EMAIL_API_KEY,
         )
         try:
             env_settings.EMAIL_PORT = int( cls.get_env_variable(

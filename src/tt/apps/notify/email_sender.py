@@ -163,6 +163,7 @@ class EmailSender:
         for setting_name in [ 'EMAIL_BACKEND',
                               'EMAIL_HOST',
                               'EMAIL_PORT',
+                              'EMAIL_API_KEY',
                               'EMAIL_HOST_USER',
                               'DEFAULT_FROM_EMAIL',
                               'SERVER_EMAIL' ]:

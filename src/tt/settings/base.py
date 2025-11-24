@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'pipeline',
     'django.contrib.humanize',
+    'anymail',
     'constance',
     'custom',
     'tt.environment',
@@ -357,7 +358,12 @@ AUTH_USER_MODEL = "custom.CustomUser"
 # ====================
 # Transactional Emails
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+
+EMAIL_API_KEY = ENV.EMAIL_API_KEY
+ANYMAIL = {
+    'RESEND_API_KEY': EMAIL_API_KEY,
+}
 
 EMAIL_SUBJECT_PREFIX = "%s " % ENV.EMAIL_SUBJECT_PREFIX
 DEFAULT_FROM_EMAIL = ENV.DEFAULT_FROM_EMAIL
