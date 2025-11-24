@@ -4,6 +4,8 @@ Tests for journal entry autosave functionality.
 Tests HTML sanitization, version conflict detection, and atomic updates
 for journal entries using ContentEditable.
 """
+import logging
+
 import json
 from datetime import date
 from django.contrib.auth import get_user_model
@@ -15,6 +17,8 @@ from tt.apps.trips.models import Trip
 from tt.apps.trips.enums import TripPermissionLevel
 from tt.apps.journal.models import Journal, JournalEntry
 from tt.apps.journal.autosave_helpers import JournalAutoSaveHelper
+
+logging.disable(logging.CRITICAL)
 
 User = get_user_model()
 

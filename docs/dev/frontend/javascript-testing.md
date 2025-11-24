@@ -42,7 +42,7 @@ open src/tt/static/tests/test-all.html
 
 **Via Django server:**
 ```bash
-src/manage.py runserver
+./src/manage.py runserver
 # Navigate to: http://127.0.0.1:6777/static/tests/test-all.html
 ```
 

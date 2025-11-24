@@ -38,12 +38,11 @@ make env-build-dev
 python3.11 -m venv venv
 . ./init-env-dev.sh
 pip install -r src/tt/requirements/development.txt
-cd src
-./manage.py check
-./manage.py migrate
-./manage.py tt_createsuperuser
-./manage.py tt_creategroups
-./manage.py runserver
+./src/manage.py check
+./src/manage.py migrate
+./src/manage.py tt_createsuperuser
+./src/manage.py tt_creategroups
+./src/manage.py runserver
 ```
 
 ## Fork the Repository
@@ -132,17 +131,17 @@ pip install -r src/tt/requirements/development.txt
 
 Initialize the database and add the admin users and groups.
 ``` shell
-cd $PROJ_DIR/src
-./manage.py check
-./manage.py migrate
-./manage.py tt_createsuperuser
-./manage.py tt_creategroups
+cd $PROJ_DIR
+./src/manage.py check
+./src/manage.py migrate
+./src/manage.py tt_createsuperuser
+./src/manage.py tt_creategroups
 ```
 
 It is a good idea to run the tests to validate that you can and that the installation seem fine.
 ``` shell
-cd $PROJ_DIR/src
-./manage.py test
+cd $PROJ_DIR
+./src/manage.py test
 ```
 
 ### Running
@@ -150,8 +149,8 @@ cd $PROJ_DIR/src
 Ensure that the Redis server is running (see the Dependencies page for installation instructions), then:
 
 ``` shell
-cd $PROJ_DIR/src
-./manage.py runserver
+cd $PROJ_DIR
+./src/manage.py runserver
 ```
 
 Then, visit: [http://127.0.0.1:6777](http://127.0.0.1:6777) to access the app.
@@ -171,26 +170,26 @@ Once your environment is set up, these are the common commands for daily develop
 cd $PROJ_DIR/src
 
 # Database operations
-./manage.py migrate
-./manage.py makemigrations
-./manage.py check
+./src/manage.py migrate
+./src/manage.py makemigrations
+./src/manage.py check
 
 # Testing
-./manage.py test                    # Run all tests
-./manage.py test weather.tests     # Run specific app tests
+./src/manage.py test                    # Run all tests
+./src/manage.py test weather.tests     # Run specific app tests
 
 # User management
-./manage.py tt_createsuperuser
-./manage.py tt_creategroups
+./src/manage.py tt_createsuperuser
+./src/manage.py tt_creategroups
 
 # Development server
-./manage.py runserver              # Runs on http://127.0.0.1:6777
+./src/manage.py runserver              # Runs on http://127.0.0.1:6777
 ```
 
 ### Code Quality
 ```bash
 # Linting and formatting (from development.txt requirements)
-black src/                         # Format code
+black src/                            # Format code
 flake8 --config=src/.flake8-ci src/   # Lint code with CI configuration
 autopep8 --in-place --recursive src/  # Auto-format
 ```

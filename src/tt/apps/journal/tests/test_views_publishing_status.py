@@ -17,8 +17,9 @@ from tt.apps.trips.enums import TripStatus
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 from tt.apps.travelog.models import Travelog, TravelogEntry
 
-User = get_user_model()
 logging.disable(logging.CRITICAL)
+
+User = get_user_model()
 
 
 class JournalViewPublishingStatusTestCase(TestCase):

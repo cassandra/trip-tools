@@ -1,3 +1,5 @@
+import logging
+
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -7,6 +9,7 @@ from tt.apps.trips.enums import TripPermissionLevel, TripPage, TripStatus
 from tt.apps.trips.models import Trip
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
+logging.disable(logging.CRITICAL)
 
 User = get_user_model()
 

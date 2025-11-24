@@ -22,7 +22,6 @@ You serve as the **first-line investigator** for tasks that require:
 - **UI/template specifics** → Use frontend-dev agent
 - **Business logic details** → Use domain-expert agent
 - **Testing strategies** → Use test-engineer agent
-- **Integration specifics** → Use integration-dev agent
 - **Code quality deep dives** → Use code-quality agent
 
 ## Your Expertise Areas
@@ -74,7 +73,6 @@ Based on findings, identify which domains are involved:
 **Recommend Specialists**:
 - backend-dev agent: For User model changes
 - frontend-dev agent: For dashboard template updates
-- integration-dev agent: For external API impacts
 
 **Context for Specialists**: [Provide findings and specific focus areas]
 ```

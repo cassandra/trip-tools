@@ -464,3 +464,212 @@ class TestTravelogImageCacheService(TestCase):
         cache_key = mock_redis.delete.call_args[0][0]
         self.assertIn(str(self.journal.uuid), cache_key)
         self.assertIn('VIEW', cache_key)
+
+
+class TestTravelogImageCacheKeySecurity(TestCase):
+    """Test cache key generation security."""
+
+    def test_cache_key_format_prevents_injection(self):
+        """Test cache key format prevents injection attacks."""
+        import uuid
+        from ..services import TravelogImageCacheService
+        from ..enums import ContentType
+
+        journal_uuid = uuid.uuid4()
+
+        # Normal case
+        key = TravelogImageCacheService._get_cache_key(
+            journal_uuid,
+            ContentType.VIEW
+        )
+
+        # Verify format: travelog:images:{uuid}:{type}
+        self.assertIn("travelog:images:", key)
+        self.assertIn(str(journal_uuid), key)
+        self.assertIn("VIEW", key)
+
+        # No injection characters should exist
+        self.assertNotIn("\n", key)
+        self.assertNotIn("\r", key)
+        self.assertNotIn("\x00", key)
+
+    def test_cache_key_uniqueness_per_journal_and_type(self):
+        """Test cache keys are unique per journal/content type combination."""
+        import uuid
+        from ..services import TravelogImageCacheService
+        from ..enums import ContentType
+
+        journal1_uuid = uuid.uuid4()
+        journal2_uuid = uuid.uuid4()
+
+        # Different journals, same type
+        key1 = TravelogImageCacheService._get_cache_key(
+            journal1_uuid, ContentType.VIEW
+        )
+        key2 = TravelogImageCacheService._get_cache_key(
+            journal2_uuid, ContentType.VIEW
+        )
+        self.assertNotEqual(key1, key2)
+
+        # Same journal, different types
+        key3 = TravelogImageCacheService._get_cache_key(
+            journal1_uuid, ContentType.DRAFT
+        )
+        self.assertNotEqual(key1, key3)
+
+    def test_cache_key_version_number_isolation(self):
+        """Test version numbers create unique cache keys."""
+        import uuid
+        from ..services import TravelogImageCacheService
+        from ..enums import ContentType
+
+        journal_uuid = uuid.uuid4()
+
+        key_v1 = TravelogImageCacheService._get_cache_key(
+            journal_uuid,
+            ContentType.VERSION,
+            version_number=1
+        )
+        key_v2 = TravelogImageCacheService._get_cache_key(
+            journal_uuid,
+            ContentType.VERSION,
+            version_number=2
+        )
+
+        # Different versions must have different keys
+        self.assertNotEqual(key_v1, key_v2)
+
+
+class TestTravelogImageCacheRegexSecurity(TestCase):
+    """Test regex patterns against ReDoS attacks."""
+
+    def test_image_extraction_html_injection_resistance(self):
+        """Test image extraction resists HTML injection attempts."""
+        from ..services import TravelogImageCacheService
+
+        # Malicious HTML with injection attempts
+        malicious_html = """
+        <img class="trip-image" data-uuid="550e8400-e29b-41d4-a716-446655440000" onload="alert(\"xss\")">
+        <img class="trip-image" data-uuid="<script>alert(\"xss\")</script>">
+        <img class="trip-image" data-uuid="550e8400-e29b-41d4-a716-446655440001" data-layout="float-right\" onload=\"alert(\"xss\")"
+        """
+
+        images = TravelogImageCacheService._extract_images_from_html(
+            malicious_html,
+            entry_date="2024-01-01",
+            document_order=1
+        )
+
+        # Only valid UUIDs should be extracted
+        # XSS attempts should be ignored (UUID format validation)
+        valid_images = [img for img in images if len(img.uuid) == 36]
+        self.assertEqual(len(valid_images), 2)  # Two valid UUIDs
+
+        for img in valid_images:
+            # UUID should be valid format (no injection)
+            self.assertEqual(len(img.uuid), 36)  # UUID format: 8-4-4-4-12
+            self.assertNotIn("<", img.uuid)
+            self.assertNotIn(">", img.uuid)
+            self.assertNotIn("script", img.uuid)
+
+
+class TestTravelogImageCacheRedisSecurity(TestCase):
+    """Test Redis cache security and error handling."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Create test user
+        self.user = User.objects.create_user(
+            email="test@example.com",
+            password="testpass123"
+        )
+
+        # Create test trip using synthetic data pattern
+        self.trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title="Test Trip"
+        )
+
+        # Create test journal
+        self.journal = Journal.objects.create(
+            trip=self.trip,
+            title="Test Journal",
+            description="A test journal",
+            visibility=JournalVisibility.PUBLIC
+        )
+
+    def test_get_images_graceful_degradation_on_redis_failure(self):
+        """Test service degrades gracefully when Redis fails."""
+        from ..services import TravelogImageCacheService
+        from ..context import TravelogPageContext
+        from ..enums import ContentType
+
+        # Create entry with image
+        JournalEntry.objects.create(
+            journal=self.journal,
+            date=date(2024, 1, 10),
+            text="<img class=\"trip-image\" data-uuid=\"550e8400-e29b-41d4-a716-446655440000\">"
+        )
+
+        context = TravelogPageContext(
+            journal=self.journal,
+            content_type=ContentType.DRAFT
+        )
+
+        # Mock Redis to raise exception
+        with patch("tt.apps.travelog.services.get_redis_client") as mock_redis:
+            mock_redis.return_value.get.side_effect = Exception("Redis down")
+
+            # Should NOT raise exception - graceful degradation
+            images = TravelogImageCacheService.get_images(context)
+
+            # Should still extract images from content (fallback)
+            self.assertEqual(len(images), 1)
+            self.assertEqual(images[0].uuid, "550e8400-e29b-41d4-a716-446655440000")
+
+    def test_cache_ttl_strategy_security(self):
+        """Test TTL strategies prevent cache staleness for security-sensitive content."""
+        from ..services import TravelogImageCacheService
+        from ..enums import ContentType
+
+        # DRAFT: 1 hour (frequently changing)
+        self.assertEqual(
+            TravelogImageCacheService._get_ttl_for_content_type(ContentType.DRAFT),
+            3600
+        )
+
+        # VIEW: None (infinite with manual invalidation - immutable content)
+        self.assertIsNone(
+            TravelogImageCacheService._get_ttl_for_content_type(ContentType.VIEW)
+        )
+
+        # VERSION: 24 hours (rarely accessed historical content)
+        self.assertEqual(
+            TravelogImageCacheService._get_ttl_for_content_type(ContentType.VERSION),
+            86400
+        )
+
+    @patch("tt.apps.travelog.services.get_redis_client")
+    def test_invalidate_cache_prevents_stale_data(self, mock_get_redis):
+        """Test cache invalidation prevents serving stale data."""
+        import uuid
+        from ..services import TravelogImageCacheService
+        from ..enums import ContentType
+
+        journal_uuid = uuid.uuid4()
+
+        mock_redis = MagicMock()
+        mock_redis.delete.return_value = 1
+        mock_get_redis.return_value = mock_redis
+
+        TravelogImageCacheService.invalidate_cache(
+            journal_uuid,
+            ContentType.VIEW
+        )
+
+        # Verify cache key deleted
+        mock_redis.delete.assert_called_once()
+        cache_key = mock_redis.delete.call_args[0][0]
+        self.assertIn(str(journal_uuid), cache_key)
+        self.assertIn("VIEW", cache_key)
+

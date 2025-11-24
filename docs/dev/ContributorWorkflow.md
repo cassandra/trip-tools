@@ -45,9 +45,8 @@ git push origin main
 You should also ensure you are in sync with with any packages or database schema changes before beginning work.
 ``` shell
 cd $PROJ_DIR
-cd src
-pip install -r tt/requirements/development.txt
-./manage.py migrate
+pip install -r src/tt/requirements/development.txt
+./src/manage.py migrate
 ```
 
 ## Create an Issue and Branch

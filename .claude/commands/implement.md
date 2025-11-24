@@ -50,7 +50,6 @@ Execute focused implementation workflow for issue that has already been picked u
    - **FOR CLEAR DOMAIN WORK**: Use Task tool with appropriate specialist agent:
      - `backend-dev`: Django models, views, managers, database changes
      - `frontend-dev`: Templates, JavaScript, CSS, UI components
-     - `integration-dev`: External APIs, data sync, third-party integrations
      - `domain-expert`: Business logic, entity relationships, domain rules
 
    - **FOR AMBIGUOUS/MIXED WORK**: Implement directly following general-purpose principles:
@@ -75,7 +74,6 @@ Execute focused implementation workflow for issue that has already been picked u
    **Conditionally use based on implementation scope**:
    - **backend-dev agent**: If Django models, views, or backend logic was modified
    - **frontend-dev agent**: If templates, JavaScript, CSS, or UI components were modified
-   - **integration-dev agent**: If external APIs or integration services were modified
    - **domain-expert agent**: If business logic or domain rules were implemented
 
    **Review criteria**: All review agents must approve before proceeding to push

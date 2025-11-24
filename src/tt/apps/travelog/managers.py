@@ -3,7 +3,8 @@ from django.db import models, transaction
 
 if TYPE_CHECKING:
     from .models import Travelog, TravelogEntry
-    from tt.apps.journal.models import Journal
+
+from tt.apps.journal.models import Journal
 
 
 class TravelogManager(models.Manager):

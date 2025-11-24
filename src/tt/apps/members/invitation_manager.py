@@ -147,7 +147,7 @@ class MemberInvitationManager( Singleton ):
 
         email_sender = EmailSender( data = email_sender_data )
         email_sender.send()
-        logger.info( f'Sent invitation email to {user.email} for trip {trip.pk}' )
+        logger.debug( f'Sent invitation email to {user.email} for trip {trip.pk}' )
         return
 
     def _send_signup_invitation_email( self,
@@ -186,7 +186,7 @@ class MemberInvitationManager( Singleton ):
 
         email_sender = EmailSender( data = email_sender_data )
         email_sender.send()
-        logger.info( f'Sent signup invitation email to {user.email} for trip {trip.pk}' )
+        logger.debug( f'Sent signup invitation email to {user.email} for trip {trip.pk}' )
         return
 
     def verify_invitation_token( self, user, token : str, trip = None ) -> bool:
