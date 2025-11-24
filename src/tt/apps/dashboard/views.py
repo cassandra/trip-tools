@@ -8,6 +8,9 @@ from django.views.generic import View
 from tt.apps.trips.enums import TripStatus
 from tt.apps.trips.models import Trip
 
+from .context import DashboardPageContext
+from .enums import DashboardPage
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,8 +29,14 @@ class DashboardView(LoginRequiredMixin, View):
         past_trips = [
             trip for trip in all_trips
             if trip.trip_status == TripStatus.PAST
-        ]        
+        ]
+
+        dashboard_page_context = DashboardPageContext(
+            active_page = DashboardPage.TRIPS,
+        )
+
         context = {
+            'dashboard_page': dashboard_page_context,
             'upcoming_trips': upcoming_trips,
             'past_trips': past_trips,
             'total_trips': len(all_trips),

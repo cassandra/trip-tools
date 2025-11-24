@@ -1,0 +1,29 @@
+{% load icons %}
+{% load tz %}
+{% timezone USER_TIMEZONE %}
+<a href="{% url 'images_image_inspect' image_uuid=trip_image.uuid %}" data-async="modal" class="uploaded-item-link">
+  <div class="uploaded-item">
+    <div class="uploaded-thumbnail">
+      {% if trip_image.thumbnail_image %}
+        <img src="{{ trip_image.thumbnail_image.url }}" alt="{{ trip_image.caption|default:'Photo' }}">
+      {% else %}
+        {% icon "camera" size="xl" %}
+      {% endif %}
+    </div>
+    <div class="uploaded-meta">
+      <div class="uploaded-name" title="{{ trip_image.caption|default:trip_image.uuid }}">{{ trip_image.caption|default:trip_image.uuid|truncatechars:30 }}</div>
+      {% if trip_image.datetime_utc %}
+        <div class="uploaded-details">{{ trip_image.datetime_utc|date:"M j, Y • g:i A" }}</div>
+      {% else %}
+        <div class="uploaded-details">{{ trip_image.uploaded_datetime|date:"M j, Y • g:i A" }}</div>
+      {% endif %}
+      {% if trip_image.latitude and trip_image.longitude %}
+        <div class="uploaded-details">Location: {{ trip_image.latitude|floatformat:4 }}, {{ trip_image.longitude|floatformat:4 }}</div>
+      {% endif %}
+      {% if trip_image.has_exif %}
+        <span class="exif-badge">EXIF</span>
+      {% endif %}
+    </div>
+  </div>
+</a>
+{% endtimezone %}

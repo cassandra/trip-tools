@@ -26,7 +26,6 @@ Perform comprehensive codebase analysis and implementation planning:
    - **domain-expert agent**: For business logic analysis
    - **backend-dev agent**: For Django model/database analysis
    - **frontend-dev agent**: For template/UI analysis
-   - **integration-dev agent**: For external API analysis
 
 4. **Comprehensive code analysis** - Identify:
    - Relevant files, classes, and functions

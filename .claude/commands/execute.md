@@ -76,7 +76,6 @@ Execute complete strategic-to-delivery workflow with intelligent coordination:
    **Implementation Phase (based on issue type):**
    - **backend-dev agent**: Django models, database, manager classes, system architecture
    - **frontend-dev agent**: Templates, UI components, JavaScript, CSS, responsive design
-   - **integration-dev agent**: External APIs, data synchronization, integration patterns
    - **test-engineer agent**: Test strategy, high-value tests, quality assurance
 
    **Coordination Strategy:**
@@ -99,7 +98,6 @@ Execute complete strategic-to-delivery workflow with intelligent coordination:
    **Determine which agents to use based on what was implemented:**
    - **backend-dev agent** (if database, models, managers, or Django backend code): Review Django patterns, database operations, backend architecture, and manager implementations
    - **frontend-dev agent** (if templates, UI, CSS, JavaScript): Review template structure, frontend patterns, accessibility, and responsive design
-   - **integration-dev agent** (if APIs, external services, data sync): Review integration patterns, API design, data transformation, and external service coordination
    - **test-engineer agent** (always for significant implementations): Review test coverage, test quality, testing patterns, and validation strategies
    - **domain-expert agent** (if business logic or domain rules): Review business rule implementation, domain modeling, and requirement compliance
    - **code-quality agent** (always): Review coding standards compliance, file organization, import structure, and adherence to project conventions from docs/CLAUDE.md
@@ -109,7 +107,6 @@ Execute complete strategic-to-delivery workflow with intelligent coordination:
 
    - **backend-dev**: Django ORM usage, database patterns, manager architecture, system design
    - **frontend-dev**: UI patterns, accessibility, responsive design, JavaScript quality
-   - **integration-dev**: API patterns, data synchronization, external service integration
    - **test-engineer**: Test coverage, testing strategies, test quality and maintainability
    - **domain-expert**: Business logic correctness, domain rule implementation, requirement fulfillment
    - **code-quality**: Coding standards, file structure, imports, naming conventions, documentation quality

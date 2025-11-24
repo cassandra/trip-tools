@@ -13,7 +13,17 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "Bash(cat:*)",
-      "Bash(flake8:*)"
+      "Bash(flake8:*)",
+      "SlashCommand(/icon:*)",
+      "WebFetch(domain:objects.githubusercontent.com)",
+      "Bash(gh issue list:*)",
+      "Bash(python manage.py check:*)",
+      "Bash(python manage.py shell:*)",
+      "Bash(find:*)",
+      "Bash(node --check:*)",
+      "Bash(readlink:*)",
+      "Bash(./src/manage.py test:*)",
+      "Bash(sort:*)"
     ],
     "deny": [],
     "ask": []

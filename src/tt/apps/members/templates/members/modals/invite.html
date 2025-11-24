@@ -6,7 +6,7 @@
 {% block title_text %}Invite Member{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'members_invite' trip_id=trip.pk %}" data-async="modal">
+<form method="post" action="{% url 'members_invite' trip_uuid=trip.uuid %}" data-async="modal">
   {% csrf_token %}
 {% endblock %}
 
@@ -50,7 +50,7 @@
 
 <div class="mb-3">
   <h6 class="small text-muted mb-2">Permission Levels:</h6>
-  {% include "members/snippets/permission_levels_explanation.html" %}
+  {% include "members/components/permission_levels_explanation.html" %}
 </div>
 
 {% if form.non_field_errors %}

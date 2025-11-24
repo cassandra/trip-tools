@@ -1,0 +1,39 @@
+{% load static %}
+{% load icons %}
+
+{# Trip cards grid with empty state using Bootstrap components #}
+{# Parameters: trips (queryset or list), icon_type (optional, defaults to 'upcoming') #}
+
+{% if trips %}
+<div class="row">
+  {% for trip in trips %}
+  <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-4">
+    <a href="{% url 'trips_home' trip_uuid=trip.uuid %}" class="text-decoration-none">
+      <div class="card card-hover h-100" data-trip-uuid="{{ trip.uuid }}">
+        <div class="card-img-top bg-light d-flex align-items-center justify-content-center trip-card-image{% if icon_type == 'past' %} trip-card-image--past{% endif %}">
+          <img src="{% static 'img/tt-icon-196x196.png' %}" alt="Trip icon" class="trip-card-icon{% if icon_type == 'past' %} trip-card-icon--past{% endif %}">
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">{{ trip.title }}</h5>
+          {% if trip.description %}
+          <p class="card-text text-muted small trip-card-description">{{ trip.description }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+{# Empty state using Bootstrap utilities #}
+<div class="text-center p-5 bg-light border border-secondary rounded empty-state-dashed">
+  <div class="text-muted mb-3">
+    {% icon "map-pin" size="lg" %}
+  </div>
+  <h3 class="h5">No {% if icon_type == 'past' %}Past{% else %}Upcoming{% endif %} Trips</h3>
+  <p class="text-muted mb-3">{% if icon_type == 'past' %}No past trips to display.{% else %}Start planning your next adventure!{% endif %}</p>
+  {% if icon_type != 'past' %}
+  <a href="{% url 'trips_create' %}" class="btn btn-primary btn-lg" data-async="modal">Create A Trip</a>
+  {% endif %}
+</div>
+{% endif %}

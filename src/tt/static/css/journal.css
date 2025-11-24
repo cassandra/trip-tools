@@ -1,0 +1,163 @@
+/*
+ * Trip Tools - Journal Content Rendering
+ *
+ * PUBLIC STYLES - These styles render saved journal HTML without JavaScript
+ * Used by both the external public view and the editor view
+ *
+ * IMPORTANT: This CSS must render correctly with zero JavaScript!
+ * All styles here are for PERSISTENT HTML elements saved to the database.
+ */
+
+/* ===========================================
+   IMAGE WRAPPER LAYOUT - PERSISTENT
+   Images are always wrapped in .trip-image-wrapper
+   =========================================== */
+
+/* Base wrapper styles */
+.trip-image-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Float-right wrapper (images within paragraphs) */
+.trip-image-wrapper[data-layout="float-right"] {
+  float: right;
+  margin: 0 0 1rem 1rem;
+  max-width: 25%; /* col-3: max 1/4 width so two images = 1/2 width */
+}
+
+/* Full-width wrapper (images between paragraphs) */
+.trip-image-wrapper[data-layout="full-width"] {
+  display: inline-block; /* Allow multiple images side-by-side */
+  margin: 0.5rem;
+  max-width: calc(33.333% - 1rem); /* col-4: max 1/3 width per image */
+  vertical-align: top;
+}
+
+/* Full-width image group container - PERSISTENT */
+.full-width-image-group {
+  display: block;
+  clear: both;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+/* Images inside wrappers fill the wrapper */
+.trip-image-wrapper img.trip-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* Height constraints based on wrapper layout */
+.trip-image-wrapper[data-layout="float-right"] img.trip-image {
+  max-height: 400px;
+}
+
+.trip-image-wrapper[data-layout="full-width"] img.trip-image {
+  max-height: 500px;
+}
+
+/* ===========================================
+   TEXT BLOCK FLOAT CLEARING - PERSISTENT
+   =========================================== */
+
+/* Clear floats before text blocks that have their own float-right images */
+.has-float-image {
+  clear: both;
+}
+
+/* ===========================================
+   TEXT BLOCK & CONTENT BLOCK STYLES - PERSISTENT
+   Per spec: docs/dev/domain/journal-entry-html-spec.md
+   =========================================== */
+
+/* Text block base styling - consistent spacing regardless of element type */
+.text-block {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.text-block:last-child {
+  margin-bottom: 0;
+}
+
+/* Content block base styling - for full-width image groups */
+.content-block {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.content-block:last-child {
+  margin-bottom: 0;
+}
+
+/* ===========================================
+   BLOCKQUOTE STYLING
+   =========================================== */
+
+/* Blockquote indentation and visual styling */
+.journal-contenteditable blockquote {
+  margin: 0 0 1rem 0;
+  padding-left: 1.5rem;
+  border-left: 4px solid #dee2e6;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.journal-contenteditable blockquote p {
+  margin-bottom: 0.5rem;
+}
+
+.journal-contenteditable blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* ===========================================
+   CONTENTEDITABLE BASE STYLES
+   Shared between editor and public views
+   =========================================== */
+
+/* Default text alignment - let content use natural alignment */
+.journal-contenteditable {
+  text-align: left;
+}
+
+/* Direct child paragraph text blocks - scoped to prevent nested paragraph styling */
+.journal-contenteditable > p.text-block {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.journal-contenteditable > p.text-block:last-child {
+  margin-bottom: 0;
+}
+
+/* ===========================================
+   IMAGE CAPTIONS - PERSISTENT
+   Captions are displayed below images
+   =========================================== */
+
+/* Caption display below images */
+.trip-image-wrapper .trip-image-caption {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #6c757d;
+  text-align: center;
+  font-style: italic;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Float-right captions: smaller text, left-aligned */
+.trip-image-wrapper[data-layout="float-right"] .trip-image-caption {
+  font-size: 0.75rem;
+  text-align: left;
+}

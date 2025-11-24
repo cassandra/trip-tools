@@ -25,6 +25,7 @@ Execute the complete PR creation workflow:
 
 3. **Gather PR information** - Collect required details:
    - Current branch name and recent commits
+   - Organize commits: pick out most important work and ignore commits that were relatively minor or branch-only cleanups.  We want to focus on the major work that will go onto the main branch.
    - **Detect correct base branch** using `git remote show origin` to find HEAD branch
    - Related GitHub issue number(s)
    - Summary of changes made
@@ -123,7 +124,6 @@ Execute the complete PR creation workflow:
    - Issue is properly linked
 
 **Requirements:**
-- Follow exact workflow from `docs/dev/workflow/workflow-guidelines.md`
 - Use exact template from `.github/PULL_REQUEST_TEMPLATE.md`
 - **Automatically detect base branch** - Never assume `main`, always detect from remote HEAD
 - Must pass all pre-PR checks before creation

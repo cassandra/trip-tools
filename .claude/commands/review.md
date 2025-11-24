@@ -1,11 +1,11 @@
 ---
 allowed-tools: Bash, Read, TodoWrite, Task
-description: Prepare code for review with quality checks and analysis
+description: Prepare code on current branch for PR with quality checks and analysis
 model: claude-sonnet-4-20250514
 argument-hint:
 ---
 
-Prepare current code for review following our quality standards:
+Prepare code on a feature branch for a PR by reviewing changes against our quality standards:
 
 ## Code Review Preparation Process
 
@@ -26,19 +26,23 @@ Execute comprehensive review preparation:
    ```
    **CRITICAL**: Address any failures before proceeding
 
-3. **Generate change summary** - Document what was modified:
+3. **Generate change summary** - Document what was modified by looking at all commits in this branch since it branched from `main`:
    ```bash
-   # Show recent commits on current branch
-   git log --oneline --graph -10
+   # Show all commits on current branch
+   git log --oneline --graph -100
+   ```
 
+3a. **CRITICAL** Analyze all commits to pick out most important work and ignore commits that were relatively minor or branch-only cleanups.  We want to focus on the major work that will go onto the main branch.
+   ```
    # Show diff against main branch
    git diff main...HEAD
 
    # Show changed files
    git diff --name-only main...HEAD
    ```
-
-4. **Use specialized review agents** - Get expert analysis:
+   
+4. **Use specialized review agents** - Get expert analysis from relevant sub-agents:
+   - **Use Task tool with code-quality agent**: Review test coverage and quality
    - **Use Task tool with test-engineer agent**: Review test coverage and quality
    - **Use Task tool with domain-expert agent**: Analyze business logic changes
    - **Use Task tool with backend-dev agent**: Review Django patterns (if applicable)

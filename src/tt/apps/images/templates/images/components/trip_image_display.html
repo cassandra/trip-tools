@@ -1,0 +1,14 @@
+{% load icons %}
+<div class="mb-3 text-center">
+  {% if trip_image.web_image %}
+  <img src="{{ trip_image.web_image.url }}"
+       alt="{{ trip_image.caption|default:'Trip Image' }}"
+       class="img-fluid rounded"
+       style="max-width: 100%; height: auto; max-height: 600px; width: auto;">
+  {% else %}
+  <div class="text-center text-muted py-5">
+    {% icon "camera" size="xl" %}
+    <p>No image available</p>
+  </div>
+  {% endif %}
+</div>

@@ -7,16 +7,16 @@ SCRIPTS = deploy/env-generate.py deploy/run_container.sh
 .DEFAULT_GOAL := fix-permissions
 
 test:
-	cd src && ./manage.py test --keepdb
+	./src/manage.py test --keepdb custom tt
 
 test-fast:
-	cd src && ./manage.py test --keepdb --parallel 4
+	./src/manage.py test --keepdb  custom tt --parallel 4
 
 lint:
-	cd src && flake8 --config=.flake8-ci tt/ 2>/dev/null
+	flake8 --config=src/.flake8-ci src/tt/ 2>/dev/null
 
 lint-strict:
-	cd src && flake8 --config=.flake8 tt/ 2>/dev/null
+	flake8 --config=src/.flake8 src/tt/ 2>/dev/null
 
 check:	lint test
 

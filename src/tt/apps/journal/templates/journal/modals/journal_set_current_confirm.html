@@ -1,0 +1,42 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load icons %}
+
+{% block modal_dialog_id %}journal-set-current-modal{% endblock %}
+
+{% block title_text %}Set as Current Version{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'journal_set_current' journal_uuid=journal.uuid travelog_uuid=travelog.uuid %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+  <div class="alert alert-info">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">
+        {% icon "info-circle" size="sm" %}
+      </div>
+      <div>
+        <strong>Change Published Version</strong>
+        <p class="mb-0 mt-2">
+          This will make version {{ travelog.version_number }} the current published version.
+          Readers will see this version when they access your travelog.
+        </p>
+        <p class="mb-0 mt-2">
+          <strong>Note:</strong> This does not affect your working journal entries.
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-info">
+  {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
+  CONFIRM
+</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

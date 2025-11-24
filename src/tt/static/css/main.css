@@ -202,6 +202,10 @@ a.clickable-card:active {
     color: var(--on-muted-color) !important;
     background-color: var(--muted-color) !important;
 }
+.bg-highlighted, .btn-highlighted {
+    color: var(--primary-color) !important;
+    background-color: var(--edit-primary-bg-color) !important;
+}
 
 /* Outline Button Overrides */
 .btn-outline-primary {
@@ -989,18 +993,6 @@ body {
   padding-top: 1rem; /* Compensate for -1rem top margin on secondary-page-header */
 }
 
-/* Notebook Editor Sticky Header */
-.notebook-editor-header {
-  position: sticky;
-  top: calc(var(--app-topbar-height) + var(--secondary-page-header-height));
-  background-color: #ffffff;
-  border-bottom: 1px solid var(--line-color);
-  z-index: 1005;
-  padding: 0.5rem 0;
-  margin-bottom: 1rem;
-}
-
-
 /* Mobile Responsive for Secondary Pages */
 @media (max-width: 768px) {
 
@@ -1078,7 +1070,7 @@ body {
 
 /* ========================================
    Unified Diff Display Styles
-   For notebook conflict resolution
+   For text conflict resolution
    ======================================== */
 
 .diff-container {
@@ -1157,6 +1149,13 @@ body {
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid #dee2e6;
+}
+
+/* Journal image gallery - drag-to-remove drop target */
+.journal-image-gallery.drop-target-active {
+    background-color: #f8d7da; /* Light red tint indicates removal */
+    border: 2px dashed #dc3545; /* Red dashed border */
+    transition: background-color 0.2s, border 0.2s;
 }
 
 

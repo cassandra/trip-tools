@@ -1,0 +1,45 @@
+{% extends "modals/error_2.html" %}
+{% load static %}
+{% load icons %}
+{% load tz %}
+
+{% block modal_dialog_id %}edit-conflict-modal{% endblock %}
+{% block modal_dialog_class %}tt-modal-dialog-800{% endblock %}
+
+{% block title_image %}
+<img class="img-fluid"
+     src="{% static 'img/tt-on-secondary-icon-196x196.png' %}"
+     alt="Warning Icon" \>
+{% endblock %}
+
+{% block title_text %}Version Conflict Detected{% endblock %}
+
+{% block body %}
+{% timezone USER_TIMEZONE %}
+<div class="alert alert-warning">
+  <strong>{% icon "warning" %} Another user has modified this entry</strong><br>
+  This entry was modified by <strong>{{ modified_by_name }}</strong>
+  at <strong>{{ modified_at_datetime|date:"F j, Y \a\t g:i A" }}</strong>.<br><br>
+  <em>Your unsaved changes may be lost if you refresh. Consider copying your changes before refreshing.</em>
+</div>
+
+<h6>Changes Comparison:</h6>
+<p class="text-muted small">Review what changed on the server before deciding to refresh:</p>
+<div class="diff-container">{{ diff_html|safe }}</div>
+{% endtimezone %}
+{% endblock %}
+
+{% block action_left %}
+<button type="button" class="btn btn-secondary" data-dismiss="modal">
+  {% icon "cancel" size="sm" css_class="tt-icon-left" %}
+  Close (To Copy Changes)
+</button>
+{% endblock %}
+
+{% block action_right %}
+<button type="button" class="btn btn-primary" id="refreshFromModal"
+        onclick="window.location.href = window.location.pathname + '?_=' + Date.now();">
+  {% icon "sync" size="sm" css_class="tt-icon-left" %}
+  Refresh to See Latest (Will Lose Changes)
+</button>
+{% endblock %}

@@ -94,28 +94,87 @@
         DATA_ORIGINAL_VALUE_ATTR: 'data-original-value',
         ATTR_V2_DELETE_FILE_ATTR: 'delete_file_attribute',
 
-        // Entity Picker - selectors for JavaScript dependencies
-        ENTITY_PICKER_FILTERABLE_ITEM_SELECTOR: '.filterable-item',
-        ENTITY_PICKER_GROUP_SECTION_SELECTOR: '.entity-group-section',
-        ENTITY_PICKER_SEARCH_INPUT_SELECTOR: '#entity-search-input',
-        ENTITY_PICKER_SEARCH_CLEAR_SELECTOR: '.entity-search-clear',
-        ENTITY_PICKER_FILTER_BTN_SELECTOR: '.entity-filter-btn',
+        // Journal Editor - IDs
+        JOURNAL_EDITOR_ID: 'id_entry_text',
+        JOURNAL_TITLE_INPUT_ID: 'id_entry_title',
+        JOURNAL_DATE_INPUT_ID: 'id_entry_date',
+        JOURNAL_TIMEZONE_INPUT_ID: 'id_entry_timezone',
 
-        // Entity Picker - Data attributes
-        ENTITY_PICKER_DATA_NAME_ATTR: 'data-entity-name',
-        ENTITY_PICKER_DATA_TYPE_ATTR: 'data-entity-type',
-        ENTITY_PICKER_DATA_STATUS_ATTR: 'data-status',
-        ENTITY_PICKER_DATA_FILTER_ATTR: 'data-filter',
+        // Journal Editor - Classes
+        JOURNAL_EDITOR_CLASS: 'journal-contenteditable',
+        JOURNAL_ENTRY_FORM_CLASS: 'journal-entry-form',
+        JOURNAL_SAVE_STATUS_CLASS: 'journal-save-status',
+        JOURNAL_IMAGE_CARD_CLASS: 'journal-image-card',
 
-        // Entity Picker - Status values
-        ENTITY_PICKER_STATUS_IN_VIEW: 'in-view',
-        ENTITY_PICKER_STATUS_NOT_IN_VIEW: 'not-in-view',
-        ENTITY_PICKER_STATUS_UNUSED: 'unused',
+        // Journal - Data Attributes
+        JOURNAL_ENTRY_PK_ATTR: 'entry-pk',
+        JOURNAL_CURRENT_VERSION_ATTR: 'current-version',
+        JOURNAL_IMAGE_UUID_ATTR: 'image-uuid',
+        JOURNAL_AUTOSAVE_URL_ATTR: 'autosave-url',
 
-        // Entity Picker - Filter values
-        ENTITY_PICKER_FILTER_ALL: 'all'
+        // Journal - Persistent HTML Elements (saved to database)
+        JOURNAL_IMAGE_WRAPPER_CLASS: 'trip-image-wrapper',
+        JOURNAL_IMAGE_CLASS: 'trip-image',
+        JOURNAL_FULL_WIDTH_GROUP_CLASS: 'full-width-image-group',
+        JOURNAL_FLOAT_MARKER_CLASS: 'has-float-image',
+        JOURNAL_LAYOUT_ATTR: 'layout',
+        JOURNAL_UUID_ATTR: 'uuid',
+        JOURNAL_TEXT_BLOCK_CLASS: 'text-block',
+        JOURNAL_CONTENT_BLOCK_CLASS: 'content-block',
+
+        // Journal Image Picker - UI Elements
+        JOURNAL_IMAGE_PANEL_HEADER_CLASS: 'journal-image-panel-header',
+
+        // Journal Image Picker - Data Attributes
+        JOURNAL_INSPECT_URL_ATTR: 'inspect-url',
+        JOURNAL_IMAGE_URL_ATTR: 'image-url',
+        JOURNAL_CAPTION_ATTR: 'caption',
+
+        // Journal Reference Image - UI Elements
+        JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS: 'journal-reference-image-container',
+        JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS: 'journal-reference-image-placeholder',
+        JOURNAL_REFERENCE_IMAGE_PREVIEW_CLASS: 'journal-reference-image-preview',
+        JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS: 'journal-reference-image-clear',
+        JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS: 'journal-reference-image-thumbnail',
+
+        // Journal Reference Image - Data Attributes
+        JOURNAL_REFERENCE_IMAGE_UUID_ATTR: 'reference-image-uuid',
+
+        // Journal - Ready-to-use selectors
+        JOURNAL_EDITOR_SELECTOR: '#id_entry_text',
+        JOURNAL_TITLE_INPUT_SELECTOR: '#id_entry_title',
+        JOURNAL_DATE_INPUT_SELECTOR: '#id_entry_date',
+        JOURNAL_TIMEZONE_INPUT_SELECTOR: '#id_entry_timezone',
+        JOURNAL_ENTRY_FORM_SELECTOR: '.journal-entry-form',
+        JOURNAL_SAVE_STATUS_SELECTOR: '.journal-save-status',
+        JOURNAL_IMAGE_CARD_SELECTOR: '.journal-image-card',
+        JOURNAL_IMAGE_WRAPPER_SELECTOR: '.trip-image-wrapper',
+        JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR: '.trip-image-wrapper[data-layout="float-right"]',
+        JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR: '.trip-image-wrapper[data-layout="full-width"]',
+        JOURNAL_IMAGE_SELECTOR: 'img.trip-image',
+        JOURNAL_FULL_WIDTH_GROUP_SELECTOR: '.full-width-image-group',
+        JOURNAL_FLOAT_MARKER_SELECTOR: '.has-float-image',
+        JOURNAL_TEXT_BLOCK_SELECTOR: '.text-block',
+        JOURNAL_CONTENT_BLOCK_SELECTOR: '.content-block',
+        JOURNAL_IMAGE_PANEL_HEADER_SELECTOR: '.journal-image-panel-header',
+        JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR: '.journal-reference-image-container',
+        JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR: '.journal-reference-image-placeholder',
+        JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR: '.journal-reference-image-preview',
+        JOURNAL_REFERENCE_IMAGE_CLEAR_SELECTOR: '.journal-reference-image-clear',
+        JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR: '.journal-reference-image-thumbnail',
+
+        // Trip Images Upload - DIVID constants
+        DIVID: {
+            IMAGES_UPLOAD_ZONE_ID: 'images-upload-zone',
+            IMAGES_FILE_INPUT_ID: 'images-file-input',
+            IMAGES_PROGRESS_SECTION_ID: 'images-progress-section',
+            IMAGES_PROGRESS_COUNT_ID: 'images-progress-count',
+            IMAGES_FILE_PROGRESS_LIST_ID: 'images-file-progress-list',
+            IMAGES_UPLOADED_GRID_ID: 'images-uploaded-grid',
+            IMAGES_UPLOADED_COUNT_ID: 'images-uploaded-count'
+        }
     };
-    
+
     window.Tt = Tt;
 
     function _generateUniqueId() {
@@ -268,14 +327,63 @@
             }
         }
         
-        console.log( `${label}: 
-    Name: ${elementTag}, 
+        console.log( `${label}:
+    Name: ${elementTag},
     Id: ${elementId},
     Classes: ${elementClasses},
     ${svgStr},
     ${offsetStr},
     ${rectStr}`) ;
-        
+
     }
-    
-})();    
+
+})();
+
+// Radio button show/hide utility
+// Uses data-show-when-checked and data-hide-when-checked attributes
+(function() {
+    'use strict';
+
+    function updateRadioVisibility($context) {
+        // If no context provided, search entire document
+        $context = $context || $(document);
+
+        // Find all radios with show/hide data attributes in this context
+        // Only process CHECKED radios - unchecked radios should not affect visibility
+        $context.find('input[type="radio"][data-show-when-checked]:checked, input[type="radio"][data-hide-when-checked]:checked').each(function() {
+            const $radio = $(this);
+
+            // Handle data-show-when-checked (this radio is checked, so show target)
+            const showSelector = $radio.data('show-when-checked');
+            if (showSelector) {
+                $(showSelector).show();
+            }
+
+            // Handle data-hide-when-checked (this radio is checked, so hide target)
+            const hideSelector = $radio.data('hide-when-checked');
+            if (hideSelector) {
+                $(hideSelector).hide();
+            }
+        });
+    }
+
+    // Event delegation for radio changes (works for all radios, including in modals)
+    $(document).on('change', 'input[type="radio"][data-show-when-checked], input[type="radio"][data-hide-when-checked]', function() {
+        updateRadioVisibility();
+    });
+
+    // Initialize on page load
+    $(document).ready(function() {
+        updateRadioVisibility();
+    });
+
+    // Initialize when modals are about to be shown (before animation)
+    $('body').on('show.bs.modal', '.modal', function() {
+        updateRadioVisibility($(this));
+    });
+
+    // Also initialize after modals are fully shown (handles edge cases)
+    $('body').on('shown.bs.modal', '.modal', function() {
+        updateRadioVisibility($(this));
+    });
+})();

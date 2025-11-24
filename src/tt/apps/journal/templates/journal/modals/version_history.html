@@ -1,0 +1,112 @@
+{% extends "modals/action_ok.html" %}
+{% load icons %}
+{% load travelog_tags %}
+
+{% block modal_dialog_id %}journal-version-history-modal{% endblock %}
+{% block modal_dialog_class %}tt-modal-dialog-800{% endblock %}
+
+{% block title_text %}Version History{% endblock %}
+
+{% block body %}
+
+  {# Version History Table #}
+  {% if travelogs %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Version</th>
+          <th>Published</th>
+          <th>Published By</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for travelog in travelogs %}
+        <tr {% if travelog.is_current %}class="bg-highlighted"{% endif %}>
+          <td class="align-middle">
+            {% if travelog.is_current %}
+            <div>
+              <span class="badge badge-success">
+                {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
+                Current
+              </span>
+            </div>
+            {% else %}
+            <div>
+              <span class="badge badge-secondary">
+                {% icon "layers" size="sm" css_class="tt-icon-left" %}
+                Archived
+              </span>
+            </div>
+            {% if request_member.can_manage_versions %}
+            <div class="mt-1">
+              <a href="{% url 'journal_set_current' journal_uuid=journal.uuid travelog_uuid=travelog.uuid %}"
+                 class="btn btn-sm btn-outline-info mr-1 mb-1"
+                 data-async="modal">
+                {% icon "check-circle" size="sm" css_class="tt-icon-left" %}
+                Set as Current
+              </a>
+            </div>
+            {% endif %}
+            {% endif %}
+          </td>
+          <td class="align-middle">
+            <strong>{{ travelog.version_number }}</strong>
+          </td>
+          <td class="align-middle">
+            <small>{{ travelog.published_datetime|date:"N j, Y" }}</small>
+            <br>
+            <small class="text-muted">{{ travelog.published_datetime|date:"g:i A" }}</small>
+          </td>
+          <td class="align-middle">
+            {% if travelog.published_by %}
+              {% if travelog.published_by.get_full_name %}
+                {{ travelog.published_by.get_full_name }}
+              {% else %}
+                {{ travelog.published_by.email }}
+              {% endif %}
+            {% else %}
+              <em class="text-muted">Unknown</em>
+            {% endif %}
+          </td>
+          <td class="align-middle">
+            <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog.version_number %}"
+               target="_blank"
+               class="btn btn-sm btn-outline-primary mr-1 mb-1">
+              {% icon "eye" size="sm" css_class="tt-icon-left" %}
+              View
+            </a>
+
+            {% if request_member.can_manage_versions %}
+
+            <br><a href="{% url 'journal_restore' journal_uuid=journal.uuid travelog_uuid=travelog.uuid %}"
+               class="btn btn-sm btn-outline-danger mb-1"
+               data-async="modal">
+              {% icon "download" size="sm" css_class="tt-icon-left" %}
+              Restore Content
+            </a>
+            {% endif %}
+
+
+            
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-warning mb-0">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">
+        {% icon "exclamation-circle" size="sm" %}
+      </div>
+      <div>
+        No published versions found.
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}

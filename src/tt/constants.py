@@ -93,4 +93,59 @@ DIVID = {
     'ATTR_V2_SHOW_MORE_TEXT_CLASS': 'show-more-text',
     'ATTR_V2_SHOW_LESS_TEXT_CLASS': 'show-less-text',
     'ATTR_V2_DELETE_FILE_ATTR': 'delete_file_attribute',
+
+    # Trip Images Upload
+    'IMAGES_UPLOAD_ZONE_ID': 'images-upload-zone',
+    'IMAGES_FILE_INPUT_ID': 'images-file-input',
+    'IMAGES_PROGRESS_SECTION_ID': 'images-progress-section',
+    'IMAGES_PROGRESS_COUNT_ID': 'images-progress-count',
+    'IMAGES_FILE_PROGRESS_LIST_ID': 'images-file-progress-list',
+    'IMAGES_UPLOADED_GRID_ID': 'images-uploaded-grid',
+    'IMAGES_UPLOADED_COUNT_ID': 'images-uploaded-count',
+
+    # Journal Editor - IDs
+    'JOURNAL_EDITOR_ID': 'id_entry_text',
+    'JOURNAL_TITLE_INPUT_ID': 'id_entry_title',
+    'JOURNAL_DATE_INPUT_ID': 'id_entry_date',
+    'JOURNAL_TIMEZONE_INPUT_ID': 'id_entry_timezone',
+
+    # Journal Editor - Classes
+    'JOURNAL_EDITOR_CLASS': 'journal-contenteditable',
+    'JOURNAL_ENTRY_FORM_CLASS': 'journal-entry-form',
+    'JOURNAL_SAVE_STATUS_CLASS': 'journal-save-status',
+    'JOURNAL_IMAGE_CARD_CLASS': 'journal-image-card',
+
+    # Journal - Data Attributes
+    'JOURNAL_ENTRY_PK_ATTR': 'entry-pk',
+    'JOURNAL_CURRENT_VERSION_ATTR': 'current-version',
+    'JOURNAL_IMAGE_UUID_ATTR': 'image-uuid',
+    'JOURNAL_AUTOSAVE_URL_ATTR': 'autosave-url',
+
+    # Journal - Persistent HTML Elements (saved to database)
+    'JOURNAL_IMAGE_WRAPPER_CLASS': 'trip-image-wrapper',
+    'JOURNAL_IMAGE_CLASS': 'trip-image',
+    'JOURNAL_FULL_WIDTH_GROUP_CLASS': 'full-width-image-group',
+    'JOURNAL_FLOAT_MARKER_CLASS': 'has-float-image',
+    'JOURNAL_LAYOUT_ATTR': 'layout',
+    'JOURNAL_UUID_ATTR': 'uuid',
+    'JOURNAL_TEXT_BLOCK_CLASS': 'text-block',
+    'JOURNAL_CONTENT_BLOCK_CLASS': 'content-block',
+
+    # Journal Image Picker - UI Elements
+    'JOURNAL_IMAGE_PANEL_HEADER_CLASS': 'journal-image-panel-header',
+
+    # Journal Image Picker - Data Attributes
+    'JOURNAL_INSPECT_URL_ATTR': 'inspect-url',
+    'JOURNAL_IMAGE_URL_ATTR': 'image-url',
+    'JOURNAL_CAPTION_ATTR': 'caption',
+
+    # Journal Reference Image - UI Elements
+    'JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS': 'journal-reference-image-container',
+    'JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS': 'journal-reference-image-placeholder',
+    'JOURNAL_REFERENCE_IMAGE_PREVIEW_CLASS': 'journal-reference-image-preview',
+    'JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS': 'journal-reference-image-clear',
+    'JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS': 'journal-reference-image-thumbnail',
+
+    # Journal Reference Image - Data Attributes
+    'JOURNAL_REFERENCE_IMAGE_UUID_ATTR': 'reference-image-uuid',
 }

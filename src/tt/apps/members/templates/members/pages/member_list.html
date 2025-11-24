@@ -11,7 +11,7 @@
     </div>
     {% if request_member.can_manage_members %}
     <div>
-      <a href="{% url 'members_invite' trip_id=trip_page.trip.pk %}" class="btn btn-primary" data-async="modal">
+      <a href="{% url 'members_invite' trip_uuid=trip_page.trip.uuid %}" class="btn btn-primary" data-async="modal">
         {% icon "plus" %}
         Invite Member
       </a>
@@ -22,7 +22,7 @@
   {% if member_data_list %}
   <div class="list-group">
     {% for member_data in member_data_list %}
-    {% include "members/snippets/member_card.html" with member_data=member_data %}
+    {% include "members/components/member_card.html" with member_data=member_data %}
     {% endfor %}
   </div>
   {% else %}
@@ -34,7 +34,7 @@
 
   <div class="mt-4">
     <h3 class="h5 mb-3">Permission Levels</h3>
-    {% include "members/snippets/permission_levels_explanation.html" %}
+    {% include "members/components/permission_levels_explanation.html" %}
   </div>
 </div>
 {% endblock %}

@@ -1,0 +1,45 @@
+{% extends "travelog/pages/base.html" %}
+{% load travelog_tags %}
+
+{% block head_title %}{{ content.title }} - {{ entry.date }}{% endblock %}
+
+{% block travelog_content %}
+<div class="container">
+  <nav class="nav-breadcrumb">
+    <a href="{% travelog_url 'travelog_toc' journal.uuid version=request.GET.version %}" class="nav-link">
+      &larr; Back to {{ content.title }}
+    </a>
+  </nav>
+
+  <h1>{{ entry.date|date:"F j, Y" }}</h1>
+  {% if entry.title %}
+  <h2>{{ entry.title }}</h2>
+  {% endif %}
+
+  <p class="text-muted">
+    From: {{ content.title }} ({{ travelog_page.content_type.label }}{% if travelog_page.version_number %} - Version {{ travelog_page.version_number }}{% endif %})
+  </p>
+
+  <div class="journal-content">
+    {{ entry.text|safe }}
+  </div>
+
+  <div class="page-navigation">
+    {% if prev_entry %}
+    <a href="{% travelog_url 'travelog_day' journal.uuid date=prev_entry.date version=request.GET.version %}" class="nav-link">
+      &larr; Previous: {{ prev_entry.date|date:"F j" }}
+    </a>
+    {% else %}
+    <span></span>
+    {% endif %}
+
+    {% if next_entry %}
+    <a href="{% travelog_url 'travelog_day' journal.uuid date=next_entry.date version=request.GET.version %}" class="nav-link">
+      Next: {{ next_entry.date|date:"F j" }} &rarr;
+    </a>
+    {% else %}
+    <span></span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

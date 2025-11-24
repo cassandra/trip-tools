@@ -25,7 +25,7 @@ const mockWindow = {
         replaceState: function() {},
         pushState: function() {}
     },
-    Hi: {
+    Tt: {
         DEBUG: false,
         MAIN_AREA_SELECTOR: '#main-content',
         autoView: null
@@ -98,7 +98,7 @@ const sandbox = {
     setTimeout: setTimeout,
     clearTimeout: clearTimeout,
     Date: Date,
-    Hi: mockWindow.Hi
+    Tt: mockWindow.Tt
 };
 
 // Make window properties available globally in sandbox
@@ -157,34 +157,34 @@ function test(name, fn) {
 
 // Run basic tests to verify modules loaded correctly
 test('All modules loaded', () => {
-    assert(typeof sandbox.Hi === 'object', 'Hi namespace exists');
-    assert(sandbox.Hi.autoView !== null, 'AutoView module loaded');
-    assert(sandbox.Hi.svgUtils !== null, 'SvgUtils module loaded');
-    assert(sandbox.Hi.watchdog !== null, 'Watchdog module loaded');
-    assert(typeof sandbox.Hi.generateUniqueId === 'function', 'Main module functions loaded');
+    assert(typeof sandbox.Tt === 'object', 'Hi namespace exists');
+    assert(sandbox.Tt.autoView !== null, 'AutoView module loaded');
+    assert(sandbox.Tt.svgUtils !== null, 'SvgUtils module loaded');
+    assert(sandbox.Tt.watchdog !== null, 'Watchdog module loaded');
+    assert(typeof sandbox.Tt.generateUniqueId === 'function', 'Main module functions loaded');
 });
 
 test('SvgUtils functions exist', () => {
-    const svgUtils = sandbox.Hi.svgUtils;
+    const svgUtils = sandbox.Tt.svgUtils;
     assert(typeof svgUtils.getSvgTransformValues === 'function', 'getSvgTransformValues exists');
     assert(typeof svgUtils.getSvgViewBox === 'function', 'getSvgViewBox exists');
     assert(typeof svgUtils.setSvgViewBox === 'function', 'setSvgViewBox exists');
 });
 
 test('Main utility functions exist', () => {
-    assert(typeof sandbox.Hi.generateUniqueId === 'function', 'generateUniqueId exists');
-    assert(typeof sandbox.Hi.setCookie === 'function', 'setCookie exists');
-    assert(typeof sandbox.Hi.getCookie === 'function', 'getCookie exists');
+    assert(typeof sandbox.Tt.generateUniqueId === 'function', 'generateUniqueId exists');
+    assert(typeof sandbox.Tt.setCookie === 'function', 'setCookie exists');
+    assert(typeof sandbox.Tt.getCookie === 'function', 'getCookie exists');
 });
 
 test('Watchdog functions exist', () => {
-    const watchdog = sandbox.Hi.watchdog;
+    const watchdog = sandbox.Tt.watchdog;
     assert(typeof watchdog.add === 'function', 'watchdog add function exists');
     assert(typeof watchdog.ok === 'function', 'watchdog ok function exists');
 });
 
 test('AutoView core functions exist', () => {
-    const autoView = sandbox.Hi.autoView;
+    const autoView = sandbox.Tt.autoView;
     assert(typeof autoView.throttle === 'function', 'throttle function exists');
     assert(typeof autoView.shouldAutoSwitch === 'function', 'shouldAutoSwitch function exists');
     assert(typeof autoView.isPassiveEventSupported === 'function', 'isPassiveEventSupported function exists');
@@ -194,7 +194,7 @@ test('AutoView core functions exist', () => {
 });
 
 test('Throttle function basic behavior', () => {
-    const autoView = sandbox.Hi.autoView;
+    const autoView = sandbox.Tt.autoView;
     let callCount = 0;
     const throttled = autoView.throttle(() => callCount++, 100);
     
@@ -207,7 +207,7 @@ test('Throttle function basic behavior', () => {
 });
 
 test('shouldAutoSwitch with recent activity', () => {
-    const autoView = sandbox.Hi.autoView;
+    const autoView = sandbox.Tt.autoView;
     const now = Date.now();
     
     // Set recent interaction (30 seconds ago)
@@ -218,7 +218,7 @@ test('shouldAutoSwitch with recent activity', () => {
 });
 
 test('shouldAutoSwitch with old activity', () => {
-    const autoView = sandbox.Hi.autoView;
+    const autoView = sandbox.Tt.autoView;
     const now = Date.now();
     
     // Set old interaction (61 seconds ago)
@@ -229,13 +229,13 @@ test('shouldAutoSwitch with old activity', () => {
 });
 
 test('isPassiveEventSupported returns boolean', () => {
-    const autoView = sandbox.Hi.autoView;
+    const autoView = sandbox.Tt.autoView;
     const result = autoView.isPassiveEventSupported();
     assert(typeof result === 'boolean', 'Returns a boolean value');
 });
 
 test('recordInteraction updates lastInteractionTime', () => {
-    const autoView = sandbox.Hi.autoView;
+    const autoView = sandbox.Tt.autoView;
     const beforeTime = Date.now();
     
     autoView.recordInteraction();
@@ -246,7 +246,7 @@ test('recordInteraction updates lastInteractionTime', () => {
 });
 
 test('clearRevertTimer handles null timer', () => {
-    const autoView = sandbox.Hi.autoView;
+    const autoView = sandbox.Tt.autoView;
     autoView.revertTimer = null;
     
     // Should not throw error
@@ -255,7 +255,7 @@ test('clearRevertTimer handles null timer', () => {
 });
 
 test('resetTransientState clears all state', () => {
-    const autoView = sandbox.Hi.autoView;
+    const autoView = sandbox.Tt.autoView;
     
     // Set up state
     autoView.isTransientView = true;
@@ -273,7 +273,7 @@ test('resetTransientState clears all state', () => {
 });
 
 test('SvgUtils getSvgTransformValues basic functionality', () => {
-    const svgUtils = sandbox.Hi.svgUtils;
+    const svgUtils = sandbox.Tt.svgUtils;
     
     // Test with null input
     const defaultResult = svgUtils.getSvgTransformValues(null);
@@ -288,7 +288,7 @@ test('SvgUtils getSvgTransformValues basic functionality', () => {
 });
 
 test('Main generateUniqueId generates IDs', () => {
-    const id = sandbox.Hi.generateUniqueId();
+    const id = sandbox.Tt.generateUniqueId();
     assert(typeof id === 'string', 'generateUniqueId returns a string');
     assert(id.startsWith('id-'), 'ID starts with id- prefix');
     assert(id.includes('-'), 'ID contains separators');

@@ -1,0 +1,76 @@
+{% extends "dashboard/pages/dashboard.html" %}
+{% load pipeline %}
+{% load icons %}
+{% load static %}
+
+{% block head_css %}
+{% stylesheet 'trip_images_upload' %}
+{% endblock %}
+
+{% block main_content %}
+<div class="trip-images-container">
+  <div class="page-header">
+    <h1>Upload Photos</h1>
+    <p class="page-subtitle">Add photos to your trip for use in journal entries</p>
+  </div>
+
+  {% if not heif_support_available %}
+  <!-- HEIC Support Warning -->
+  <div class="alert alert-warning" role="alert">
+    <strong>Limited Format Support:</strong> HEIC/iPhone image format is not available.
+    Only JPG and PNG formats are supported.
+    Contact your administrator to install pillow-heif for HEIC support.
+  </div>
+  {% endif %}
+
+  <!-- Upload Zone -->
+  <div class="upload-zone" id="{{ DIVID.IMAGES_UPLOAD_ZONE_ID }}">
+    <div class="upload-icon">
+      {% icon "upload" size="xl" %}
+    </div>
+    <h2 class="upload-title">Drag & Drop Photos Here</h2>
+    <p class="upload-subtitle">or</p>
+    <button class="btn btn-upload" type="button" onclick="document.getElementById('{{ DIVID.IMAGES_FILE_INPUT_ID }}').click()">
+      Choose Files from Computer
+    </button>
+    <p class="upload-hint">
+      Supports JPG, PNG{% if heif_support_available %}, HEIC{% endif %} • Max 20MB per file • Multiple files allowed
+    </p>
+    <input type="file" id="{{ DIVID.IMAGES_FILE_INPUT_ID }}" multiple accept="image/jpeg,image/jpg,image/png{% if heif_support_available %},image/heic{% endif %}" style="display: none;">
+  </div>
+
+  <!-- Upload Progress Section -->
+  <div class="upload-progress-section" id="{{ DIVID.IMAGES_PROGRESS_SECTION_ID }}">
+    <div class="progress-header">
+      <h3 class="progress-title">Uploading</h3>
+      <span class="progress-count" id="{{ DIVID.IMAGES_PROGRESS_COUNT_ID }}">0 of 0 files</span>
+    </div>
+    <div id="{{ DIVID.IMAGES_FILE_PROGRESS_LIST_ID }}"></div>
+  </div>
+
+  <!-- Uploaded Images Grid -->
+  <div class="uploaded-section">
+    <div class="uploaded-header">
+      <h3 class="uploaded-title">Your Photos</h3>
+      <span class="uploaded-count" id="{{ DIVID.IMAGES_UPLOADED_COUNT_ID }}">{{ uploaded_images.count }}</span>
+    </div>
+
+    <div class="uploaded-grid" id="{{ DIVID.IMAGES_UPLOADED_GRID_ID }}">
+      {% if uploaded_images %}
+        {% for image in uploaded_images %}
+        {% include "images/components/image_grid_item.html" with trip_image=image %}
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">{% icon "camera" size="xl" %}</div>
+          <p>No photos uploaded yet. Upload some photos to get started!</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_post_javascript %}
+{% javascript 'trip_images_upload' %}
+{% endblock %}

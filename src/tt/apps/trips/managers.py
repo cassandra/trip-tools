@@ -37,7 +37,7 @@ class TripManager(models.Manager):
             )
         """
         from .enums import TripPermissionLevel, TripStatus
-        from .models import TripMember
+        from tt.apps.members.models import TripMember
 
         # Set default status if not provided
         if 'trip_status' not in trip_fields:
@@ -54,14 +54,3 @@ class TripManager(models.Manager):
             )
 
         return trip
-
-
-class TripMemberManager(models.Manager):
-
-    def for_trip(self, trip):
-        """Get all members for a specific trip."""
-        return self.filter( trip = trip )
-
-    def for_user(self, user):
-        """Get all trip memberships for a specific user."""
-        return self.filter( user = user )

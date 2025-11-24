@@ -69,13 +69,15 @@ class ModalView( View ):
     def get( self, request, *args, **kwargs ):
         return self.modal_response( request )
     
-    def modal_response( self, request, context = None, status = 200 ):
+    def modal_response( self, request, context = None, template_name = None, status = 200 ):
         if context is None:
             context = dict()
+        if template_name is None:
+            template_name = self.get_template_name()
         if is_ajax( request ):
             modal_response = antinode.modal_from_template(
                 request = request,
-                template_name = self.get_template_name(),
+                template_name = template_name,
                 context = context,
                 status = status,
             )

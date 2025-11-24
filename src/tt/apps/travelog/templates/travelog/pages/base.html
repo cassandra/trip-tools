@@ -1,0 +1,35 @@
+{% extends "pages/base_public.html" %}
+{% load pipeline %}
+{% load travelog_tags %}
+
+{% block head_css %}
+{% stylesheet 'travelog_css_head' %}
+{% endblock %}
+
+{% block body_class %}{{ journal.theme.css_classname }}{% endblock %}
+
+{% block body_pre_javascript %}
+{% javascript 'travelog_js_top' %}
+{% endblock %}
+
+{% block content %}
+  {# Header section - shown only for DRAFT and VERSION content types #}
+  {% if travelog_page.is_draft or travelog_page.is_historical_version %}
+  <div class="alert alert-warning mb-0 text-center" role="alert">
+    {% block travelog_header %}
+    {# Default header content - child templates can override #}
+    <p class="h4 mb-0">
+      <strong>{{ travelog_page.content_type.label }}</strong>
+      {% if travelog_page.version_number %} &mdash; Version {{ travelog_page.version_number }}{% endif %}
+    </p>
+    {% endblock %}
+  </div>
+  {% endif %}
+
+  {# Main page content #}
+  {% block travelog_content %}{% endblock %}
+{% endblock %}
+
+{% block body_post_javascript %}
+{% javascript 'travelog_js_bottom' %}
+{% endblock %}

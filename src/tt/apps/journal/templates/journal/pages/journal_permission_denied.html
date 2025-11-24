@@ -1,0 +1,13 @@
+{% extends "journal/pages/journal_base.html" %}
+
+{% block trip_content %}
+<div class="m-3">
+  <div class="alert alert-warning">
+    <h4>Viewer Only</h4>
+    <p>You do not have permission to edit journal entries for this trip. Only trip editors can create and modify journal entries.</p>
+    <p>However, you can view the public version of this journal.</p>
+    <hr>
+    <a href="{% url 'travelog_toc' journal_uuid=journal.uuid %}" class="btn btn-primary">View Public Journal</a>
+  </div>
+</div>
+{% endblock %}

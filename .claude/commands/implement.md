@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash, Read, Edit, Write, TodoWrite, Grep, Glob, Task
-description: Implement a GitHub issue that has been picked up, stopping at PR-ready state
+description: Implement a GitHub issue on an existing feature branch, stopping before committing
 model: claude-sonnet-4-20250514
 argument-hint: [issue-number]
 ---
@@ -17,7 +17,7 @@ Execute focused implementation workflow for issue that has already been picked u
 
 2. **Validate prerequisites** - Ensure issue is ready for implementation:
    ```bash
-   # Verify we're on the correct feature branch (not staging/master)
+   # Verify we're on a feature branch (not staging/master)
    git branch --show-current
    # Should show: feature/$1-* or bugfix/$1-* etc.
 
@@ -28,7 +28,7 @@ Execute focused implementation workflow for issue that has already been picked u
    # Verify branch is up to date with remote
    git pull
    ```
-   **CRITICAL**: STOP if not on feature branch or if working directory is not clean
+   **CRITICAL**: STOP if not on feature branch or if working directory is not clean. **DO NOT** restore files: ask what to do next.
 
 3. **Read issue context** - Understand requirements completely:
    ```bash
@@ -50,7 +50,6 @@ Execute focused implementation workflow for issue that has already been picked u
    - **FOR CLEAR DOMAIN WORK**: Use Task tool with appropriate specialist agent:
      - `backend-dev`: Django models, views, managers, database changes
      - `frontend-dev`: Templates, JavaScript, CSS, UI components
-     - `integration-dev`: External APIs, data sync, third-party integrations
      - `domain-expert`: Business logic, entity relationships, domain rules
 
    - **FOR AMBIGUOUS/MIXED WORK**: Implement directly following general-purpose principles:
@@ -75,7 +74,6 @@ Execute focused implementation workflow for issue that has already been picked u
    **Conditionally use based on implementation scope**:
    - **backend-dev agent**: If Django models, views, or backend logic was modified
    - **frontend-dev agent**: If templates, JavaScript, CSS, or UI components were modified
-   - **integration-dev agent**: If external APIs or integration services were modified
    - **domain-expert agent**: If business logic or domain rules were implemented
 
    **Review criteria**: All review agents must approve before proceeding to push
@@ -97,19 +95,7 @@ Execute focused implementation workflow for issue that has already been picked u
    - Confirm solution follows project patterns
    - Verify all code review feedback has been addressed
 
-9. **Push implementation** - Make code available for review:
-   ```bash
-   # Add all relevant changes
-   git add .
-
-   # Create descriptive commit message following our standards
-   git commit -m "[Concise description of what was implemented]"
-
-   # Push to remote feature branch
-   git push origin
-   ```
-
-10. **Final status report** - Provide implementation summary:
+9. **Final status report** - Provide implementation summary:
     - Summarize what was implemented and approach taken
     - Note any key files or components modified
     - Highlight important implementation decisions
@@ -123,16 +109,15 @@ Execute focused implementation workflow for issue that has already been picked u
 - Use adaptive approach: specialist agents for clear domains, direct implementation for ambiguous work
 - MANDATORY code review with code-quality and test-engineer agents
 - MUST pass all tests, linting, and code review before completion
+- **DO NOT** Commit and Push - stop for validation and review: commit done later
 - NO PR creation - stop at PR-ready state
-- Provide clear handoff to `/pr` command
 
 **Prerequisites:**
-- Issue #$1 must have been picked up with `/pickup` command
 - Feature branch must already exist and be checked out
 - Investigation and planning should already be complete
 
 **Issue to implement:** #$1
 
-**IMPORTANT**: This command stops before PR creation. After completion, user should review the implementation and run `/pr "Title"` to create the pull request.
+**IMPORTANT**: This command stops before commiting changes. After completion, user should review the implementation and commit when ready.
 
 Begin implementation process now.

@@ -346,7 +346,7 @@ function asyncSubmitHandlerHelper( $form ) {
 
     if (( $($form).attr('method') )
         && ( $($form).attr('method').toUpperCase() == 'GET' )) {
-        let formData = $form.serializeArray();
+        formData = $form.serializeArray();
         if ( lastButtonName ) {
             formData.push( { name: lastButtonName, value: lastButtonValue } );
         }

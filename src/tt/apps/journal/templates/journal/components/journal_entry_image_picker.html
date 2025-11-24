@@ -1,0 +1,38 @@
+{% load static %}
+{% load icons %}
+
+<!-- Panel Header - Fixed -->
+<div class="{{ DIVID.JOURNAL_IMAGE_PANEL_HEADER_CLASS }}">
+  <h5 class="mb-2">Images</h5>
+
+  <!-- Date and Scope Filter Form -->
+  <form method="get" action="{% url 'journal_entry_images' entry_uuid=entry.uuid %}" data-async="#journal-image-gallery" data-mode="insert">
+    <!-- Date Filter -->
+    <input
+        type="date"
+        class="form-control form-control-sm mb-2"
+        id="id_image_date_filter"
+        name="date"
+        value="{{ entry.date|date:'Y-m-d' }}"
+        onchange-async="true"
+    >
+
+    <!-- Scope Filter Pills (client-side filtering only) -->
+    <div class="btn-group btn-group-sm btn-group-toggle w-100" data-toggle="buttons">
+      <label class="btn btn-outline-secondary active">
+        <input type="radio" name="scope" value="unused" checked> Unused
+      </label>
+      <label class="btn btn-outline-secondary">
+        <input type="radio" name="scope" value="used"> Used
+      </label>
+      <label class="btn btn-outline-secondary">
+        <input type="radio" name="scope" value="all"> All
+      </label>
+    </div>
+  </form>
+</div>
+
+<!-- Image Gallery Grid - Scrollable -->
+<div class="journal-image-gallery" id="journal-image-gallery">
+  {% include "journal/components/journal_image_gallery_grid.html" with accessible_images=accessible_images trip=trip %}
+</div>

@@ -115,7 +115,9 @@ INSTALLED_APPS = [
     'tt.apps.candidates',
     'tt.apps.itineraries',
     'tt.apps.bookings',
-    'tt.apps.notebook',
+    'tt.apps.images',
+    'tt.apps.journal',
+    'tt.apps.travelog',
     'tt.apps.reviews',
 ]
 
@@ -238,6 +240,33 @@ PIPELINE = {
             ),
             'output_filename': 'css/css_head.css',
         },
+        'trip_images_upload': {
+            'source_filenames': (
+                'css/trip_images_upload.css',
+            ),
+            'output_filename': 'css/trip_images_upload.css',
+        },
+        'journal': {
+            'source_filenames': (
+                'css/journal.css',
+            ),
+            'output_filename': 'css/journal.css',
+        },
+        'journal_editor': {
+            'source_filenames': (
+                'css/journal.css',
+                'css/journal-editor.css',
+            ),
+            'output_filename': 'css/journal_editor.css',
+        },
+        'travelog_css_head': {
+            'source_filenames': (
+                'bootstrap/css/bootstrap.css',
+                'css/travelog.css',
+                'css/journal.css',
+            ),
+            'output_filename': 'css/travelog_css_head.css',
+        },
     },
     'JAVASCRIPT': {
         'js_before_content': {
@@ -258,6 +287,39 @@ PIPELINE = {
                 'bootstrap/js/bootstrap.js',
             ),
             'output_filename': 'js/js_after_content.js',
+        },
+        'trip_images_upload': {
+            'source_filenames': (
+                'js/trip_images_upload.js',
+            ),
+            'output_filename': 'js/trip_images_upload.js',
+        },
+        'journal': {
+            'source_filenames': (
+                'js/journal.js',
+            ),
+            'output_filename': 'js/journal.js',
+        },
+        'journal_editor': {
+            'source_filenames': (
+                'js/journal-editor.js',
+            ),
+            'output_filename': 'js/journal_editor.js',
+        },
+        'travelog_js_top': {
+            'source_filenames': (
+                'js/jquery-3.7.0.min.js',
+                'js/cookie.js',
+                'js/journal.js',
+            ),
+            'output_filename': 'js/travelog_js_top.js',
+        },
+        'travelog_js_bottom': {
+            'source_filenames': (
+                'js/popper.min.js',
+                'bootstrap/js/bootstrap.js',
+            ),
+            'output_filename': 'js/travelog_js_bottom.js',
         },
     }
 }

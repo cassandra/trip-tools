@@ -1,0 +1,108 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load icons %}
+
+{% block modal_dialog_id %}journal-publish-modal{% endblock %}
+
+{% block title_text %}Publish Journal{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'journal_publish' journal_uuid=journal.uuid %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+  {# Publishing Status Summary #}
+  <div class="mb-4">
+    <h6 class="font-weight-bold mb-2">Publishing Status</h6>
+    {% if publishing_status.has_published_version %}
+      {# Show current version info #}
+      <div class="d-flex align-items-start mb-2">
+        <div class="mr-2">
+          {% icon "book" size="sm" css_class="text-primary" %}
+        </div>
+        <div>
+          <div>
+            <strong>Current Version:</strong> {{ publishing_status.current_published_version.version_number }}
+          </div>
+          <small class="text-muted">
+            Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
+            {% if publishing_status.current_published_version.published_by %}
+              by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
+            {% endif %}
+          </small>
+        </div>
+      </div>
+
+      {% if publishing_status.has_unpublished_changes %}
+        {# Show unpublished changes indicator #}
+        <div class="d-flex align-items-start">
+          <div class="mr-2">
+            {% icon "exclamation-circle" size="sm" css_class="text-warning" %}
+          </div>
+          <div>
+            <strong class="text-warning">Unpublished Changes Detected</strong>
+            <div><small class="text-muted">Publishing will create version {{ publishing_status.current_published_version.version_number|add:1 }}</small></div>
+          </div>
+        </div>
+      {% else %}
+        {# Show up-to-date status #}
+        <div class="d-flex align-items-start">
+          <div class="mr-2">
+            {% icon "check-circle" size="sm" css_class="text-success" %}
+          </div>
+          <div>
+            <strong class="text-success">Up to Date</strong>
+            <div><small class="text-muted">No unpublished changes detected</small></div>
+          </div>
+        </div>
+      {% endif %}
+    {% else %}
+      {# First-time publishing #}
+      <div class="d-flex align-items-start">
+        <div class="mr-2">
+          {% icon "upload" size="sm" css_class="text-primary" %}
+        </div>
+        <div>
+          <div><strong>Ready for First Publication</strong></div>
+          <small class="text-muted">This will create version 1 of your journal</small>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Visibility Controls Section #}
+  <div class="mb-4">
+    <h6 class="font-weight-bold mb-2">Visibility Settings</h6>
+    {% include "journal/components/_visibility_form_fields.html" with form=visibility_form journal=journal %}
+  </div>
+
+  {# Confirmation Message #}
+  <div class="alert alert-warning">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">
+        {% icon "warning" size="lg" %}
+      </div>
+      <div>
+        <strong>Important:</strong> Publishing creates an immutable snapshot of your journal. Once published, this version cannot be modified. You can always publish new versions with future changes.
+      </div>
+    </div>
+  </div>
+
+  {# Display form-level errors if any #}
+  {% if visibility_form.non_field_errors %}
+  <div class="alert alert-danger">
+    {{ visibility_form.non_field_errors }}
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-primary">
+  {% icon "upload" size="sm" css_class="tt-icon-left" %}
+  PUBLISH
+</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

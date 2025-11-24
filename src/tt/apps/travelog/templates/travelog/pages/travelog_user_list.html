@@ -1,0 +1,66 @@
+{% extends "pages/base_public.html" %}
+{% load pipeline %}
+{% load travelog_tags %}
+{% load icons %}
+
+{% block head_title %}{{ target_user.get_full_name }}'s Travelogs{% endblock %}
+
+{% block head_css %}
+{% stylesheet 'travelog_css_head' %}
+{% endblock %}
+
+{% block body_class %}theme-current{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>{{ target_user.get_full_name }}'s Travelogs</h1>
+  <p class="subtitle">Journey through my adventures around the world</p>
+
+  {% if travelog_items %}
+  <div class="card-grid">
+    {% for item in travelog_items %}
+    <div>
+      <a href="{% travelog_url 'travelog_toc' item.journal.uuid %}" class="clickable-card">
+        <div class="card">
+          {% if item.display_image and item.display_image.thumbnail_image %}
+          <img src="{{ item.display_image.thumbnail_image.url }}" alt="{{ item.journal.title }}" class="card-image">
+          {% else %}
+          <div class="card-image placeholder-image"></div>
+          {% endif %}
+
+          <div class="card-content">
+            <h3 class="card-title">
+              {{ item.journal.title }}
+              {% if item.requires_password %}
+              <span class="lock-icon" title="Password Required">
+                <span style="display: inline-block; width: 20px; height: 20px; vertical-align: middle;">
+                  {% icon "shield" css_class="lock-icon-svg" aria_label="Password Required" %}
+                </span>
+              </span>
+              {% endif %}
+            </h3>
+
+            {% if item.earliest_entry_date and item.latest_entry_date %}
+            <div class="card-date">
+              {% if item.earliest_entry_date == item.latest_entry_date %}
+              {{ item.earliest_entry_date|date:"F j, Y" }}
+              {% else %}
+              {{ item.earliest_entry_date|date:"F j" }} - {{ item.latest_entry_date|date:"F j, Y" }}
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {% if item.journal.description %}
+            <p class="card-description">{{ item.journal.description|truncatewords:20 }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p>No published travelogs found for this user.</p>
+  {% endif %}
+</div>
+{% endblock %}

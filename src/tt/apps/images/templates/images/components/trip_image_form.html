@@ -1,0 +1,105 @@
+{% load icons %}
+{% load tz %}
+{% timezone USER_TIMEZONE %}
+
+<!-- Caption -->
+<div class="form-group">
+  <label for="{{ trip_image_form.caption.id_for_label }}" class="font-weight-bold">Caption</label>
+  {{ trip_image_form.caption }}
+  {% if trip_image_form.caption.errors %}
+  <div class="text-danger small mt-1">{{ trip_image_form.caption.errors }}</div>
+  {% endif %}
+</div>
+
+<!-- Photo Taken Date/Time -->
+<div class="form-group">
+  <label for="{{ trip_image_form.datetime_utc.id_for_label }}" class="font-weight-bold">Photo Taken</label>
+  {% if image_page_context.trip_image.datetime_utc %}
+  <div class="form-control-plaintext small mb-1">
+    <strong>Local:</strong> {{ image_page_context.trip_image.datetime_utc|date:"F j, Y g:i A" }} {{ USER_TIMEZONE }}
+    {% if image_page_context.trip_image.timezone %}
+    {% timezone image_page_context.trip_image.timezone %}
+    <br><strong>Original:</strong> {{ image_page_context.trip_image.datetime_utc|date:"F j, Y g:i A" }} {{ image_page_context.trip_image.timezone }}
+      {% endtimezone %}
+    {% endif %}
+  </div>
+  {% endif %}
+  {{ trip_image_form.datetime_utc }}
+  {% if trip_image_form.datetime_utc.errors %}
+  <div class="text-danger small mt-1">{{ trip_image_form.datetime_utc.errors }}</div>
+  {% endif %}
+  <small class="form-text text-muted">
+    Date and time when the photo was taken
+    {% if image_page_context.trip_image.timezone_unknown %}
+    <span class="text-warning">
+      {% icon "warning" size="sm" %} Timezone uncertain (no EXIF offset)
+    </span>
+    {% endif %}
+  </small>
+</div>
+
+<!-- Timezone -->
+<div class="form-group">
+  <label for="{{ trip_image_form.timezone.id_for_label }}" class="font-weight-bold">Timezone</label>
+  {{ trip_image_form.timezone }}
+  {% if trip_image_form.timezone.errors %}
+  <div class="text-danger small mt-1">{{ trip_image_form.timezone.errors }}</div>
+  {% else %}
+  <small class="form-text text-muted">{{ trip_image_form.timezone.help_text }}</small>
+  {% endif %}
+</div>
+
+<!-- GPS Coordinates -->
+<div class="form-group">
+  <label for="{{ trip_image_form.gps_coordinates.id_for_label }}" class="font-weight-bold">GPS Coordinates</label>
+  {{ trip_image_form.gps_coordinates }}
+  {% if trip_image_form.gps_coordinates.errors %}
+  <div class="text-danger small mt-1">{{ trip_image_form.gps_coordinates.errors }}</div>
+  {% else %}
+  <small class="form-text text-muted">{{ trip_image_form.gps_coordinates.help_text }}</small>
+  {% endif %}
+  {% if image_page_context.trip_image.latitude and image_page_context.trip_image.longitude %}
+  <div class="form-control-plaintext small mb-1">
+    <strong>Current:</strong> {% include "images/components/gps_display.html" with trip_image=image_page_context.trip_image %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Tags -->
+<div class="form-group">
+  <label for="{{ trip_image_form.tags_input.id_for_label }}" class="font-weight-bold">Tags</label>
+  {{ trip_image_form.tags_input }}
+  {% if trip_image_form.tags_input.errors %}
+  <div class="text-danger small mt-1">{{ trip_image_form.tags_input.errors }}</div>
+  {% else %}
+  <small class="form-text text-muted">{{ trip_image_form.tags_input.help_text }}</small>
+  {% endif %}
+</div>
+
+<!-- Dimensions (read-only) -->
+{% if image_page_context.trip_image.web_image %}
+<div class="form-group">
+  <label class="font-weight-bold">Dimensions</label>
+  <div class="form-control-plaintext">{{ image_page_context.trip_image.web_image.width }} × {{ image_page_context.trip_image.web_image.height }} px</div>
+</div>
+{% endif %}
+
+<!-- Image ID (read-only) -->
+<div class="form-group">
+  <label class="font-weight-bold">Image ID</label>
+  <div class="form-control-plaintext"><small class="text-monospace">{{ image_page_context.trip_image.uuid }}</small></div>
+</div>
+
+<!-- Upload Info (read-only) -->
+<div class="form-group mb-0">
+  <label class="font-weight-bold">Upload Info</label>
+  <div class="form-control-plaintext">
+    <small>
+      {{ image_page_context.trip_image.uploaded_by.get_full_name|default:image_page_context.trip_image.uploaded_by.email }} on {{ image_page_context.trip_image.uploaded_datetime|date:"M j, Y g:i A" }}
+      {% if image_page_context.trip_image.has_exif %}
+      <span class="exif-badge ml-2">EXIF</span>
+      {% endif %}
+    </small>
+  </div>
+</div>
+{% endtimezone %}

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -10,8 +12,8 @@ from tt.apps.trips.mixins import TripViewMixin
 
 class ItineraryHomeView( LoginRequiredMixin, TripViewMixin, View ):
 
-    def get(self, request, trip_id: int, *args, **kwargs) -> HttpResponse:
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+    def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_viewer( request_member )
 
         trip_page_context = TripPageContext(

@@ -18,19 +18,28 @@ class AuthenticationMiddleware(object):
         'members_signup_and_accept',
     }
 
+    # Path prefixes that are publicly accessible without authentication
+    EXEMPT_PATH_PREFIXES = (
+        '/travelog/',
+    )
+
     def __init__(self, get_response):
         self.get_response = get_response
         return
 
     def __call__(self, request):
-        
+
         if request.user.is_authenticated:
             return self.get_response( request )
+
+        # Check if path starts with any exempt prefix
+        if any(request.path.startswith(prefix) for prefix in self.EXEMPT_PATH_PREFIXES):
+            return self.get_response(request)
 
         resolver_match = resolve( request.path )
         view_url_name = resolver_match.url_name
         app_name = resolver_match.app_name
-        
+
         if (( app_name == 'admin' )
             or ( view_url_name in self.EXEMPT_VIEW_URL_NAMES )):
             return self.get_response(request)

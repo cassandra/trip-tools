@@ -34,7 +34,7 @@ class CustomUserAdmin( UserAdmin ):
 
     # Fields for the user edit form
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        (None, {"fields": ("email", "password", "uuid")}),
         (_("Personal info"), {"fields": ("first_name", "last_name")}),
         (
             _("Permissions"),
@@ -58,3 +58,4 @@ class CustomUserAdmin( UserAdmin ):
     list_filter = ("is_staff", "is_superuser", "is_active", "groups")
     search_fields = ( "email", "uuid" )
     ordering = ("id",)
+    readonly_fields = ( 'uuid', )

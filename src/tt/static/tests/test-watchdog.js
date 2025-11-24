@@ -10,7 +10,7 @@
 (function() {
     'use strict';
     
-    QUnit.module('Hi.watchdog', function(hooks) {
+    QUnit.module('Tt.watchdog', function(hooks) {
         let mockTimers;
         let originalSetInterval;
         let callCounts;
@@ -42,9 +42,9 @@
         });
         
         QUnit.test('watchdog module exists and has expected interface', function(assert) {
-            assert.ok(Hi.watchdog, 'Watchdog module exists');
-            assert.equal(typeof Hi.watchdog.add, 'function', 'add method exists');
-            assert.equal(typeof Hi.watchdog.ok, 'function', 'ok method exists');
+            assert.ok(Tt.watchdog, 'Watchdog module exists');
+            assert.equal(typeof Tt.watchdog.add, 'function', 'add method exists');
+            assert.equal(typeof Tt.watchdog.ok, 'function', 'ok method exists');
         });
         
         QUnit.test('add method accepts parameters correctly', function(assert) {
@@ -55,7 +55,7 @@
             };
             
             // This should not throw an error
-            Hi.watchdog.add('test-type', mockInit, 1000);
+            Tt.watchdog.add('test-type', mockInit, 1000);
             
             assert.ok(true, 'add method accepts valid parameters without error');
             
@@ -65,7 +65,7 @@
         
         QUnit.test('ok method accepts type parameter correctly', function(assert) {
             // This should not throw an error
-            Hi.watchdog.ok('test-type');
+            Tt.watchdog.ok('test-type');
             
             assert.ok(true, 'ok method accepts type parameter without error');
         });
@@ -227,7 +227,7 @@
                 return 'mock-timer-id';
             };
             
-            Hi.watchdog.add('interval-test', function() {}, 1000);
+            Tt.watchdog.add('interval-test', function() {}, 1000);
             
             // Watchdog should set timer to 2x the normal refresh rate
             assert.equal(capturedDelay, 2000, 'Timer interval is 2x the normal refresh rate');

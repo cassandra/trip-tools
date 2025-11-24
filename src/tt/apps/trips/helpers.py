@@ -1,6 +1,6 @@
-from tt.apps.members.transient_models import TripMemberData
+from tt.apps.members.schemas import TripMemberData
 from tt.apps.trips.enums import TripPermissionLevel
-from tt.apps.trips.models import TripMember
+from tt.apps.members.models import TripMember
 
 
 class TripHelpers:

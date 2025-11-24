@@ -41,7 +41,7 @@ Keep view classes lightweight - delegate complex logic to helper classes:
 ### App Settings Auto-Discovery
 Create `settings.py` in any app with `SettingEnum` subclass:
 - Automatically appears on config page
-- Requires `./manage.py migrate` after adding new settings
+- Requires `./src/manage.py migrate` after adding new settings
 - Debug internal settings at `/config/internal`
 
 ### Adding Config UI Sections

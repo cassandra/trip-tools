@@ -51,13 +51,13 @@ Execute design-focused work session for planning and mockup creation:
    - Ensure mockup works across different screen sizes
 
 7. **Iterate on mockup design** - Refine before moving to documentation:
+   - **MUST** Stop for review and iterate until finalize mockup before proceeding to interaction docs
    - Test mockup functionality and user experience
    - Validate against design requirements
    - Ensure consistency with existing design patterns
    - Get feedback and iterate as needed
-   - Finalize mockup before proceeding to interaction docs
 
-8. **Create interaction documentation** - After mockup is finalized:
+8. **Create interaction documentation** - **ONLY AFTER** mockup is finalized:
    - Document in `data/design/issue-$1/interaction-patterns.md`
    - Specify user interaction flows and behaviors
    - Define component states and transitions
@@ -72,6 +72,8 @@ Execute design-focused work session for planning and mockup creation:
    - Note any dependencies or technical requirements
 
 10. **Post design deliverables to GitHub issue** - Share for review:
+    - **NEVER** Use references to locally stored files in GitHub comments: this does not scale.
+    - **ALWAYS** post full content to GitHub as comments and attachements.
     - Attach HTML mockup file to GitHub issue
     - Post interaction patterns as issue comment
     - Post design summary as issue comment

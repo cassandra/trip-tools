@@ -28,7 +28,7 @@ class SubsystemAttributePageEditContext(AttributePageEditContext):
     
     @property
     def content_body_template_name(self):
-        return 'config/panes/subsystem_edit_content_body.html'
+        return 'config/components/subsystem_edit_content_body.html'
 
     def to_template_context(self) -> Dict[str, Any]:
         template_context = super().to_template_context()
@@ -57,7 +57,7 @@ class SubsystemAttributeItemEditContext(AttributeItemEditContext):
     
     @property
     def content_body_template_name(self):
-        return 'config/panes/subsystem_edit_content_body.html'
+        return 'config/components/subsystem_edit_content_body.html'
 
     @property
     def attribute_model_subclass(self) -> Type[AttributeModel]:

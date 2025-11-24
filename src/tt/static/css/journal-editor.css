@@ -1,0 +1,594 @@
+/*
+ * Trip Tools - Journal Entry Editor Interactions
+ *
+ * EDITOR-ONLY STYLES - These styles are for editor interactions only
+ * NOT used in the public view
+ *
+ * IMPORTANT: All styles here are for TRANSIENT elements/states
+ * These are UI-only and never saved to the database.
+ *
+ * References JavaScript constants in journal-editor.js:
+ * - CSS_DELETE_BTN: 'trip-image-delete-btn'
+ * - CSS_DROP_ZONE_ACTIVE: 'drop-zone-active'
+ * - CSS_DROP_ZONE_BETWEEN: 'drop-zone-between'
+ * - CSS_DRAGGING: 'dragging'
+ * - CSS_DRAG_OVER: 'drag-over'
+ */
+
+/* ===========================================
+   CSS CUSTOM PROPERTIES
+   =========================================== */
+
+:root {
+  /* Reference image aspect ratio (4:3 for standard photo dimensions) */
+  --reference-image-aspect-ratio: 4 / 3;
+}
+
+/* ===========================================
+   EDITOR LAYOUT
+   =========================================== */
+
+/* Main Layout Container */
+.journal-editor-layout {
+  display: flex !important;
+  height: calc(100vh - var(--app-topbar-height));
+  overflow: hidden;
+}
+
+/* Center Editor Panel */
+.journal-editor-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--white);
+}
+
+/* Right Image Panel */
+.journal-image-panel {
+  width: 400px;
+  border-left: 1px solid var(--line-color);
+  background-color: var(--muted-bg-light);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Editor Header with Save Status */
+.journal-editor-header {
+  flex-shrink: 0;
+  background-color: var(--white);
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+}
+
+/* Editor Form Container */
+.journal-entry-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+/* Form Header (Title, Date, Timezone, Reference Image) */
+.journal-form-header {
+  flex-shrink: 0;
+  margin-bottom: 1rem;
+}
+
+/* Force labels to stay inline with inputs */
+.journal-form-header label {
+  white-space: nowrap;
+}
+
+/* Editor Container - Scrollable */
+.journal-editor-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.journal-save-status {
+  font-size: 0.875rem;
+  padding: 0.35rem 0.65rem;
+}
+
+/* Reference Image Container */
+.journal-reference-image-container {
+  width: 100%;
+  position: relative;
+}
+
+/* Reference Image Placeholder (placeholder state - no image set) */
+.journal-reference-image-placeholder {
+  display: flex;
+  width: 100%;
+  aspect-ratio: var(--reference-image-aspect-ratio);
+  border-radius: 4px;
+  /* Min height ensures comfortable drop target on small screens where aspect-ratio might be too small */
+  min-height: 120px;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.journal-reference-image-placeholder.drop-zone-active {
+  /* Note: !important needed to override Bootstrap .bg-light utility class */
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  /* Use outline instead of border to avoid layout shifts */
+  outline: 2px dashed var(--primary-color, #007bff);
+  outline-offset: 4px;
+}
+
+.journal-reference-image-preview.drop-zone-active {
+  outline: 3px dashed var(--primary-color, #007bff);
+  outline-offset: 4px;
+}
+
+.journal-reference-drop-hint {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Reference Image Preview (preview state - image set) */
+.journal-reference-image-preview {
+  width: 100%;
+  aspect-ratio: var(--reference-image-aspect-ratio);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.journal-reference-image-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line-color);
+}
+
+.journal-reference-image-preview:hover .journal-reference-image-thumbnail {
+  opacity: 0.9;
+}
+
+/* Clear button (similar to trip-image-delete-btn) */
+.journal-reference-image-clear {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: rgba(220, 53, 69, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.journal-reference-image-clear:hover {
+  background-color: rgba(200, 35, 51, 1);
+}
+
+.journal-reference-image-preview:hover .journal-reference-image-clear {
+  display: flex;
+}
+
+/* ===========================================
+   FORMATTING TOOLBAR
+   =========================================== */
+
+/* Toolbar container - sticky at top of editor */
+.journal-editor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--white);
+  border: 1px solid var(--line-color);
+  border-radius: 4px 4px 0 0;
+  padding: 0.5rem;
+  margin-bottom: 0;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Toolbar buttons */
+.journal-editor-toolbar .btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Active state for toolbar buttons */
+.journal-editor-toolbar .btn.active {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border-color: var(--primary-color, #007bff);
+}
+
+/* Toolbar button icons */
+.journal-editor-toolbar .btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Button group styling */
+.journal-editor-toolbar .btn-group {
+  display: inline-flex;
+}
+
+/* Separator between button groups */
+.journal-editor-toolbar .toolbar-separator {
+  width: 1px;
+  height: 1.5rem;
+  background-color: var(--line-color);
+  margin: 0 0.25rem;
+}
+
+/* Heading dropdown */
+.journal-editor-toolbar .dropdown-menu {
+  min-width: 8rem;
+}
+
+/* Mobile: Hide toolbar on very small screens (editor is disabled anyway) */
+@media (max-width: 767px) {
+  .journal-editor-toolbar {
+    display: none;
+  }
+}
+
+/* ===========================================
+   CONTENTEDITABLE EDITOR - INTERACTIVE
+   =========================================== */
+
+/* ContentEditable Editor */
+.journal-contenteditable {
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
+  padding: 1rem;
+  border: 1px solid var(--line-color);
+  border-top: none; /* Toolbar provides top border */
+  border-radius: 0 0 4px 4px; /* Bottom corners only */
+  background-color: var(--white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-color);
+  outline: none;
+  min-height: 300px;
+}
+
+.journal-contenteditable:focus {
+  border-color: var(--primary-color, #007bff);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Placeholder styling */
+.journal-contenteditable:empty:before {
+  content: attr(data-placeholder);
+  color: var(--muted-text, #6c757d);
+  font-style: italic;
+}
+
+/* ===========================================
+   IMAGE PANEL - EDITOR ONLY
+   =========================================== */
+
+/* Image Panel Header - Fixed */
+.journal-image-panel-header {
+  flex-shrink: 0;
+  padding: 1rem;
+  background-color: var(--muted-bg-light);
+  border-bottom: 1px solid var(--line-color);
+}
+
+/* Image Gallery Grid - Scrollable */
+.journal-image-gallery {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+  align-content: start;
+}
+
+/* Image Card */
+.journal-image-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.journal-image-card:hover {
+  transform: translateY(-2px);
+}
+
+.journal-image-card.selected {
+  background-color: var(--primary-color-light, #e3f2fd);
+}
+
+.journal-image-card.selected .journal-image-thumbnail {
+  border: 3px solid var(--primary-color, #007bff);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.journal-image-thumbnail {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+  border: 1px solid var(--line-color);
+}
+
+.journal-image-caption {
+  padding: 0.25rem;
+}
+
+/* Image Metadata Preview Popup */
+.image-metadata-preview {
+  position: absolute;
+  background: white;
+  border: 1px solid var(--line-color);
+  border-radius: 4px;
+  padding: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  pointer-events: none;
+  min-width: 200px;
+}
+
+/* ===========================================
+   EDITOR-ONLY IMAGE INTERACTIONS
+   TRANSIENT - Never saved to database
+   =========================================== */
+
+/* Cursor and interaction hints */
+.trip-image-wrapper img.trip-image {
+  cursor: move;
+  user-select: none;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+/* Image hover state - TRANSIENT */
+.trip-image-wrapper:hover img.trip-image {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Image selected state - TRANSIENT */
+.trip-image-wrapper.selected img.trip-image {
+  outline: 3px solid var(--primary-color, #007bff);
+  outline-offset: 2px;
+}
+
+/* Image being dragged - TRANSIENT */
+.trip-image-wrapper.dragging img.trip-image {
+  opacity: 0.5;
+}
+
+/* Picker card being dragged - TRANSIENT */
+.journal-image-card.dragging {
+  opacity: 0.5;
+}
+
+/* Drag count badge - TRANSIENT */
+.drag-count-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Delete Button - TRANSIENT (never saved) */
+.trip-image-delete-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: rgba(220, 53, 69, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.trip-image-delete-btn:hover {
+  background-color: rgba(200, 35, 51, 1);
+}
+
+.trip-image-wrapper:hover .trip-image-delete-btn {
+  display: flex;
+}
+
+/* ===========================================
+   DROP ZONE INDICATORS - TRANSIENT
+   Never saved to database
+   =========================================== */
+
+/* Drop zone indicator for text blocks (p or div) */
+.journal-contenteditable .text-block.drop-zone-active {
+  background-color: rgba(0, 123, 255, 0.1);
+  outline: 2px dashed var(--primary-color, #007bff);
+  outline-offset: 4px;
+}
+
+/* Drop zone indicator for full-width image wrappers */
+.journal-contenteditable .trip-image-wrapper.drop-zone-active {
+  outline: 2px dashed var(--primary-color, #007bff);
+  outline-offset: 4px;
+}
+
+/* Drop zone indicator between paragraphs */
+.drop-zone-between {
+  height: 4px;
+  background-color: var(--primary-color, #007bff);
+  margin: 0.5rem 0;
+  border-radius: 2px;
+  position: relative;
+}
+
+.drop-zone-between::before {
+  content: 'Drop here for full-width image';
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+/* Dragging state for picker images - TRANSIENT */
+.journal-image-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+/* Drag over state for editor - TRANSIENT */
+.journal-contenteditable.drag-over {
+  background-color: rgba(0, 123, 255, 0.05);
+  border-color: var(--primary-color, #007bff);
+}
+
+/* ===========================================
+   RESPONSIVE BREAKPOINTS
+   =========================================== */
+
+/* Desktop: 1920px+ */
+@media (min-width: 1920px) {
+  .journal-image-panel {
+    width: 400px;
+  }
+}
+
+/* Laptop: 1366px - 1919px */
+@media (min-width: 1366px) and (max-width: 1919px) {
+  .journal-image-panel {
+    width: 350px;
+  }
+}
+
+/* Tablet: 1024px - 1365px */
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .journal-image-panel {
+    width: 320px;
+  }
+}
+
+/* Below 1024px: Stack vertically */
+@media (max-width: 1023px) {
+  .journal-editor-layout {
+    flex-direction: column;
+  }
+
+  .journal-image-panel {
+    width: 100%;
+    max-height: 400px;
+    border-left: none;
+    border-top: 1px solid var(--line-color);
+  }
+}
+
+/* Below 768px: Responsive adjustments for narrow screens */
+@media (max-width: 767px) {
+  .journal-editor-header {
+    padding: 1rem;
+  }
+
+  .journal-entry-form {
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  .journal-form-header .form-inline {
+    flex-wrap: wrap;
+  }
+
+  .journal-form-header .form-group {
+    margin-right: 0.5rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .journal-save-status {
+    font-size: 0.75rem;
+  }
+}
+
+/* Switch to list layout when panel is narrow */
+@media (max-width: 1365px) {
+  .journal-image-gallery {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .journal-image-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .journal-image-thumbnail {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  .journal-image-caption {
+    flex: 1;
+    padding: 0;
+  }
+}
+
+/* Reference image picker grid - always 3 columns */
+.reference-image-picker-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1rem;
+}
+
+.reference-image-picker-grid .journal-image-card {
+  display: block !important;
+}
+
+.reference-image-picker-grid .journal-image-thumbnail {
+  width: 100% !important;
+  aspect-ratio: 1 !important;
+  margin-bottom: 0.25rem !important;
+}

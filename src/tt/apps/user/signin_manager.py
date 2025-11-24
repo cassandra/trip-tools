@@ -7,7 +7,7 @@ from django.urls import reverse
 from tt.apps.common.singleton import Singleton
 from tt.apps.notify.email_sender import EmailData, EmailSender
 
-from .transient_models import UserAuthenticationData
+from .schemas import UserAuthenticationData
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,15 @@
+import logging
+
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
+from tt.apps.members.models import TripMember
+from tt.apps.trips.enums import TripPermissionLevel, TripPage, TripStatus
 from tt.apps.trips.models import Trip
-from tt.apps.trips.enums import TripPage, TripStatus
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
+logging.disable(logging.CRITICAL)
 
 User = get_user_model()
 
@@ -83,7 +87,7 @@ class TripHomeViewTests(TestCase):
             description='Test Description',
             trip_status=TripStatus.UPCOMING
         )
-        self.trips_home_url = reverse('trips_home', kwargs={'trip_id': self.trip.pk})
+        self.trips_home_url = reverse('trips_home', kwargs={'trip_uuid': self.trip.uuid})
 
     def test_trips_home_requires_authentication(self):
         """Test that trip home requires authentication."""
@@ -123,7 +127,7 @@ class TripHomeViewTests(TestCase):
         )
 
         self.client.force_login(self.user)
-        other_trip_url = reverse('trips_home', kwargs={'trip_id': other_trip.pk})
+        other_trip_url = reverse('trips_home', kwargs = { 'trip_uuid': other_trip.uuid })
         response = self.client.get(other_trip_url)
 
         # Should return a 404 since user doesn't own the trip
@@ -155,8 +159,6 @@ class TripHomeViewTests(TestCase):
 
     def test_admin_can_view_trip(self):
         """User with ADMIN permission can view trip."""
-        from tt.apps.trips.models import TripMember
-        from tt.apps.trips.enums import TripPermissionLevel
 
         admin_user = User.objects.create_user(
             email='admin@test.com',
@@ -176,8 +178,6 @@ class TripHomeViewTests(TestCase):
 
     def test_editor_can_view_trip(self):
         """User with EDITOR permission can view trip."""
-        from tt.apps.trips.models import TripMember
-        from tt.apps.trips.enums import TripPermissionLevel
 
         editor_user = User.objects.create_user(
             email='editor@test.com',
@@ -197,8 +197,6 @@ class TripHomeViewTests(TestCase):
 
     def test_viewer_can_view_trip(self):
         """User with VIEWER permission can view trip."""
-        from tt.apps.trips.models import TripMember
-        from tt.apps.trips.enums import TripPermissionLevel
 
         viewer_user = User.objects.create_user(
             email='viewer@test.com',
@@ -219,6 +217,6 @@ class TripHomeViewTests(TestCase):
     def test_trips_home_nonexistent_trip(self):
         """Test that requesting nonexistent trip returns 404."""
         self.client.force_login(self.user)
-        url = reverse('trips_home', kwargs={'trip_id': 99999})
+        url = reverse('trips_home', kwargs={'trip_uuid': '32653d87-9b24-4c8f-adfb-8ab876418072'})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)

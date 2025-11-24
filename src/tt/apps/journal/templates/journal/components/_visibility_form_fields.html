@@ -1,0 +1,94 @@
+{% load icons %}
+{% load journal_tags %}
+
+{# Visibility Selection Section #}
+<div class="form-group">
+  <label class="font-weight-bold">
+    Visibility <span class="text-danger">*</span>
+  </label>
+  {% for radio in form.visibility %}
+  <div class="form-check">
+    <input type="radio"
+           name="visibility"
+           value="{{ radio.data.value }}"
+           id="{{ radio.id_for_label }}"
+           class="visibility-radio form-check-input"
+           {% if radio.data.value == 'PROTECTED' %}
+           data-show-when-checked="#password-section"
+           {% else %}
+           data-hide-when-checked="#password-section"
+           {% endif %}
+           {% if radio.data.selected %}checked{% endif %}>
+    <label class="form-check-label" for="{{ radio.id_for_label }}">
+      {% with vis=radio.data.value|get_visibility_by_name %}
+      {% icon vis.icon_name size="sm" css_class="tt-icon-left" %}
+      <strong>{{ vis.label }}</strong> - {{ vis.description }}
+      {% endwith %}
+    </label>
+  </div>
+  {% endfor %}
+  {% if form.visibility.errors %}
+  <div class="text-danger small mt-1">
+    {{ form.visibility.errors }}
+  </div>
+  {% endif %}
+</div>
+
+{# Password Section #}
+<div class="form-group" id="password-section">
+  <label class="font-weight-bold">
+    Password
+  </label>
+
+  {% if journal.has_password %}
+  {# Show password action radios when journal has existing password #}
+  <div class="mb-2" id="password-action-radios">
+    {% for radio in form.password_action %}
+    <div class="form-check">
+      <input type="radio"
+             name="password_action"
+             value="{{ radio.data.value }}"
+             id="{{ radio.id_for_label }}"
+             class="password-action-radio form-check-input"
+             {% if radio.data.value == 'SET_NEW' %}
+             data-show-when-checked="#password-section .attr-v2-secret-input-wrapper"
+             {% else %}
+             data-hide-when-checked="#password-section .attr-v2-secret-input-wrapper"
+             {% endif %}
+             {% if radio.data.selected %}checked{% endif %}>
+      <label class="form-check-label" for="{{ radio.id_for_label }}">
+        {{ radio.choice_label }}
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Password input field #}
+  <div class="attr-v2-secret-input-wrapper">
+    {{ form.password }}
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary attr-v2-secret-toggle"
+            onclick="Tt.attr.toggleSecretField(this)"
+            title="Show password">
+      <span class="attr-v2-icon-show">{% icon "eye" size="sm" %}</span>
+      <span class="attr-v2-icon-hide" style="display: none;">{% icon "eye-off" size="sm" %}</span>
+    </button>
+  </div>
+
+  {% if journal.has_password %}
+  <small class="form-text text-muted">
+    Choose whether to keep the existing password or set a new one.
+  </small>
+  {% else %}
+  <small class="form-text text-muted">
+    Required when visibility is set to Protected.
+  </small>
+  {% endif %}
+
+  {% if form.password.errors %}
+  <div class="text-danger small mt-1">
+    {{ form.password.errors }}
+  </div>
+  {% endif %}
+</div>

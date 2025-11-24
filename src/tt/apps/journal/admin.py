@@ -1,0 +1,71 @@
+from django.contrib import admin
+
+from tt.apps.common.admin_utils import admin_link
+
+from . import models
+
+
+class JournalEntryInline(admin.TabularInline):
+    model = models.JournalEntry
+    extra = 0
+    readonly_fields = ('edit_version', 'created_datetime', 'modified_datetime')
+
+    fields = (
+        'date',
+        'title',
+        'reference_image',
+        'edit_version',
+        'modified_datetime',
+    )
+
+
+@admin.register(models.Journal)
+class JournalAdmin(admin.ModelAdmin):
+    show_full_result_count = False
+
+    list_display = (
+        'title',
+        'trip_link',
+        'visibility',
+        'has_password',
+        'reference_image',
+        'created_datetime',
+        'modified_datetime',
+    )
+
+    list_filter = ('visibility', 'created_datetime')
+    search_fields = ['title', 'description', 'trip__title']
+    readonly_fields = ('uuid', 'created_datetime', 'modified_datetime')
+    inlines = [JournalEntryInline]
+
+    @admin_link('trip', 'Trip')
+    def trip_link(self, trip):
+        return trip.title
+
+
+@admin.register(models.JournalEntry)
+class JournalEntryAdmin(admin.ModelAdmin):
+    show_full_result_count = False
+
+    list_display = (
+        'date',
+        'journal_link',
+        'title',
+        'has_reference_image',
+        'modified_datetime',
+    )
+
+    list_filter = ('date', 'created_datetime')
+    search_fields = ['title', 'text', 'journal__title']
+    readonly_fields = ('edit_version', 'created_datetime', 'modified_datetime')
+    date_hierarchy = 'date'
+
+    @admin_link('journal', 'Journal')
+    def journal_link(self, journal):
+        return journal.title
+
+    def has_reference_image(self, obj):
+        return bool(obj.reference_image)
+    
+    has_reference_image.short_description = 'Ref Image'
+    has_reference_image.boolean = True

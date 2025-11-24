@@ -35,7 +35,6 @@ Execute systematic debugging approach:
    - **Use Task tool with general-purpose agent**: Broad pattern search and cross-domain analysis
    - **Use Task tool with backend-dev agent**: Django/database debugging (if applicable)
    - **Use Task tool with frontend-dev agent**: Template/JavaScript debugging (if applicable)
-   - **Use Task tool with integration-dev agent**: External API/integration debugging (if applicable)
    - **Use Task tool with test-engineer agent**: Test failure analysis (if applicable)
 
 5. **Analyze error patterns** - Identify:

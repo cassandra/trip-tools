@@ -1,0 +1,95 @@
+{% load travelog_tags %}
+{% load icons %}
+<div class="journal-editor-container">
+  <!-- Formatting Toolbar -->
+  <div class="journal-editor-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; gap: 0.5rem;">
+    <!-- Text Formatting Group -->
+    <div class="btn-group" role="group" aria-label="Text formatting">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="bold" title="Bold (Ctrl+B)">
+        {% icon "bold" size="sm" aria_label="Bold" %}
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="italic" title="Italic (Ctrl+I)">
+        {% icon "italic" size="sm" aria_label="Italic" %}
+      </button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <!-- Headings Dropdown -->
+    <div class="btn-group" role="group" aria-label="Headings">
+      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {% icon "heading" size="sm" aria_label="Heading" %} Heading
+      </button>
+      <div class="dropdown-menu">
+        <a class="dropdown-item" href="#" data-command="heading" data-level="2">Heading 2</a>
+        <a class="dropdown-item" href="#" data-command="heading" data-level="3">Heading 3</a>
+        <a class="dropdown-item" href="#" data-command="heading" data-level="4">Heading 4</a>
+      </div>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <!-- Lists Group -->
+    <div class="btn-group" role="group" aria-label="Lists">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertUnorderedList" title="Bulleted list">
+        {% icon "list-ul" size="sm" aria_label="Bulleted list" %}
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="insertOrderedList" title="Numbered list">
+        {% icon "list-ol" size="sm" aria_label="Numbered list" %}
+      </button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <!-- Indent/Outdent Group -->
+    <div class="btn-group" role="group" aria-label="Indentation">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="indent" title="Increase indent">
+        {% icon "indent" size="sm" aria_label="Indent" %}
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="outdent" title="Decrease indent">
+        {% icon "outdent" size="sm" aria_label="Outdent" %}
+      </button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <!-- Insert Group -->
+    <div class="btn-group" role="group" aria-label="Insert">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="createLink" title="Insert link">
+        {% icon "link" size="sm" aria_label="Link" %}
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-command="code" title="Code block">
+        {% icon "code" size="sm" aria_label="Code" %}
+      </button>
+    </div>
+    </div>
+
+    <!-- Preview Button (right side) -->
+    <div>
+      <a href="{% travelog_url 'travelog_day' entry.journal.uuid date=entry.date version='draft' refresh=True %}"
+         target="_blank"
+         class="btn btn-sm btn-outline-primary"
+         title="Preview this entry in the draft travelog">
+        {% icon "eye" size="sm" aria_label="Preview" %} Preview
+      </a>
+    </div>
+  </div>
+
+  <!-- ContentEditable Editor -->
+  <div
+    class="{{ DIVID.JOURNAL_EDITOR_CLASS }}"
+    id="{{ DIVID.JOURNAL_EDITOR_ID }}"
+    contenteditable="true"
+    data-{{ DIVID.JOURNAL_CURRENT_VERSION_ATTR }}="{{ entry.edit_version }}"
+    data-{{ DIVID.JOURNAL_AUTOSAVE_URL_ATTR }}="{% url 'journal_entry_autosave' entry_uuid=entry.uuid %}"
+    data-placeholder="Start writing your journal entry..."
+    role="textbox"
+    aria-label="Journal entry content"
+    aria-multiline="true"
+  >{{ entry.text|safe }}</div>
+
+  <!-- Hidden textarea for form fallback (non-JS) -->
+  <textarea class="d-none" name="text" id="{{ DIVID.JOURNAL_EDITOR_ID }}_fallback">{{ entry.text }}</textarea>
+
+</div>

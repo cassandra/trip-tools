@@ -1,0 +1,34 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load icons %}
+{% load journal_tags %}
+
+{% block modal_dialog_id %}journal-visibility-modal{% endblock %}
+
+{% block title_text %}Change Journal Visibility{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'journal_visibility' journal_uuid=journal.uuid %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+  {% include "journal/components/_visibility_form_fields.html" with form=form journal=journal %}
+
+  <div class="alert alert-info mt-3">
+    <small>
+      {% icon "info-circle" size="sm" css_class="tt-icon-left" %}
+      <strong>Note:</strong> Changing visibility affects who can view your published journal versions. Current editors of the journal are not affected.
+    </small>
+  </div>
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-primary">
+  {% icon "save" size="sm" css_class="tt-icon-left" %}
+  SAVE VISIBILITY SETTINGS
+</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

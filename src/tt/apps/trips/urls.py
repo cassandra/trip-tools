@@ -1,9 +1,17 @@
-from django.urls import re_path
+from django.urls import path
 
 from . import views
 
 
 urlpatterns = [
-    re_path(r'^create$', views.TripCreateModalView.as_view(), name='trips_create'),
-    re_path(r'^(?P<trip_id>\d+)$', views.TripHomeView.as_view(), name='trips_home'),
+    path(
+        'create',
+        views.TripCreateModalView.as_view(),
+        name='trips_create'
+    ),
+    path(
+        '<uuid:trip_uuid>',
+        views.TripHomeView.as_view(),
+        name='trips_home'
+    ),
 ]

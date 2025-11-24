@@ -1,9 +1,14 @@
+from uuid import UUID
+from typing import Union
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import BadRequest, PermissionDenied
 from django.http import Http404, HttpRequest
 
+from tt.apps.members.models import TripMember
+
 from .enums import TripPermissionLevel
-from .models import Trip, TripMember
+from .models import Trip
 
 User = get_user_model()
 
@@ -11,22 +16,27 @@ User = get_user_model()
 class TripViewMixin:
 
     def get_trip_member( self,
-                         request  : HttpRequest,
-                         trip_id  : int = None,
+                         request    : HttpRequest,
+                         trip_uuid  : Union[UUID, str, None] = None,
                          *args, **kwargs ) -> TripMember:
-        if not trip_id:
-            for arg_name in [ 'trip_id', 'trip_pk', 'trip' ]:
-                try:
-                    trip_id = int( request.kwargs.get( arg_name ))
+        if not trip_uuid:
+            for arg_name in [ 'trip_uuid', 'trip' ]:
+                trip_uuid = kwargs.get( arg_name )
+                if trip_uuid:
                     break
-                except ( TypeError, ValueError):
-                    pass
                 continue
 
-        if not trip_id:
+        if not trip_uuid:
             raise BadRequest()
+
+        if isinstance( trip_uuid, str ):
+            try:
+                trip_uuid = UUID( trip_uuid )
+            except ValueError:
+                raise BadRequest( 'Invalid UUID format' )
+
         try:
-            trip = Trip.objects.get( pk = trip_id )
+            trip = Trip.objects.get( uuid = trip_uuid )
             return TripMember.objects.get( trip = trip, user = request.user )
         except Trip.DoesNotExist:
             raise Http404()

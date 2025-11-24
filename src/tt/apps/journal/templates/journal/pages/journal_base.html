@@ -1,0 +1,31 @@
+{% extends "trips/pages/trip_subpage.html" %}
+{% load static %}
+{% load icons %}
+
+{% block trip_subpage_sidebar_header %}
+<div class="px-3">
+  <a href="{% url 'journal_home' trip_uuid=trip_page.trip.uuid %}" class="plain text-primary h3">Trip Journal</a>
+</div>
+{% endblock %}
+
+{% block subpage_sidebar_content %}
+{% if journal_page.journal_entries %}
+<ul class="app-sidebar-nav">
+  {% for entry in journal_page.journal_entries %}
+  <li>
+    <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"{% if entry.uuid == journal_page.journal_entry_uuid %} class="active" aria-current="page"{% endif %}>
+      {{ entry.date|date:'D, M j' }}
+    </a>
+  </li>
+  {% endfor %}
+  {% if trip_page.request_member.can_edit_trip %}
+  <li>
+    <a href="{% url 'journal_entry_new' journal_uuid=journal_page.journal.uuid %}" class="text-muted">
+      {% icon "plus" size="sm" css_class="tt-icon-left" %}
+      <span>New Entry</span>
+    </a>
+  </li>
+  {% endif %}
+</ul>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,71 @@
+{% load static %}
+{% load icons %}
+{% load tz %}
+{% timezone USER_TIMEZONE %}
+
+<div class="list-group-item" id="member-{{ member_data.uuid }}">
+  <div class="d-flex w-100 justify-content-between align-items-start">
+    <div class="flex-grow-1">
+      <div class="d-flex align-items-center mb-2">
+        <h5 class="mb-0 mr-3">
+          {% if member_data.user.get_full_name %}
+            {{ member_data.user.get_full_name }}
+          {% else %}
+            {{ member_data.user.email }}
+          {% endif %}
+        </h5>
+        {% if member_data.is_user %}
+        <span class="badge bg-light text-dark ml-2">You</span>
+        {% endif %}
+      </div>
+
+      {% if member_data.user.email != member_data.user.get_full_name %}
+      <p class="mb-1 text-muted">{{ member_data.user.email }}</p>
+      {% endif %}
+
+      {% if request_member.can_manage_members %}
+      <button class="btn btn-sm btn-link p-0 text-muted" type="button" data-toggle="collapse" data-target="#details-{{ member_data.uuid }}" aria-expanded="false" aria-controls="details-{{ member_data.uuid }}">
+        Show Details
+      </button>
+      <div class="collapse mt-2" id="details-{{ member_data.uuid }}">
+        <div class="small text-muted">
+          <strong>Added by:</strong> {{ member_data.trip_member.added_by.email }}<br>
+          <strong>Date Added:</strong> {{ member_data.trip_member.added_datetime|date:"F j, Y \a\t g:i A" }}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="d-flex align-items-start">
+      {% if member_data.permission_level_options %}
+      <div class="dropdown mr-2">
+        <button class="btn btn-lg btn-outline-primary dropdown-toggle d-flex align-items-center" type="button" id="permission-dropdown-{{ member_data.uuid }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span class="badge bg-{{ member_data.permission_level.name|lower }} mr-1 px-3 py-2">{{ member_data.permission_level.label }}</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right p-1" style="min-width: 0;">
+          {% for permission_level in member_data.permission_level_options %}
+            <form method="post" action="{% url 'members_change_permission' trip_uuid=member_data.trip.uuid member_uuid=member_data.uuid %}" data-async="#member-{{ member_data.uuid }}" data-mode="replace" class="dropdown-item-form">
+              {% csrf_token %}
+              <input type="hidden" name="permission_level" value="{{ permission_level }}">
+              <button type="submit" class="dropdown-item p-1">
+                <span class="badge bg-{{ permission_level }} px-3 py-2 d-block">{{ permission_level.label }}</span>
+              </button>
+            </form>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <span class="badge bg-{{ member_data.permission_level.name|lower }} mr-1 px-3 py-2">{{ member_data.permission_level.label }}</span>
+      {% endif %}
+      {% if member_data.is_user or member_data.can_remove %}
+      <a href="{% url 'members_remove' trip_uuid=member_data.trip.uuid member_uuid=member_data.uuid %}"
+         class="btn btn-outline-danger"
+         data-async="modal"
+         title="Remove Member">
+        {% icon "delete" %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endtimezone %}

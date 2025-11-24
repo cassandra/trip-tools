@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from django.shortcuts import render
 
@@ -47,8 +48,8 @@ class TripHomeView( TripViewMixin, ModalView ):
     def get_template_name(self) -> str:
         return 'trips/pages/trip-home.html'
 
-    def get(self, request, trip_id, *args, **kwargs):
-        request_member = self.get_trip_member( request, trip_id = trip_id )
+    def get(self, request, trip_uuid : UUID, *args, **kwargs):
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
         self.assert_is_viewer( request_member )
         trip = request_member.trip
 

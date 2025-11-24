@@ -1,0 +1,147 @@
+{% extends "journal/pages/journal_base.html" %}
+{% load static %}
+{% load icons %}
+{% load pipeline %}
+
+{% block head_css %}
+{% stylesheet 'journal_editor' %}
+{% endblock %}
+
+{% block trip_content %}
+<!-- Main journal editor layout -->
+<div class="journal-editor-layout">
+
+  <!-- ===========================================
+       CENTER EDITOR PANEL
+       =========================================== -->
+  <div class="journal-editor-panel mt-2">
+
+    <!-- Editor Form -->
+    <form class="{{ DIVID.JOURNAL_ENTRY_FORM_CLASS }}" method="post">
+      {% csrf_token %}
+
+      <!-- Compact Header: Two columns -->
+      <div class="row mb-3 journal-form-header">
+        <!-- Left column: Reference Image (hidden on small screens) -->
+        <div class="col-md-3 d-none d-md-block">
+          <div class="form-group">
+            <div class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS }}"
+                 data-{{ DIVID.JOURNAL_REFERENCE_IMAGE_UUID_ATTR }}="{% if entry.reference_image %}{{ entry.reference_image.uuid }}{% endif %}">
+
+              <!-- Placeholder state: Camera icon (drop zone) - shown when no reference image -->
+              <div class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS }} bg-light border align-items-center justify-content-center text-muted{% if entry.reference_image %} d-none{% endif %}">
+                {% icon "camera" size="lg" %}
+                <span class="journal-reference-drop-hint">Drop reference image</span>
+              </div>
+
+              <!-- Preview state: Show thumbnail + clear button - shown when reference image set -->
+              <div class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_PREVIEW_CLASS }}{% if not entry.reference_image %} d-none{% endif %}">
+                <img src="{% if entry.reference_image %}{{ entry.reference_image.thumbnail_image.url }}{% endif %}"
+                     alt="{% if entry.reference_image %}{{ entry.reference_image.caption|default:'Reference' }}{% endif %}"
+                     class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS }}"
+                     draggable="true"
+                     data-{{ DIVID.JOURNAL_INSPECT_URL_ATTR }}="{% if entry.reference_image %}{% url 'images_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_uuid={{ trip.uuid }}{% endif %}">
+                <button type="button"
+                        class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS }}"
+                        title="Clear reference image">&times;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: Title, Date, Timezone -->
+        <div class="col-12 col-md-9">
+          <div>
+            <!-- Title (full width in left column) -->
+            <div class="form-group form-inline mb-2">
+              <label for="{{ DIVID.JOURNAL_TITLE_INPUT_ID }}" class="font-weight-bold mr-2">Title:</label>
+              <input
+                  type="text"
+                  class="form-control flex-grow-1"
+                  id="{{ DIVID.JOURNAL_TITLE_INPUT_ID }}"
+                  name="title"
+                  value="{{ entry.title }}"
+                  placeholder="Enter journal entry title..."
+              >
+            </div>
+
+            <!-- Date and Timezone (inline in second row) -->
+            <div class="form-inline">
+              <label for="{{ DIVID.JOURNAL_DATE_INPUT_ID }}" class="font-weight-bold mr-2">Date:</label>
+              <input
+                  type="date"
+                  class="form-control mr-2"
+                  id="{{ DIVID.JOURNAL_DATE_INPUT_ID }}"
+                  name="date"
+                  value="{{ entry.date|date:'Y-m-d' }}"
+              >
+              <small class="text-muted mr-2">({{ entry.date|date:"l" }})</small>
+              {{ journal_entry_form.timezone }}
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end align-items-center mt-4">
+            <button type="button"
+                    class="btn btn-sm btn-primary mr-2 journal-manual-save-btn"
+                    style="display: none;"
+                    title="Save now">
+              Save
+            </button>
+            <span class="badge badge-secondary {{ DIVID.JOURNAL_SAVE_STATUS_CLASS }}">
+              Saved 2 seconds ago
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      {% if show_source_changed_warning %}
+        <div class="alert alert-warning mx-2 mb-2" role="alert">
+          <small>
+            <strong>{% icon "warning" size="lg" %} Note:</strong>
+            The source note for this entry has been updated since this journal entry was created.
+          </small>
+        </div>
+      {% endif %}
+
+      {% include "journal/components/journal_entry_text_edit.html" %}
+
+    </form>
+
+    <!-- Footer: Delete and Help Buttons -->
+    <div class="d-flex justify-content-between m-2">
+      <!-- Delete Button (left) -->
+      <a href="{% url 'journal_entry_delete' entry_uuid=entry.uuid %}"
+         class="btn btn-sm btn-outline-danger"
+         data-async="modal"
+         title="Delete this journal entry">
+        {% icon "delete" size="sm" %} Delete Entry
+      </a>
+
+      <!-- Editing Help Button (right) -->
+      <a href="{% url 'journal_editor_help' %}"
+         class="btn btn-sm btn-outline-secondary"
+         data-async="modal"
+         title="Show keyboard shortcuts and editing help">
+        {% icon "question-circle" size="sm" %} Editing Help
+      </a>
+    </div>
+
+  </div>
+
+  <!-- ===========================================
+       RIGHT IMAGE PANEL
+       =========================================== -->
+  <div class="journal-image-panel d-none d-lg-flex" id="journal-image-panel">
+    {% include "journal/components/journal_entry_image_picker.html" %}
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block footer_post_javascript %}
+{{ block.super }}
+{% javascript 'journal_editor' %}
+{% endblock %}

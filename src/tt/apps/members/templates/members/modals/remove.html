@@ -6,7 +6,7 @@
 {% block title_text %}{% if is_self_removal %}Leave Trip{% else %}Remove Member{% endif %}{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'members_remove' trip_id=trip.pk member_id=member.pk %}" data-async="modal">
+<form method="post" action="{% url 'members_remove' trip_uuid=trip.uuid member_uuid=member.uuid %}" data-async="modal">
   {% csrf_token %}
 {% endblock %}
 
