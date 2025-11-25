@@ -27,7 +27,10 @@
       "Bash(time make test-sqlite:*)",
       "Bash(make docker-build:*)",
       "Bash(curl:*)",
-      "WebFetch(domain:triptools.net)"
+      "WebFetch(domain:triptools.net)",
+      "Bash(python src/manage.py check:*)",
+      "Bash(xargs cat:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

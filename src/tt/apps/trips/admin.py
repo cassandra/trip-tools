@@ -27,13 +27,14 @@ class TripAdmin(admin.ModelAdmin):
         'title',
         'owner_link',
         'trip_status',
+        'uuid',
         'created_datetime',
         'modified_datetime',
     )
 
     list_filter = ( 'trip_status', 'created_datetime' )
     search_fields = [ 'title', 'description', 'members__user__email' ]
-    readonly_fields = ( 'created_datetime', 'modified_datetime' )
+    readonly_fields = ( 'created_datetime', 'modified_datetime', 'uuid' )
     inlines = [ TripMemberInline ]
 
     @admin_link( 'owner', 'Owner' )

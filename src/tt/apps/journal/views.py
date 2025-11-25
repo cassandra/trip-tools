@@ -52,7 +52,7 @@ class JournalHomeView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View
             return HttpResponseRedirect( redirect_url )
 
         if not request_member.can_edit_trip:
-            return self.journal_permission_denied_response(
+            return self.journal_view_only_response(
                 request = request,
                 request_member = request_member,
                 journal = None,
@@ -137,7 +137,7 @@ class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
         self.assert_is_viewer(request_member)
 
         if not request_member.can_edit_trip:
-            return self.journal_permission_denied_response(
+            return self.journal_view_only_response(
                 request = request,
                 request_member = request_member,
                 journal = journal,
@@ -304,7 +304,7 @@ class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, 
         self.assert_is_viewer(request_member)
 
         if not request_member.can_edit_trip:
-            return self.journal_permission_denied_response(
+            return self.journal_view_only_response(
                 request = request,
                 request_member = request_member,
                 journal = journal,
@@ -350,7 +350,7 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
         self.assert_is_viewer(request_member)
 
         if not request_member.can_edit_trip:
-            return self.journal_permission_denied_response(
+            return self.journal_view_only_response(
                 request = request,
                 request_member = request_member,
                 journal = entry.journal,

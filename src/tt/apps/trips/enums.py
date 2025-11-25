@@ -32,28 +32,31 @@ class TripPermissionLevel( LabeledEnum ):
 
     def __lt__( self, other ):
         if not isinstance( other, TripPermissionLevel ):
-            raise NotImplementedError()
+            return NotImplemented
         return bool( self.priority < other.priority )
 
     def __le__( self, other ):
         if not isinstance( other, TripPermissionLevel ):
-            raise NotImplementedError()
+            return NotImplemented
         return bool( self.priority <= other.priority )
 
     def __gt__( self, other ):
         if not isinstance( other, TripPermissionLevel ):
-            raise NotImplementedError()
+            return NotImplemented
         return bool( self.priority > other.priority )
 
     def __ge__( self, other ):
         if not isinstance( other, TripPermissionLevel ):
-            raise NotImplementedError()
+            return NotImplemented
         return bool( self.priority >= other.priority )
 
     def __eq__( self, other ):
         if not isinstance( other, TripPermissionLevel ):
-            raise NotImplementedError()
+            return False
         return bool( self.priority == other.priority )
+
+    def __hash__( self ):
+        return hash( self.priority )
 
     @property
     def is_owner(self):
