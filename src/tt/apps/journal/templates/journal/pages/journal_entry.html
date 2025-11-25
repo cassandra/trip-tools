@@ -29,7 +29,7 @@
                  data-{{ DIVID.JOURNAL_REFERENCE_IMAGE_UUID_ATTR }}="{% if entry.reference_image %}{{ entry.reference_image.uuid }}{% endif %}">
 
               <!-- Placeholder state: Camera icon (drop zone) - shown when no reference image -->
-              <div class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS }} bg-light border align-items-center justify-content-center text-muted{% if entry.reference_image %} d-none{% endif %}">
+              <div class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS }}{% if entry.reference_image %} d-none{% endif %}">
                 {% icon "camera" size="lg" %}
                 <span class="journal-reference-drop-hint">Drop reference image</span>
               </div>

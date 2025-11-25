@@ -830,24 +830,6 @@ body {
 }
 
 /* Trip card styling */
-.trip-card-image {
-  height: 180px;
-}
-
-.trip-card-image--past {
-  opacity: 0.7;
-}
-
-.trip-card-icon {
-  max-width: 120px;
-  max-height: 120px;
-  opacity: 0.6;
-}
-
-.trip-card-icon--past {
-  filter: grayscale(50%);
-}
-
 .trip-card-description {
   display: -webkit-box;
   -webkit-line-clamp: 2;

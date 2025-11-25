@@ -77,9 +77,14 @@
   <div class="d-flex justify-content-between align-items-center mb-2">
     <div class="d-flex align-items-center">
       {# Trip reference image - fixed square #}
-      <div class="ml-2 mr-2" style="width: 3rem; height: 3rem; flex-shrink: 0;">
-        {% url 'trip_reference_image_picker' trip_uuid=trip_page.trip.uuid as trip_image_picker_url %}
-        {% include "images/components/reference_image_display.html" with image=trip_page.trip.reference_image height="3rem" show_edit_icon=trip_page.request_member.can_edit_trip edit_url=trip_image_picker_url placeholder_icon="map-pin" %}
+      <div class="ml-2 mr-2" style="width: 3rem; flex-shrink: 0;">
+        {% if trip_page.request_member.can_edit_trip %}
+        <a href="{% url 'trip_reference_image_picker' trip_uuid=trip_page.trip.uuid %}" data-async="modal" title="Click to change reference image">
+          {% include "images/components/reference_image_display.html" with image=trip_page.trip.reference_image size="responsive" editable=True %}
+        </a>
+        {% else %}
+        {% include "images/components/reference_image_display.html" with image=trip_page.trip.reference_image size="responsive" %}
+        {% endif %}
       </div>
 
       <h1 class="h2 mb-0 mx-2">{{ trip_page.trip.title }}</h1>

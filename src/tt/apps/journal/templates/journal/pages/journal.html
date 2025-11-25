@@ -14,7 +14,9 @@
   <div class="card mb-3">
     <div class="row no-gutters">
       <div class="col-3 col-md-2" id="journal-reference-image-container">
-        {% include "journal/components/journal_reference_image_display.html" %}
+        <a href="{% url 'journal_reference_image_picker' journal_uuid=journal.uuid %}" data-async="modal" title="Click to change reference image">
+          {% include "images/components/reference_image_display.html" with image=journal.reference_image size="md" editable=True %}
+        </a>
       </div>
 
       <div class="col-9 col-md-10">
@@ -243,17 +245,7 @@
     <div class="row no-gutters">
       {# Left side: Reference image or placeholder #}
       <div class="col-3 col-md-2">
-        {% if entry.reference_image %}
-        <img src="{{ entry.reference_image.thumbnail_image.url }}"
-             alt="{{ entry.reference_image.caption|default:'Reference' }}"
-             class="img-fluid w-100"
-             style="object-fit: cover; height: 150px;">
-        {% else %}
-        <div class="bg-light d-flex align-items-center justify-content-center text-muted border-right"
-             style="height: 150px;">
-          {% icon "camera" size="lg" %}
-        </div>
-        {% endif %}
+        {% include "images/components/reference_image_display.html" with image=entry.reference_image size="md" %}
       </div>
 
       {# Right side: Entry content #}

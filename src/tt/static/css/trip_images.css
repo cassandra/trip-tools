@@ -405,3 +405,108 @@
   text-decoration: none;
   color: inherit;
 }
+
+/* ========================================
+   Reference Image Display Component
+   Unified styling for Trip, Journal, JournalEntry reference images
+   ======================================== */
+
+/* Base container - square aspect ratio */
+.ref-image-display {
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Size presets */
+.ref-image-display--xs {
+  width: 48px;
+  min-width: 48px;
+}
+
+.ref-image-display--sm {
+  width: 80px;
+  min-width: 80px;
+}
+
+.ref-image-display--md {
+  width: 120px;
+  min-width: 120px;
+}
+
+.ref-image-display--lg {
+  width: 180px;
+  min-width: 180px;
+}
+
+/* Responsive - fills container width (parent must have explicit width) */
+.ref-image-display--responsive {
+  width: 100%;
+  min-width: unset;
+}
+
+/* Image styling - covers container with aspect ratio preserved */
+.ref-image-display__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Placeholder styling - icon centered on light background */
+.ref-image-display__placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--muted-color, #6c757d);
+  border: 1px solid #dee2e6;
+}
+
+/* Placeholder image (e.g., app icon for trip cards) */
+.ref-image-display__placeholder-image {
+  max-width: 60%;
+  max-height: 60%;
+  opacity: 0.6;
+}
+
+/* Past trip modifier - reduced opacity */
+.ref-image-display--past {
+  opacity: 0.7;
+}
+
+.ref-image-display--past .ref-image-display__placeholder {
+  filter: grayscale(50%);
+}
+
+.ref-image-display--past .ref-image-display__placeholder-image {
+  filter: grayscale(50%);
+}
+
+/* Editable placeholder - visual indicator that clicking will edit */
+.ref-image-display__placeholder--editable {
+  cursor: pointer;
+  border-style: dashed;
+}
+
+.ref-image-display__placeholder--editable:hover {
+  background-color: #e9ecef;
+  border-color: var(--primary-color, #007bff);
+}
+
+/* Edit indicator icon */
+.ref-image-display__edit-indicator {
+  position: absolute;
+  bottom: 0.25rem;
+  right: 0.25rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  padding: 0.25rem;
+  line-height: 1;
+  color: var(--muted-color, #6c757d);
+}

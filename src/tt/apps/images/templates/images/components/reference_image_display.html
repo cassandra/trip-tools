@@ -1,41 +1,32 @@
-{% load icons %}
+{% load icons static %}
 {% comment %}
-Reusable component for displaying a reference image with optional edit capability.
+Unified component for displaying a reference image.
 
 Parameters:
 - image: TripImage instance or None
-- edit_url: URL for the image picker modal
-- height: CSS height value (e.g., "120px", "2.5rem")
-- show_edit_icon: Boolean - whether to show edit functionality (default: False)
-- placeholder_icon: Icon name for placeholder (default: "camera")
-- container_class: Additional CSS classes for container
+- size: "xs", "sm", "md", "lg", or "responsive" (default: "md")
+- editable: Boolean - shows edit indicator on placeholder (default: False)
+- placeholder_image: Static image path (e.g., "img/tt-icon-196x196.png")
+                     If not provided, shows camera icon.
+
+Click behavior should be handled by wrapping this component in a link.
 {% endcomment %}
 
-{% if show_edit_icon %}
-<a href="{{ edit_url }}"
-   data-async="modal"
-   class="d-block {{ container_class|default:'' }}"
-   style="cursor: pointer; height: {{ height|default:'120px' }};"
-   title="Click to change reference image">
-{% else %}
-<div class="d-block {{ container_class|default:'' }}"
-     style="height: {{ height|default:'120px' }};">
-{% endif %}
-
+<div class="ref-image-display ref-image-display--{{ size|default:'md' }}">
   {% if image and image.thumbnail_image %}
   <img src="{{ image.thumbnail_image.url }}"
        alt="{{ image.caption|default:'Reference' }}"
-       class="img-fluid w-100"
-       style="object-fit: cover; height: 100%;">
+       class="ref-image-display__image">
   {% else %}
-  <div class="bg-light d-flex align-items-center justify-content-center text-muted border-right"
-       style="height: 100%;">
-    {% icon placeholder_icon|default:"camera" size="lg" %}
+  <div class="ref-image-display__placeholder{% if editable %} ref-image-display__placeholder--editable{% endif %}">
+    {% if placeholder_image %}
+    <img src="{% static placeholder_image %}" alt="Placeholder" class="ref-image-display__placeholder-image">
+    {% else %}
+    {% icon "camera" size="lg" %}
+    {% endif %}
+    {% if editable %}
+    <span class="ref-image-display__edit-indicator">{% icon "edit" size="sm" %}</span>
+    {% endif %}
   </div>
   {% endif %}
-
-{% if show_edit_icon %}
-</a>
-{% else %}
 </div>
-{% endif %}

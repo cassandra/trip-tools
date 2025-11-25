@@ -16,15 +16,6 @@
  */
 
 /* ===========================================
-   CSS CUSTOM PROPERTIES
-   =========================================== */
-
-:root {
-  /* Reference image aspect ratio (4:3 for standard photo dimensions) */
-  --reference-image-aspect-ratio: 4 / 3;
-}
-
-/* ===========================================
    EDITOR LAYOUT
    =========================================== */
 
@@ -96,35 +87,36 @@
   padding: 0.35rem 0.65rem;
 }
 
-/* Reference Image Container */
+/* Reference Image - Editor-specific interactive component
+   Self-contained styling for the drag-drop reference image picker */
+
+/* Container - square aspect ratio, fills parent width */
 .journal-reference-image-container {
+  display: block;
   width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
   position: relative;
 }
 
-/* Reference Image Placeholder (placeholder state - no image set) */
+/* Placeholder state - shown when no image set */
 .journal-reference-image-placeholder {
-  display: flex;
   width: 100%;
-  aspect-ratio: var(--reference-image-aspect-ratio);
-  border-radius: 4px;
-  /* Min height ensures comfortable drop target on small screens where aspect-ratio might be too small */
-  min-height: 120px;
+  height: 100%;
+  background-color: #f8f9fa;
+  display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  transition: background-color 0.2s, border-color 0.2s;
+  color: var(--muted-color, #6c757d);
+  border: 1px solid #dee2e6;
+  transition: background-color 0.2s, outline-color 0.2s;
 }
 
 .journal-reference-image-placeholder.drop-zone-active {
-  /* Note: !important needed to override Bootstrap .bg-light utility class */
   background-color: rgba(0, 123, 255, 0.1) !important;
-  /* Use outline instead of border to avoid layout shifts */
   outline: 2px dashed var(--primary-color, #007bff);
-  outline-offset: 4px;
-}
-
-.journal-reference-image-preview.drop-zone-active {
-  outline: 3px dashed var(--primary-color, #007bff);
   outline-offset: 4px;
 }
 
@@ -133,29 +125,30 @@
   font-weight: 500;
 }
 
-/* Reference Image Preview (preview state - image set) */
+/* Preview state - shown when image is set */
 .journal-reference-image-preview {
   width: 100%;
-  aspect-ratio: var(--reference-image-aspect-ratio);
-  border-radius: 4px;
+  height: 100%;
   position: relative;
-  overflow: hidden;
   cursor: pointer;
+}
+
+.journal-reference-image-preview.drop-zone-active {
+  outline: 3px dashed var(--primary-color, #007bff);
+  outline-offset: 4px;
 }
 
 .journal-reference-image-thumbnail {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid var(--line-color);
 }
 
 .journal-reference-image-preview:hover .journal-reference-image-thumbnail {
   opacity: 0.9;
 }
 
-/* Clear button (similar to trip-image-delete-btn) */
+/* Clear button */
 .journal-reference-image-clear {
   position: absolute;
   top: 0.5rem;
