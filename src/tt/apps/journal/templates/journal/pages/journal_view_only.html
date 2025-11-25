@@ -1,0 +1,80 @@
+{% extends "journal/pages/journal_base.html" %}
+{% load icons %}
+{% load travelog_tags %}
+
+{% block trip_content %}
+<div class="m-3">
+
+  {% if not journal %}
+  {# No journal exists - info alert, no buttons #}
+  <div class="alert alert-info">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">{% icon "info-circle" %}</div>
+      <div>
+        <h5 class="alert-heading mb-2">No Journal Yet</h5>
+        <p class="mb-0">A journal has not been created for this trip yet.</p>
+      </div>
+    </div>
+  </div>
+
+  {% elif publishing_status.is_unpublished %}
+  {# Journal exists but not published - info alert, draft preview button #}
+  <div class="alert alert-info">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">{% icon "info-circle" %}</div>
+      <div>
+        <h5 class="alert-heading mb-2">Journal Not Yet Published</h5>
+        <p class="mb-2">This journal is being worked on and hasn't been published yet.</p>
+        <a href="{% travelog_url 'travelog_toc' journal.uuid version='draft' %}"
+           class="btn btn-primary" target="_blank">
+          {% icon "eye" size="sm" css_class="tt-icon-left" %}Preview Draft
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  {# Published - success alert, show version info, buttons for both views if changes exist #}
+  <div class="alert alert-success">
+    <div class="d-flex align-items-start">
+      <div class="mr-2">{% icon "check-circle" %}</div>
+      <div>
+        <h5 class="alert-heading mb-2">Published Journal Available</h5>
+        <p class="mb-2">
+          <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+          <span class="text-muted">
+            &bull; Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
+          </span>
+        </p>
+        {% if publishing_status.has_unpublished_changes %}
+        <p class="mb-2"><small class="text-muted">There's also a newer draft with unpublished changes.</small></p>
+        {% endif %}
+        <div class="btn-group" role="group">
+          <a href="{% travelog_url 'travelog_toc' journal.uuid %}"
+             class="btn btn-primary" target="_blank">
+            {% icon "eye" size="sm" css_class="tt-icon-left" %}View Published
+          </a>
+          {% if publishing_status.has_unpublished_changes %}
+          <a href="{% travelog_url 'travelog_toc' journal.uuid version='draft' %}"
+             class="btn btn-outline-secondary" target="_blank">
+            {% icon "eye" size="sm" css_class="tt-icon-left" %}Preview Draft
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Viewer notice - always shown when journal exists #}
+  {% if journal %}
+  <div class="alert alert-secondary mt-3">
+    <small>
+      {% icon "lock" size="sm" css_class="tt-icon-left" %}
+      You have <strong>viewer</strong> access to this trip. Only trip editors can create and modify journal entries.
+    </small>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
