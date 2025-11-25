@@ -168,7 +168,7 @@ git add TT_VERSION CHANGELOG.md
 git diff --cached
 # Check that only TT_VERSION and CHANGELOG.md are staged
 
-# 3. Commit with standard message
+# 3. Commit with standard message and **WITHOUT** any attributions.
 git commit -m "Bump version to v0.0.1"
 
 # 4. Push to origin/main
@@ -475,7 +475,7 @@ git fetch --tags
 # 4. Update TT_VERSION
 echo "v0.0.2-dev" > TT_VERSION
 
-# 5. Commit version bump
+# 5. Commit version bump **WITHOUT** any attributions.
 git add TT_VERSION
 git commit -m "Bump version to v0.0.2-dev"
 
