@@ -29,13 +29,15 @@ class EnvironmentSettings:
     ALLOWED_HOSTS              : Tuple[ str ]  = field( default_factory = tuple )
     CORS_ALLOWED_ORIGINS       : Tuple[ str ]  = field( default_factory = tuple )
     EXTRA_CSP_URLS             : Tuple[ str ]  = field( default_factory = tuple )
-    DATABASE_HOST              : str           = None
-    DATABASE_PORT              : str           = None
-    DATABASE_NAME              : str           = None
-    DATABASE_USER              : str           = None
-    DATABASE_PASSWORD          : str           = None
-    DATABASES_NAME_PATH        : str           = None
-    MEDIA_ROOT                 : str           = None
+    # MySQL database settings (optional if using SQLite via ci.py)
+    DATABASE_HOST              : str           = ''
+    DATABASE_PORT              : str           = ''
+    DATABASE_NAME              : str           = ''
+    DATABASE_USER              : str           = ''
+    DATABASE_PASSWORD          : str           = ''
+    # SQLite database path (optional if using MySQL)
+    DATABASES_NAME_PATH        : str           = ''
+    MEDIA_ROOT                 : str           = ''
     STORAGE_ENDPOINT_URL       : str           = ''
     STORAGE_REGION_NAME        : str           = ''
     STORAGE_BUCKET_NAME        : str           = ''
