@@ -6,9 +6,15 @@
 (function() {
     'use strict';
 
+    // Constants
+    var MAX_FILES_PER_BATCH = 50;
+    var UPLOAD_TIMEOUT_MS = 120000; // 2 minutes per file
+
     // State management
     var uploadQueue = [];
     var completedCount = 0;
+    var currentUploadIndex = 0;
+    var isUploading = false;
 
     // DOM element cache
     var $uploadZone;
@@ -96,6 +102,12 @@
     function handleFiles(files) {
         var fileArray = Array.from(files);
 
+        // Validate file count
+        if (fileArray.length > MAX_FILES_PER_BATCH) {
+            alert('Too many files selected. Maximum ' + MAX_FILES_PER_BATCH + ' files allowed per batch.');
+            return;
+        }
+
         // Validate files
         var validFiles = fileArray.filter(function(file) {
             return validateFile(file);
@@ -117,6 +129,8 @@
         });
 
         completedCount = 0;
+        currentUploadIndex = 0;
+        isUploading = false;
 
         // Show progress section
         $progressSection.addClass('active');
@@ -128,8 +142,8 @@
             createProgressItem(fileItem);
         });
 
-        // Start uploads
-        uploadFiles();
+        // Start sequential uploads
+        uploadNextFile();
     }
 
     // Validate file
@@ -184,20 +198,42 @@
         $fileProgressList.append($progressItem);
     }
 
-    // Upload files
-    function uploadFiles() {
+    // Upload next file in queue (sequential processing)
+    function uploadNextFile() {
+        // Check if all files are processed
+        if (currentUploadIndex >= uploadQueue.length) {
+            isUploading = false;
+            return;
+        }
+
+        // Prevent concurrent uploads
+        if (isUploading) {
+            return;
+        }
+
+        isUploading = true;
+        var fileItem = uploadQueue[currentUploadIndex];
+
+        // Upload single file
+        uploadSingleFile(fileItem, currentUploadIndex);
+    }
+
+    // Upload a single file
+    function uploadSingleFile(fileItem, index) {
         var formData = new FormData();
+        formData.append('files', fileItem.file);
 
-        uploadQueue.forEach(function(fileItem) {
-            formData.append('files', fileItem.file);
-        });
+        // Mark as uploading
+        updateFileStatus(fileItem.id, 'uploading', 'Uploading...', 0);
 
-        // Mark all as uploading
-        uploadQueue.forEach(function(fileItem) {
-            updateFileStatus(fileItem.id, 'uploading', 'Uploading...', 0);
-        });
+        // Track XHR for timeout handling
+        var uploadStartTime = Date.now();
+        var timeoutId = setTimeout(function() {
+            console.error('Upload timeout for file:', fileItem.file.name);
+            handleSingleFileError(fileItem, 'Upload timed out after ' + (UPLOAD_TIMEOUT_MS / 1000) + ' seconds');
+        }, UPLOAD_TIMEOUT_MS);
 
-        // Use jQuery AJAX directly for file upload
+        // Use jQuery AJAX for file upload
         $.ajax({
             url: window.location.pathname,
             type: 'POST',
@@ -207,56 +243,109 @@
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            success: function(data) {
-                handleUploadResponse(data);
+            timeout: UPLOAD_TIMEOUT_MS,
+            xhr: function() {
+                var xhr = new window.XMLHttpRequest();
+                // Upload progress tracking
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        var percentComplete = Math.round((e.loaded / e.total) * 100);
+                        updateFileStatus(fileItem.id, 'uploading', 'Uploading...', percentComplete);
+                    }
+                }, false);
+                return xhr;
             },
-            error: function(xhr) {
-                handleUploadError(xhr);
+            success: function(data) {
+                clearTimeout(timeoutId);
+                handleSingleFileResponse(fileItem, data, index);
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                clearTimeout(timeoutId);
+                var errorMsg = buildErrorMessage(xhr, textStatus, errorThrown);
+                handleSingleFileError(fileItem, errorMsg);
             }
         });
     }
 
-    // Handle upload response
-    function handleUploadResponse(data) {
-        if (!data.files || !Array.isArray(data.files)) {
-            console.error('Invalid response format', data);
-            uploadQueue.forEach(function(fileItem) {
-                updateFileStatus(fileItem.id, 'error', 'Upload failed', null, 'Server returned invalid response');
-            });
+    // Handle single file upload response
+    function handleSingleFileResponse(fileItem, data, index) {
+        if (!data.files || !Array.isArray(data.files) || data.files.length === 0) {
+            console.error('Invalid response format for file:', fileItem.file.name, data);
+            handleSingleFileError(fileItem, 'Server returned invalid response');
             return;
         }
 
-        // Match response files to queue items by index
-        data.files.forEach(function(fileResult, index) {
-            var queueItem = uploadQueue[index];
-            if (!queueItem) return;
+        // Get the first (and only) file result
+        var fileResult = data.files[0];
 
-            if (fileResult.status === 'success') {
-                completedCount++;
-                var details = buildSuccessDetails(fileResult);
-                updateFileStatus(queueItem.id, 'success', 'Complete', 100, details);
+        if (fileResult.status === 'success') {
+            completedCount++;
+            var details = buildSuccessDetails(fileResult);
+            updateFileStatus(fileItem.id, 'success', 'Complete', 100, details);
 
-                // Add to grid
-                addImageToGrid(fileResult);
-            } else {
-                completedCount++;
-                var errorMsg = fileResult.error_message || 'Upload failed';
-                updateFileStatus(queueItem.id, 'error', 'Failed', null, errorMsg);
-            }
-        });
+            // Add to grid
+            addImageToGrid(fileResult);
+        } else {
+            completedCount++;
+            var errorMsg = fileResult.error_message || 'Upload failed';
+            updateFileStatus(fileItem.id, 'error', 'Failed', null, errorMsg);
+        }
 
         updateProgressCount();
         updateUploadedCount();
+
+        // Move to next file
+        currentUploadIndex++;
+        isUploading = false;
+        uploadNextFile();
     }
 
-    // Handle upload error
-    function handleUploadError(xhr) {
-        console.error('Upload error', xhr);
-        uploadQueue.forEach(function(fileItem) {
-            updateFileStatus(fileItem.id, 'error', 'Failed', null, 'Network error or server unavailable');
-        });
-        completedCount = uploadQueue.length;
+    // Handle single file upload error
+    function handleSingleFileError(fileItem, errorMsg) {
+        console.error('Upload error for file:', fileItem.file.name, errorMsg);
+
+        completedCount++;
+        updateFileStatus(fileItem.id, 'error', 'Failed', null, errorMsg);
         updateProgressCount();
+
+        // Move to next file even after error
+        currentUploadIndex++;
+        isUploading = false;
+        uploadNextFile();
+    }
+
+    // Build error message from AJAX error
+    function buildErrorMessage(xhr, textStatus, errorThrown) {
+        if (textStatus === 'timeout') {
+            return 'Upload timed out - file may be too large or connection too slow';
+        }
+
+        if (xhr.status === 413) {
+            return 'File too large for server (413 error)';
+        }
+
+        if (xhr.status === 0) {
+            return 'Network error - please check your connection';
+        }
+
+        if (xhr.status >= 500) {
+            return 'Server error (' + xhr.status + ') - please try again';
+        }
+
+        if (xhr.status >= 400) {
+            // Try to parse error message from response
+            try {
+                var response = JSON.parse(xhr.responseText);
+                if (response.error) {
+                    return response.error;
+                }
+            } catch (e) {
+                // Ignore JSON parse errors
+            }
+            return 'Upload failed (' + xhr.status + ')';
+        }
+
+        return errorThrown || 'Upload failed - unknown error';
     }
 
     // Update file status
