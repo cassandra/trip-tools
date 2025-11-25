@@ -4,7 +4,16 @@
 <nav id="appSidebar"
      class="app-sidebar collapse d-md-block {% block sidebar_class %}{% endblock %}">
 {% block sidebar_content %}
-{% endblock %}
+
+  <div class="plain text-primary h3 pl-3">
+    {% block sidebar_title %}Trip Tools{% endblock %}
+  </div>
+
+  <ul class="app-sidebar-nav">
+  {% block sidebar_back_nav %}{% endblock %}
+   {% block sidebar_nav_items %}{% endblock %}
+  </ul>
+  {% endblock %}
 </nav>
 {% endblock %}
 

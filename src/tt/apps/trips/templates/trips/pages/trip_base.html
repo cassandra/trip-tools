@@ -19,57 +19,59 @@
 </div>
 {% endblock %}
 
-{% block sidebar_content %}
-<ul class="app-sidebar-nav">
-  <li>
-    <a href="{% url 'dashboard_home' %}">
-      {% icon "chevron-left" size="sm" %}
-      <span>Back to Dashboard</span>
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'trips_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'trip_overview' %} class="active" aria-current="page"{% endif %}>
-      {% icon "home" size="sm" %}
-      <span>Trip Overview</span>
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'itineraries_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'itinerary' %} class="active" aria-current="page"{% endif %}>
-      {% icon "clock" size="sm" %}
-      <span>Itinerary</span>
-    </a>
-  </li>
-  <li>
-    <a href="#"{% if trip_page.active_page.value == 'locations' %} class="active" aria-current="page"{% endif %}>
-      {% icon "map-pin" size="sm" %}
-      <span>Locations</span>
-    </a>
-  </li>
-  <li>
-    <a href="#"{% if trip_page.active_page.value == 'bookings' %} class="active" aria-current="page"{% endif %}>
-      {% icon "layers" size="sm" %}
-      <span>Bookings</span>
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'journal_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'journal' %} class="active" aria-current="page"{% endif %}>
-      {% icon "collection" size="sm" %}
-      <span>Journal</span>
-    </a>
-  </li>
-  <li>
-    <a href="#"{% if trip_page.active_page.value == 'reviews' %} class="active" aria-current="page"{% endif %}>
-      {% icon "edit" size="sm" %}
-      <span>Reviews</span>
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'members_list' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'members' %} class="active" aria-current="page"{% endif %}>
-      {% icon "collection" size="sm" %}
-      <span>Members</span>
-    </a>
-  </li>
-</ul>
+{% block sidebar_title %}Trip{% endblock %}
+
+{% block sidebar_back_nav %}
+<li>
+  <a href="{% url 'dashboard_home' %}">
+    {% icon "chevron-left" size="sm" %}
+    <span>Back to Dashboard</span>
+  </a>
+</li>
+{% endblock %}
+{% block sidebar_nav_items %}
+<li>
+  <a href="{% url 'trips_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'trip_overview' %} class="active" aria-current="page"{% endif %}>
+    {% icon "home" size="sm" %}
+    <span>Trip Overview</span>
+  </a>
+</li>
+<li>
+  <a href="{% url 'itineraries_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'itinerary' %} class="active" aria-current="page"{% endif %}>
+    {% icon "clock" size="sm" %}
+    <span>Itinerary</span>
+  </a>
+</li>
+<li>
+  <a href="#"{% if trip_page.active_page.value == 'locations' %} class="active" aria-current="page"{% endif %}>
+    {% icon "map-pin" size="sm" %}
+    <span>Locations</span>
+  </a>
+</li>
+<li>
+  <a href="#"{% if trip_page.active_page.value == 'bookings' %} class="active" aria-current="page"{% endif %}>
+    {% icon "layers" size="sm" %}
+    <span>Bookings</span>
+  </a>
+</li>
+<li>
+  <a href="{% url 'journal_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'journal' %} class="active" aria-current="page"{% endif %}>
+    {% icon "collection" size="sm" %}
+    <span>Journal</span>
+  </a>
+</li>
+<li>
+  <a href="#"{% if trip_page.active_page.value == 'reviews' %} class="active" aria-current="page"{% endif %}>
+    {% icon "edit" size="sm" %}
+    <span>Reviews</span>
+  </a>
+</li>
+<li>
+  <a href="{% url 'members_list' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'members' %} class="active" aria-current="page"{% endif %}>
+    {% icon "collection" size="sm" %}
+    <span>Members</span>
+  </a>
+</li>
 {% endblock %}
 
 {% block secondary_content %}

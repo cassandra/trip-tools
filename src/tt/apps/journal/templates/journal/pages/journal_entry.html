@@ -7,6 +7,17 @@
 {% stylesheet 'journal_editor' %}
 {% endblock %}
 
+{% block sidebar_title %}Journal Entry{% endblock %}
+
+{% block sidebar_back_nav %}
+<li>
+  <a href="{% url 'journal' journal_uuid=entry.journal.uuid %}">
+    {% icon "chevron-left" size="sm" %}
+    <span>Back to Journal</span>
+  </a>
+</li>
+{% endblock %}
+
 {% block trip_content %}
 <!-- Main journal editor layout -->
 <div class="journal-editor-layout">
