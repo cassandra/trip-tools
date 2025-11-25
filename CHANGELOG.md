@@ -4,5 +4,5 @@
 
 _High-level view of the applications change history.  See releases and commits for more fine-grained history._
 
-- v0.0.1 : TBD
+- v0.1.0 : Initial production release with trip journals, travelogs, and MySQL backend
 
