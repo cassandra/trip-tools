@@ -24,7 +24,8 @@
       "Bash(readlink:*)",
       "Bash(./src/manage.py test:*)",
       "Bash(sort:*)",
-      "Bash(time make test-sqlite:*)"
+      "Bash(time make test-sqlite:*)",
+      "Bash(make docker-build:*)"
     ],
     "deny": [],
     "ask": []

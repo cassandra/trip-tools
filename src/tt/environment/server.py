@@ -260,9 +260,7 @@ class EnvironmentSettings:
         if extra_host_urls_str:
             host_url_tuple_list = cls.parse_url_list_str( extra_host_urls_str )
             
-            # Assume first extra host is the SITE_DOMAIN, but this does not
-            # matter until the Django "sites" feature needs to be used (if
-            # ever).
+            # Assume first extra host is the SITE_DOMAIN.
             #
             if host_url_tuple_list:
                 env_settings.SITE_DOMAIN = host_url_tuple_list[0][0]
@@ -351,14 +349,16 @@ class EnvironmentSettings:
                 host = parsed_url.hostname
                 port = parsed_url.port
                 if port:
-                    normalized_url_str = f'{scheme}://{host}:{port}' 
+                    normalized_url_str = f'{scheme}://{host}:{port}'
                 else:
                     normalized_url_str = f'{scheme}://{host}'
                 host_url_tuple_list.append( ( host, normalized_url_str ) )
 
             except ( TypeError, ValueError ):
-                pass
-            continue
+                raise ImproperlyConfigured(
+                    f"Invalid URL '{url_str}' in environment config. "
+                    f"URLs must include scheme (e.g., https://example.com)"
+                )
         return host_url_tuple_list
             
     @classmethod

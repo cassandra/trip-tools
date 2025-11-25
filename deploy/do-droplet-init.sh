@@ -63,6 +63,12 @@ sudo apt install -y redis-server
 sudo systemctl enable redis-server
 sudo systemctl start redis-server
 
+echo "Installing docker-compose ..."
+sudo apt install -y docker-compose
+
+echo "Creating deployment directory ..."
+mkdir -p /opt/triptools
+
 # After DNS is set up and pointing to this server, run:
 echo "*********"
 echo "* NOTICE: Need to run certbot after DNS points here."

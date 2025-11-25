@@ -7,8 +7,6 @@ RUN apt-get update \
         curl \
         supervisor \
         nginx \
-        redis-server \
-        redis-tools \
     && mkdir -p /var/log/supervisor \
     && mkdir -p /etc/supervisor/conf.d \
     && rm -rf /var/lib/apt/lists/* \

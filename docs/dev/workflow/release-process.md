@@ -17,7 +17,8 @@ Trip Tools uses a structured release workflow for deploying to production:
 - Local development environment configured
 - All target changes merged into `main` branch
 - SSH access to production droplet configured
-- Make targets operational (`make release-prod`)
+- Docker running locally (checked automatically by make targets)
+- Make targets operational (`make docker-build`, `make deploy-prod`)
 
 ## Release Workflow
 
@@ -395,18 +396,21 @@ fi
 
 **What `make deploy-prod` Does:**
 
-1. **Copy environment file:**
-   - Converts `.private/env/production.sh` to docker-compose format (if needed)
-   - SCPs to droplet: `/opt/triptools/.env`
+1. **Check Docker running:**
+   - Verifies Docker daemon is running locally (fails fast with clear error if not)
 
-2. **Transfer Docker image:**
+2. **Copy environment file:**
+   - Converts `.private/env/production.sh` to docker-compose format (if needed)
+   - SCPs to droplet: `/opt/triptools/triptools.env`
+
+3. **Transfer Docker image:**
    - SCPs tar.gz to droplet: `/tmp/`
 
-3. **Load and restart:**
+4. **Load and restart:**
    - SSHs to droplet
    - Loads Docker image from tar.gz
-   - Runs `docker-compose down`
-   - Runs `docker-compose up -d`
+   - Runs `docker-compose --env-file triptools.env down`
+   - Runs `docker-compose --env-file triptools.env up -d`
    - Cleans up temp files (local and remote)
 
 **Validation Checklist:**
@@ -421,11 +425,12 @@ fi
 - [ ] No errors in output
 
 **Common Issues:**
+- **Docker not running**: Start Docker locally and retry (`make deploy-prod` checks this automatically)
 - **Docker build fails**: Check Dockerfile syntax or dependencies
 - **Image too large**: Check for unnecessary files in Docker context
 - **SCP transfer fails**: Check SSH credentials or network connectivity
 - **Droplet SSH fails**: Verify droplet is running and accessible
-- **docker-compose fails**: Check .env file or docker-compose.yml syntax
+- **docker-compose fails**: Check triptools.env file or docker-compose.yml syntax
 - **Services won't start**: Check Docker logs on droplet
 
 **Monitoring Deployment:**

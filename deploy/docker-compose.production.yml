@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  tt:
+    image: tt:${TT_VERSION:-latest}
+    container_name: tt
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - triptools.env
