@@ -1,10 +1,9 @@
 from datetime import date as date_class, timedelta
 import logging
-import pytz
+from typing import Tuple
 from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import BadRequest
 from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -14,25 +13,25 @@ from django.views.generic import View
 
 from tt.apps.common.antinode import http_response
 from tt.apps.console.console_helper import ConsoleSettingsHelper
+from tt.apps.images.views import EntityImagePickerView
 from tt.apps.members.models import TripMember
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
+from tt.apps.trips.models import Trip
 from tt.async_view import ModalView
 
 from .autosave_helpers import JournalAutoSaveHelper, JournalConflictHelper
 from .context import JournalPageContext
-from .enums import JournalVisibility, ImagePickerScope
+from .enums import JournalVisibility
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry
 from .schemas import PublishingStatusHelper
-from .services import (
-    JournalImagePickerService,
-    JournalRestoreService,
-)
+from .services import JournalRestoreService
 
-from tt.apps.images.models import TripImage
+from tt.apps.images.services import ImagePickerService
+
 from tt.apps.travelog.models import Travelog
 from tt.apps.travelog.services import PublishingService
 
@@ -357,12 +356,11 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
                 journal = entry.journal,
             )
 
-        accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
+        accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
             trip = entry.journal.trip,
             user = request.user,
             date = entry.date,
             timezone = entry.timezone,
-            scope = ImagePickerScope.DEFAULT,
         )
 
         trip_page_context = TripPageContext(
@@ -541,12 +539,11 @@ class JournalEntryImagePickerView( LoginRequiredMixin, TripViewMixin, View ):
         except ValueError:
             return http_response({'error': 'Invalid date format'}, status=400)
 
-        accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
+        accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
             trip=trip,
             user=request.user,
             date=selected_date,
             timezone=entry.timezone,
-            scope=ImagePickerScope.DEFAULT,
         )
 
         context = {
@@ -831,108 +828,49 @@ class JournalRestoreView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return self.refresh_response( request )
 
 
-class JournalReferenceImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView):
-    """Modal for selecting and setting a reference image for the Journal."""
+class JournalReferenceImagePickerView(EntityImagePickerView):
+    """
+    Modal for selecting and setting a reference image for the Journal.
+    """
 
     def get_template_name(self) -> str:
         return 'journal/modals/journal_reference_image_picker.html'
 
-    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
-        journal = get_object_or_404(
-            Journal,
-            uuid=journal_uuid,
-        )
+    def get_entity_model(self):
+        return Journal
+
+    def get_entity_uuid_param_name(self) -> str:
+        return 'journal_uuid'
+
+    def check_permission(self, request, entity: Journal) -> None:
+        """Verify user has editor permission for the journal's trip."""
         request_member = get_object_or_404(
             TripMember,
-            trip=journal.trip,
-            user=request.user,
-        )
-        self.assert_is_editor(request_member)
-        trip = request_member.trip
-
-        selected_date, selected_timezone = self._get_accessible_images_date_and_timezone(
-            journal = journal,
-            request_date_str = request.GET.get('date'),
-        )
-        # Get accessible images for the selected date/timezone
-        accessible_images = JournalImagePickerService.get_accessible_images_for_image_picker(
-            trip = trip,
-            user = request.user,
-            date = selected_date,
-            timezone = selected_timezone,
-            scope = ImagePickerScope.DEFAULT,
-        )
-
-        context = {
-            'journal': journal,
-            'accessible_images': accessible_images,
-            'trip': trip,
-            'selected_date': selected_date,
-        }
-        return self.modal_response(request, context)
-
-    def post(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
-        journal = get_object_or_404(
-            Journal,
-            uuid=journal_uuid,
-        )
-        request_member = get_object_or_404(
-            TripMember,
-            trip=journal.trip,
+            trip=entity.trip,
             user=request.user,
         )
         self.assert_is_editor(request_member)
 
-        image_uuid_str = request.POST.get('image_uuid')
-        if not image_uuid_str:
-            return http_response({'error': 'Image UUID required'}, status=400)
+    def get_default_date_and_timezone(self, entity: Journal) -> Tuple[date_class, str]:
+        """
+        Determine default date and timezone for Journal image picker.
 
-        try:
-            image_uuid = UUID(image_uuid_str)
-        except ValueError:
-            return http_response({'error': 'Invalid UUID format'}, status=400)
-
-        # Get and validate image (verify it was uploaded by a trip member)
-        trip_image = get_object_or_404(TripImage, uuid=image_uuid)
-
-        # Security check: ensure image was uploaded by a current trip member
-        member_user_ids = TripMember.objects.filter(
-            trip=journal.trip
-        ).values_list('user_id', flat=True)
-
-        if trip_image.uploaded_by_id not in member_user_ids:
-            return http_response({'error': 'Image not accessible'}, status=403)
-
-        # Update journal reference image
-        journal.reference_image = trip_image
-        journal.save(update_fields=['reference_image'])
-
-        return self.refresh_response( request )
-
-    def _get_accessible_images_date_and_timezone( self, journal : Journal, request_date_str: str ):
-        if request_date_str:
-            try:
-                selected_date = date_class.fromisoformat( request_date_str )
-                return ( selected_date, journal.timezone )
-            except ( TypeError, ValueError ):
-                raise BadRequest('Invalid date format')
-
-        if journal.reference_image and journal.reference_image.datetime_utc:
-            ref_img = journal.reference_image
-            # Use image's timezone if available, otherwise fall back to journal timezone
-            selected_timezone = ref_img.timezone if ref_img.timezone else journal.timezone
-            # Convert UTC datetime to the selected timezone to get the correct date
-            tz = pytz.timezone(selected_timezone)
-            selected_date = ref_img.datetime_utc.astimezone(tz).date()
-            return ( selected_date, selected_timezone )
-
-        for journal_entry in journal.entries.order_by('date'):
+        Priority:
+        1. Date from first journal entry with a reference image
+        2. Today's date with journal timezone
+        """
+        # Check journal entries for a reference image
+        for journal_entry in entity.entries.order_by('date'):
             if journal_entry.reference_image:
-                selected_date = journal_entry.date if journal_entry else date_class.today()
-                selected_timezone = journal_entry.timezone
-                return ( selected_date, selected_timezone )
-            continue
-        
-        selected_date = date_class.today()
-        selected_timezone = journal.timezone
-        return ( selected_date, selected_timezone )
+                return (journal_entry.date, journal_entry.timezone)
+
+        # Fallback to today with journal timezone
+        return (date_class.today(), entity.timezone)
+
+    def get_trip_from_entity(self, entity: Journal) -> Trip:
+        """Extract trip from journal entity."""
+        return entity.trip
+
+    def get_picker_url(self, entity: Journal) -> str:
+        """Return the URL for the Journal reference image picker."""
+        return reverse('journal_reference_image_picker', kwargs={'journal_uuid': entity.uuid})

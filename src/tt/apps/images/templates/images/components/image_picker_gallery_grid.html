@@ -1,0 +1,18 @@
+{% comment %}
+Reusable component for rendering the image gallery grid in the picker modal.
+This is the inner content of the gallery container that gets replaced on async updates.
+
+Context variables:
+- accessible_images: QuerySet of TripImage instances
+- trip: Trip instance (for permission context)
+{% endcomment %}
+
+{% if accessible_images %}
+  {% for image in accessible_images %}
+    {% include "images/components/image_picker_card.html" with image=image trip=trip %}
+  {% endfor %}
+{% else %}
+  <div class="text-center text-muted py-4">
+    <p class="mb-0">No images for this date.</p>
+  </div>
+{% endif %}

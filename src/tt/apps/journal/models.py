@@ -18,7 +18,7 @@ class JournalContent( models.Model ):
     Abstract base for journal-like containers (e.g., Journal and Travelog).
     Defines the common interface needed for unified content rendering.
     """
-    
+
     uuid = models.UUIDField(
         default = uuid.uuid4,
         editable = False,
@@ -35,9 +35,9 @@ class JournalContent( models.Model ):
         on_delete = models.SET_NULL,
         null = True,
         blank = True,
-        related_name = '%(class)s_entries',  # Must be dynamic in abstract models
+        related_name = '%(class)s_references',
     )
-    
+
     class Meta:
         abstract = True
         
@@ -87,7 +87,7 @@ class JournalEntryContent(models.Model):
         on_delete = models.SET_NULL,
         null = True,
         blank = True,
-        related_name = '%(class)s_entries',  # Must be dynamic in abstract models
+        related_name = '%(class)s_references',
     )
    
     class Meta:

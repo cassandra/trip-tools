@@ -10,8 +10,14 @@
   <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-4">
     <a href="{% url 'trips_home' trip_uuid=trip.uuid %}" class="text-decoration-none">
       <div class="card card-hover h-100" data-trip-uuid="{{ trip.uuid }}">
-        <div class="card-img-top bg-light d-flex align-items-center justify-content-center trip-card-image{% if icon_type == 'past' %} trip-card-image--past{% endif %}">
-          <img src="{% static 'img/tt-icon-196x196.png' %}" alt="Trip icon" class="trip-card-icon{% if icon_type == 'past' %} trip-card-icon--past{% endif %}">
+        <div class="card-img-top trip-card-image{% if icon_type == 'past' %} trip-card-image--past{% endif %}" style="overflow: hidden;">
+          {% if trip.reference_image and trip.reference_image.thumbnail_image %}
+            <img src="{{ trip.reference_image.thumbnail_image.url }}" alt="{{ trip.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+          {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center h-100">
+              <img src="{% static 'img/tt-icon-196x196.png' %}" alt="Trip icon" class="trip-card-icon{% if icon_type == 'past' %} trip-card-icon--past{% endif %}">
+            </div>
+          {% endif %}
         </div>
         <div class="card-body">
           <h5 class="card-title">{{ trip.title }}</h5>
