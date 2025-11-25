@@ -193,11 +193,11 @@ class TestPublishingServicePublishJournal(TransactionTestCase):
         self.assertIn('VIEW', cache_key)
 
     def test_publish_journal_copies_reference_image(self):
-        """Test that reference_image is properly copied to travelog."""
+        """Test that reference_image is properly copied to travelog from journal."""
         from tt.apps.images.models import TripImage
         from django.core.files.base import ContentFile
 
-        # Create a test image (TripImage doesn't have trip field)
+        # Create a test image
         test_image = TripImage.objects.create(
             uploaded_by=self.user
         )
@@ -218,6 +218,7 @@ class TestPublishingServicePublishJournal(TransactionTestCase):
         with patch('tt.apps.travelog.services.get_redis_client'):
             travelog = PublishingService.publish_journal(self.journal, self.user)
 
+        # Travelog should have its own reference_image field (snapshot from journal)
         self.assertEqual(travelog.reference_image, test_image)
 
     def test_publish_journal_transaction_rollback_on_error(self):

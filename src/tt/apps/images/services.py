@@ -1,12 +1,14 @@
 import io
 import logging
 import re
-from datetime import datetime, timezone, timedelta
+from datetime import date as date_type, datetime, timezone, timedelta
 from typing import Optional, Tuple, Any
 
+from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
+from django.db.models import QuerySet
 from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.utils import timezone as django_timezone
@@ -14,6 +16,7 @@ from PIL import Image, ImageOps, ExifTags
 
 from tt.apps.common import datetimeproxy
 from tt.apps.common.singleton import Singleton
+from tt.apps.trips.models import Trip
 
 from .schemas import (
     GpsCoordinate,
@@ -26,6 +29,39 @@ from .schemas import (
 from .models import TripImage
 
 logger = logging.getLogger(__name__)
+
+
+class ImagePickerService:
+    """
+    Generic service for image picker operations across all entity types.
+
+    Provides filtered image access based on trip membership, date, and timezone.
+    This service is reusable for any entity type that needs image selection functionality.
+    """
+
+    @staticmethod
+    def get_accessible_images_for_image_picker( trip      : Trip,
+                                                user      : User,
+                                                date      : date_type,
+                                                timezone  : str         ) -> QuerySet:
+        """
+        Get images accessible for image picker, ordered chronologically.
+
+        Returns all images for the specified date in chronological order by datetime_utc.
+        This is the single source of truth for image picker queries across all apps.
+        """
+        from tt.apps.journal.utils import JournalUtils
+
+        start_dt, end_dt = JournalUtils.get_entry_date_boundaries(date, timezone)
+        images = TripImage.objects.accessible_to_user_in_trip_for_date_range(
+            user = user,
+            trip = trip,
+            start_datetime = start_dt,
+            end_datetime = end_dt,
+        ).order_by('datetime_utc')
+
+        return images
+
 
 # Check for HEIF support and update configuration
 HEIF_SUPPORT_AVAILABLE = False

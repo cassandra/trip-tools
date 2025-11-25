@@ -26,6 +26,13 @@ class Trip(models.Model):
     description = models.TextField(
         blank = True,
     )
+    reference_image = models.ForeignKey(
+        'images.TripImage',
+        on_delete = models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name = 'trip_references',
+    )
     trip_status = LabeledEnumField(
         TripStatus,
         'Trip Status',

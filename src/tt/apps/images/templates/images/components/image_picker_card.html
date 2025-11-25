@@ -1,0 +1,35 @@
+{% comment %}
+Reusable component for rendering a single image card in the image picker.
+
+Context variables:
+- image: TripImage instance
+- trip: Trip instance (for permission context)
+{% endcomment %}
+
+<div class="{{ DIVID.IMAGE_PICKER_CARD_CLASS }}"
+     data-{{ DIVID.IMAGE_PICKER_UUID_ATTR }}="{{ image.uuid }}"
+     data-{{ DIVID.IMAGE_PICKER_THUMBNAIL_URL_ATTR }}="{{ image.thumbnail_image.url }}"
+     data-{{ DIVID.IMAGE_PICKER_CAPTION_ATTR }}="{{ image.caption|default:'Untitled' }}"
+     style="cursor: pointer; border: 2px solid transparent; border-radius: 8px; overflow: hidden; transition: border-color 0.2s;"
+     onclick="selectReferenceImage(this)">
+  <div style="width: 100%; height: 150px; overflow: hidden;">
+    <img src="{{ image.thumbnail_image.url }}"
+         alt="{{ image.caption }}"
+         class="w-100 h-100"
+         style="object-fit: cover;">
+  </div>
+  <div class="p-2 bg-light">
+    <small class="font-weight-bold d-block text-truncate">
+      {% if image.caption %}
+        {{ image.caption }}
+      {% else %}
+        <span class="text-muted">Untitled</span>
+      {% endif %}
+    </small>
+    {% if image.datetime_utc %}
+      <small class="text-muted">{{ image.datetime_utc|date:"g:i A" }}</small>
+    {% else %}
+      <small class="text-muted">Unknown time</small>
+    {% endif %}
+  </div>
+</div>

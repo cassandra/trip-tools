@@ -19,4 +19,9 @@ urlpatterns = [
         views.TripEditModalView.as_view(),
         name='trips_edit'
     ),
+    path(
+        '<uuid:trip_uuid>/reference-image-picker/',
+        views.TripReferenceImagePickerView.as_view(),
+        name='trip_reference_image_picker'
+    ),
 ]

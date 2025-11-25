@@ -140,6 +140,25 @@
         // Journal Reference Image - Data Attributes
         JOURNAL_REFERENCE_IMAGE_UUID_ATTR: 'reference-image-uuid',
 
+        // Image Picker - Classes
+        IMAGE_PICKER_CARD_CLASS: 'image-picker-card',
+        IMAGE_PICKER_UUID_INPUT_CLASS: 'image-picker-uuid-input',
+        IMAGE_PICKER_PREVIEW_CLASS: 'image-picker-preview',
+        IMAGE_PICKER_CAPTION_CLASS: 'image-picker-caption',
+        IMAGE_PICKER_SET_BTN_CLASS: 'image-picker-set-btn',
+
+        // Image Picker - Data Attributes
+        IMAGE_PICKER_UUID_ATTR: 'image-uuid',
+        IMAGE_PICKER_THUMBNAIL_URL_ATTR: 'thumbnail-url',
+        IMAGE_PICKER_CAPTION_ATTR: 'caption',
+
+        // Image Picker - Ready-to-use selectors
+        IMAGE_PICKER_CARD_SELECTOR: '.image-picker-card',
+        IMAGE_PICKER_UUID_INPUT_SELECTOR: '.image-picker-uuid-input',
+        IMAGE_PICKER_PREVIEW_SELECTOR: '.image-picker-preview',
+        IMAGE_PICKER_CAPTION_SELECTOR: '.image-picker-caption',
+        IMAGE_PICKER_SET_BTN_SELECTOR: '.image-picker-set-btn',
+
         // Journal - Ready-to-use selectors
         JOURNAL_EDITOR_SELECTOR: '#id_entry_text',
         JOURNAL_TITLE_INPUT_SELECTOR: '#id_entry_title',

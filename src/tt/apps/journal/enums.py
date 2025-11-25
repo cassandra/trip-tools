@@ -21,15 +21,6 @@ class JournalVisibility(LabeledEnum):
         self.badge_color = badge_color
 
 
-class ImagePickerScope(LabeledEnum):
-    """
-    Scope filter for journal image picker.
-
-    Phase 1: Single DEFAULT value - all filtering done client-side.
-    """
-    DEFAULT = ('All Images', 'Show all images for the selected date')
-
-
 class JournalTheme(LabeledEnum):
     """
     Visual theme for travelog display.

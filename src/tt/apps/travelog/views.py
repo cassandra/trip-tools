@@ -67,7 +67,7 @@ class TravelogUserListView(TravelogViewMixin, View):
             latest_date = entries.last().date.strftime('%Y-%m-%d') if entries.exists() else None
 
             display_image = journal.reference_image
-            # Use first reference image for display if none explicitly set
+            # Use first entry reference image for display if none explicitly set
             if not display_image:
                 for entry in entries:
                     if entry.reference_image:

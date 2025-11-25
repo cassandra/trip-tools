@@ -318,11 +318,11 @@ class TestJournalRestoreService(TransactionTestCase):
         test_image.web_image.save('test.jpg', ContentFile(b'fake_image_data'), save=True)
 
         # Create travelog with complete data
+        # Note: Travelog does not have reference_image field - that's on Trip
         travelog = Travelog.objects.create(
             journal=self.journal,
             version_number=1,
             title='Snapshot',
-            reference_image=test_image,
             published_by=self.user
         )
         TravelogEntry.objects.create(

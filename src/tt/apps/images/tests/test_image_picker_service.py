@@ -1,5 +1,5 @@
 """
-Tests for JournalImagePickerService - focusing on date boundary security.
+Tests for ImagePickerService - focusing on date boundary security.
 
 Tests timezone-aware date boundary calculations to prevent unauthorized image access.
 """
@@ -11,8 +11,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from tt.apps.images.models import TripImage
-from tt.apps.journal.enums import ImagePickerScope
-from tt.apps.journal.services import JournalImagePickerService
+from tt.apps.images.services import ImagePickerService
 from tt.apps.journal.utils import JournalUtils
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
@@ -21,7 +20,7 @@ logging.disable(logging.CRITICAL)
 User = get_user_model()
 
 
-class TestJournalImagePickerDateBoundaries(TestCase):
+class TestImagePickerServiceDateBoundaries(TestCase):
     """Test timezone-aware date boundary calculations for image picker."""
 
     def setUp(self):
@@ -95,12 +94,11 @@ class TestJournalImagePickerDateBoundaries(TestCase):
         )
 
         # Get images for Jan 15, 2024 in UTC
-        images = JournalImagePickerService.get_accessible_images_for_image_picker(
+        images = ImagePickerService.get_accessible_images_for_image_picker(
             trip=self.trip,
             user=self.user,
             date=date(2024, 1, 15),
             timezone='UTC',
-            scope=ImagePickerScope.DEFAULT
         )
 
         # Only img1 should be included
@@ -117,36 +115,33 @@ class TestJournalImagePickerDateBoundaries(TestCase):
         )
 
         # Query for Jan 15 in UTC - should NOT include midnight image
-        images_utc = JournalImagePickerService.get_accessible_images_for_image_picker(
+        images_utc = ImagePickerService.get_accessible_images_for_image_picker(
             trip=self.trip,
             user=self.user,
             date=date(2024, 1, 15),
             timezone='UTC',
-            scope=ImagePickerScope.DEFAULT
         )
         utc_image_ids = [img.id for img in images_utc]
         self.assertNotIn(img.id, utc_image_ids)
 
         # Query for Jan 15 in Pacific time (UTC-8) - SHOULD include
         # (midnight UTC = 4pm PST on Jan 15, which IS part of Jan 15 PST day)
-        images_pst = JournalImagePickerService.get_accessible_images_for_image_picker(
+        images_pst = ImagePickerService.get_accessible_images_for_image_picker(
             trip=self.trip,
             user=self.user,
             date=date(2024, 1, 15),
             timezone='America/Los_Angeles',
-            scope=ImagePickerScope.DEFAULT
         )
         pst_image_ids = [img.id for img in images_pst]
         self.assertIn(img.id, pst_image_ids)
 
         # But query for Jan 16 in PST should NOT include it
         # (midnight UTC = 4pm PST Jan 15, so it belongs to Jan 15 PST, not Jan 16 PST)
-        images_pst_16 = JournalImagePickerService.get_accessible_images_for_image_picker(
+        images_pst_16 = ImagePickerService.get_accessible_images_for_image_picker(
             trip=self.trip,
             user=self.user,
             date=date(2024, 1, 16),
             timezone='America/Los_Angeles',
-            scope=ImagePickerScope.DEFAULT
         )
         pst_16_image_ids = [img.id for img in images_pst_16]
         self.assertNotIn(img.id, pst_16_image_ids)
@@ -170,12 +165,11 @@ class TestJournalImagePickerDateBoundaries(TestCase):
         )
 
         # Get images for the date
-        images = JournalImagePickerService.get_accessible_images_for_image_picker(
+        images = ImagePickerService.get_accessible_images_for_image_picker(
             trip=self.trip,
             user=self.user,
             date=date(2024, 1, 15),
             timezone='UTC',
-            scope=ImagePickerScope.DEFAULT
         )
 
         # Should be in chronological order
@@ -189,12 +183,11 @@ class TestJournalImagePickerDateBoundaries(TestCase):
         """Test service handles invalid timezone gracefully."""
         # Invalid timezone should raise exception (not security bypass)
         with self.assertRaises(Exception):  # Could be pytz.UnknownTimeZoneError or similar
-            JournalImagePickerService.get_accessible_images_for_image_picker(
+            ImagePickerService.get_accessible_images_for_image_picker(
                 trip=self.trip,
                 user=self.user,
                 date=date(2024, 1, 15),
                 timezone='Invalid/Timezone',
-                scope=ImagePickerScope.DEFAULT
             )
 
     def test_date_boundary_precision_security(self):
@@ -206,23 +199,21 @@ class TestJournalImagePickerDateBoundaries(TestCase):
         )
 
         # Query for Jan 15 - should NOT include boundary image
-        images_15 = JournalImagePickerService.get_accessible_images_for_image_picker(
+        images_15 = ImagePickerService.get_accessible_images_for_image_picker(
             trip=self.trip,
             user=self.user,
             date=date(2024, 1, 15),
             timezone='UTC',
-            scope=ImagePickerScope.DEFAULT
         )
         image_15_ids = [img.id for img in images_15]
         self.assertNotIn(boundary_img.id, image_15_ids)
 
         # Query for Jan 16 - should include boundary image
-        images_16 = JournalImagePickerService.get_accessible_images_for_image_picker(
+        images_16 = ImagePickerService.get_accessible_images_for_image_picker(
             trip=self.trip,
             user=self.user,
             date=date(2024, 1, 16),
             timezone='UTC',
-            scope=ImagePickerScope.DEFAULT
         )
         image_16_ids = [img.id for img in images_16]
         self.assertIn(boundary_img.id, image_16_ids)
@@ -244,12 +235,11 @@ class TestJournalImagePickerDateBoundaries(TestCase):
 
         results = []
         for tz in timezone_variants:
-            images = JournalImagePickerService.get_accessible_images_for_image_picker(
+            images = ImagePickerService.get_accessible_images_for_image_picker(
                 trip=self.trip,
                 user=self.user,
                 date=date(2024, 1, 15),
                 timezone=tz,
-                scope=ImagePickerScope.DEFAULT
             )
             results.append(len(list(images)))
 

@@ -28,7 +28,6 @@ class JournalAdmin(admin.ModelAdmin):
         'trip_link',
         'visibility',
         'has_password',
-        'reference_image',
         'created_datetime',
         'modified_datetime',
     )
