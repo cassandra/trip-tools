@@ -23,7 +23,8 @@
       "Bash(node --check:*)",
       "Bash(readlink:*)",
       "Bash(./src/manage.py test:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(time make test-sqlite:*)"
     ],
     "deny": [],
     "ask": []
