@@ -141,10 +141,11 @@ class TripManagerCreateWithOwnerTestCase(TransactionTestCase):
 class TripManagerQueryFilteringTestCase(TestCase):
     """Test TripManager query filtering methods."""
 
-    def setUp(self):
-        self.user1 = User.objects.create_user(email='user1@test.com', password='pass')
-        self.user2 = User.objects.create_user(email='user2@test.com', password='pass')
-        self.user3 = User.objects.create_user(email='user3@test.com', password='pass')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = User.objects.create_user(email='user1@test.com', password='pass')
+        cls.user2 = User.objects.create_user(email='user2@test.com', password='pass')
+        cls.user3 = User.objects.create_user(email='user3@test.com', password='pass')
 
     def test_for_user_returns_member_trips(self):
         """for_user should return all trips where user is a member."""

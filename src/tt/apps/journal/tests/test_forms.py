@@ -28,9 +28,10 @@ User = get_user_model()
 class JournalVisibilityFormPasswordValidationTestCase(TestCase):
     """Test password validation for PROTECTED visibility."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='test@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='test@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
 
     def test_protected_visibility_requires_password_new_journal(self):
         """PROTECTED visibility requires password for journal without existing password."""
@@ -250,9 +251,10 @@ class JournalVisibilityFormPasswordValidationTestCase(TestCase):
 class JournalVisibilityFormInitializationTestCase(TestCase):
     """Test form initialization with journal instance."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='test@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='test@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
 
     def test_form_pre_populates_visibility(self):
         """Form should pre-populate visibility from journal."""
@@ -322,9 +324,10 @@ class JournalVisibilityFormInitializationTestCase(TestCase):
 class JournalVisibilityFormEdgeCasesTestCase(TestCase):
     """Test edge cases and security boundaries."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='test@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='test@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
 
     def test_password_with_whitespace(self):
         """Password with whitespace should be accepted (but leading/trailing whitespace is stripped by Django)."""

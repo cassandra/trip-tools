@@ -1,18 +1,26 @@
 # -*- coding: utf-8 -*-
-from .base import *
+"""
+CI/Testing settings - inherits from development with SQLite database.
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+Use this for fast test runs: DJANGO_SETTINGS_MODULE=tt.settings.ci
+"""
+from .development import *
 
+# Override database to use SQLite for faster tests
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join( ENV.DATABASES_NAME_PATH, 'tt.sqlite3' ),
+        'NAME': os.path.join(ENV.DATABASES_NAME_PATH, 'tt.sqlite3'),
     }
 }
 
-STATIC_ROOT = '/tmp/tt/static'
+# Suppress email sending during tests - write to console instead
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Suppress background monitoring tasks during tests
+SUPPRESS_MONITORS = True
+
+# Minimal logging for cleaner test output
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -31,18 +39,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'hi': {
-            'handlers': ['console' ],
-            'level': 'INFO',
-            'propagate': False,
+            'level': 'WARNING',
         },
     },
 }
-
-BASE_URL_FOR_EMAIL_LINKS = 'http:/127.0.0.1:8411/'
-
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-SUPPRESS_MONITORS = True

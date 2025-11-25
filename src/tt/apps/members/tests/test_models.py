@@ -43,35 +43,36 @@ class TripMemberModelTests(TestCase):
 class TripMemberPermissionMethodTests(TestCase):
     """Tests for TripMember permission checking methods - core business logic."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         """Set up test users and trip with various permission levels."""
-        self.owner_user = User.objects.create_user(email='owner@test.com', password='pass')
-        self.admin_user = User.objects.create_user(email='admin@test.com', password='pass')
-        self.editor_user = User.objects.create_user(email='editor@test.com', password='pass')
-        self.viewer_user = User.objects.create_user(email='viewer@test.com', password='pass')
+        cls.owner_user = User.objects.create_user(email='owner@test.com', password='pass')
+        cls.admin_user = User.objects.create_user(email='admin@test.com', password='pass')
+        cls.editor_user = User.objects.create_user(email='editor@test.com', password='pass')
+        cls.viewer_user = User.objects.create_user(email='viewer@test.com', password='pass')
 
         # Create trip with owner
-        self.trip = TripSyntheticData.create_test_trip(user=self.owner_user, title='Test Trip')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.owner_user, title='Test Trip')
 
         # Add members at different permission levels
-        self.owner_member = TripMember.objects.get(trip=self.trip, user=self.owner_user)
-        self.admin_member = TripSyntheticData.add_trip_member(
-            trip=self.trip,
-            user=self.admin_user,
+        cls.owner_member = TripMember.objects.get(trip=cls.trip, user=cls.owner_user)
+        cls.admin_member = TripSyntheticData.add_trip_member(
+            trip=cls.trip,
+            user=cls.admin_user,
             permission_level=TripPermissionLevel.ADMIN,
-            added_by=self.owner_user
+            added_by=cls.owner_user
         )
-        self.editor_member = TripSyntheticData.add_trip_member(
-            trip=self.trip,
-            user=self.editor_user,
+        cls.editor_member = TripSyntheticData.add_trip_member(
+            trip=cls.trip,
+            user=cls.editor_user,
             permission_level=TripPermissionLevel.EDITOR,
-            added_by=self.owner_user
+            added_by=cls.owner_user
         )
-        self.viewer_member = TripSyntheticData.add_trip_member(
-            trip=self.trip,
-            user=self.viewer_user,
+        cls.viewer_member = TripSyntheticData.add_trip_member(
+            trip=cls.trip,
+            user=cls.viewer_user,
             permission_level=TripPermissionLevel.VIEWER,
-            added_by=self.owner_user
+            added_by=cls.owner_user
         )
 
     def test_has_trip_permission_owner_access(self):

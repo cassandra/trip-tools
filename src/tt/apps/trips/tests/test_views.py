@@ -75,18 +75,21 @@ class TripCreateModalViewTests(TestCase):
 class TripHomeViewTests(TestCase):
     """Tests for the trip home view."""
 
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = TripSyntheticData.create_test_trip(
-            user=self.user,
+        cls.trip = TripSyntheticData.create_test_trip(
+            user=cls.user,
             title='Test Trip',
             description='Test Description',
             trip_status=TripStatus.UPCOMING
         )
+
+    def setUp(self):
+        self.client = Client()
         self.trips_home_url = reverse('trips_home', kwargs={'trip_uuid': self.trip.uuid})
 
     def test_trips_home_requires_authentication(self):

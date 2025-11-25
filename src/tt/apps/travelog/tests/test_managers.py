@@ -11,7 +11,7 @@ import logging
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TransactionTestCase
+from django.test import TestCase, TransactionTestCase
 
 from tt.apps.journal.models import Journal
 from tt.apps.journal.enums import JournalVisibility
@@ -202,7 +202,7 @@ class TestTravelogManagerVersioning(TransactionTestCase):
         self.assertEqual(tl2_j1.version_number, 2)
 
 
-class TestTravelogManagerQueryMethods(TransactionTestCase):
+class TestTravelogManagerQueryMethods(TestCase):
     """Test TravelogManager query methods."""
 
     def setUp(self):

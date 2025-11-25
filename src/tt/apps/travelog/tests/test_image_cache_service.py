@@ -28,23 +28,24 @@ User = get_user_model()
 class TestTravelogImageCacheService(TestCase):
     """Test the TravelogImageCacheService class."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         """Set up test fixtures."""
         # Create test user (CustomUser uses email instead of username)
-        self.user = User.objects.create_user(
+        cls.user = User.objects.create_user(
             email='test@example.com',
             password='testpass123'
         )
 
         # Create test trip using synthetic data pattern
-        self.trip = TripSyntheticData.create_test_trip(
-            user=self.user,
+        cls.trip = TripSyntheticData.create_test_trip(
+            user=cls.user,
             title='Test Trip'
         )
 
         # Create test journal
-        self.journal = Journal.objects.create(
-            trip=self.trip,
+        cls.journal = Journal.objects.create(
+            trip=cls.trip,
             title='Test Journal',
             description='A test journal',
             visibility=JournalVisibility.PUBLIC
@@ -576,23 +577,24 @@ class TestTravelogImageCacheRegexSecurity(TestCase):
 class TestTravelogImageCacheRedisSecurity(TestCase):
     """Test Redis cache security and error handling."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         """Set up test fixtures."""
         # Create test user
-        self.user = User.objects.create_user(
+        cls.user = User.objects.create_user(
             email="test@example.com",
             password="testpass123"
         )
 
         # Create test trip using synthetic data pattern
-        self.trip = TripSyntheticData.create_test_trip(
-            user=self.user,
+        cls.trip = TripSyntheticData.create_test_trip(
+            user=cls.user,
             title="Test Trip"
         )
 
         # Create test journal
-        self.journal = Journal.objects.create(
-            trip=self.trip,
+        cls.journal = Journal.objects.create(
+            trip=cls.trip,
             title="Test Journal",
             description="A test journal",
             visibility=JournalVisibility.PUBLIC
