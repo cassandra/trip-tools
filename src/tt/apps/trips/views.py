@@ -1,7 +1,10 @@
 import logging
 from uuid import UUID
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
 from django.shortcuts import render
+from django.urls import reverse
 
 from tt.async_view import ModalView
 
@@ -30,12 +33,12 @@ class TripCreateModalView(ModalView):
         form = TripForm( request.POST )
 
         if form.is_valid():
-            Trip.objects.create_with_owner(
+            trip = Trip.objects.create_with_owner(
                 owner = request.user,
                 **form.cleaned_data
             )
-
-            return self.refresh_response( request )
+            redirect_url = reverse( 'trips_home', kwargs = { 'trip_uuid': trip.uuid } )
+            return self.redirect_response( request, redirect_url )
 
         context = {
             'form': form,
@@ -65,3 +68,39 @@ class TripHomeView( TripViewMixin, ModalView ):
             'trip_page': trip_page_context,
         }
         return render( request, 'trips/pages/trip-home.html', context )
+
+
+class TripEditModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
+
+    def get_template_name(self) -> str:
+        return 'trips/modals/trip_edit.html'
+
+    def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
+        self.assert_is_editor( request_member )
+        trip = request_member.trip
+
+        form = TripForm( instance = trip )
+
+        context = {
+            'form': form,
+            'trip': trip,
+        }
+        return self.modal_response( request, context = context )
+
+    def post(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
+        self.assert_is_editor( request_member )
+        trip = request_member.trip
+
+        form = TripForm( request.POST, instance = trip )
+
+        if form.is_valid():
+            form.save()
+            return self.refresh_response( request )
+
+        context = {
+            'form': form,
+            'trip': trip,
+        }
+        return self.modal_response( request, context = context, status = 400 )

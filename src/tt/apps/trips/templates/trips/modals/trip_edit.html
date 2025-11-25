@@ -1,0 +1,26 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load icons %}
+
+{% block modal_dialog_id %}trip-edit-modal{% endblock %}
+
+{% block title_text %}Edit Trip{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'trips_edit' trip_uuid=trip.uuid %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+  {% include "trips/components/trip-form.html" %}
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-primary">
+  {% icon "save" size="sm" css_class="tt-icon-left" %}
+  UPDATE
+</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

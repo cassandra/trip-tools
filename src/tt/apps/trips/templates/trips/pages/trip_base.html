@@ -77,6 +77,14 @@
   <div class="d-flex justify-content-between align-items-center mb-2">
     <div class="d-flex align-items-center">
       <h1 class="h2 mb-0 mx-2">{{ trip_page.trip.title }}</h1>
+      {% if trip_page.request_member.can_edit_trip %}
+      <a href="{% url 'trips_edit' trip_uuid=trip_page.trip.uuid %}"
+         data-async="modal"
+         class="text-muted mr-2"
+         title="Edit trip title and description">
+        {% icon "edit" size="lg" %}
+      </a>
+      {% endif %}
       <span class="badge badge-info">{{ trip_page.trip.trip_status.label }}</span>
     </div>
     {% block trip_extra_actions %}

@@ -14,4 +14,9 @@ urlpatterns = [
         views.TripHomeView.as_view(),
         name='trips_home'
     ),
+    path(
+        '<uuid:trip_uuid>/edit',
+        views.TripEditModalView.as_view(),
+        name='trips_edit'
+    ),
 ]
