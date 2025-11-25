@@ -1,11 +1,6 @@
 {% extends "dashboard/pages/dashboard.html" %}
-{% load pipeline %}
 {% load icons %}
 {% load static %}
-
-{% block head_css %}
-{% stylesheet 'trip_images_upload' %}
-{% endblock %}
 
 {% block main_content %}
 <div class="trip-images-container">
@@ -72,5 +67,9 @@
 {% endblock %}
 
 {% block footer_post_javascript %}
-{% javascript 'trip_images_upload' %}
+<script>
+$(document).ready(function() {
+    Tt.tripImagesUpload.init();
+});
+</script>
 {% endblock %}

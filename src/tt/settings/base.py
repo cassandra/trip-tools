@@ -243,14 +243,9 @@ PIPELINE = {
                 'css/main.css',
                 'css/icons.css',
                 'css/attribute.css',
+                'css/trip_images.css',
             ),
             'output_filename': 'css/css_head.css',
-        },
-        'trip_images_upload': {
-            'source_filenames': (
-                'css/trip_images_upload.css',
-            ),
-            'output_filename': 'css/trip_images_upload.css',
         },
         'journal': {
             'source_filenames': (
@@ -294,12 +289,6 @@ PIPELINE = {
                 'bootstrap/js/bootstrap.js',
             ),
             'output_filename': 'js/js_after_content.js',
-        },
-        'trip_images_upload': {
-            'source_filenames': (
-                'js/trip_images_upload.js',
-            ),
-            'output_filename': 'js/trip_images_upload.js',
         },
         'journal': {
             'source_filenames': (

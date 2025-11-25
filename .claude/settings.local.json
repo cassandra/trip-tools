@@ -30,7 +30,8 @@
       "WebFetch(domain:triptools.net)",
       "Bash(python src/manage.py check:*)",
       "Bash(xargs cat:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(make test-sqlite:*)"
     ],
     "deny": [],
     "ask": []
