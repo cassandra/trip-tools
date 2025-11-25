@@ -56,10 +56,12 @@ class PublishingStatusHelper:
         For JournalEntries: compares modification timestamps since entries aren't
         modified during publish.
         """
-        # Compare Journal content directly (title and description are published fields)
+        # Compare Journal content directly (title, description, reference_image are published fields)
         if journal.title != travelog.title:
             return True
         if journal.description != travelog.description:
+            return True
+        if journal.reference_image_id != travelog.reference_image_id:
             return True
 
         # Compare JournalEntry timestamps (entries modified after publish)

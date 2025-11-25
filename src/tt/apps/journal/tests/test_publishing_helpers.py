@@ -388,6 +388,46 @@ class PublishingStatusHelperTestCase(TestCase):
         self.assertTrue(status.has_unpublished_changes)
         self.assertTrue(status.is_published_with_changes)
 
+    def test_published_with_modified_reference_image(self):
+        """Test status when journal reference image has been modified after publishing."""
+        from tt.apps.images.models import TripImage
+
+        entry1 = JournalEntry.objects.create(
+            journal=self.journal,
+            date=date(2025, 1, 1),
+            title='Day 1',
+            text='<p>Content</p>',
+            timezone='UTC',
+            modified_by=self.user,
+        )
+        travelog = Travelog.objects.create(
+            journal=self.journal,
+            version_number=1,
+            is_current=True,
+            title=self.journal.title,
+            description=self.journal.description,
+            reference_image=self.journal.reference_image,
+            published_by=self.user,
+        )
+        TravelogEntry.objects.create(
+            travelog=travelog,
+            source_entry=entry1,
+            date=entry1.date,
+            title=entry1.title,
+            text=entry1.text,
+            timezone=entry1.timezone,
+        )
+
+        # Modify the journal's reference image
+        test_image = TripImage.objects.create(uploaded_by=self.user)
+        self.journal.reference_image = test_image
+        self.journal.save()
+
+        status = PublishingStatusHelper.get_publishing_status(self.journal)
+
+        self.assertTrue(status.has_unpublished_changes)
+        self.assertTrue(status.is_published_with_changes)
+
     def test_published_only_non_current_version(self):
         """Test that only is_current=True travelog is used for status."""
         entry1 = JournalEntry.objects.create(
