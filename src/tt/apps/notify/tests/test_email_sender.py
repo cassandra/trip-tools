@@ -232,52 +232,92 @@ class TestEmailSender(BaseTestCase):
         self.assertIn('HOME_URL', context)
         self.assertIn('UNSUBSCRIBE_URL', context)
 
-    def test_email_configuration_validation_success(self):
-        """Test email configuration validation passes when all settings present."""
+    def test_email_configuration_validation_success_with_api(self):
+        """Test email validation passes with API-based email config (no SMTP)."""
+        with override_settings(
+            EMAIL_BACKEND='anymail.backends.resend.EmailBackend',
+            EMAIL_API_KEY='test-api-key',
+            DEFAULT_FROM_EMAIL='noreply@example.com',
+            SERVER_EMAIL='server@example.com',
+            EMAIL_HOST='',  # Empty - not using SMTP
+            EMAIL_HOST_USER='',
+        ):
+            sender = EmailSender(data=self.base_email_data)
+
+            # Should not raise an exception
+            sender._assert_email_configured()
+
+            # Class methods should also work
+            self.assertTrue(EmailSender.is_email_configured())
+            self.assertEqual(EmailSender.get_missing_email_setting_names(), [])
+
+    def test_email_configuration_validation_success_with_smtp(self):
+        """Test email validation passes with SMTP-based email config (no API)."""
         with override_settings(
             EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend',
             EMAIL_HOST='smtp.example.com',
             EMAIL_PORT=587,
             EMAIL_HOST_USER='user@example.com',
             DEFAULT_FROM_EMAIL='noreply@example.com',
-            SERVER_EMAIL='server@example.com'
+            SERVER_EMAIL='server@example.com',
+            EMAIL_API_KEY='',  # Empty - not using API
         ):
             sender = EmailSender(data=self.base_email_data)
-            
+
             # Should not raise an exception
             sender._assert_email_configured()
-            
+
             # Class methods should also work
             self.assertTrue(EmailSender.is_email_configured())
             self.assertEqual(EmailSender.get_missing_email_setting_names(), [])
 
-    def test_email_configuration_validation_failure(self):
-        """Test email configuration validation fails when settings missing."""
+    def test_email_configuration_validation_failure_missing_common(self):
+        """Test email validation fails when common settings missing."""
         with override_settings(
             EMAIL_BACKEND='',
-            EMAIL_HOST='',
-            EMAIL_PORT=587,
-            EMAIL_HOST_USER='user@example.com',
+            EMAIL_API_KEY='test-api-key',  # Has API key but missing common
             DEFAULT_FROM_EMAIL='',
-            SERVER_EMAIL='server@example.com'
+            SERVER_EMAIL='',
         ):
             sender = EmailSender(data=self.base_email_data)
-            
+
             with self.assertRaises(ImproperlyConfigured) as context:
                 sender._assert_email_configured()
-            
+
             error_message = str(context.exception)
             self.assertIn('Email is not configured', error_message)
             self.assertIn('EMAIL_BACKEND', error_message)
-            self.assertIn('EMAIL_HOST', error_message)
             self.assertIn('DEFAULT_FROM_EMAIL', error_message)
-            
+
             # Class methods should also detect issues
             self.assertFalse(EmailSender.is_email_configured())
             missing_settings = EmailSender.get_missing_email_setting_names()
             self.assertIn('EMAIL_BACKEND', missing_settings)
-            self.assertIn('EMAIL_HOST', missing_settings)
             self.assertIn('DEFAULT_FROM_EMAIL', missing_settings)
+
+    def test_email_configuration_validation_failure_neither_delivery(self):
+        """Test email validation fails when neither API nor SMTP is configured."""
+        with override_settings(
+            EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend',
+            EMAIL_HOST='',  # Empty - no SMTP
+            EMAIL_HOST_USER='',
+            EMAIL_API_KEY='',  # Empty - no API
+            DEFAULT_FROM_EMAIL='noreply@example.com',
+            SERVER_EMAIL='server@example.com',
+        ):
+            sender = EmailSender(data=self.base_email_data)
+
+            with self.assertRaises(ImproperlyConfigured) as context:
+                sender._assert_email_configured()
+
+            error_message = str(context.exception)
+            self.assertIn('Email is not configured', error_message)
+
+            # Should indicate missing delivery method
+            self.assertFalse(EmailSender.is_email_configured())
+            missing_settings = EmailSender.get_missing_email_setting_names()
+            # Should have something indicating API or SMTP needed
+            self.assertTrue(any('EMAIL_API_KEY' in s or 'EMAIL_HOST' in s for s in missing_settings))
 
     @patch('tt.apps.notify.email_sender.send_html_email')
     def test_send_method_integration(self, mock_send_email):
