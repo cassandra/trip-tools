@@ -26,7 +26,8 @@
       "Bash(sort:*)",
       "Bash(time make test-sqlite:*)",
       "Bash(make docker-build:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:triptools.net)"
     ],
     "deny": [],
     "ask": []
