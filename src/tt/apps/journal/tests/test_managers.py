@@ -26,9 +26,10 @@ User = get_user_model()
 class JournalManagerForTripTestCase(TestCase):
     """Test JournalManager.for_trip filtering."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='user@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='user@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
 
     def test_for_trip_returns_trip_journals(self):
         """for_trip should return all journals for the specified trip."""
@@ -98,9 +99,10 @@ class JournalManagerForTripTestCase(TestCase):
 class JournalManagerGetPrimaryForTripTestCase(TestCase):
     """Test JournalManager.get_primary_for_trip - MVP single journal pattern."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='user@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='user@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
 
     def test_get_primary_returns_first_journal(self):
         """get_primary_for_trip should return the first (oldest) journal."""
@@ -164,11 +166,12 @@ class JournalManagerGetPrimaryForTripTestCase(TestCase):
 class JournalEntryManagerForJournalTestCase(TestCase):
     """Test JournalEntryManager.for_journal filtering."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='user@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
-        self.journal = Journal.objects.create(
-            trip=self.trip,
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='user@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
+        cls.journal = Journal.objects.create(
+            trip=cls.trip,
             title='Test Journal',
             visibility=JournalVisibility.PRIVATE,
             timezone='UTC',
@@ -293,9 +296,10 @@ class JournalCascadeDeletionTestCase(TestCase):
 class JournalManagerEdgeCasesTestCase(TestCase):
     """Test edge cases and boundary conditions."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='user@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='user@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
 
     def test_for_trip_multiple_journals_different_visibilities(self):
         """for_trip should return journals regardless of visibility."""

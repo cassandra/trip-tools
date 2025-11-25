@@ -176,14 +176,15 @@ class TestJournalPasswordSecurity(TestCase):
 class TestJournalSecurityConfiguration(TestCase):
     """Test Journal security configuration validation."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         """Set up test fixtures."""
-        self.user = User.objects.create_user(
+        cls.user = User.objects.create_user(
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = TripSyntheticData.create_test_trip(
-            user=self.user,
+        cls.trip = TripSyntheticData.create_test_trip(
+            user=cls.user,
             title='Test Trip'
         )
 

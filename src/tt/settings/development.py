@@ -14,6 +14,13 @@ INSTALLED_APPS += [ 'tt.testing' ]
 
 STATIC_ROOT = '/tmp/tt/static'
 
+# Fast password hashing for development/testing
+# MD5 is insecure for production but dramatically speeds up test user creation
+# (~100-200ms savings per User.objects.create_user() call across 787+ tests)
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+]
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

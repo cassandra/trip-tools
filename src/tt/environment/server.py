@@ -29,13 +29,16 @@ class EnvironmentSettings:
     ALLOWED_HOSTS              : Tuple[ str ]  = field( default_factory = tuple )
     CORS_ALLOWED_ORIGINS       : Tuple[ str ]  = field( default_factory = tuple )
     EXTRA_CSP_URLS             : Tuple[ str ]  = field( default_factory = tuple )
+    # Database settings - either MySQL OR SQLite must be configured
+    # MySQL (server-based): TT_DB_HOST, TT_DB_PORT, TT_DB_NAME, TT_DB_USER, TT_DB_PASSWORD
     DATABASE_HOST              : str           = None
     DATABASE_PORT              : str           = None
     DATABASE_NAME              : str           = None
     DATABASE_USER              : str           = None
     DATABASE_PASSWORD          : str           = None
+    # SQLite (file-based): TT_DB_PATH
     DATABASES_NAME_PATH        : str           = None
-    MEDIA_ROOT                 : str           = None
+    MEDIA_ROOT                 : str           = ''
     STORAGE_ENDPOINT_URL       : str           = ''
     STORAGE_REGION_NAME        : str           = ''
     STORAGE_BUCKET_NAME        : str           = ''
@@ -116,34 +119,17 @@ class EnvironmentSettings:
 
         ###########
         # Databases
-        
-        # Current: For server based DB (e.g., MySQL, Postgres)
-        env_settings.DATABASE_HOST = cls.get_env_variable(
-            'TT_DB_HOST',
-            env_settings.DATABASE_HOST,
-        )
-        env_settings.DATABASE_PORT = cls.get_env_variable(
-            'TT_DB_PORT',
-            env_settings.DATABASE_PORT,
-        )
-        env_settings.DATABASE_NAME = cls.get_env_variable(
-            'TT_DB_NAME',
-            env_settings.DATABASE_NAME,
-        )
-        env_settings.DATABASE_USER = cls.get_env_variable(
-            'TT_DB_USER',
-            env_settings.DATABASE_USER,
-        )
-        env_settings.DATABASE_PASSWORD = cls.get_env_variable(
-            'TT_DB_PASSWORD',
-            env_settings.DATABASE_PASSWORD,
-        )
+        # Either MySQL OR SQLite must be configured (validated at end)
 
-        # Previous: For file-base DB (e.g., SQLite)
-        env_settings.DATABASES_NAME_PATH = cls.get_env_variable(
-            'TT_DB_PATH',
-            env_settings.DATABASES_NAME_PATH,
-        )
+        # MySQL/Postgres (server-based) - all 5 vars needed for complete config
+        env_settings.DATABASE_HOST = cls.get_env_variable('TT_DB_HOST', '')
+        env_settings.DATABASE_PORT = cls.get_env_variable('TT_DB_PORT', '')
+        env_settings.DATABASE_NAME = cls.get_env_variable('TT_DB_NAME', '')
+        env_settings.DATABASE_USER = cls.get_env_variable('TT_DB_USER', '')
+        env_settings.DATABASE_PASSWORD = cls.get_env_variable('TT_DB_PASSWORD', '')
+
+        # SQLite (file-based) - just needs path
+        env_settings.DATABASES_NAME_PATH = cls.get_env_variable('TT_DB_PATH', '')
 
         ###########
         # Media
@@ -301,7 +287,37 @@ class EnvironmentSettings:
             env_settings.CORS_ALLOWED_ORIGINS += tuple( cors_allowed_origins_list )
             env_settings.EXTRA_CSP_URLS += tuple( cors_allowed_origins_list )
 
+        ###########
+        # Validation
+        env_settings.validate_database_config()
+
         return env_settings
+
+    def validate_database_config(self) -> None:
+        """
+        Ensure either MySQL OR SQLite database is fully configured.
+
+        Raises ImproperlyConfigured if neither is properly set up.
+        """
+        # Check MySQL configuration (all 5 vars must be present and non-empty)
+        mysql_vars = [
+            self.DATABASE_HOST,
+            self.DATABASE_PORT,
+            self.DATABASE_NAME,
+            self.DATABASE_USER,
+            self.DATABASE_PASSWORD,
+        ]
+        has_mysql = all(v is not None and v != '' for v in mysql_vars)
+
+        # Check SQLite configuration (just needs the path)
+        has_sqlite = self.DATABASES_NAME_PATH is not None and self.DATABASES_NAME_PATH != ''
+
+        if not has_mysql and not has_sqlite:
+            raise ImproperlyConfigured(
+                "Database not configured. Provide either:\n"
+                "  - MySQL: TT_DB_HOST, TT_DB_PORT, TT_DB_NAME, TT_DB_USER, TT_DB_PASSWORD\n"
+                "  - SQLite: TT_DB_PATH"
+            )
     
     @classmethod
     def get_env_variable( cls, var_name, default = None ) -> str:

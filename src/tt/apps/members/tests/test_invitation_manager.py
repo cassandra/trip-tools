@@ -20,9 +20,12 @@ User = get_user_model()
 class TestMemberInvitationTokenSecurity(TestCase):
     """Test token validation security patterns."""
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='test@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
+
     def setUp(self):
-        self.user = User.objects.create_user(email='test@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
         self.manager = MemberInvitationManager()
 
     def test_verify_token_one_time_use_enforcement(self):
@@ -283,9 +286,12 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
 class TestMemberInvitationEdgeCases(BaseTestCase):
     """Test edge cases and boundary conditions."""
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='owner@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
+
     def setUp(self):
-        self.user = User.objects.create_user(email='owner@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
         self.manager = MemberInvitationManager()
 
     def test_singleton_pattern_same_instance(self):

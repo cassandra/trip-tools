@@ -158,17 +158,27 @@ class EmailSender:
         return True
     
     @classmethod
-    def get_missing_email_setting_names( cls ) -> List[ str ]:
-        missing_names = list()
-        for setting_name in [ 'EMAIL_BACKEND',
-                              'EMAIL_HOST',
-                              'EMAIL_PORT',
-                              'EMAIL_API_KEY',
-                              'EMAIL_HOST_USER',
-                              'DEFAULT_FROM_EMAIL',
-                              'SERVER_EMAIL' ]:
-            email_setting = getattr( settings, setting_name )
-            if not email_setting:
-                missing_names.append( setting_name )
-            continue
+    def get_missing_email_setting_names(cls) -> List[str]:
+        """
+        Check email configuration and return list of missing settings.
+
+        Requires:
+        - Always: EMAIL_BACKEND, DEFAULT_FROM_EMAIL, SERVER_EMAIL
+        - One of: EMAIL_API_KEY (for API backend) OR EMAIL_HOST+EMAIL_HOST_USER (for SMTP)
+        """
+        missing_names = []
+
+        # Always required
+        for setting_name in ['EMAIL_BACKEND', 'DEFAULT_FROM_EMAIL', 'SERVER_EMAIL']:
+            if not getattr(settings, setting_name, None):
+                missing_names.append(setting_name)
+
+        # Check API OR SMTP - one delivery method must be configured
+        has_api = bool(getattr(settings, 'EMAIL_API_KEY', None))
+        has_smtp = (bool(getattr(settings, 'EMAIL_HOST', None))
+                    and bool(getattr(settings, 'EMAIL_HOST_USER', None)))
+
+        if not has_api and not has_smtp:
+            missing_names.append('EMAIL_API_KEY or (EMAIL_HOST + EMAIL_HOST_USER)')
+
         return missing_names

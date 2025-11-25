@@ -20,28 +20,17 @@ class TestEnvironmentHomeView(SyncViewTestCase):
         response = self.client.get(url)
         self.assertSuccessResponse(response)
         self.assertJsonResponse(response)
-        
+
         data = response.json()
-        
-        # Check for expected configuration keys
-        expected_keys = [
+
+        # Keys that should always be present
+        common_keys = [
             'ALLOWED_HOSTS',
-            'DATABASE_HOST',
-            'DATABASE_PORT',
-            'DATABASE_NAME',
-            'DATABASE_USER',
-            'DATABASE_PASSWORD',
-            'DATABASES_NAME_PATH',
             'REDIS_HOST',
             'REDIS_PORT',
             'MEDIA_ROOT',
             'DEFAULT_FROM_EMAIL',
             'SERVER_EMAIL',
-            'EMAIL_HOST',
-            'EMAIL_PORT',
-            'EMAIL_HOST_USER',
-            'EMAIL_USE_TLS',
-            'EMAIL_USE_SSL',
             'CORS_ALLOWED_ORIGINS',
             'CSP_DEFAULT_SRC',
             'CSP_CONNECT_SRC',
@@ -53,9 +42,33 @@ class TestEnvironmentHomeView(SyncViewTestCase):
             'CSP_CHILD_SRC',
             'CSP_FONT_SRC',
         ]
-        
-        for key in expected_keys:
+
+        for key in common_keys:
             self.assertIn(key, data, f"Expected key '{key}' not found in config data")
+
+        # Database config: either SQLite (DATABASES_NAME_PATH) or MySQL (full connection params)
+        sqlite_key = 'DATABASES_NAME_PATH'
+        mysql_keys = ['DATABASE_HOST', 'DATABASE_PORT', 'DATABASE_NAME', 'DATABASE_USER', 'DATABASE_PASSWORD']
+
+        has_sqlite = sqlite_key in data and data[sqlite_key]
+        has_mysql = all(key in data for key in mysql_keys)
+
+        self.assertTrue(
+            has_sqlite or has_mysql,
+            f"Expected either '{sqlite_key}' or all of {mysql_keys} in config data"
+        )
+
+        # Email config: either API-based (EMAIL_API_KEY) or SMTP (full SMTP params)
+        api_key = 'EMAIL_API_KEY'
+        smtp_keys = ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_HOST_USER', 'EMAIL_USE_TLS', 'EMAIL_USE_SSL']
+
+        has_api_email = api_key in data
+        has_smtp_email = all(key in data for key in smtp_keys)
+
+        self.assertTrue(
+            has_api_email or has_smtp_email,
+            f"Expected either '{api_key}' or all of {smtp_keys} in config data"
+        )
 
     def test_post_not_allowed(self):
         """Test that POST requests are not allowed."""
@@ -70,9 +83,19 @@ class TestEnvironmentHomeView(SyncViewTestCase):
         """Test that config values are pulled from Django settings."""
         self.client.force_login(self.user)
 
-        # Set mock values
+        # Set mock values - ENV attributes
         mock_settings.ENV.environment_name = 'test'
         mock_settings.ENV.VERSION = '1.0.0'
+        mock_settings.ENV.DATABASE_HOST = 'db.test.com'
+        mock_settings.ENV.DATABASE_PORT = '3306'
+        mock_settings.ENV.DATABASE_NAME = 'test_db'
+        mock_settings.ENV.STORAGE_ENDPOINT_URL = 'https://storage.test.com'
+        mock_settings.ENV.STORAGE_REGION_NAME = 'us-east-1'
+        mock_settings.ENV.STORAGE_BUCKET_NAME = 'test-bucket'
+        mock_settings.ENV.STORAGE_LOCATION_PREFIX = 'prefix'
+        mock_settings.ENV.STORAGE_CUSTOM_DOMAIN = 'cdn.test.com'
+
+        # Set mock values - direct settings attributes
         mock_settings.ALLOWED_HOSTS = ['test.example.com']
         mock_settings.REDIS_HOST = 'redis.test.com'
         mock_settings.REDIS_PORT = 6379
@@ -99,7 +122,7 @@ class TestEnvironmentHomeView(SyncViewTestCase):
         url = reverse('env_home')
         response = self.client.get(url)
         self.assertSuccessResponse(response)
-        
+
         data = response.json()
         self.assertEqual(data['ENVIRONMENT'], 'test')
         self.assertEqual(data['VERSION'], '1.0.0')

@@ -13,8 +13,15 @@ PRODUCTION_DEPLOY_PATH := /opt/triptools
 test:
 	./src/manage.py test --keepdb custom tt
 
-test-fast:
-	./src/manage.py test --keepdb  custom tt --parallel 4
+test-parallel:
+	./src/manage.py test --keepdb custom tt --parallel 4
+
+# SQLite tests (fast, good for rapid iteration)
+test-sqlite:
+	DJANGO_SETTINGS_MODULE=tt.settings.ci ./src/manage.py test custom tt
+
+test-sqlite-parallel:
+	DJANGO_SETTINGS_MODULE=tt.settings.ci ./src/manage.py test custom tt --parallel 4
 
 lint:
 	flake8 --config=src/.flake8-ci src/tt/ 2>/dev/null
