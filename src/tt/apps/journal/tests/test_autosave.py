@@ -318,6 +318,138 @@ class JournalEntryAutosaveBasicTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 405)
 
+    def test_autosave_date_change_detection_with_default_title(self):
+        """Test date change detection and title auto-regeneration."""
+        # Set up entry with default title pattern
+        self.entry.date = date(2024, 1, 15)  # Monday
+        self.entry.title = 'Monday, January 15, 2024'
+        self.entry.save()
+
+        url = reverse('journal_entry_autosave', kwargs={
+            'entry_uuid': self.entry.uuid
+        })
+
+        # Change date to Jan 16 - JS always sends current title
+        data = {
+            'text': '<p>Content</p>',
+            'new_date': '2024-01-16',
+            'new_title': 'Monday, January 15, 2024',  # Current title (matches old default)
+            'version': 1,
+        }
+
+        response = self.client.post(
+            url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        response_data = response.json()
+        self.assertEqual(response_data['status'], 'success')
+        self.assertTrue(response_data['date_changed'])
+        self.assertTrue(response_data['title_updated'])
+
+        # Verify entry was updated with new date and auto-generated title
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.date, date(2024, 1, 16))
+        self.assertEqual(self.entry.title, 'Tuesday, January 16, 2024')
+
+    def test_autosave_date_change_with_custom_title_preserves_title(self):
+        """Test that custom titles are preserved when date changes."""
+        # Set up entry with custom title
+        self.entry.date = date(2024, 1, 15)
+        self.entry.title = 'My Custom Adventure Title'
+        self.entry.save()
+
+        url = reverse('journal_entry_autosave', kwargs={
+            'entry_uuid': self.entry.uuid
+        })
+
+        # Change date - JS always sends current title
+        data = {
+            'text': '<p>Content</p>',
+            'new_date': '2024-01-16',
+            'new_title': 'My Custom Adventure Title',  # Custom title (not default pattern)
+            'version': 1,
+        }
+
+        response = self.client.post(
+            url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        response_data = response.json()
+        self.assertEqual(response_data['status'], 'success')
+        self.assertTrue(response_data['date_changed'])
+        self.assertFalse(response_data['title_updated'])
+
+        # Verify custom title was preserved
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.date, date(2024, 1, 16))
+        self.assertEqual(self.entry.title, 'My Custom Adventure Title')
+
+    def test_autosave_no_date_change_no_flags(self):
+        """Test that flags are False when date doesn't change."""
+        url = reverse('journal_entry_autosave', kwargs={
+            'entry_uuid': self.entry.uuid
+        })
+
+        data = {
+            'text': '<p>Updated content</p>',
+            'version': 1,
+        }
+
+        response = self.client.post(
+            url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        response_data = response.json()
+        self.assertEqual(response_data['status'], 'success')
+        self.assertFalse(response_data['date_changed'])
+        self.assertFalse(response_data['title_updated'])
+
+    def test_autosave_date_change_with_explicit_title_override(self):
+        """Test that explicit title in request takes precedence over auto-generation."""
+        # Set up entry with default title
+        self.entry.date = date(2024, 1, 15)
+        self.entry.title = 'Monday, January 15, 2024'
+        self.entry.save()
+
+        url = reverse('journal_entry_autosave', kwargs={
+            'entry_uuid': self.entry.uuid
+        })
+
+        # Change both date and title explicitly
+        data = {
+            'text': '<p>Content</p>',
+            'new_date': '2024-01-16',
+            'new_title': 'User Override Title',
+            'version': 1,
+        }
+
+        response = self.client.post(
+            url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        response_data = response.json()
+        self.assertEqual(response_data['status'], 'success')
+        self.assertTrue(response_data['date_changed'])
+        # title_updated should be False because we're using explicit title from request
+        self.assertFalse(response_data['title_updated'])
+
+        # Verify explicit title was used
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.date, date(2024, 1, 16))
+        self.assertEqual(self.entry.title, 'User Override Title')
+
 
 class JournalEntryAutosaveHelperTests(TestCase):
     """Tests for JournalAutoSaveHelper utility functions."""
@@ -391,6 +523,31 @@ class JournalEntryAutosaveHelperTests(TestCase):
         self.assertIn('Safe', sanitized)
         self.assertNotIn('<script>', sanitized)
         self.assertNotIn('</script>', sanitized)
+
+    def test_is_default_title_for_date_match(self):
+        """Test detecting when title matches default pattern."""
+        test_date = date(2025, 11, 25)
+        title = 'Tuesday, November 25, 2025'
+        self.assertTrue(
+            JournalAutoSaveHelper.is_default_title_for_date(title, test_date)
+        )
+
+    def test_is_default_title_for_date_custom_title(self):
+        """Test detecting when title is custom (not default)."""
+        test_date = date(2025, 11, 25)
+        title = 'My Custom Title'
+        self.assertFalse(
+            JournalAutoSaveHelper.is_default_title_for_date(title, test_date)
+        )
+
+    def test_is_default_title_for_date_wrong_date(self):
+        """Test detecting when title matches a different date."""
+        test_date = date(2025, 11, 25)
+        # Title for November 26 instead
+        title = 'Wednesday, November 26, 2025'
+        self.assertFalse(
+            JournalAutoSaveHelper.is_default_title_for_date(title, test_date)
+        )
 
 
 class JournalEntryAtomicUpdateTests(TransactionTestCase):

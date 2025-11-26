@@ -1977,6 +1977,16 @@
             this.maxTimeout = null;
           }
 
+          // Handle title update notification if backend regenerated the title
+          if (response.title_updated) {
+            this.editor.handleTitleUpdate(snapshot.title);
+          }
+
+          // Handle date change - show refresh modal if provided by backend
+          if (response.modal) {
+            AN.displayModal(response.modal);
+          }
+
           if (this.hasUnsavedChanges) {
             this.editor.updateStatus('unsaved');
           } else {
@@ -2541,12 +2551,52 @@
       self.handleContentChange();
     });
 
+    // Date changes trigger immediate save:
+    // - 'change' from picker selection (not keyboard) → immediate save
+    // - 'blur' when field loses focus → immediate save
+    // Track keyboard input to distinguish picker from typing
+    var dateInputIsTyping = false;
+
+    this.$dateInput.on('keydown', function(e) {
+      if (e.key !== 'Enter') {
+        dateInputIsTyping = true;
+      }
+    });
+
     this.$dateInput.on('change', function() {
+      if (!dateInputIsTyping) {
+        // Change from picker selection, not keyboard
+        self.handleContentChange();
+        self.autoSaveManager.saveNow();
+      }
+      // Reset flag - if it was typing, blur will handle save
+    });
+
+    this.$dateInput.on('blur', function() {
+      dateInputIsTyping = false;
       self.handleContentChange();
+      self.autoSaveManager.saveNow();
     });
 
     this.$timezoneInput.on('change', function() {
       self.handleContentChange();
+    });
+
+    // Prevent ENTER from submitting form - trigger immediate save instead
+    this.$titleInput.on('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        self.handleContentChange();
+        self.autoSaveManager.saveNow();
+      }
+    });
+
+    this.$dateInput.on('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        self.handleContentChange();
+        self.autoSaveManager.saveNow();
+      }
     });
   };
 
@@ -2909,7 +2959,7 @@
 
     // Display the conflict modal if provided
     if (data && data.modal) {
-      AN.processModalAction(data.modal);
+      AN.displayModal(data.modal);
     }
   };
 
@@ -2960,6 +3010,29 @@
     if (this.$manualSaveBtn.length) {
       this.$manualSaveBtn.toggle(status === 'unsaved');
     }
+  };
+
+  /**
+   * Handle title update from server
+   * Updates the title input field and shows a brief notification
+   */
+  JournalEditor.prototype.handleTitleUpdate = function(newTitle) {
+    // Update the title input field
+    this.$titleInput.val(newTitle);
+
+    // Show brief notification in status area
+    var originalStatus = this.$statusElement.text();
+    var originalClass = this.$statusElement.attr('class');
+
+    this.$statusElement
+      .removeClass('badge-secondary badge-success badge-warning badge-info badge-danger')
+      .addClass('badge-info')
+      .text('Title updated to match new date');
+
+    // Restore original status after 3 seconds
+    setTimeout(function() {
+      this.$statusElement.attr('class', originalClass).text(originalStatus);
+    }.bind(this), 3000);
   };
 
   /**

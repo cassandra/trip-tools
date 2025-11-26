@@ -441,22 +441,57 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
                     if date_error:
                         return date_error
 
+                # Track original values for change detection
+                original_date = locked_entry.date
+                original_title = locked_entry.title
+
+                # Detect date change and auto-regenerate title if needed
+                date_changed = False
+                title_updated = False
+                final_new_title = autosave_request.new_title
+
+                if ( autosave_request.new_date
+                     and ( autosave_request.new_date != original_date )):
+                    date_changed = True
+
+                    # Check if title should be auto-regenerated
+                    # If the title being sent matches the OLD date's default pattern,
+                    # auto-regenerate it for the new date
+                    sent_title = autosave_request.new_title or original_title
+                    if JournalAutoSaveHelper.is_default_title_for_date(sent_title, original_date):
+                        final_new_title = JournalEntry.generate_default_title(
+                            autosave_request.new_date
+                        )
+                        title_updated = True
+
                 # Update fields and increment version atomically
                 updated_entry = JournalAutoSaveHelper.update_entry_atomically(
                     entry = locked_entry,
                     text = sanitized_text,  # Use sanitized HTML
                     user = request.user,
                     new_date = autosave_request.new_date,
-                    new_title = autosave_request.new_title,
+                    new_title = final_new_title,
                     new_timezone = autosave_request.new_timezone,
                     new_reference_image_uuid = autosave_request.new_reference_image_uuid
                 )
 
-            return JsonResponse({
+            response_data = {
                 'status': 'success',
                 'version': updated_entry.edit_version,
                 'modified_datetime': updated_entry.modified_datetime.isoformat(),
-            })
+                'date_changed': date_changed,
+                'title_updated': title_updated,
+            }
+
+            # Include date-changed modal if date was changed
+            if date_changed:
+                response_data['modal'] = render_to_string(
+                    'journal/modals/date_changed.html',
+                    {},
+                    request = request
+                )
+
+            return JsonResponse(response_data)
 
         except JournalEntry.DoesNotExist:
             logger.error(f'Entry {entry.pk} not found during atomic update')
