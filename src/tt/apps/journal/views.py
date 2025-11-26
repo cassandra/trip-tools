@@ -518,7 +518,7 @@ class JournalEntryDeleteModalView( LoginRequiredMixin, TripViewMixin, ModalView 
         return self.redirect_response( request, redirect_url )
 
 
-class JournalEntryImagePickerView( LoginRequiredMixin, TripViewMixin, View ):
+class JournalEditorMultiImagePickerView( LoginRequiredMixin, TripViewMixin, View ):
 
     def get(self, request, entry_uuid: UUID, *args, **kwargs) -> HttpResponse:
         entry = get_object_or_404(
@@ -554,12 +554,12 @@ class JournalEntryImagePickerView( LoginRequiredMixin, TripViewMixin, View ):
             'trip': trip,
         }
         gallery_html = render_to_string(
-            'journal/components/journal_image_gallery_grid.html',
+            'journal/components/journal_editor_multi_image_gallery_grid.html',
             context,
             request=request
         )
 
-        return http_response({'insert': {'journal-image-gallery': gallery_html}})
+        return http_response({'insert': {'journal-editor-multi-image-gallery': gallery_html}})
 
 
 class JournalEditorHelpView(LoginRequiredMixin, ModalView):
@@ -947,7 +947,7 @@ class JournalImageUploadView(EntityImageUploadView):
         }, status=400)
 
 
-class JournalEntryReferenceImagePickerView( EntityImagePickerView ):
+class JournalEntryImagePickerView( EntityImagePickerView ):
 
     def get_template_name(self) -> str:
         return 'journal/modals/journal_entry_reference_image_picker.html'
@@ -1049,17 +1049,17 @@ class JournalEntryImageUploadView(EntityImageUploadView):
         }, status=400)
 
 
-class JournalEntryMultiImageUploadView(EntityImageUploadView):
+class JournalEditorMultiImageUploadView(EntityImageUploadView):
     """
-    Multi-image upload mode for the JournalEntry sidebar.
+    Multi-image upload mode for the Journal Editor sidebar.
 
     Allows uploading multiple images at once. Images are added to the
-    trip's image collection and become available in the journal entry's
-    image picker panel.
+    trip's image collection and become available in the journal editor's
+    multi-image picker panel.
     """
 
     def get_template_name(self) -> str:
-        return 'journal/modals/journal_entry_multi_image_upload.html'
+        return 'journal/modals/journal_editor_multi_image_upload.html'
 
     def get_max_files(self) -> int:
         return 50
@@ -1076,4 +1076,4 @@ class JournalEntryMultiImageUploadView(EntityImageUploadView):
 
     def get_upload_url(self, request, *args, **kwargs) -> str:
         entry_uuid = kwargs.get('entry_uuid')
-        return reverse('journal_entry_multi_image_upload', kwargs={'entry_uuid': entry_uuid})
+        return reverse('journal_editor_multi_image_upload', kwargs={'entry_uuid': entry_uuid})

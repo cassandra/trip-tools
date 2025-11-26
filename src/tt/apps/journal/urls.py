@@ -79,13 +79,13 @@ urlpatterns = [
         name='journal_entry_delete'
     ),
     path(
-        'entry/<uuid:entry_uuid>/images/',
-        views.JournalEntryImagePickerView.as_view(),
-        name='journal_entry_images'
+        'entry/<uuid:entry_uuid>/editor-images/',
+        views.JournalEditorMultiImagePickerView.as_view(),
+        name='journal_editor_multi_images'
     ),
     path(
         'entry/<uuid:entry_uuid>/reference-image-picker/',
-        views.JournalEntryReferenceImagePickerView.as_view(),
+        views.JournalEntryImagePickerView.as_view(),
         name='journal_entry_reference_image_picker'
     ),
     path(
@@ -94,9 +94,9 @@ urlpatterns = [
         name='journal_entry_image_upload'
     ),
     path(
-        'entry/<uuid:entry_uuid>/upload-images-multi/',
-        views.JournalEntryMultiImageUploadView.as_view(),
-        name='journal_entry_multi_image_upload'
+        'entry/<uuid:entry_uuid>/editor-images-upload/',
+        views.JournalEditorMultiImageUploadView.as_view(),
+        name='journal_editor_multi_image_upload'
     ),
     path(
         'entry/editor-help',

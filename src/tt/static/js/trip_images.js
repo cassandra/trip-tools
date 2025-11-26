@@ -48,13 +48,13 @@
     // Initialize delegated event handlers for image picker cards
     $(document).ready(function() {
         // Delegated click handler for image picker cards
-        $('body').on('click', '.' + Tt.DIVID.IMAGE_PICKER_CARD_CLASS, function(e) {
+        $('body').on('click', Tt.IMAGE_PICKER_CARD_SELECTOR, function(e) {
             e.preventDefault();
             _selectReferenceImage(this);
         });
 
         // Delegated keyboard handler for image picker cards (Enter/Space)
-        $('body').on('keydown', '.' + Tt.DIVID.IMAGE_PICKER_CARD_CLASS, function(e) {
+        $('body').on('keydown', Tt.IMAGE_PICKER_CARD_SELECTOR, function(e) {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 _selectReferenceImage(this);

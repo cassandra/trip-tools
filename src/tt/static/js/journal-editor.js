@@ -64,12 +64,12 @@
     CSS_DRAGGING: 'dragging',
     CSS_DRAG_OVER: 'drag-over',
     CSS_SELECTED: 'selected',
-    CSS_JOURNAL_IMAGE_PANEL: 'journal-image-panel',
+    CSS_JOURNAL_EDITOR_MULTI_IMAGE_PANEL: 'journal-editor-multi-image-panel',
 
     // Transient element selectors
     SEL_DELETE_BTN: '.trip-image-delete-btn',
     SEL_DROP_ZONE_BETWEEN: '.drop-zone-between',
-    SEL_JOURNAL_IMAGE_PANEL: '.journal-image-panel',
+    SEL_JOURNAL_EDITOR_MULTI_IMAGE_PANEL: '.journal-editor-multi-image-panel',
   };
 
   /**
@@ -1249,7 +1249,7 @@
       }
 
       // Find picker card with this UUID
-      var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
+      var $card = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
 
       if ($card.length === 0) {
         console.warn('[ImageDataService] No picker card found for UUID:', uuid);
@@ -1261,7 +1261,7 @@
       var $img = $card.find('img');
       var url = $img.attr('src') || '';
       var caption = $img.attr('alt') || '';
-      var inspectUrl = $card.data(Tt.JOURNAL_INSPECT_URL_ATTR) || '';
+      var inspectUrl = $card.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR) || '';
 
       if (!imageUuid) {
         console.error('[ImageDataService] Picker card missing data-image-uuid for UUID:', uuid);
@@ -2020,7 +2020,7 @@
   };
 
   /**
-   * JournalImagePicker
+   * JournalEditorMultiImagePicker
    *
    * Manages image selection in the journal image picker panel.
    *
@@ -2032,7 +2032,7 @@
    * - Selection count badge display
    * - Client-side filtering by usage (unused/used/all)
    */
-  function JournalImagePicker($panel, editor) {
+  function JournalEditorMultiImagePicker($panel, editor) {
     this.$panel = $panel;
     this.editor = editor; // Reference to JournalEditor for usedImageUUIDs
     this.selectedImages = new Set();
@@ -2040,7 +2040,7 @@
     this.filterScope = 'unused'; // Default filter: 'unused' | 'used' | 'all'
 
     // Initialize badge manager
-    var $headerTitle = this.$panel.find(Tt.JOURNAL_IMAGE_PANEL_HEADER_SELECTOR + ' h5');
+    var $headerTitle = this.$panel.find(Tt.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_SELECTOR + ' h5');
     this.badgeManager = new SelectionBadgeManager($headerTitle, 'selected-images-count');
 
     // Register with coordinator
@@ -2052,17 +2052,17 @@
   /**
    * Initialize image picker event handlers
    */
-  JournalImagePicker.prototype.init = function() {
+  JournalEditorMultiImagePicker.prototype.init = function() {
     var self = this;
 
     // Click handler for image selection
-    $(document).on('click', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
+    $(document).on('click', Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
       e.preventDefault();
       self.handleImageClick(this, e);
     });
 
     // Double-click handler for opening inspector modal
-    $(document).on('dblclick', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
+    $(document).on('dblclick', Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
       e.preventDefault();
       self.handleImageDoubleClick(this);
     });
@@ -2079,7 +2079,7 @@
   /**
    * Handle image card click with modifier key support
    */
-  JournalImagePicker.prototype.handleImageClick = function(card, event) {
+  JournalEditorMultiImagePicker.prototype.handleImageClick = function(card, event) {
     var $card = $(card);
     var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
     var modifiers = getSelectionModifiers(event);
@@ -2099,8 +2099,8 @@
   /**
    * Handle Shift+click range selection
    */
-  JournalImagePicker.prototype.handleRangeSelection = function($clickedCard) {
-    var $allCards = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR);
+  JournalEditorMultiImagePicker.prototype.handleRangeSelection = function($clickedCard) {
+    var $allCards = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR);
     var clickedIndex = $allCards.index($clickedCard);
     var startIndex = Math.min(this.lastSelectedIndex, clickedIndex);
     var endIndex = Math.max(this.lastSelectedIndex, clickedIndex);
@@ -2116,7 +2116,7 @@
   /**
    * Toggle selection state for a single image
    */
-  JournalImagePicker.prototype.toggleSelection = function($card, uuid) {
+  JournalEditorMultiImagePicker.prototype.toggleSelection = function($card, uuid) {
     if (this.selectedImages.has(uuid)) {
       this.selectedImages.delete(uuid);
       $card.removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
@@ -2125,23 +2125,23 @@
       $card.addClass(EDITOR_TRANSIENT.CSS_SELECTED);
     }
 
-    var $allCards = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR);
+    var $allCards = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR);
     this.lastSelectedIndex = $allCards.index($card);
   };
 
   /**
    * Clear all selections
    */
-  JournalImagePicker.prototype.clearAllSelections = function() {
+  JournalEditorMultiImagePicker.prototype.clearAllSelections = function() {
     this.selectedImages.clear();
-    $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
     this.lastSelectedIndex = null;
   };
 
   /**
    * Update selection count badge UI
    */
-  JournalImagePicker.prototype.updateSelectionUI = function() {
+  JournalEditorMultiImagePicker.prototype.updateSelectionUI = function() {
     var count = this.selectedImages.size;
     this.badgeManager.update(count);
 
@@ -2152,9 +2152,9 @@
   /**
    * Handle double-click to open Image Inspector modal
    */
-  JournalImagePicker.prototype.handleImageDoubleClick = function(card) {
+  JournalEditorMultiImagePicker.prototype.handleImageDoubleClick = function(card) {
     var $card = $(card);
-    var inspectUrl = $card.data(Tt.JOURNAL_INSPECT_URL_ATTR);
+    var inspectUrl = $card.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
 
     if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
       AN.get(inspectUrl);
@@ -2165,11 +2165,11 @@
    * Apply filter to image cards based on usage scope
    * @param {string} scope - 'unused' | 'used' | 'all'
    */
-  JournalImagePicker.prototype.applyFilter = function(scope) {
+  JournalEditorMultiImagePicker.prototype.applyFilter = function(scope) {
     this.filterScope = scope;
     var usedImageUUIDs = this.editor.usedImageUUIDs;
 
-    $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).each(function() {
+    $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
       var $card = $(this);
       var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
       // Check if count > 0 to handle same image appearing multiple times
@@ -2231,9 +2231,9 @@
 
     // Initialize image picker (if panel exists)
     // IMPORTANT: Must initialize AFTER usedImageUUIDs is created
-    var $imagePanel = $(EDITOR_TRANSIENT.SEL_JOURNAL_IMAGE_PANEL);
+    var $imagePanel = $(EDITOR_TRANSIENT.SEL_JOURNAL_EDITOR_MULTI_IMAGE_PANEL);
     if ($imagePanel.length > 0) {
-      this.imagePicker = new JournalImagePicker($imagePanel, this);
+      this.imagePicker = new JournalEditorMultiImagePicker($imagePanel, this);
     }
 
     this.init();
@@ -2970,7 +2970,7 @@
 
     // Make picker images draggable (already set in HTML)
     // Handle dragstart from picker
-    $(document).on('dragstart', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
+    $(document).on('dragstart', Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
       self.draggedElement = this;
       self.dragSource = DRAG_SOURCE.PICKER;
 
@@ -2983,7 +2983,7 @@
     });
 
     // Handle dragend from picker
-    $(document).on('dragend', Tt.JOURNAL_IMAGE_CARD_SELECTOR, function(e) {
+    $(document).on('dragend', Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
       // Visual cleanup only - state cleanup happens in drop handlers
       self.updateDraggingVisuals(false);
       self.clearDropZones();
@@ -3056,7 +3056,7 @@
     });
 
     // Make picker panel a drop target for editor and reference images (drag-to-remove)
-    var $pickerGallery = $('.journal-image-gallery');
+    var $pickerGallery = $('.journal-editor-multi-image-gallery');
     if ($pickerGallery.length) {
       $pickerGallery.on('dragover', function(e) {
         // Allow drops from editor or reference (removal), not from picker (no-op)
@@ -3069,7 +3069,7 @@
 
       $pickerGallery.on('dragleave', function(e) {
         // Only remove if we're leaving the gallery completely
-        if (!$(e.relatedTarget).closest('.journal-image-gallery').length) {
+        if (!$(e.relatedTarget).closest('.journal-editor-multi-image-gallery').length) {
           $(this).removeClass('drop-target-active');
         }
       });
@@ -3324,8 +3324,8 @@
       var uuid = $img.data('uuid');
 
       // Get inspect URL from the corresponding picker card
-      var $pickerCard = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
-      var inspectUrl = $pickerCard.data(Tt.JOURNAL_INSPECT_URL_ATTR);
+      var $pickerCard = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
+      var inspectUrl = $pickerCard.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
 
       if (inspectUrl) {
         AN.get(inspectUrl);
@@ -3377,7 +3377,7 @@
     if (isDraggedSelected && this.imagePicker.selectedImages.size > 1) {
       // Multi-image insert: get all selected cards in DOM order
       var selectedUuids = this.imagePicker.selectedImages;
-      $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).each(function() {
+      $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
         var $card = $(this);
         var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
         if (selectedUuids.has(uuid)) {
@@ -3404,7 +3404,7 @@
    * @returns {Object|null} {uuid, url, caption} or null if not found
    */
   JournalEditor.prototype.getImageDataFromUUID = function(uuid) {
-    var $card = $(Tt.JOURNAL_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
+    var $card = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
 
     if (!$card.length) {
       return null;
@@ -3412,8 +3412,8 @@
 
     return {
       uuid: uuid,
-      url: $card.data(Tt.JOURNAL_IMAGE_URL_ATTR),
-      caption: $card.data(Tt.JOURNAL_CAPTION_ATTR) || 'Untitled'
+      url: $card.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_URL_ATTR),
+      caption: $card.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CAPTION_ATTR) || 'Untitled'
     };
   };
 
@@ -3533,7 +3533,7 @@
           // Mark all selected cards
           count = this.imagePicker.selectedImages.size;
           var selectedUuids = this.imagePicker.selectedImages;
-          $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).each(function() {
+          $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
             var $card = $(this);
             if (selectedUuids.has($card.data(Tt.JOURNAL_IMAGE_UUID_ATTR))) {
               $elementsToMark.push($card);
@@ -3583,7 +3583,7 @@
       }
     } else {
       // Remove .dragging class from all elements
-      $(Tt.JOURNAL_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+      $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
       this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
 
       // Remove count badges
@@ -4061,7 +4061,7 @@
     // Setup double-click to open inspector
     this.$referenceContainer.on('dblclick', Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
       e.preventDefault();
-      var inspectUrl = $(this).data(Tt.JOURNAL_INSPECT_URL_ATTR);
+      var inspectUrl = $(this).data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
       if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
         AN.get(inspectUrl);
       }

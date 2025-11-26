@@ -2,10 +2,10 @@
 {% load icons %}
 
 <!-- Panel Header - Fixed -->
-<div class="{{ DIVID.JOURNAL_IMAGE_PANEL_HEADER_CLASS }}">
+<div class="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_CLASS }}">
   <div class="d-flex justify-content-between align-items-center mb-2">
     <h5 class="mb-0">Images</h5>
-    <a href="{% url 'journal_entry_multi_image_upload' entry_uuid=entry.uuid %}"
+    <a href="{% url 'journal_editor_multi_image_upload' entry_uuid=entry.uuid %}"
        class="btn btn-sm btn-outline-primary"
        data-async="modal">
       {% icon "upload" size="sm" css_class="tt-icon-left" %}
@@ -14,7 +14,7 @@
   </div>
 
   <!-- Date and Scope Filter Form -->
-  <form method="get" action="{% url 'journal_entry_images' entry_uuid=entry.uuid %}" data-async="#journal-image-gallery" data-mode="insert">
+  <form method="get" action="{% url 'journal_editor_multi_images' entry_uuid=entry.uuid %}" data-async="#journal-editor-multi-image-gallery" data-mode="insert">
     <!-- Date Filter -->
     <input
         type="date"
@@ -41,6 +41,6 @@
 </div>
 
 <!-- Image Gallery Grid - Scrollable -->
-<div class="journal-image-gallery" id="journal-image-gallery">
-  {% include "journal/components/journal_image_gallery_grid.html" with accessible_images=accessible_images trip=trip %}
+<div class="journal-editor-multi-image-gallery" id="journal-editor-multi-image-gallery">
+  {% include "journal/components/journal_editor_multi_image_gallery_grid.html" with accessible_images=accessible_images trip=trip %}
 </div>

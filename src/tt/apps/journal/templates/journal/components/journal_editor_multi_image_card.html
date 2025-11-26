@@ -6,18 +6,18 @@ Context variables:
 - trip: Trip instance (for permission context)
 {% endcomment %}
 
-<div class="{{ DIVID.JOURNAL_IMAGE_CARD_CLASS }}"
+<div class="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS }}"
      draggable="true"
      data-{{ DIVID.JOURNAL_IMAGE_UUID_ATTR }}="{{ image.uuid }}"
-     data-{{ DIVID.JOURNAL_IMAGE_URL_ATTR }}="{{ image.web_image.url }}"
+     data-{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_URL_ATTR }}="{{ image.web_image.url }}"
      data-thumbnail-url="{{ image.thumbnail_image.url }}"
-     data-{{ DIVID.JOURNAL_INSPECT_URL_ATTR }}="{% url 'images_image_inspect' image_uuid=image.uuid %}?trip_uuid={{ trip.uuid }}"
-     data-{{ DIVID.JOURNAL_CAPTION_ATTR }}="{{ image.caption|default:'Untitled' }}"
+     data-{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR }}="{% url 'images_image_inspect' image_uuid=image.uuid %}?trip_uuid={{ trip.uuid }}"
+     data-{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_CAPTION_ATTR }}="{{ image.caption|default:'Untitled' }}"
      title="{{ image.caption|default:'Untitled' }} - {% if image.datetime_utc %}{{ image.datetime_utc|date:'g:i A' }}{% else %}Unknown time{% endif %}">
-  <div class="journal-image-thumbnail">
+  <div class="journal-editor-multi-image-thumbnail">
     <img src="{{ image.thumbnail_image.url }}" alt="{{ image.caption }}" class="w-100 h-100" style="object-fit: cover;">
   </div>
-  <div class="journal-image-caption">
+  <div class="journal-editor-multi-image-caption">
     <small class="font-weight-bold d-block text-truncate">
       {% if image.caption %}
         {{ image.caption }}

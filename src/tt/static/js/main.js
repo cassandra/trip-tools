@@ -104,7 +104,7 @@
         JOURNAL_EDITOR_CLASS: 'journal-contenteditable',
         JOURNAL_ENTRY_FORM_CLASS: 'journal-entry-form',
         JOURNAL_SAVE_STATUS_CLASS: 'journal-save-status',
-        JOURNAL_IMAGE_CARD_CLASS: 'journal-image-card',
+        JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS: 'journal-editor-multi-image-card',
 
         // Journal - Data Attributes
         JOURNAL_ENTRY_PK_ATTR: 'entry-pk',
@@ -122,13 +122,13 @@
         JOURNAL_TEXT_BLOCK_CLASS: 'text-block',
         JOURNAL_CONTENT_BLOCK_CLASS: 'content-block',
 
-        // Journal Image Picker - UI Elements
-        JOURNAL_IMAGE_PANEL_HEADER_CLASS: 'journal-image-panel-header',
+        // Journal Editor Multi-Image Picker - UI Elements
+        JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_CLASS: 'journal-editor-multi-image-panel-header',
 
-        // Journal Image Picker - Data Attributes
-        JOURNAL_INSPECT_URL_ATTR: 'inspect-url',
-        JOURNAL_IMAGE_URL_ATTR: 'image-url',
-        JOURNAL_CAPTION_ATTR: 'caption',
+        // Journal Editor Multi-Image Picker - Data Attributes
+        JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR: 'inspect-url',
+        JOURNAL_EDITOR_MULTI_IMAGE_URL_ATTR: 'image-url',
+        JOURNAL_EDITOR_MULTI_IMAGE_CAPTION_ATTR: 'caption',
 
         // Journal Reference Image - UI Elements
         JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS: 'journal-reference-image-container',
@@ -166,7 +166,7 @@
         JOURNAL_TIMEZONE_INPUT_SELECTOR: '#id_entry_timezone',
         JOURNAL_ENTRY_FORM_SELECTOR: '.journal-entry-form',
         JOURNAL_SAVE_STATUS_SELECTOR: '.journal-save-status',
-        JOURNAL_IMAGE_CARD_SELECTOR: '.journal-image-card',
+        JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR: '.journal-editor-multi-image-card',
         JOURNAL_IMAGE_WRAPPER_SELECTOR: '.trip-image-wrapper',
         JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR: '.trip-image-wrapper[data-layout="float-right"]',
         JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR: '.trip-image-wrapper[data-layout="full-width"]',
@@ -175,7 +175,7 @@
         JOURNAL_FLOAT_MARKER_SELECTOR: '.has-float-image',
         JOURNAL_TEXT_BLOCK_SELECTOR: '.text-block',
         JOURNAL_CONTENT_BLOCK_SELECTOR: '.content-block',
-        JOURNAL_IMAGE_PANEL_HEADER_SELECTOR: '.journal-image-panel-header',
+        JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_SELECTOR: '.journal-editor-multi-image-panel-header',
         JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR: '.journal-reference-image-container',
         JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR: '.journal-reference-image-placeholder',
         JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR: '.journal-reference-image-preview',

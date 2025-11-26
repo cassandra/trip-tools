@@ -113,7 +113,7 @@ DIVID = {
     'JOURNAL_EDITOR_CLASS': 'journal-contenteditable',
     'JOURNAL_ENTRY_FORM_CLASS': 'journal-entry-form',
     'JOURNAL_SAVE_STATUS_CLASS': 'journal-save-status',
-    'JOURNAL_IMAGE_CARD_CLASS': 'journal-image-card',
+    'JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS': 'journal-editor-multi-image-card',
 
     # Journal - Data Attributes
     'JOURNAL_ENTRY_PK_ATTR': 'entry-pk',
@@ -131,13 +131,13 @@ DIVID = {
     'JOURNAL_TEXT_BLOCK_CLASS': 'text-block',
     'JOURNAL_CONTENT_BLOCK_CLASS': 'content-block',
 
-    # Journal Image Picker - UI Elements
-    'JOURNAL_IMAGE_PANEL_HEADER_CLASS': 'journal-image-panel-header',
+    # Journal Editor Multi-Image Picker - UI Elements
+    'JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_CLASS': 'journal-editor-multi-image-panel-header',
 
-    # Journal Image Picker - Data Attributes
-    'JOURNAL_INSPECT_URL_ATTR': 'inspect-url',
-    'JOURNAL_IMAGE_URL_ATTR': 'image-url',
-    'JOURNAL_CAPTION_ATTR': 'caption',
+    # Journal Editor Multi-Image Picker - Data Attributes
+    'JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR': 'inspect-url',
+    'JOURNAL_EDITOR_MULTI_IMAGE_URL_ATTR': 'image-url',
+    'JOURNAL_EDITOR_MULTI_IMAGE_CAPTION_ATTR': 'caption',
 
     # Journal Reference Image - UI Elements
     'JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS': 'journal-reference-image-container',
