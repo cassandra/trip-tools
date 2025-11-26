@@ -11,9 +11,12 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic import View
 
+
 from tt.apps.common.antinode import http_response
 from tt.apps.console.console_helper import ConsoleSettingsHelper
-from tt.apps.images.views import EntityImagePickerView
+from tt.apps.images.enums import UploadStatus
+from tt.apps.images.views import EntityImagePickerView, EntityImageUploadView
+from tt.apps.images.services import ImageUploadService
 from tt.apps.members.models import TripMember
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
@@ -828,10 +831,7 @@ class JournalRestoreView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return self.refresh_response( request )
 
 
-class JournalReferenceImagePickerView(EntityImagePickerView):
-    """
-    Modal for selecting and setting a reference image for the Journal.
-    """
+class JournalReferenceImagePickerView( EntityImagePickerView ):
 
     def get_template_name(self) -> str:
         return 'journal/modals/journal_reference_image_picker.html'
@@ -843,7 +843,6 @@ class JournalReferenceImagePickerView(EntityImagePickerView):
         return 'journal_uuid'
 
     def check_permission(self, request, entity: Journal) -> None:
-        """Verify user has editor permission for the journal's trip."""
         request_member = get_object_or_404(
             TripMember,
             trip=entity.trip,
@@ -853,8 +852,6 @@ class JournalReferenceImagePickerView(EntityImagePickerView):
 
     def get_default_date_and_timezone(self, entity: Journal) -> Tuple[date_class, str]:
         """
-        Determine default date and timezone for Journal image picker.
-
         Priority:
         1. Date from first journal entry with a reference image
         2. Today's date with journal timezone
@@ -868,9 +865,113 @@ class JournalReferenceImagePickerView(EntityImagePickerView):
         return (date_class.today(), entity.timezone)
 
     def get_trip_from_entity(self, entity: Journal) -> Trip:
-        """Extract trip from journal entity."""
         return entity.trip
 
     def get_picker_url(self, entity: Journal) -> str:
-        """Return the URL for the Journal reference image picker."""
         return reverse('journal_reference_image_picker', kwargs={'journal_uuid': entity.uuid})
+
+    def get_upload_url(self, entity: Journal) -> str:
+        return reverse('journal_image_upload', kwargs={'journal_uuid': entity.uuid})
+
+
+class JournalImageUploadView(EntityImageUploadView):
+    """
+    Single-image upload mode - automatically sets uploaded image as
+    Journal's reference image and triggers page refresh on success.
+    """
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_image_upload.html'
+
+    def get_max_files(self) -> int:
+        return 1
+
+    def check_permission(self, request, *args, **kwargs) -> None:
+        """Verify user has editor permission for the journal's trip."""
+        journal_uuid = kwargs.get('journal_uuid')
+        journal = get_object_or_404(Journal, uuid=journal_uuid)
+        request_member = get_object_or_404(
+            TripMember,
+            trip=journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+    def get_upload_url(self, request, *args, **kwargs) -> str:
+        """Return the URL for the Journal image upload endpoint."""
+        journal_uuid = kwargs.get('journal_uuid')
+        return reverse('journal_image_upload', kwargs={'journal_uuid': journal_uuid})
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle upload and automatically set as Journal's reference image.
+
+        On successful upload, sets the image as the Journal's reference image.
+        JavaScript handles page refresh via onComplete callback.
+        """
+        
+        journal_uuid = kwargs.get('journal_uuid')
+        journal = get_object_or_404(Journal, uuid=journal_uuid)
+        request_member = get_object_or_404(
+            TripMember,
+            trip=journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+        uploaded_files = request.FILES.getlist('files')
+
+        if not uploaded_files:
+            return JsonResponse({'error': 'No file provided'}, status=400)
+
+        if len(uploaded_files) > 1:
+            return JsonResponse({'error': 'Only one image allowed'}, status=400)
+
+        # Process the single file
+        service = ImageUploadService()
+        result = service.process_uploaded_image(
+            uploaded_files[0],
+            request.user,
+            request=request,
+        )
+
+        if result.status == UploadStatus.SUCCESS:
+            journal.reference_image = result.trip_image
+            journal.save(update_fields=['reference_image'])
+
+            # Return success - JS onComplete callback handles page refresh
+            return JsonResponse({'files': [result.to_dict()]})
+
+        return JsonResponse({
+            'error': result.error_message or 'Upload failed'
+        }, status=400)
+
+
+class JournalEntryImageUploadView(EntityImageUploadView):
+    """
+    Modal view for uploading images in the JournalEntry context.
+
+    Multi-image upload mode - allows uploading multiple images at once.
+    Images are added to the trip's image collection and become available
+    in the journal entry's image picker.
+    """
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_entry_image_upload.html'
+
+    def get_max_files(self) -> int:
+        return 50  # Multi-image mode
+
+    def check_permission(self, request, *args, **kwargs) -> None:
+        entry_uuid = kwargs.get('entry_uuid')
+        entry = get_object_or_404(JournalEntry, uuid=entry_uuid)
+        request_member = get_object_or_404(
+            TripMember,
+            trip=entry.journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+    def get_upload_url(self, request, *args, **kwargs) -> str:
+        entry_uuid = kwargs.get('entry_uuid')
+        return reverse('journal_entry_image_upload', kwargs={'entry_uuid': entry_uuid})

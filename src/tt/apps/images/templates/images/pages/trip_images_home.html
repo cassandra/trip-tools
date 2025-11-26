@@ -69,7 +69,17 @@
 {% block footer_post_javascript %}
 <script>
 $(document).ready(function() {
-    Tt.tripImagesUpload.init();
+    // Initialize upload component using the configurable factory
+    Tt.createImageUpload({
+        uploadZoneSelector: '#{{ DIVID.IMAGES_UPLOAD_ZONE_ID }}',
+        fileInputSelector: '#{{ DIVID.IMAGES_FILE_INPUT_ID }}',
+        progressSectionSelector: '#{{ DIVID.IMAGES_PROGRESS_SECTION_ID }}',
+        progressCountSelector: '#{{ DIVID.IMAGES_PROGRESS_COUNT_ID }}',
+        fileProgressListSelector: '#{{ DIVID.IMAGES_FILE_PROGRESS_LIST_ID }}',
+        uploadedGridSelector: '#{{ DIVID.IMAGES_UPLOADED_GRID_ID }}',
+        uploadedCountSelector: '#{{ DIVID.IMAGES_UPLOADED_COUNT_ID }}',
+        maxFiles: 50
+    });
 });
 </script>
 {% endblock %}

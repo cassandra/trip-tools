@@ -500,7 +500,7 @@ class ImageUploadService(Singleton):
 
             return ImageUploadResult.success(
                 filename=uploaded_file.name,
-                uuid=str(trip_image.uuid),
+                trip_image=trip_image,
                 metadata=metadata,
                 html=html,
             )

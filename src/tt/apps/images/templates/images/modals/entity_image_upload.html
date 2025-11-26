@@ -1,0 +1,143 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load icons %}
+{% load static %}
+
+{% comment %}
+Base image upload modal for uploading images in modal context.
+
+This template provides a reusable upload interface that can be used for:
+- Multi-image uploads (e.g., Journal Entry editing)
+- Single-image uploads (e.g., Trip reference image setting)
+
+Context variables required:
+- upload_url: URL for form action and upload endpoint
+- max_files: Maximum number of files to allow (default: 50, use 1 for single-image mode)
+- heif_support_available: Boolean indicating HEIF format support
+- upload_zone_id: Unique ID for the upload zone
+- file_input_id: Unique ID for the file input
+
+Optional context variables:
+- show_uploaded_grid: Whether to show uploaded images grid (default: True)
+- uploaded_images: QuerySet of TripImage instances to display initially
+- initial_uploaded_count: Initial count of uploaded images (default: 0)
+
+Subclasses must define these blocks:
+- modal_dialog_id: Unique ID for the modal
+- title_text: Modal title
+{% endcomment %}
+
+{% block modal_dialog_class %}tt-modal-dialog-800{% endblock %}
+
+{% block preamble %}
+<form method="post"
+      action="{{ upload_url }}"
+      data-async="modal"
+      id="image-upload-form">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+  <!-- HEIC Support Warning -->
+  {% if not heif_support_available %}
+  <div class="alert alert-warning" role="alert">
+    <strong>Limited Format Support:</strong> HEIC/iPhone image format is not available.
+    Only JPG and PNG formats are supported.
+  </div>
+  {% endif %}
+
+  <!-- Upload Zone -->
+  <div class="upload-zone" id="{{ upload_zone_id }}">
+    <div class="upload-icon">
+      {% icon "upload" size="xl" %}
+    </div>
+    <h2 class="upload-title">Drag & Drop Photos Here</h2>
+    <p class="upload-subtitle">or</p>
+    <button class="btn btn-upload" type="button" onclick="document.getElementById('{{ file_input_id }}').click()">
+      Choose Files from Computer
+    </button>
+    <p class="upload-hint">
+      Supports JPG, PNG{% if heif_support_available %}, HEIC{% endif %} • Max 20MB per file
+      {% if max_files == 1 %}
+        • Single image only
+      {% else %}
+        • Multiple files allowed (max {{ max_files }})
+      {% endif %}
+    </p>
+    <input type="file"
+           id="{{ file_input_id }}"
+           {% if max_files == 1 %}{% else %}multiple{% endif %}
+           accept="image/jpeg,image/jpg,image/png{% if heif_support_available %},image/heic{% endif %}"
+           style="display: none;">
+  </div>
+
+  <!-- Upload Progress Section -->
+  <div class="upload-progress-section" id="{{ upload_zone_id }}-progress-section" style="display: none;">
+    <div class="progress-header">
+      <h3 class="progress-title">Uploading</h3>
+      <span class="progress-count" id="{{ upload_zone_id }}-progress-count">0 of 0 files</span>
+    </div>
+    <div id="{{ upload_zone_id }}-file-progress-list"></div>
+  </div>
+
+  <!-- Uploaded Images Grid -->
+  {% if show_uploaded_grid %}
+  <div class="uploaded-section">
+    <div class="uploaded-header">
+      <h3 class="uploaded-title">Uploaded Photos</h3>
+      <span class="uploaded-count" id="{{ upload_zone_id }}-uploaded-count">{{ initial_uploaded_count|default:0 }}</span>
+    </div>
+
+    <div class="uploaded-grid" id="{{ upload_zone_id }}-uploaded-grid">
+      {% if uploaded_images %}
+        {% for image in uploaded_images %}
+        {% include "images/components/image_grid_item.html" with trip_image=image %}
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">{% icon "camera" size="xl" %}</div>
+          <p>No photos uploaded yet. Upload some photos to get started!</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block action_right %}
+<button type="button"
+        class="btn btn-primary"
+        data-dismiss="modal">
+  {% icon "save" size="sm" css_class="tt-icon-left" %}
+  DONE
+</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+
+<script>
+$(document).ready(function() {
+    // Initialize the upload component with configuration
+    Tt.createImageUpload({
+        uploadZoneSelector: '#{{ upload_zone_id }}',
+        fileInputSelector: '#{{ file_input_id }}',
+        progressSectionSelector: '#{{ upload_zone_id }}-progress-section',
+        progressCountSelector: '#{{ upload_zone_id }}-progress-count',
+        fileProgressListSelector: '#{{ upload_zone_id }}-file-progress-list',
+        {% if show_uploaded_grid %}
+        uploadedGridSelector: '#{{ upload_zone_id }}-uploaded-grid',
+        uploadedCountSelector: '#{{ upload_zone_id }}-uploaded-count',
+        {% endif %}
+        uploadEndpoint: '{{ upload_url }}',
+        maxFiles: {{ max_files|default:50 }}{% if max_files == 1 %},
+        onComplete: function(results) {
+            // Single-image mode: refresh page on successful upload
+            if (results.length > 0 && results[0].status === 'success') {
+                location.reload();
+            }
+        }
+        {% endif %}
+    });
+});
+</script>
+{% endblock %}
