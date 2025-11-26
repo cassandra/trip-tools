@@ -25,7 +25,7 @@ class JournalViewMixin:
         else:
             journal_entries = JournalEntry.objects.none()
             publishing_status = None
-        journal_page_context = JournalPageContext(
+        journal_page_context = JournalPageContext.create(
             journal = journal,
             journal_entries = journal_entries,
         )

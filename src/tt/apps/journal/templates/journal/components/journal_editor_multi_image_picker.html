@@ -22,12 +22,12 @@
           class="form-control form-control-sm flex-grow-1"
           id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID }}"
           name="date"
-          value="{{ entry.date|date:'Y-m-d' }}"
+          {% if not is_recent_mode %}value="{{ entry.date|date:'Y-m-d' }}"{% endif %}
           onchange-async="true"
       >
       <button
           type="button"
-          class="btn btn-sm btn-outline-primary ml-1"
+          class="btn btn-sm {% if is_recent_mode %}btn-primary{% else %}btn-outline-primary{% endif %} ml-1"
           id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID }}"
           title="Show recently uploaded images">
         Recent

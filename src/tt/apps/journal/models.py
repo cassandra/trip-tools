@@ -10,8 +10,13 @@ from tt.apps.common.utils import is_blank
 from tt.apps.trips.models import Trip
 from tt.apps.images.models import TripImage
 
-from .enums import JournalVisibility, JournalTheme
+from .enums import JournalVisibility, JournalTheme, EntryPageType
 from . import managers
+
+
+# Special date constants for prologue and epilogue entries
+PROLOGUE_DATE = date_class.min  # date(1, 1, 1)
+EPILOGUE_DATE = date_class.max  # date(9999, 12, 31)
 
 
 class JournalContent( models.Model ):
@@ -59,14 +64,14 @@ class JournalContent( models.Model ):
 class JournalEntryContent(models.Model):
     """
     Abstract base for journal entry content (JournalEntry and TravelogEntry).
-      Defines the common interface needed for unified entry rendering.
-      """
+    Defines the common interface needed for unified entry rendering.
+    """
 
     uuid = models.UUIDField(
         default = uuid.uuid4,
         unique = True,
         editable = False,
-    )    
+    )
     date = models.DateField()
     timezone = models.CharField(
         max_length = 63,
@@ -90,10 +95,74 @@ class JournalEntryContent(models.Model):
         blank = True,
         related_name = '%(class)s_references',
     )
-   
+
     class Meta:
         abstract = True
-        
+
+    @property
+    def is_prologue(self) -> bool:
+        """Returns True if this entry is the journal prologue (date.min)."""
+        return bool( self.date == PROLOGUE_DATE )
+
+    @property
+    def is_epilogue(self) -> bool:
+        """Returns True if this entry is the journal epilogue (date.max)."""
+        return bool( self.date == EPILOGUE_DATE )
+
+    @property
+    def is_special_entry(self) -> bool:
+        """Returns True if this entry is a prologue or epilogue."""
+        return bool( self.is_prologue or self.is_epilogue )
+
+    @property
+    def page_type(self) -> EntryPageType:
+        """Return the page type enum for this entry."""
+        if self.is_prologue:
+            return EntryPageType.PROLOGUE
+        elif self.is_epilogue:
+            return EntryPageType.EPILOGUE
+        return EntryPageType.DATED
+
+    @property
+    def display_date_short(self) -> str:
+        """
+        Return short date string for navigation contexts.
+        Returns 'Prologue'/'Epilogue' for special entries, 'Mon, Jan 1' format otherwise.
+        """
+        if self.is_special_entry:
+            return self.page_type.label
+        return self.date.strftime('%a, %b %-d')
+
+    @property
+    def display_date_medium(self) -> str:
+        """
+        Return medium date string for headings without weekday.
+        Returns 'Prologue'/'Epilogue' for special entries, 'January 1, 2024' format otherwise.
+        """
+        if self.is_special_entry:
+            return self.page_type.label
+        return self.date.strftime('%B %-d, %Y')
+
+    @property
+    def display_date_nav(self) -> str:
+        """
+        Return date string for navigation links without year.
+        Returns 'Prologue'/'Epilogue' for special entries, 'January 1' format otherwise.
+        """
+        if self.is_special_entry:
+            return self.page_type.label
+        return self.date.strftime('%B %-d')
+
+    @property
+    def display_date_long(self) -> str:
+        """
+        Return long date string for title/heading contexts.
+        Returns 'Prologue'/'Epilogue' for special entries, 'Monday, January 1, 2024' otherwise.
+        """
+        if self.is_special_entry:
+            return self.page_type.label
+        return self.date.strftime('%A, %B %-d, %Y')
+
     def __str__(self):
         return f"{self.title} ({self.date})"
 
@@ -224,6 +293,13 @@ class JournalEntry( JournalEntryContent ):
         """
         if isinstance(date_obj, str):
             date_obj = date_class.fromisoformat(date_obj)
+
+        # Handle special dates
+        if date_obj == PROLOGUE_DATE:
+            return EntryPageType.PROLOGUE.label
+        elif date_obj == EPILOGUE_DATE:
+            return EntryPageType.EPILOGUE.label
+
         return date_obj.strftime('%A, %B %d, %Y')
 
     def save(self, *args, **kwargs):

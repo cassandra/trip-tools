@@ -45,7 +45,7 @@
           {% endif %}
           <div class="card-content">
             <h3 class="card-title">
-              {{ entry.date|date:"F j" }}{% if entry.title %} - {{ entry.title }}{% endif %}
+              {{ entry.display_date_nav }}{% if entry.title %} - {{ entry.title }}{% endif %}
             </h3>
             {% if entry.text %}
             <p class="card-description">

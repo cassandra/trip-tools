@@ -254,14 +254,10 @@
           <div class="d-flex w-100 justify-content-between align-items-start">
             <div>
               <h5 class="mb-1">
-                {% if entry.title %}
-                {{ entry.title }}
-                {% else %}
-                {{ entry.date|date:'l, F j, Y' }}
-                {% endif %}
+                {{ entry.title|default:entry.display_date_long }}
               </h5>
               {% if entry.text %}
-              <small class="text-muted">{{ entry.date|date:'l, F j, Y' }}</small>
+              <small class="text-muted">{{ entry.display_date_long }}</small>
               {% else %}
               <p class="mb-0 text-muted"><em>Empty entry</em></p>
               {% endif %}

@@ -64,6 +64,16 @@ urlpatterns = [
         name='journal_entry_new'
     ),
     path(
+        '<uuid:journal_uuid>/entry/prologue/new/',
+        views.JournalPrologueNewView.as_view(),
+        name='journal_prologue_new'
+    ),
+    path(
+        '<uuid:journal_uuid>/entry/epilogue/new/',
+        views.JournalEpilogueNewView.as_view(),
+        name='journal_epilogue_new'
+    ),
+    path(
         'entry/<uuid:entry_uuid>',
         views.JournalEntryView.as_view(),
         name='journal_entry'

@@ -1,19 +1,15 @@
+from datetime import date as date_class
 from typing import TYPE_CHECKING, Optional
 
 from django.db import models
 
 if TYPE_CHECKING:
-    from .models import Journal
+    from .models import Journal, JournalEntry
 
 
 class JournalManager(models.Manager):
-    """Manager for Journal model."""
 
     def for_trip(self, trip) -> models.QuerySet:
-        """
-        Get all journals for a specific trip.
-        Returns QuerySet (may be empty).
-        """
         return self.filter(trip = trip)
 
     def get_primary_for_trip(self, trip) -> Optional['Journal']:
@@ -28,8 +24,19 @@ class JournalManager(models.Manager):
 
 
 class JournalEntryManager(models.Manager):
-    """Manager for JournalEntry model."""
 
     def for_journal(self, journal) -> models.QuerySet:
-        """Get all entries for a specific journal."""
         return self.filter(journal = journal)
+
+    def get_prologue(self, journal) -> Optional['JournalEntry']:
+        return self.filter(journal=journal, date=date_class.min).first()
+
+    def get_epilogue(self, journal) -> Optional['JournalEntry']:
+        from datetime import date as date_class
+        return self.filter(journal=journal, date=date_class.max).first()
+
+    def has_prologue(self, journal) -> bool:
+        return self.filter(journal=journal, date=date_class.min).exists()
+
+    def has_epilogue(self, journal) -> bool:
+        return self.filter(journal=journal, date=date_class.max).exists()
