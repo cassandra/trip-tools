@@ -537,6 +537,13 @@ h3 {
   font-size: 1.1rem;
 }
 
+/* Clearfix to contain floated images within journal content */
+.journal-content::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
 .journal-content p {
   margin-bottom: 1.8rem;
 }
@@ -545,12 +552,19 @@ h3 {
   float: right;
   margin: 0 0 1.5rem 2rem;
   max-width: 350px;
+  max-height: 300px; /* Prevent portrait images from dominating layout */
 }
 
 .journal-content .trip-image {
   width: 100%;
   border-radius: 15px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.journal-content .trip-image-wrapper[data-layout="float-right"] .trip-image {
+  width: auto; /* Allow portrait images to be narrower when height-constrained */
+  max-width: 100%; /* But don't exceed wrapper width */
+  max-height: 300px; /* Match wrapper max-height to prevent overflow */
 }
 
 .journal-content .full-width-image-group {
