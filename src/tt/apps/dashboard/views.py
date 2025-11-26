@@ -5,8 +5,8 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic import View
 
-from tt.apps.trips.enums import TripStatus
-from tt.apps.trips.models import Trip
+from tt.apps.members.models import TripMember
+from tt.apps.trips.enums import TripPermissionLevel, TripStatus
 
 from .context import DashboardPageContext
 from .enums import DashboardPage
@@ -15,21 +15,33 @@ logger = logging.getLogger(__name__)
 
 
 class DashboardView(LoginRequiredMixin, View):
-    """Dashboard combines UPCOMING and CURRENT trips in main section per business requirement."""
+    """Dashboard categorizes trips by ownership and status."""
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
-        # Single query with evaluation to avoid N+1 queries
-        all_trips = list(Trip.objects.for_user(request.user).order_by('-created_datetime'))
+        # Single query: get all memberships with trips prefetched
+        memberships = list(
+            TripMember.objects
+            .filter(user=request.user)
+            .select_related('trip')
+            .order_by('-trip__created_datetime')
+        )
 
-        # In-memory filtering (no additional queries)
-        upcoming_trips = [
-            trip for trip in all_trips
-            if trip.trip_status in [TripStatus.UPCOMING, TripStatus.CURRENT]
-        ]
-        past_trips = [
-            trip for trip in all_trips
-            if trip.trip_status == TripStatus.PAST
-        ]
+        # In-memory categorization by ownership and status
+        owned_upcoming_trips = []
+        shared_trips = []
+        owned_past_trips = []
+
+        for membership in memberships:
+            trip = membership.trip
+            is_owner = membership.permission_level == TripPermissionLevel.OWNER
+
+            if trip.trip_status in [TripStatus.UPCOMING, TripStatus.CURRENT]:
+                if is_owner:
+                    owned_upcoming_trips.append(trip)
+                else:
+                    shared_trips.append(trip)
+            elif trip.trip_status == TripStatus.PAST and is_owner:
+                owned_past_trips.append(trip)
 
         dashboard_page_context = DashboardPageContext(
             active_page = DashboardPage.TRIPS,
@@ -37,9 +49,10 @@ class DashboardView(LoginRequiredMixin, View):
 
         context = {
             'dashboard_page': dashboard_page_context,
-            'upcoming_trips': upcoming_trips,
-            'past_trips': past_trips,
-            'total_trips': len(all_trips),
+            'owned_upcoming_trips': owned_upcoming_trips,
+            'shared_trips': shared_trips,
+            'owned_past_trips': owned_past_trips,
+            'total_trips': len(memberships),
         }
 
         return render(request, 'dashboard/pages/dashboard.html', context)
