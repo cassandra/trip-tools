@@ -133,6 +133,10 @@ DIVID = {
 
     # Journal Editor Multi-Image Picker - UI Elements
     'JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_CLASS': 'journal-editor-multi-image-panel-header',
+    'JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID': 'journal-editor-multi-image-gallery',
+    'JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID': 'image-filter-form',
+    'JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID': 'id_image_date_filter',
+    'JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID': 'btn-recent-images',
 
     # Journal Editor Multi-Image Picker - Data Attributes
     'JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR': 'inspect-url',

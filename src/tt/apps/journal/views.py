@@ -33,7 +33,10 @@ from .models import Journal, JournalEntry
 from .schemas import PublishingStatusHelper
 from .services import JournalRestoreService
 
+from tt.apps.images.helpers import TripImageHelpers
 from tt.apps.images.services import ImagePickerService
+
+from tt.constants import DIVID
 
 from tt.apps.travelog.models import Travelog
 from tt.apps.travelog.services import PublishingService
@@ -533,21 +536,32 @@ class JournalEditorMultiImagePickerView( LoginRequiredMixin, TripViewMixin, View
         self.assert_is_viewer(request_member)
         trip = request_member.trip
 
-        selected_date_str = request.GET.get('date', None)
-        if not selected_date_str:
-            return http_response({'error': 'Date parameter required'}, status=400)
+        # Check if recent mode is requested
+        is_recent_mode = request.GET.get('recent', '').lower() == 'true'
 
-        try:
-            selected_date = date_class.fromisoformat(selected_date_str)
-        except ValueError:
-            return http_response({'error': 'Invalid date format'}, status=400)
+        if is_recent_mode:
+            # Recent mode: Get recent images from trip editors
+            accessible_images = TripImageHelpers.get_recent_images_for_trip_editors(
+                trip=trip,
+                limit=50
+            )
+        else:
+            # Date-based mode: Use existing date-based filtering
+            selected_date_str = request.GET.get('date', None)
+            if not selected_date_str:
+                return http_response({'error': 'Date parameter required'}, status=400)
 
-        accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
-            trip=trip,
-            user=request.user,
-            date=selected_date,
-            timezone=entry.timezone,
-        )
+            try:
+                selected_date = date_class.fromisoformat(selected_date_str)
+            except ValueError:
+                return http_response({'error': 'Invalid date format'}, status=400)
+
+            accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
+                trip=trip,
+                user=request.user,
+                date=selected_date,
+                timezone=entry.timezone,
+            )
 
         context = {
             'accessible_images': accessible_images,
@@ -559,7 +573,7 @@ class JournalEditorMultiImagePickerView( LoginRequiredMixin, TripViewMixin, View
             request=request
         )
 
-        return http_response({'insert': {'journal-editor-multi-image-gallery': gallery_html}})
+        return http_response({'insert': {DIVID['JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID']: gallery_html}})
 
 
 class JournalEditorHelpView(LoginRequiredMixin, ModalView):

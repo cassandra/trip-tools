@@ -14,16 +14,25 @@
   </div>
 
   <!-- Date and Scope Filter Form -->
-  <form method="get" action="{% url 'journal_editor_multi_images' entry_uuid=entry.uuid %}" data-async="#journal-editor-multi-image-gallery" data-mode="insert">
-    <!-- Date Filter -->
-    <input
-        type="date"
-        class="form-control form-control-sm mb-2"
-        id="id_image_date_filter"
-        name="date"
-        value="{{ entry.date|date:'Y-m-d' }}"
-        onchange-async="true"
-    >
+  <form method="get" action="{% url 'journal_editor_multi_images' entry_uuid=entry.uuid %}" data-async="#{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID }}" data-mode="insert" id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID }}">
+    <!-- Date Filter with Recent Button -->
+    <div class="d-flex mb-2">
+      <input
+          type="date"
+          class="form-control form-control-sm flex-grow-1"
+          id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID }}"
+          name="date"
+          value="{{ entry.date|date:'Y-m-d' }}"
+          onchange-async="true"
+      >
+      <button
+          type="button"
+          class="btn btn-sm btn-outline-primary ml-1"
+          id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID }}"
+          title="Show recently uploaded images">
+        Recent
+      </button>
+    </div>
 
     <!-- Scope Filter Pills (client-side filtering only) -->
     <div class="btn-group btn-group-sm btn-group-toggle w-100" data-toggle="buttons">
@@ -41,6 +50,6 @@
 </div>
 
 <!-- Image Gallery Grid - Scrollable -->
-<div class="journal-editor-multi-image-gallery" id="journal-editor-multi-image-gallery">
+<div class="journal-editor-multi-image-gallery" id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID }}">
   {% include "journal/components/journal_editor_multi_image_gallery_grid.html" with accessible_images=accessible_images trip=trip %}
 </div>
