@@ -124,7 +124,7 @@ class TripImage(models.Model):
         null = True,
         related_name = 'uploaded_images',
     )
-    uploaded_datetime = models.DateTimeField(auto_now_add = True)
+    uploaded_datetime = models.DateTimeField(auto_now_add=True, db_index=True)
 
     # Edit tracking
     modified_datetime = models.DateTimeField(

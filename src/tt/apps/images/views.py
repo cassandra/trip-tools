@@ -15,6 +15,7 @@ from django.views.generic import View
 from tt.apps.common.antinode import http_response
 from tt.apps.dashboard.context import DashboardPageContext
 from tt.apps.dashboard.enums import DashboardPage
+from tt.apps.journal.models import JournalEntry
 from tt.apps.members.models import TripMember
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
@@ -44,8 +45,10 @@ class ImagesHomeView( LoginRequiredMixin, View ):
             active_page=DashboardPage.IMAGES,
         )
 
-        # Query uploaded images for the current user
-        uploaded_images = TripImage.objects.for_user( request.user )[0:self.MAX_LATEST_IMAGES]
+        # Query recent uploaded images for the current user
+        uploaded_images = TripImage.objects.for_user(
+            request.user
+        ).order_by('-uploaded_datetime')[:self.MAX_LATEST_IMAGES]
 
         context = {
             'dashboard_page': dashboard_page_context,
@@ -460,12 +463,22 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
             entity = entity,
             request_date_str = request.GET.get('date'),
         )
-        accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
+
+        # Determine if fallback should be used
+        use_fallback = self._should_use_recent_images_fallback(
+            entity = entity,
+            request_date_str = request.GET.get('date'),
+        )
+
+        # Get images with optional fallback
+        accessible_images = ImagePickerService.get_accessible_images_with_fallback(
             trip = trip,
             user = request.user,
             date = selected_date,
             timezone = selected_timezone,
+            use_fallback = use_fallback,
         )
+
         context = {
             'entity': entity,
             'accessible_images': accessible_images,
@@ -547,3 +560,43 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
 
         # Priority 3: Use default from subclass
         return self.get_default_date_and_timezone(entity)
+
+    def _should_use_recent_images_fallback(
+        self,
+        entity,
+        request_date_str: Optional[str]
+    ) -> bool:
+        """
+        Determine if the recent images fallback should be used.
+
+        The fallback is enabled when:
+        - No explicit date parameter is provided in the request, AND
+        - No existing reference image with datetime_utc is set, AND
+        - Entity is NOT a JournalEntry
+
+        The fallback is disabled when:
+        - Explicit date parameter is provided (user is browsing dates), OR
+        - Existing reference image with UTC date is set (use that date), OR
+        - Entity is a JournalEntry (entries have specific dates, no fallback)
+
+        Args:
+            entity: The entity (Trip, JournalEntry, etc.)
+            request_date_str: Date string from request parameter (if any)
+
+        Returns:
+            True if fallback should be used, False otherwise
+        """
+        # Disable fallback if explicit date parameter provided
+        if request_date_str:
+            return False
+
+        # Disable fallback if existing reference image with UTC date
+        if entity.reference_image and entity.reference_image.datetime_utc:
+            return False
+
+        # Disable fallback for JournalEntry entities (they have specific dates)
+        if isinstance(entity, JournalEntry):
+            return False
+
+        # Enable fallback in all other cases
+        return True

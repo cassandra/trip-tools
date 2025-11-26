@@ -282,3 +282,288 @@ class TestImagePickerServiceDateBoundaries(TestCase):
         # Verify 24 hour duration
         duration = end - start
         self.assertEqual(duration.total_seconds(), 86400)
+
+
+class TestImagePickerServiceWithFallback(TestCase):
+    """Test get_accessible_images_with_fallback method."""
+
+    def setUp(self):
+        """Set up test data."""
+        from tt.apps.trips.enums import TripPermissionLevel
+        from tt.apps.trips.tests.synthetic_data import TripSyntheticData
+
+        self.user1 = User.objects.create_user(email='owner@test.com', password='pass')
+        self.user2 = User.objects.create_user(email='editor@test.com', password='pass')
+        self.user3 = User.objects.create_user(email='viewer@test.com', password='pass')
+
+        self.trip = TripSyntheticData.create_test_trip(user=self.user1)
+        TripSyntheticData.add_trip_member(self.trip, self.user2, TripPermissionLevel.EDITOR, self.user1)
+        TripSyntheticData.add_trip_member(self.trip, self.user3, TripPermissionLevel.VIEWER, self.user1)
+
+    def test_returns_date_filtered_images_when_they_exist(self):
+        """Should return date-filtered images when available, not fallback."""
+        # Create images on the target date
+        img1 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            datetime_utc=datetime(2024, 1, 15, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Image on target date',
+        )
+        img2 = TripImage.objects.create(
+            uploaded_by=self.user2,
+            datetime_utc=datetime(2024, 1, 15, 14, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Another on target date',
+        )
+
+        # Create images on different dates (should not appear)
+        TripImage.objects.create(
+            uploaded_by=self.user1,
+            datetime_utc=datetime(2024, 1, 20, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Different date',
+        )
+
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=True,
+        )
+
+        # Should return date-filtered images, not fallback
+        image_ids = [img.id for img in images]
+        self.assertEqual(len(image_ids), 2)
+        self.assertIn(img1.id, image_ids)
+        self.assertIn(img2.id, image_ids)
+
+    def test_falls_back_to_recent_images_when_date_query_empty(self):
+        """Should fall back to recent images when date query returns no results."""
+        # Create images on different dates (not on target date Jan 15)
+        img1 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            datetime_utc=datetime(2024, 1, 20, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Recent image 1',
+        )
+        img2 = TripImage.objects.create(
+            uploaded_by=self.user2,
+            datetime_utc=datetime(2024, 1, 21, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Recent image 2',
+        )
+
+        # Query for Jan 15 (no images exist for this date)
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=True,
+        )
+
+        # Should return recent images as fallback
+        image_ids = [img.id for img in images]
+        self.assertEqual(len(image_ids), 2)
+        self.assertIn(img1.id, image_ids)
+        self.assertIn(img2.id, image_ids)
+
+    def test_fallback_respects_use_fallback_false(self):
+        """Should not use fallback when use_fallback=False."""
+        # Create images on different date (not target date)
+        TripImage.objects.create(
+            uploaded_by=self.user1,
+            datetime_utc=datetime(2024, 1, 20, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Recent image',
+        )
+
+        # Query for Jan 15 with use_fallback=False
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=False,
+        )
+
+        # Should return empty queryset, not fallback
+        self.assertEqual(images.count(), 0)
+
+    def test_fallback_returns_empty_when_no_editor_images(self):
+        """Should handle empty fallback results gracefully."""
+        # Create images only from viewer (excluded from fallback)
+        TripImage.objects.create(
+            uploaded_by=self.user3,
+            datetime_utc=datetime(2024, 1, 20, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Viewer image',
+        )
+
+        # Query for date with no images
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=True,
+        )
+
+        # Should return empty list (no editor+ images)
+        self.assertEqual(len(images), 0)
+
+    def test_fallback_uses_exists_for_efficiency(self):
+        """Should use .exists() check for performance."""
+        # Create many images on target date
+        for i in range(50):
+            # Use different hours and minutes to create 50 distinct images
+            hour = 10 + (i // 60)
+            minute = i % 60
+            TripImage.objects.create(
+                uploaded_by=self.user1,
+                datetime_utc=datetime(2024, 1, 15, hour, minute, 0, tzinfo=dt_timezone.utc),
+                caption=f'Image {i}',
+            )
+
+        # This should execute efficiently without loading all images
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=True,
+        )
+
+        # Should return date-filtered images (not evaluate fallback)
+        self.assertEqual(images.count(), 50)
+
+    def test_fallback_excludes_viewer_images(self):
+        """Fallback should only include images from editor+ users."""
+        # Create images from different permission levels
+        img_owner = TripImage.objects.create(
+            uploaded_by=self.user1,
+            datetime_utc=datetime(2024, 1, 20, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Owner image',
+        )
+        img_editor = TripImage.objects.create(
+            uploaded_by=self.user2,
+            datetime_utc=datetime(2024, 1, 20, 11, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Editor image',
+        )
+        img_viewer = TripImage.objects.create(
+            uploaded_by=self.user3,
+            datetime_utc=datetime(2024, 1, 20, 12, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Viewer image',
+        )
+
+        # Query for date with no images (triggers fallback)
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=True,
+        )
+
+        # Should include owner and editor, but not viewer
+        image_ids = [img.id for img in images]
+        self.assertIn(img_owner.id, image_ids)
+        self.assertIn(img_editor.id, image_ids)
+        self.assertNotIn(img_viewer.id, image_ids)
+
+    def test_fallback_ordered_by_uploaded_datetime_desc(self):
+        """Fallback should return most recent images first."""
+        # Create images at different times
+        img1 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            caption='Oldest',
+        )
+        img2 = TripImage.objects.create(
+            uploaded_by=self.user2,
+            caption='Middle',
+        )
+        img3 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            caption='Newest',
+        )
+
+        # Query for date with no images (triggers fallback)
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=True,
+        )
+
+        # Should be ordered newest first
+        images_list = list(images)
+        self.assertEqual(images_list[0].id, img3.id)
+        self.assertEqual(images_list[1].id, img2.id)
+        self.assertEqual(images_list[2].id, img1.id)
+
+    def test_fallback_limit_to_50_images(self):
+        """Fallback should limit results to 50 images."""
+        # Create 60 images
+        for i in range(60):
+            TripImage.objects.create(
+                uploaded_by=self.user1,
+                caption=f'Image {i}',
+            )
+
+        # Query for date with no images (triggers fallback)
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=True,
+        )
+
+        # Should return only 50 (default limit)
+        self.assertEqual(len(images), 50)
+
+    def test_date_query_takes_precedence_over_fallback(self):
+        """When date query has results, should not use fallback."""
+        # Create one image on target date
+        img_target = TripImage.objects.create(
+            uploaded_by=self.user1,
+            datetime_utc=datetime(2024, 1, 15, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Target date image',
+        )
+
+        # Create many recent images
+        for i in range(50):
+            TripImage.objects.create(
+                uploaded_by=self.user1,
+                datetime_utc=datetime(2024, 1, 20, 10, i, 0, tzinfo=dt_timezone.utc),
+                caption=f'Recent image {i}',
+            )
+
+        # Query for Jan 15
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='UTC',
+            use_fallback=True,
+        )
+
+        # Should return only the target date image, not recent images
+        self.assertEqual(images.count(), 1)
+        self.assertEqual(images[0].id, img_target.id)
+
+    def test_fallback_with_timezone_conversion(self):
+        """Fallback should work correctly with different timezones."""
+        # Create image
+        TripImage.objects.create(
+            uploaded_by=self.user1,
+            datetime_utc=datetime(2024, 1, 20, 10, 0, 0, tzinfo=dt_timezone.utc),
+            caption='Recent image',
+        )
+
+        # Query for date with different timezone
+        images = ImagePickerService.get_accessible_images_with_fallback(
+            trip=self.trip,
+            user=self.user1,
+            date=date(2024, 1, 15),
+            timezone='America/New_York',
+            use_fallback=True,
+        )
+
+        # Should trigger fallback (no images on Jan 15 EST)
+        self.assertEqual(len(images), 1)
