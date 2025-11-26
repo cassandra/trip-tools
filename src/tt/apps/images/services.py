@@ -18,6 +18,7 @@ from tt.apps.common import datetimeproxy
 from tt.apps.common.singleton import Singleton
 from tt.apps.trips.models import Trip
 
+from .helpers import TripImageHelpers
 from .schemas import (
     GpsCoordinate,
     ExifMetadata,
@@ -59,6 +60,55 @@ class ImagePickerService:
             start_datetime = start_dt,
             end_datetime = end_dt,
         ).order_by('datetime_utc')
+
+        return images
+
+    @staticmethod
+    def get_accessible_images_with_fallback(
+        trip: Trip,
+        user: User,
+        date: date_type,
+        timezone: str,
+        use_fallback: bool = True
+    ) -> QuerySet:
+        """
+        Get images with fallback to recent uploads if date query returns no results.
+
+        This method enhances the basic image picker by providing a fallback when
+        no images are found for the specified date. The fallback shows recently
+        uploaded images from trip editors, making it easier for users to select
+        an image when none match the date criteria.
+
+        Fallback behavior:
+        - First attempts to get images for the specified date
+        - If use_fallback=True and no images found, falls back to recent images
+        - Recent images are from trip members with editor+ permissions
+        - Recent images ordered by uploaded_datetime DESC
+
+        Args:
+            trip: Trip instance for scoping image access
+            user: User requesting access
+            date: Date to filter images by
+            timezone: Timezone string for date boundary calculation
+            use_fallback: Whether to use fallback when date query is empty (default: True)
+
+        Returns:
+            QuerySet of TripImage instances (date-filtered or recent fallback)
+        """
+        # Try date-based query first
+        images = ImagePickerService.get_accessible_images_for_image_picker(
+            trip=trip,
+            user=user,
+            date=date,
+            timezone=timezone,
+        )
+
+        # Use fallback if enabled and no images found
+        if use_fallback and not images.exists():
+            images = TripImageHelpers.get_recent_images_for_trip_editors(
+                trip=trip,
+                limit=50,
+            )
 
         return images
 
