@@ -12,7 +12,7 @@ so newly uploaded images appear in the image picker gallery.
 {% block action_right %}
 <button type="button"
         class="btn btn-primary"
-        onclick="location.reload();">
+        onclick="JournalEditor.refreshImagePickerWithRecent();">
   {% load icons %}
   {% icon "save" size="sm" css_class="tt-icon-left" %}
   DONE

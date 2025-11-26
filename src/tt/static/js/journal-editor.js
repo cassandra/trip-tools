@@ -4406,4 +4406,161 @@
     }
   };
 
+  /**
+   * ============================================================================
+   * IMAGE PICKER FILTERING - Recent vs Date-based filtering
+   * ============================================================================
+   */
+
+  /**
+   * Initialize image picker filter controls
+   * Handles Recent button and date picker interaction
+   */
+  function initImagePickerFilters() {
+    var $form = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID);
+    var $dateInput = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID);
+    var $recentBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID);
+    var $gallery = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID);
+
+    if ($form.length === 0 || $dateInput.length === 0 || $recentBtn.length === 0) {
+      return; // Not on a page with image picker
+    }
+
+    // Track current mode (recent or date)
+    var currentMode = 'date'; // Start in date mode
+
+    /**
+     * Update visual state of Recent button
+     * @param {boolean} isActive - Whether Recent mode is active
+     */
+    function updateRecentButtonState(isActive) {
+      if (isActive) {
+        $recentBtn.removeClass('btn-outline-primary').addClass('btn-primary');
+      } else {
+        $recentBtn.removeClass('btn-primary').addClass('btn-outline-primary');
+      }
+    }
+
+    /**
+     * Load gallery with recent images
+     */
+    function loadRecentImages() {
+      var baseUrl = $form.attr('action');
+      var url = baseUrl + '?recent=true';
+
+      AN.loadAsyncContent({
+        url: url,
+        target: $gallery,
+        mode: 'insert',
+        success: function() {
+          currentMode = 'recent';
+          updateRecentButtonState(true);
+          $dateInput.val(''); // Clear date input to show we're in Recent mode
+        },
+        error: function() {
+          console.error('Failed to load recent images');
+        }
+      });
+    }
+
+    /**
+     * Load gallery with date-filtered images
+     * @param {string} dateValue - Date in YYYY-MM-DD format
+     */
+    function loadDateFilteredImages(dateValue) {
+      var baseUrl = $form.attr('action');
+      var url = baseUrl + '?date=' + encodeURIComponent(dateValue);
+
+      AN.loadAsyncContent({
+        url: url,
+        target: $gallery,
+        mode: 'insert',
+        success: function() {
+          currentMode = 'date';
+          updateRecentButtonState(false);
+        },
+        error: function() {
+          console.error('Failed to load date-filtered images');
+        }
+      });
+    }
+
+    /**
+     * Handle Recent button click
+     */
+    $recentBtn.on('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (currentMode !== 'recent') {
+        loadRecentImages();
+      }
+    });
+
+    /**
+     * Handle date input change
+     * The onchange-async attribute will trigger form submission automatically,
+     * but we need to update our mode tracking and button state
+     */
+    $dateInput.on('change', function() {
+      var dateValue = $(this).val();
+
+      if (dateValue) {
+        // Date was selected - switch to date mode
+        currentMode = 'date';
+        updateRecentButtonState(false);
+        // The onchange-async will handle the actual form submission
+      }
+    });
+
+    // Initialize button state based on initial mode
+    updateRecentButtonState(currentMode === 'recent');
+  }
+
+  /**
+   * Refresh image picker gallery with recent images
+   * Called after upload completion to show newly uploaded images
+   */
+  function refreshImagePickerWithRecent() {
+    var $gallery = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID);
+    var $form = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID);
+    var $dateInput = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID);
+    var $recentBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID);
+
+    if ($form.length > 0 && $gallery.length > 0) {
+      var baseUrl = $form.attr('action');
+      var url = baseUrl + '?recent=true';
+
+      AN.loadAsyncContent({
+        url: url,
+        target: $gallery,
+        mode: 'insert',
+        success: function() {
+          // Update UI to show Recent mode is active
+          if ($dateInput.length > 0) {
+            $dateInput.val('');
+          }
+          if ($recentBtn.length > 0) {
+            $recentBtn.removeClass('btn-outline-primary').addClass('btn-primary');
+          }
+        },
+        error: function() {
+          console.error('Failed to load recent images after upload');
+          location.reload();
+        }
+      });
+    } else {
+      location.reload();
+    }
+  }
+
+  // Initialize image picker filters when DOM is ready
+  $(document).ready(function() {
+    initImagePickerFilters();
+  });
+
+  // Expose functions globally for use in templates
+  window.JournalEditor = window.JournalEditor || {};
+  window.JournalEditor.refreshImagePickerWithRecent = refreshImagePickerWithRecent;
+
 })(jQuery);

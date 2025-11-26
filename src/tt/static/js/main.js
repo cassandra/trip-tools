@@ -190,7 +190,13 @@
             IMAGES_PROGRESS_COUNT_ID: 'images-progress-count',
             IMAGES_FILE_PROGRESS_LIST_ID: 'images-file-progress-list',
             IMAGES_UPLOADED_GRID_ID: 'images-uploaded-grid',
-            IMAGES_UPLOADED_COUNT_ID: 'images-uploaded-count'
+            IMAGES_UPLOADED_COUNT_ID: 'images-uploaded-count',
+
+            // Journal Editor Multi-Image Picker
+            JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID: 'journal-editor-multi-image-gallery',
+            JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID: 'image-filter-form',
+            JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID: 'id_image_date_filter',
+            JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID: 'btn-recent-images'
         }
     };
 
