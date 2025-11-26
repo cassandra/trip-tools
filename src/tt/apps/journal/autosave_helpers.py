@@ -15,7 +15,7 @@ from uuid import UUID
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, JsonResponse
 
-from tt.apps.common.autosave_helpers import AutoSaveHelper as SharedAutoSaveHelper, ConflictHelper, DiffHelper
+from tt.apps.common.autosave_helpers import AutoSaveHelper as SharedAutoSaveHelper, ConflictHelper
 from tt.apps.common.html_sanitizer import sanitize_rich_text_html
 from tt.apps.images.models import TripImage
 
@@ -36,33 +36,6 @@ class JournalAutoSaveRequest:
     new_reference_image_uuid : Optional[str]
 
 
-class JournalDiffHelper:
-    """
-    Helper for generating visual diffs between journal entry versions.
-
-    Wrapper around shared DiffHelper for consistency.
-    """
-
-    @classmethod
-    def generate_unified_diff_html(cls,
-                                   server_text: str,
-                                   client_text: str) -> str:
-        """
-        Generate HTML-formatted unified diff comparing server text to client text.
-
-        Shows changes from server version (what's on server) to client version
-        (what user was trying to save). Uses standard unified diff format.
-
-        Args:
-            server_text: Current text on server (latest version)
-            client_text: Text from client that caused conflict
-
-        Returns:
-            HTML string with styled unified diff, ready for display
-        """
-        return DiffHelper.generate_unified_diff_html(server_text, client_text)
-
-
 class JournalConflictHelper:
     """
     Helper for handling edit conflicts in journal entries.
@@ -72,24 +45,17 @@ class JournalConflictHelper:
 
     @classmethod
     def build_conflict_response(cls,
-                                request: HttpRequest,
-                                entry: JournalEntry,
-                                client_text: str) -> JsonResponse:
+                                request      : HttpRequest,
+                                entry        : JournalEntry,
+                                client_text  : str) -> JsonResponse:
         """
-        Build conflict response with diff modal for version conflicts.
-
-        Args:
-            request: Django request object
-            entry: Locked journal entry with conflicting version
-            client_text: Text from client that caused conflict
-
         Returns:
             JsonResponse with modal HTML and server version (status 409)
         """
         return ConflictHelper.build_conflict_response(
-            request=request,
-            entry=entry,
-            client_text=client_text,
+            request = request,
+            entry = entry,
+            client_text = client_text,
         )
 
 
@@ -97,18 +63,13 @@ class JournalAutoSaveHelper:
     """Helper for journal entry auto-save operations with HTML sanitization."""
 
     @classmethod
+    def is_default_title_for_date( cls, title: str, date_obj: date_class ) -> bool:
+        return bool( title == JournalEntry.generate_default_title(date_obj) )
+
+    @classmethod
     def parse_autosave_request(
             cls,
             request_body: bytes) -> Tuple[Optional[JournalAutoSaveRequest], Optional[JsonResponse]]:
-        """
-        Parse and validate auto-save request JSON for journal entries.
-
-        Args:
-            request_body: Raw request body bytes
-
-        Returns:
-            Tuple of (JournalAutoSaveRequest, None) on success, or (None, error_response) on failure
-        """
         try:
             data = json.loads(request_body)
             text = data.get('text', '')
@@ -124,7 +85,6 @@ class JournalAutoSaveHelper:
                 status=400
             )
 
-        # Parse date if provided
         new_date = None
         if date_str:
             try:
@@ -136,14 +96,12 @@ class JournalAutoSaveHelper:
                     status=400
                 )
 
-        # Parse reference_image_uuid if provided
         new_reference_image_uuid = None
         if reference_image_uuid is not None:
             if reference_image_uuid == '':
                 # Empty string means clear reference image
                 new_reference_image_uuid = ''
             else:
-                # Validate UUID format
                 try:
                     UUID(reference_image_uuid)
                     new_reference_image_uuid = reference_image_uuid
@@ -165,18 +123,6 @@ class JournalAutoSaveHelper:
 
     @classmethod
     def sanitize_html_content(cls, html_content: str) -> str:
-        """
-        Sanitize HTML content for journal entries.
-
-        Uses Bleach library to sanitize HTML with configured whitelist of
-        allowed tags and attributes.
-
-        Args:
-            html_content: Raw HTML content from client
-
-        Returns:
-            Sanitized HTML content safe for storage and display
-        """
         try:
             return sanitize_rich_text_html(html_content)
         except Exception as e:
@@ -188,16 +134,6 @@ class JournalAutoSaveHelper:
     def validate_date_uniqueness(cls,
                                  entry: JournalEntry,
                                  new_date: date_class) -> Optional[JsonResponse]:
-        """
-        Validate that new date doesn't conflict with existing entries.
-
-        Args:
-            entry: Entry being updated
-            new_date: Proposed new date
-
-        Returns:
-            JsonResponse with error if conflict exists, None if valid
-        """
         if new_date and new_date != entry.date:
             existing = JournalEntry.objects.filter(
                 journal=entry.journal,
@@ -223,23 +159,6 @@ class JournalAutoSaveHelper:
                                  new_title                : Optional[str]        = None,
                                  new_timezone             : Optional[str]        = None,
                                  new_reference_image_uuid : Optional[str]        = None) -> JournalEntry:
-        """
-        Update journal entry with atomic version increment.
-
-        Note: HTML sanitization should be performed before calling this method.
-
-        Args:
-            entry: Locked entry to update
-            text: New text content (should already be sanitized)
-            user: User making the modification
-            new_date: Optional new date for entry
-            new_title: Optional new title for entry
-            new_timezone: Optional new timezone for entry
-            new_reference_image_uuid: Optional new reference image UUID (empty string to clear, or valid UUID)
-
-        Returns:
-            Updated entry with refreshed version
-        """
         extra_updates = {}
 
         if new_date is not None:
@@ -251,13 +170,10 @@ class JournalAutoSaveHelper:
         if new_timezone is not None:
             extra_updates['timezone'] = new_timezone
 
-        # Handle reference_image by UUID
         if new_reference_image_uuid is not None:
             if new_reference_image_uuid == '':
-                # Empty string means clear reference image
                 extra_updates['reference_image_id'] = None
             else:
-                # Look up TripImage by UUID and set FK with PK
                 try:
                     trip_image = TripImage.objects.get(uuid=new_reference_image_uuid)
                     extra_updates['reference_image_id'] = trip_image.pk

@@ -1,0 +1,33 @@
+{% extends "modals/action_2.html" %}
+{% load static %}
+{% load icons %}
+
+{% block modal_dialog_id %}date-changed-modal{% endblock %}
+
+{% block title_image %}
+<img class="img-fluid"
+     src="{% static 'img/tt-on-primary-icon-196x196.png' %}"
+     alt="Trip Tools Icon" \>
+{% endblock %}
+
+{% block title_text %}Date Changed{% endblock %}
+
+{% block body %}
+<p>You have changed the journal entry date. To see the updated sidebar navigation and entry order, please refresh the page.</p>
+<p class="mb-0"><strong>Your changes have been saved.</strong></p>
+{% endblock %}
+
+{% block action_left %}
+<button type="button" class="btn btn-secondary" data-dismiss="modal">
+  {% icon "cancel" size="sm" css_class="tt-icon-left" %}
+  Continue Editing
+</button>
+{% endblock %}
+
+{% block action_right %}
+<button type="button" class="btn btn-primary"
+        onclick="window.location.href = window.location.pathname + '?_=' + Date.now();">
+  {% icon "sync" size="sm" css_class="tt-icon-left" %}
+  Refresh Now
+</button>
+{% endblock %}

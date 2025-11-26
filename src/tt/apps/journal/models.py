@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from datetime import date as date_class
 import uuid
 from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
@@ -212,16 +213,23 @@ class JournalEntry( JournalEntryContent ):
         editable = False,
     )
 
+    @classmethod
+    def generate_default_title( cls, date_obj ) -> str:
+        """
+        Generate the default title for a given date.
+
+        This is the single source of truth for default title generation.
+        Used by save() for new entries and by autosave helpers for
+        detecting when titles should be auto-regenerated on date changes.
+        """
+        if isinstance(date_obj, str):
+            date_obj = date_class.fromisoformat(date_obj)
+        return date_obj.strftime('%A, %B %d, %Y')
+
     def save(self, *args, **kwargs):
         """Override save to auto-generate title from date if empty."""
         if not self.title:
-            # Ensure date is a date object (Django may pass string initially)
-            from datetime import date as date_class
-            if isinstance(self.date, str):
-                date_obj = date_class.fromisoformat(self.date)
-            else:
-                date_obj = self.date
-            self.title = date_obj.strftime('%A, %B %d, %Y')
+            self.title = self.generate_default_title(self.date)
         super().save(*args, **kwargs)
 
     def __str__(self):

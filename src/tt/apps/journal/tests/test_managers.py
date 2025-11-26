@@ -444,6 +444,14 @@ class JournalManagerEdgeCasesTestCase(TestCase):
         self.assertIn('15', entry.title)
         self.assertIn('2025', entry.title)
 
+    def test_journal_entry_generate_default_title(self):
+        """JournalEntry.generate_default_title returns correct format."""
+        from datetime import date
+
+        test_date = date(2025, 11, 25)  # A Tuesday
+        title = JournalEntry.generate_default_title(test_date)
+        self.assertEqual(title, 'Tuesday, November 25, 2025')
+
     def test_journal_str_representation(self):
         """Journal __str__ should return meaningful string."""
         journal = Journal.objects.create(

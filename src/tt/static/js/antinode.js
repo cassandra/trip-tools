@@ -287,9 +287,21 @@
             });
         },
         
-        addAfterAsyncRenderFunction: addAfterAsyncRenderFunction
+        addAfterAsyncRenderFunction: addAfterAsyncRenderFunction,
+
+        // Display modal content that was rendered server-side.
+        // Creates a modal wrapper, appends the content, and shows it.
+        //
+        // Usage:
+        //   AN.displayModal('<div class="modal-dialog">...</div>');
+        //
+        displayModal: function( modalContent ) {
+            let targetObj = getNewModal();
+            targetObj.append( modalContent );
+            showModal( targetObj );
+        }
     }
-    
+
     window.AN = AN;
 
 //====================
