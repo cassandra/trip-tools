@@ -5,7 +5,7 @@
 <div class="{{ DIVID.JOURNAL_IMAGE_PANEL_HEADER_CLASS }}">
   <div class="d-flex justify-content-between align-items-center mb-2">
     <h5 class="mb-0">Images</h5>
-    <a href="{% url 'journal_entry_image_upload' entry_uuid=entry.uuid %}"
+    <a href="{% url 'journal_entry_multi_image_upload' entry_uuid=entry.uuid %}"
        class="btn btn-sm btn-outline-primary"
        data-async="modal">
       {% icon "upload" size="sm" css_class="tt-icon-left" %}

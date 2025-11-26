@@ -947,20 +947,49 @@ class JournalImageUploadView(EntityImageUploadView):
         }, status=400)
 
 
+class JournalEntryReferenceImagePickerView( EntityImagePickerView ):
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_entry_reference_image_picker.html'
+
+    def get_entity_model(self):
+        return JournalEntry
+
+    def get_entity_uuid_param_name(self) -> str:
+        return 'entry_uuid'
+
+    def check_permission(self, request, entity: JournalEntry) -> None:
+        request_member = get_object_or_404(
+            TripMember,
+            trip=entity.journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+    def get_default_date_and_timezone(self, entity: JournalEntry) -> Tuple[date_class, str]:
+        return (entity.date, entity.timezone)
+
+    def get_trip_from_entity(self, entity: JournalEntry) -> Trip:
+        return entity.journal.trip
+
+    def get_picker_url(self, entity: JournalEntry) -> str:
+        return reverse('journal_entry_reference_image_picker', kwargs={'entry_uuid': entity.uuid})
+
+    def get_upload_url(self, entity: JournalEntry) -> str:
+        return reverse('journal_entry_image_upload', kwargs={'entry_uuid': entity.uuid})
+
+
 class JournalEntryImageUploadView(EntityImageUploadView):
     """
-    Modal view for uploading images in the JournalEntry context.
-
-    Multi-image upload mode - allows uploading multiple images at once.
-    Images are added to the trip's image collection and become available
-    in the journal entry's image picker.
+    Single-image upload mode - automatically sets uploaded image as
+    JournalEntry's reference image and triggers page refresh on success.
     """
 
     def get_template_name(self) -> str:
         return 'journal/modals/journal_entry_image_upload.html'
 
     def get_max_files(self) -> int:
-        return 50  # Multi-image mode
+        return 1
 
     def check_permission(self, request, *args, **kwargs) -> None:
         entry_uuid = kwargs.get('entry_uuid')
@@ -975,3 +1004,76 @@ class JournalEntryImageUploadView(EntityImageUploadView):
     def get_upload_url(self, request, *args, **kwargs) -> str:
         entry_uuid = kwargs.get('entry_uuid')
         return reverse('journal_entry_image_upload', kwargs={'entry_uuid': entry_uuid})
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle upload and automatically set as JournalEntry's reference image.
+
+        On successful upload, sets the image as the entry's reference image.
+        JavaScript handles page refresh via onComplete callback.
+        """
+        entry_uuid = kwargs.get('entry_uuid')
+        entry = get_object_or_404(JournalEntry, uuid=entry_uuid)
+        request_member = get_object_or_404(
+            TripMember,
+            trip=entry.journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+        uploaded_files = request.FILES.getlist('files')
+
+        if not uploaded_files:
+            return JsonResponse({'error': 'No file provided'}, status=400)
+
+        if len(uploaded_files) > 1:
+            return JsonResponse({'error': 'Only one image allowed'}, status=400)
+
+        # Process the single file
+        service = ImageUploadService()
+        result = service.process_uploaded_image(
+            uploaded_files[0],
+            request.user,
+            request=request,
+        )
+
+        if result.status == UploadStatus.SUCCESS:
+            entry.reference_image = result.trip_image
+            entry.save(update_fields=['reference_image'])
+
+            # Return success - JS onComplete callback handles page refresh
+            return JsonResponse({'files': [result.to_dict()]})
+
+        return JsonResponse({
+            'error': result.error_message or 'Upload failed'
+        }, status=400)
+
+
+class JournalEntryMultiImageUploadView(EntityImageUploadView):
+    """
+    Multi-image upload mode for the JournalEntry sidebar.
+
+    Allows uploading multiple images at once. Images are added to the
+    trip's image collection and become available in the journal entry's
+    image picker panel.
+    """
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_entry_multi_image_upload.html'
+
+    def get_max_files(self) -> int:
+        return 50
+
+    def check_permission(self, request, *args, **kwargs) -> None:
+        entry_uuid = kwargs.get('entry_uuid')
+        entry = get_object_or_404(JournalEntry, uuid=entry_uuid)
+        request_member = get_object_or_404(
+            TripMember,
+            trip=entry.journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+    def get_upload_url(self, request, *args, **kwargs) -> str:
+        entry_uuid = kwargs.get('entry_uuid')
+        return reverse('journal_entry_multi_image_upload', kwargs={'entry_uuid': entry_uuid})
