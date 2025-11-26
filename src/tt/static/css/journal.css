@@ -24,6 +24,7 @@
   float: right;
   margin: 0 0 1rem 1rem;
   max-width: 25%; /* col-3: max 1/4 width so two images = 1/2 width */
+  max-height: 300px; /* Prevent portrait images from dominating layout */
 }
 
 /* Full-width wrapper (images between paragraphs) */
@@ -55,7 +56,9 @@
 
 /* Height constraints based on wrapper layout */
 .trip-image-wrapper[data-layout="float-right"] img.trip-image {
-  max-height: 400px;
+  width: auto; /* Allow portrait images to be narrower when height-constrained */
+  max-width: 100%; /* But don't exceed wrapper width */
+  max-height: 300px; /* Match wrapper max-height to prevent overflow */
 }
 
 .trip-image-wrapper[data-layout="full-width"] img.trip-image {
@@ -125,6 +128,13 @@
 /* Default text alignment - let content use natural alignment */
 .journal-contenteditable {
   text-align: left;
+}
+
+/* Clearfix to contain floated images within contenteditable */
+.journal-contenteditable::after {
+  content: "";
+  display: block;
+  clear: both;
 }
 
 /* Direct child paragraph text blocks - scoped to prevent nested paragraph styling */
