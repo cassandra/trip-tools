@@ -1,10 +1,10 @@
 from datetime import date as date_class, timedelta
 import logging
-from typing import Tuple
+from typing import Optional, Tuple
 from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import DatabaseError, IntegrityError, transaction
+from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -24,12 +24,18 @@ from tt.apps.trips.mixins import TripViewMixin
 from tt.apps.trips.models import Trip
 from tt.async_view import ModalView
 
-from .autosave_helpers import JournalAutoSaveHelper, JournalConflictHelper
+from .autosave_helpers import (
+    JournalAutoSaveHelper,
+    JournalConflictHelper,
+    DateChangeOrchestrator,
+    AutosaveResponseBuilder,
+    ExceptionResponseBuilder,
+)
 from .context import JournalPageContext
 from .enums import JournalVisibility
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
 from .mixins import JournalViewMixin
-from .models import Journal, JournalEntry
+from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE
 from .schemas import PublishingStatusHelper
 from .services import JournalRestoreService
 
@@ -68,7 +74,7 @@ class JournalHomeView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View
             active_page = TripPage.JOURNAL,
             request_member = request_member,
         )
-        journal_page_context = JournalPageContext(
+        journal_page_context = JournalPageContext.create(
             journal = None,
             journal_entries = list(),
         )
@@ -76,7 +82,7 @@ class JournalHomeView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View
             'trip_page': trip_page_context,
             'journal_page': journal_page_context,
         }
-         
+
         return render(request, 'journal/pages/journal_start.html', context)
 
 
@@ -158,9 +164,9 @@ class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
             active_page = TripPage.JOURNAL,
             request_member = request_member,
         )
-        journal_page_context = JournalPageContext(
+        journal_page_context = JournalPageContext.create(
             journal = journal,
-            journal_entries = journal_entries
+            journal_entries = journal_entries,
         )
         context = {
             'trip_page': trip_page_context,
@@ -296,8 +302,29 @@ class JournalVisibilityChangeView( LoginRequiredMixin, TripViewMixin, ModalView 
 
 
 class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
+    """
+    Also used as base class for creating prologue and epilogue journal entries.
 
-    def get(self, request, journal_uuid : UUID, *args, **kwargs) -> HttpResponse:
+    Subclasses can override:
+    - get_existing_entry(): Check for existing entry that should prevent creation
+    - get_entry_date_and_timezone(): Provide date and timezone for new entry
+    """
+
+    def get_existing_entry( self, journal: Journal ) -> Optional[JournalEntry]:
+        """
+        Check for an existing entry that should prevent creation.
+        Returns None by default (regular entries don't have this restriction).
+        """
+        return None
+
+    def get_entry_date_and_timezone( self, journal: Journal ) -> Tuple[date_class, str]:
+        """Get the date and timezone for the new entry."""
+        latest_entry = journal.entries.order_by('-date').first()
+        if latest_entry:
+            return (latest_entry.date + timedelta(days=1), latest_entry.timezone)
+        return (date_class.today(), journal.timezone)
+
+    def get( self, request, journal_uuid: UUID, *args, **kwargs ) -> HttpResponse:
         journal = get_object_or_404(
             Journal,
             uuid = journal_uuid,
@@ -315,30 +342,44 @@ class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, 
                 request_member = request_member,
                 journal = journal,
             )
-        
-        # Only editors can create new entries
+
         self.assert_is_editor(request_member)
 
-        # Calculate default date and timezone
-        latest_entry = journal.entries.order_by('-date').first()
-        if latest_entry:
-            # Subsequent entry: inherit from previous entry
-            default_date = latest_entry.date + timedelta(days=1)
-            default_timezone = latest_entry.timezone
-        else:
-            # First entry: use today and inherit from journal
-            default_date = date_class.today()
-            default_timezone = journal.timezone
+        # Check if this type of entry already exists (for special entries)
+        existing_entry = self.get_existing_entry(journal)
+        if existing_entry:
+            return redirect('journal_entry', entry_uuid=existing_entry.uuid)
 
         # Create new entry (title will be auto-generated from date in model.save())
+        entry_date, entry_timezone = self.get_entry_date_and_timezone(journal)
         entry = JournalEntry.objects.create(
             journal = journal,
-            date = default_date,
-            timezone = default_timezone,
+            date = entry_date,
+            timezone = entry_timezone,
             text = '',
             modified_by = request.user,
         )
-        return redirect( 'journal_entry', entry_uuid = entry.uuid )
+        return redirect('journal_entry', entry_uuid=entry.uuid)
+
+
+class JournalPrologueNewView( JournalEntryNewView ):
+    """Create a new prologue entry."""
+
+    def get_existing_entry( self, journal: Journal ) -> Optional[JournalEntry]:
+        return JournalEntry.objects.get_prologue( journal )
+
+    def get_entry_date_and_timezone( self, journal: Journal ) -> Tuple[date_class, str]:
+        return ( PROLOGUE_DATE, journal.timezone )
+
+
+class JournalEpilogueNewView( JournalEntryNewView ):
+    """Create a new epilogue entry."""
+
+    def get_existing_entry( self, journal: Journal ) -> Optional[JournalEntry]:
+        return JournalEntry.objects.get_epilogue(journal)
+
+    def get_entry_date_and_timezone( self, journal: Journal ) -> Tuple[date_class, str]:
+        return ( EPILOGUE_DATE, journal.timezone )
 
 
 class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
@@ -362,20 +403,29 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
                 journal = entry.journal,
             )
 
-        accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
-            trip = entry.journal.trip,
-            user = request.user,
-            date = entry.date,
-            timezone = entry.timezone,
-        )
+        # For prologue/epilogue entries, use recent images instead of date-based filtering
+        # (date.min/date.max would cause overflow in date boundary calculations)
+        is_recent_mode = entry.is_special_entry
+
+        if is_recent_mode:
+            accessible_images = TripImageHelpers.get_recent_images_for_trip_editors(
+                trip = entry.journal.trip,
+            )
+        else:
+            accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
+                trip = entry.journal.trip,
+                user = request.user,
+                date = entry.date,
+                timezone = entry.timezone,
+            )
 
         trip_page_context = TripPageContext(
             active_page = TripPage.JOURNAL,
             request_member = request_member,
         )
-        
+
         journal_entries = entry.journal.entries.all()
-        journal_page_context = JournalPageContext(
+        journal_page_context = JournalPageContext.create(
             journal = entry.journal,
             journal_entries = journal_entries,
             journal_entry_uuid = entry.uuid,
@@ -391,6 +441,7 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
             'entry': entry,
             'journal_entry_form': journal_entry_form,
             'accessible_images': accessible_images,
+            'is_recent_mode': is_recent_mode,
             'trip': entry.journal.trip,
         }
         return render(request, 'journal/pages/journal_entry.html', context)
@@ -441,75 +492,35 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
                     if date_error:
                         return date_error
 
-                # Track original values for change detection
-                original_date = locked_entry.date
-                original_title = locked_entry.title
-
-                # Detect date change and auto-regenerate title if needed
-                date_changed = False
-                title_updated = False
-                final_new_title = autosave_request.new_title
-
-                if ( autosave_request.new_date
-                     and ( autosave_request.new_date != original_date )):
-                    date_changed = True
-
-                    # Check if title should be auto-regenerated
-                    # If the title being sent matches the OLD date's default pattern,
-                    # auto-regenerate it for the new date
-                    sent_title = autosave_request.new_title or original_title
-                    if JournalAutoSaveHelper.is_default_title_for_date(sent_title, original_date):
-                        final_new_title = JournalEntry.generate_default_title(
-                            autosave_request.new_date
-                        )
-                        title_updated = True
+                # Process date change and title auto-regeneration
+                date_change_result = DateChangeOrchestrator.process_date_change(
+                    entry = locked_entry,
+                    new_date = autosave_request.new_date,
+                    new_title = autosave_request.new_title,
+                )
 
                 # Update fields and increment version atomically
                 updated_entry = JournalAutoSaveHelper.update_entry_atomically(
                     entry = locked_entry,
-                    text = sanitized_text,  # Use sanitized HTML
+                    text = sanitized_text,
                     user = request.user,
-                    new_date = autosave_request.new_date,
-                    new_title = final_new_title,
+                    new_date = date_change_result.final_date,
+                    new_title = date_change_result.final_title,
                     new_timezone = autosave_request.new_timezone,
                     new_reference_image_uuid = autosave_request.new_reference_image_uuid
                 )
 
-            response_data = {
-                'status': 'success',
-                'version': updated_entry.edit_version,
-                'modified_datetime': updated_entry.modified_datetime.isoformat(),
-                'date_changed': date_changed,
-                'title_updated': title_updated,
-            }
-
-            # Include date-changed modal if date was changed
-            if date_changed:
-                response_data['modal'] = render_to_string(
-                    'journal/modals/date_changed.html',
-                    {},
-                    request = request
-                )
-
-            return JsonResponse(response_data)
-
-        except JournalEntry.DoesNotExist:
-            logger.error(f'Entry {entry.pk} not found during atomic update')
-            return JsonResponse(
-                {'status': 'error', 'message': 'Entry not found'},
-                status = 404
+            return AutosaveResponseBuilder.build_success_response(
+                request = request,
+                updated_entry = updated_entry,
+                date_changed = date_change_result.date_changed,
+                title_updated = date_change_result.title_updated,
             )
-        except IntegrityError as e:
-            logger.warning(f'Integrity constraint violation for entry {entry.pk}: {e}')
-            return JsonResponse(
-                {'status': 'error', 'message': 'Unable to save - entry date conflicts with another entry'},
-                status = 409
-            )
-        except DatabaseError as e:
-            logger.error(f'Database error auto-saving journal entry {entry.pk}: {e}')
-            return JsonResponse(
-                {'status': 'error', 'message': 'Database error occurred'},
-                status = 500
+
+        except Exception as e:
+            return ExceptionResponseBuilder.handle_autosave_exception(
+                exception = e,
+                entry = entry,
             )
 
 
@@ -1026,6 +1037,33 @@ class JournalEntryImagePickerView( EntityImagePickerView ):
 
     def get_upload_url(self, entity: JournalEntry) -> str:
         return reverse('journal_entry_image_upload', kwargs={'entry_uuid': entity.uuid})
+
+    def _should_use_recent_images_fallback(
+        self,
+        entity: JournalEntry,
+        request_date_str: Optional[str]
+    ) -> bool:
+        """
+        Override fallback logic for journal entries.
+
+        For special entries (prologue/epilogue), always use fallback since they
+        don't have meaningful dates for image filtering. For regular dated entries,
+        disable fallback to show images from that specific date.
+        """
+        # Disable fallback if explicit date parameter provided (user browsing dates)
+        if request_date_str:
+            return False
+
+        # Disable fallback if existing reference image with UTC date
+        if entity.reference_image and entity.reference_image.datetime_utc:
+            return False
+
+        # Enable fallback for special entries (prologue/epilogue)
+        if entity.is_special_entry:
+            return True
+
+        # Disable fallback for regular dated entries
+        return False
 
 
 class JournalEntryImageUploadView(EntityImageUploadView):

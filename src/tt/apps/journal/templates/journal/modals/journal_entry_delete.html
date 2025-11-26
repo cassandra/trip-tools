@@ -13,7 +13,7 @@
   <strong>Are you sure you want to delete this journal entry?</strong>
 </div>
 <p>
-  This will permanently delete the journal entry for <strong>{{ journal_entry.date|date:"F j, Y" }}</strong>.
+  This will permanently delete the journal entry for <strong>{{ journal_entry.display_date_long }}</strong>.
   {% if journal_entry.text %}
   All content will be lost.
   {% endif %}

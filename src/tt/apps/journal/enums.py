@@ -72,3 +72,11 @@ class JournalTheme(LabeledEnum):
     def default(cls):
         """Default theme for new journals."""
         return JournalTheme.DEFAULT
+
+    
+class EntryPageType(LabeledEnum):
+
+    DATED     = ( 'Dated'     , 'Journal entries with a date.' )
+    PROLOGUE  = ( 'Prologue'  , 'Journal entries that are prologue.' )
+    EPILOGUE  = ( 'Epilogue'  , 'Journal entries that are epilogue.' )
+    

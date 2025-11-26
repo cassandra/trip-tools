@@ -15,7 +15,6 @@ from django.views.generic import View
 from tt.apps.common.antinode import http_response
 from tt.apps.dashboard.context import DashboardPageContext
 from tt.apps.dashboard.enums import DashboardPage
-from tt.apps.journal.models import JournalEntry
 from tt.apps.members.models import TripMember
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
@@ -571,13 +570,13 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
 
         The fallback is enabled when:
         - No explicit date parameter is provided in the request, AND
-        - No existing reference image with datetime_utc is set, AND
-        - Entity is NOT a JournalEntry
+        - No existing reference image with datetime_utc is set
 
         The fallback is disabled when:
         - Explicit date parameter is provided (user is browsing dates), OR
-        - Existing reference image with UTC date is set (use that date), OR
-        - Entity is a JournalEntry (entries have specific dates, no fallback)
+        - Existing reference image with UTC date is set (use that date)
+
+        Subclasses may override this to provide entity-specific fallback logic.
 
         Args:
             entity: The entity (Trip, JournalEntry, etc.)
@@ -592,10 +591,6 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
 
         # Disable fallback if existing reference image with UTC date
         if entity.reference_image and entity.reference_image.datetime_utc:
-            return False
-
-        # Disable fallback for JournalEntry entities (they have specific dates)
-        if isinstance(entity, JournalEntry):
             return False
 
         # Enable fallback in all other cases

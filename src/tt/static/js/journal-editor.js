@@ -4529,7 +4529,8 @@
     }
 
     // Track current mode (recent or date)
-    var currentMode = 'date'; // Start in date mode
+    // Detect initial mode from DOM: empty date input means recent mode
+    var currentMode = $dateInput.val() ? 'date' : 'recent';
 
     /**
      * Update visual state of Recent button

@@ -1,7 +1,7 @@
 {% extends "travelog/pages/base.html" %}
 {% load travelog_tags %}
 
-{% block head_title %}{{ content.title }} - {{ entry.date }}{% endblock %}
+{% block head_title %}{{ content.title }} - {{ entry.display_date_medium }}{% endblock %}
 
 {% block travelog_content %}
 <div class="container">
@@ -11,7 +11,7 @@
     </a>
   </nav>
 
-  <h1>{{ entry.date|date:"F j, Y" }}</h1>
+  <h1>{{ entry.display_date_medium }}</h1>
   {% if entry.title %}
   <h2>{{ entry.title }}</h2>
   {% endif %}
@@ -27,7 +27,7 @@
   <div class="page-navigation">
     {% if prev_entry %}
     <a href="{% travelog_url 'travelog_day' journal.uuid date=prev_entry.date version=request.GET.version %}" class="nav-link">
-      &larr; Previous: {{ prev_entry.date|date:"F j" }}
+      &larr; Previous: {{ prev_entry.display_date_nav }}
     </a>
     {% else %}
     <span></span>
@@ -35,7 +35,7 @@
 
     {% if next_entry %}
     <a href="{% travelog_url 'travelog_day' journal.uuid date=next_entry.date version=request.GET.version %}" class="nav-link">
-      Next: {{ next_entry.date|date:"F j" }} &rarr;
+      Next: {{ next_entry.display_date_nav }} &rarr;
     </a>
     {% else %}
     <span></span>
