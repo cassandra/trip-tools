@@ -4,6 +4,39 @@
  */
 
 /* ========================================
+   Image Picker Components
+   ======================================== */
+
+.image-picker-card {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.image-picker-card:hover,
+.image-picker-card:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.image-picker-card:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.image-picker-card-image {
+  width: 100%;
+  height: 150px;
+  overflow: hidden;
+}
+
+.image-picker-card-image img {
+  object-fit: cover;
+}
+
+/* ========================================
    Container and Layout
    ======================================== */
 

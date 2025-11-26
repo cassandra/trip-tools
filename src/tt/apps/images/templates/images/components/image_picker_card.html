@@ -10,13 +10,13 @@ Context variables:
      data-{{ DIVID.IMAGE_PICKER_UUID_ATTR }}="{{ image.uuid }}"
      data-{{ DIVID.IMAGE_PICKER_THUMBNAIL_URL_ATTR }}="{{ image.thumbnail_image.url }}"
      data-{{ DIVID.IMAGE_PICKER_CAPTION_ATTR }}="{{ image.caption|default:'Untitled' }}"
-     style="cursor: pointer; border: 2px solid transparent; border-radius: 8px; overflow: hidden; transition: border-color 0.2s;"
-     onclick="selectReferenceImage(this)">
-  <div style="width: 100%; height: 150px; overflow: hidden;">
+     tabindex="0"
+     role="button"
+     aria-label="Select {{ image.caption|default:'untitled image' }}">
+  <div class="image-picker-card-image">
     <img src="{{ image.thumbnail_image.url }}"
          alt="{{ image.caption }}"
-         class="w-100 h-100"
-         style="object-fit: cover;">
+         class="w-100 h-100">
   </div>
   <div class="p-2 bg-light">
     <small class="font-weight-bold d-block text-truncate">
