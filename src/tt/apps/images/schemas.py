@@ -4,7 +4,6 @@ Domain models and value objects for trip image processing.
 Following Domain-Driven Design principles:
 - Value objects are immutable (frozen dataclasses)
 - Business rules encapsulated in domain entities
-- No external dependencies (pure Python + standard library)
 """
 from dataclasses import dataclass
 from datetime import datetime
@@ -12,6 +11,7 @@ from decimal import Decimal
 from typing import Optional, Tuple, Dict, Any
 
 from .enums import UploadStatus
+from .models import TripImage
 
 
 # Configuration constants - centralized business rules
@@ -330,47 +330,58 @@ class ImageUploadResult:
     Immutable result of image upload processing operation.
 
     Represents the outcome of uploading and processing a single image file,
-    including success/error status, metadata, and optional rendered HTML.
+    including success/error status, the created TripImage, metadata, and
+    optional rendered HTML.
     """
     status         : UploadStatus
     filename       : str
-    uuid           : Optional[str]           = None
+    trip_image     : Optional[TripImage]     = None
     error_message  : Optional[str]           = None
     metadata       : Optional[ExifMetadata]  = None
     html           : Optional[str]           = None
 
+    @property
+    def uuid(self) -> Optional[str]:
+        """Return the TripImage UUID as string, or None if upload failed."""
+        if self.trip_image is not None:
+            return str(self.trip_image.uuid)
+        return None
+
     @classmethod
-    def success( cls,
-                 filename       : str,
-                 uuid           : str,
-                 metadata       : ExifMetadata,
-                 html           : Optional[str] = None ) -> 'ImageUploadResult':
+    def success(
+        cls,
+        filename   : str,
+        trip_image : TripImage,
+        metadata   : ExifMetadata,
+        html       : Optional[str] = None,
+    ) -> 'ImageUploadResult':
         """
         Create successful upload result.
 
         Args:
             filename: Original uploaded filename
-            uuid: Created TripImage UUID (as string)
+            trip_image: Created TripImage instance
             metadata: Extracted EXIF metadata
             html: Optional rendered grid item HTML
 
         Returns:
             ImageUploadResult with SUCCESS status
         """
-        from tt.apps.images.enums import UploadStatus
         return cls(
-            status = UploadStatus.SUCCESS,
-            filename = filename,
-            uuid = uuid,
-            error_message = None,
-            metadata = metadata,
-            html = html,
+            status=UploadStatus.SUCCESS,
+            filename=filename,
+            trip_image=trip_image,
+            error_message=None,
+            metadata=metadata,
+            html=html,
         )
 
     @classmethod
-    def failure( cls,
-                 filename      : str,
-                 error_message : str ) -> 'ImageUploadResult':
+    def failure(
+        cls,
+        filename      : str,
+        error_message : str,
+    ) -> 'ImageUploadResult':
         """
         Create failed upload result.
 
@@ -381,14 +392,13 @@ class ImageUploadResult:
         Returns:
             ImageUploadResult with ERROR status
         """
-        from tt.apps.images.enums import UploadStatus
         return cls(
-            status = UploadStatus.ERROR,
-            filename = filename,
-            uuid = None,
-            error_message = error_message,
-            metadata = None,
-            html = None,
+            status=UploadStatus.ERROR,
+            filename=filename,
+            trip_image=None,
+            error_message=error_message,
+            metadata=None,
+            html=None,
         )
 
     def to_dict(self) -> Dict[str, Any]:

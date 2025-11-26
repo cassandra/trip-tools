@@ -1,0 +1,20 @@
+{% extends "images/modals/entity_image_upload.html" %}
+
+{% block modal_dialog_id %}journal-entry-image-upload-modal{% endblock %}
+{% block title_text %}Upload Images{% endblock %}
+
+{% comment %}
+Multi-image upload modal for Journal Entry context.
+Overrides the DONE button to refresh the page when closed,
+so newly uploaded images appear in the image picker gallery.
+{% endcomment %}
+
+{% block action_right %}
+<button type="button"
+        class="btn btn-primary"
+        onclick="location.reload();">
+  {% load icons %}
+  {% icon "save" size="sm" css_class="tt-icon-left" %}
+  DONE
+</button>
+{% endblock %}

@@ -47,7 +47,9 @@
   background-color: rgba(23, 112, 114, 0.02);
 }
 
-.upload-zone.dragover {
+/* Support both old 'dragover' and new 'tt-upload-dragover' class names */
+.upload-zone.dragover,
+.upload-zone.tt-upload-dragover {
   border-color: var(--primary-color);
   background-color: rgba(23, 112, 114, 0.05);
   border-width: 4px;
@@ -132,9 +134,11 @@
 
 /* ========================================
    Individual File Progress
+   Support both old and new (tt-) prefixed class names
    ======================================== */
 
-.file-progress-item {
+.file-progress-item,
+.tt-file-progress-item {
   padding: 1rem;
   border: 1px solid #f0f0f0;
   border-radius: 8px;
@@ -142,34 +146,40 @@
   transition: all 0.2s ease;
 }
 
-.file-progress-item.uploading {
+.file-progress-item.uploading,
+.tt-file-progress-item.uploading {
   background: rgba(23, 112, 114, 0.02);
   border-color: var(--primary-color);
 }
 
-.file-progress-item.processing {
+.file-progress-item.processing,
+.tt-file-progress-item.processing {
   background: rgba(23, 112, 114, 0.02);
   border-color: var(--primary-color);
 }
 
-.file-progress-item.success {
+.file-progress-item.success,
+.tt-file-progress-item.success {
   background: rgba(23, 114, 25, 0.02);
   border-color: var(--success-color);
 }
 
-.file-progress-item.error {
+.file-progress-item.error,
+.tt-file-progress-item.error {
   background: rgba(114, 24, 23, 0.02);
   border-color: var(--error-color);
 }
 
-.file-header {
+.file-header,
+.tt-file-header {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 0.75rem;
 }
 
-.file-icon {
+.file-icon,
+.tt-file-icon {
   width: 50px;
   height: 50px;
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -181,12 +191,14 @@
   flex-shrink: 0;
 }
 
-.file-info {
+.file-info,
+.tt-file-info {
   flex: 1;
   min-width: 0;
 }
 
-.file-name {
+.file-name,
+.tt-file-name {
   font-weight: 600;
   color: var(--tertiary-color);
   margin-bottom: 0.25rem;
@@ -195,12 +207,14 @@
   text-overflow: ellipsis;
 }
 
-.file-size {
+.file-size,
+.tt-file-size {
   font-size: 0.85rem;
   color: var(--muted-color);
 }
 
-.file-status {
+.file-status,
+.tt-file-status {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -209,23 +223,28 @@
   white-space: nowrap;
 }
 
-.file-status.uploading {
+.file-status.uploading,
+.tt-file-status.uploading {
   color: var(--primary-color);
 }
 
-.file-status.processing {
+.file-status.processing,
+.tt-file-status.processing {
   color: var(--primary-color);
 }
 
-.file-status.success {
+.file-status.success,
+.tt-file-status.success {
   color: var(--success-color);
 }
 
-.file-status.error {
+.file-status.error,
+.tt-file-status.error {
   color: var(--error-color);
 }
 
-.progress-bar-container {
+.progress-bar-container,
+.tt-progress-bar-container {
   width: 100%;
   height: 8px;
   background: #f0f0f0;
@@ -234,35 +253,42 @@
   margin-bottom: 0.5rem;
 }
 
-.progress-bar-fill {
+.progress-bar-fill,
+.tt-progress-bar-fill {
   height: 100%;
   background: var(--primary-color);
   transition: width 0.3s ease;
   border-radius: 4px;
 }
 
-.progress-bar-fill.success {
+.progress-bar-fill.success,
+.tt-progress-bar-fill.success {
   background: var(--success-color);
 }
 
-.progress-details {
+.progress-details,
+.tt-progress-details {
   font-size: 0.8rem;
   color: var(--muted-color);
 }
 
-.progress-details.error {
+.progress-details.error,
+.tt-progress-details.error {
   color: var(--error-color);
 }
 
-.progress-details.success {
+.progress-details.success,
+.tt-progress-details.success {
   color: var(--success-color);
 }
 
 /* ========================================
    Spinner Animation
+   Support both old and new (tt-) prefixed class names
    ======================================== */
 
-.spinner {
+.spinner,
+.tt-spinner {
   display: inline-block;
   width: 14px;
   height: 14px;

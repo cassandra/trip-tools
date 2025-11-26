@@ -3,7 +3,15 @@
 
 <!-- Panel Header - Fixed -->
 <div class="{{ DIVID.JOURNAL_IMAGE_PANEL_HEADER_CLASS }}">
-  <h5 class="mb-2">Images</h5>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Images</h5>
+    <a href="{% url 'journal_entry_image_upload' entry_uuid=entry.uuid %}"
+       class="btn btn-sm btn-outline-primary"
+       data-async="modal">
+      {% icon "upload" size="sm" css_class="tt-icon-left" %}
+      Upload
+    </a>
+  </div>
 
   <!-- Date and Scope Filter Form -->
   <form method="get" action="{% url 'journal_entry_images' entry_uuid=entry.uuid %}" data-async="#journal-image-gallery" data-mode="insert">

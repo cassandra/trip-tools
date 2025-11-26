@@ -24,4 +24,9 @@ urlpatterns = [
         views.TripReferenceImagePickerView.as_view(),
         name='trip_reference_image_picker'
     ),
+    path(
+        '<uuid:trip_uuid>/upload-image/',
+        views.TripImageUploadView.as_view(),
+        name='trip_image_upload'
+    ),
 ]

@@ -10,6 +10,9 @@ Context variables required:
 - accessible_images: QuerySet of TripImage instances
 - selected_date: Date object for current filter
 
+Optional context variables:
+- upload_url: URL for image upload modal (displays upload button if provided)
+
 Subclasses must define these blocks:
 - modal_dialog_id: Unique ID for the modal
 - title_text: Modal title
@@ -71,10 +74,20 @@ Subclasses must define these blocks:
 
     <!-- Date Filter Section -->
     <div class="form-group mb-0">
-      <label for="date-filter" class="font-weight-bold">
-        {% icon "calendar" size="sm" css_class="tt-icon-left" %}
-        Filter by Date
-      </label>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <label for="date-filter" class="font-weight-bold mb-0">
+          {% icon "calendar" size="sm" css_class="tt-icon-left" %}
+          Filter by Date
+        </label>
+        {% if upload_url %}
+        <a href="{{ upload_url }}"
+           class="btn btn-sm btn-outline-primary"
+           data-async="modal">
+          {% icon "upload" size="sm" css_class="tt-icon-left" %}
+          Upload
+        </a>
+        {% endif %}
+      </div>
       <input type="date"
              id="date-filter"
              name="date"

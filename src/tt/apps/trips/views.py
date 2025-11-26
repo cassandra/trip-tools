@@ -4,11 +4,13 @@ from typing import Tuple
 from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
-from tt.apps.images.views import EntityImagePickerView
+from tt.apps.images.enums import UploadStatus
+from tt.apps.images.services import ImageUploadService
+from tt.apps.images.views import EntityImagePickerView, EntityImageUploadView
 from tt.apps.members.models import TripMember
 from tt.async_view import ModalView
 
@@ -110,12 +112,7 @@ class TripEditModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return self.modal_response( request, context = context, status = 400 )
 
 
-class TripReferenceImagePickerView(EntityImagePickerView):
-    """
-    Modal view for selecting a reference image for a Trip.
-
-    Extends EntityImagePickerView with Trip-specific configuration.
-    """
+class TripReferenceImagePickerView( EntityImagePickerView ):
 
     def get_template_name(self) -> str:
         return 'trips/modals/trip_reference_image_picker.html'
@@ -136,11 +133,6 @@ class TripReferenceImagePickerView(EntityImagePickerView):
         self.assert_is_editor(request_member)
 
     def get_default_date_and_timezone(self, entity: Trip) -> Tuple[date_class, str]:
-        """
-        Determine default date and timezone for Trip image picker.
-
-        Uses today's date and UTC timezone as default.
-        """
         return (date_class.today(), 'UTC')
 
     def get_trip_from_entity(self, entity: Trip) -> Trip:
@@ -148,5 +140,69 @@ class TripReferenceImagePickerView(EntityImagePickerView):
         return entity
 
     def get_picker_url(self, entity: Trip) -> str:
-        """Return the URL for the Trip reference image picker."""
         return reverse('trip_reference_image_picker', kwargs={'trip_uuid': entity.uuid})
+
+    def get_upload_url(self, entity: Trip) -> str:
+        return reverse('trip_image_upload', kwargs={'trip_uuid': entity.uuid})
+
+
+class TripImageUploadView(EntityImageUploadView):
+    """
+    Single-image upload mode - automatically sets uploaded image as
+    Trip's reference image and triggers page refresh on success.
+    """
+
+    def get_template_name(self) -> str:
+        return 'trips/modals/trip_image_upload.html'
+
+    def get_max_files(self) -> int:
+        return 1
+
+    def check_permission(self, request, *args, **kwargs) -> None:
+        trip_uuid = kwargs.get('trip_uuid')
+        request_member = self.get_trip_member(request, trip_uuid=trip_uuid)
+        self.assert_is_editor(request_member)
+
+    def get_upload_url(self, request, *args, **kwargs) -> str:
+        trip_uuid = kwargs.get('trip_uuid')
+        return reverse('trip_image_upload', kwargs={'trip_uuid': trip_uuid})
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle upload and automatically set as Trip's reference image.
+
+        On successful upload, sets the image as the Trip's reference image.
+        JavaScript handles page refresh via onComplete callback.
+        """
+
+        trip_uuid = kwargs.get('trip_uuid')
+        request_member = self.get_trip_member(request, trip_uuid=trip_uuid)
+        self.assert_is_editor(request_member)
+        trip = request_member.trip
+
+        uploaded_files = request.FILES.getlist('files')
+
+        if not uploaded_files:
+            return JsonResponse({'error': 'No file provided'}, status=400)
+
+        if len(uploaded_files) > 1:
+            return JsonResponse({'error': 'Only one image allowed'}, status=400)
+
+        # Process the single file
+        service = ImageUploadService()
+        result = service.process_uploaded_image(
+            uploaded_files[0],
+            request.user,
+            request=request,
+        )
+
+        if result.status == UploadStatus.SUCCESS:
+            trip.reference_image = result.trip_image
+            trip.save(update_fields=['reference_image'])
+
+            # Return success - JS onComplete callback handles page refresh
+            return JsonResponse({'files': [result.to_dict()]})
+
+        return JsonResponse({
+            'error': result.error_message or 'Upload failed'
+        }, status=400)

@@ -54,6 +54,11 @@ urlpatterns = [
         name='journal_reference_image_picker'
     ),
     path(
+        '<uuid:journal_uuid>/upload-image/',
+        views.JournalImageUploadView.as_view(),
+        name='journal_image_upload'
+    ),
+    path(
         '<uuid:journal_uuid>/entry/new/',
         views.JournalEntryNewView.as_view(),
         name='journal_entry_new'
@@ -77,6 +82,11 @@ urlpatterns = [
         'entry/<uuid:entry_uuid>/images/',
         views.JournalEntryImagePickerView.as_view(),
         name='journal_entry_images'
+    ),
+    path(
+        'entry/<uuid:entry_uuid>/upload-images/',
+        views.JournalEntryImageUploadView.as_view(),
+        name='journal_entry_image_upload'
     ),
     path(
         'entry/editor-help',

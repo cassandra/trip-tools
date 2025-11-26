@@ -3,7 +3,6 @@ import pytz
 from abc import ABC, abstractmethod
 from datetime import date as date_class
 from typing import Optional, Tuple
-
 from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -24,7 +23,7 @@ from tt.apps.trips.models import Trip
 from tt.async_view import ModalView
 
 from .context import ImagePageContext
-from .enums import ImageAccessRole
+from .enums import ImageAccessRole, UploadStatus
 from .forms import TripImageEditForm
 from .helpers import TripImageHelpers
 from .models import TripImage
@@ -83,8 +82,6 @@ class ImagesHomeView( LoginRequiredMixin, View ):
             result = service.process_uploaded_image(uploaded_file, request.user, request=request)
             results.append(result)
 
-            # Import UploadStatus for comparison
-            from tt.apps.images.enums import UploadStatus
             if result.status == UploadStatus.SUCCESS:
                 success_count += 1
             else:
@@ -115,7 +112,7 @@ class ImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
     2. Without trip context: Only uploader has access
     """
 
-    def get_template_name(self ) -> str:
+    def get_template_name(self) -> str:
         # We override this when editing is allowed
         return 'images/modals/trip_image_inspect_view.html'
 
@@ -196,6 +193,188 @@ class ImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
         )
 
 
+class EntityImageUploadView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
+    """
+    Abstract base view for uploading images in modal context.
+
+    This view provides a generic upload modal that can be configured for:
+    - Multi-image uploads (e.g., Journal Entry editing)
+    - Single-image uploads (e.g., Trip reference image setting)
+
+    Subclasses must implement abstract methods to define:
+    - Permission checking
+    - Upload endpoint URL
+    - Template configuration
+    - Max files allowed (1 for single-image mode, >1 for multi-image)
+    """
+
+    @abstractmethod
+    def check_permission(self, request, *args, **kwargs) -> None:
+        """
+        Check if user has permission to upload images.
+
+        Should raise PermissionDenied if user lacks permission.
+        """
+        pass
+
+    @abstractmethod
+    def get_upload_url(self, request, *args, **kwargs) -> str:
+        """
+        Return the URL for upload form action and endpoint.
+
+        This URL will be used for both:
+        - Form action attribute
+        - AJAX upload endpoint
+        """
+        pass
+
+    @abstractmethod
+    def get_max_files(self) -> int:
+        """
+        Return maximum number of files allowed.
+
+        Returns:
+            1 for single-image mode, >1 for multi-image mode
+        """
+        pass
+
+    def get_template_name(self) -> str:
+        """
+        Return the template path for the upload modal.
+
+        Default implementation uses the base upload template.
+        Override to provide custom template.
+        """
+        return 'images/modals/entity_image_upload.html'
+
+    def get_upload_zone_id(self) -> str:
+        """
+        Return unique ID for the upload zone.
+
+        Default implementation generates a unique ID.
+        Override if you need a specific ID.
+        """
+        return 'image-upload-zone'
+
+    def get_file_input_id(self) -> str:
+        """
+        Return unique ID for the file input element.
+
+        Default implementation generates a unique ID.
+        Override if you need a specific ID.
+        """
+        return 'image-file-input'
+
+    def get_show_uploaded_grid(self) -> bool:
+        """
+        Whether to show the uploaded images grid.
+
+        Default: True for multi-image mode, False for single-image mode.
+        Override to customize.
+        """
+        return self.get_max_files() > 1
+
+    def get_uploaded_images(self, request, *args, **kwargs):
+        """
+        Return QuerySet of uploaded images to display initially.
+
+        Default implementation returns no images.
+        Override to provide initial images.
+        """
+        return TripImage.objects.none()
+
+    def get_initial_uploaded_count(self, request, *args, **kwargs) -> int:
+        """
+        Return initial count of uploaded images.
+
+        Default implementation counts the uploaded_images queryset.
+        Override if you want to provide a different count.
+        """
+        return self.get_uploaded_images(request, *args, **kwargs).count()
+
+    def get(self, request, *args, **kwargs) -> HttpResponse:
+        """
+        Handle GET request: Display upload modal.
+        """
+        # Check permissions
+        self.check_permission(request, *args, **kwargs)
+
+        # Build context for template
+        context = {
+            'upload_url': self.get_upload_url(request, *args, **kwargs),
+            'max_files': self.get_max_files(),
+            'heif_support_available': HEIF_SUPPORT_AVAILABLE,
+            'upload_zone_id': self.get_upload_zone_id(),
+            'file_input_id': self.get_file_input_id(),
+            'show_uploaded_grid': self.get_show_uploaded_grid(),
+            'uploaded_images': self.get_uploaded_images(request, *args, **kwargs),
+            'initial_uploaded_count': self.get_initial_uploaded_count(request, *args, **kwargs),
+        }
+
+        return self.modal_response(request, context=context)
+
+    def post(self, request, *args, **kwargs) -> JsonResponse:
+        """
+        Handle POST request: Process uploaded images.
+
+        Delegates image processing to ImageUploadService and returns
+        JSON response with upload results for each file.
+        """
+        # Check permissions
+        self.check_permission(request, *args, **kwargs)
+
+        uploaded_files = request.FILES.getlist('files')
+
+        if not uploaded_files:
+            logger.debug(
+                f"Upload rejected: User {request.user.email} (ID: {request.user.id}) "
+                f"submitted request with no files"
+            )
+            return JsonResponse(
+                {'error': 'No files provided'},
+                status=400,
+            )
+
+        # Validate file count against max_files limit
+        max_files = self.get_max_files()
+        if len(uploaded_files) > max_files:
+            logger.debug(
+                f"Upload rejected: User {request.user.email} (ID: {request.user.id}) "
+                f"submitted {len(uploaded_files)} files but max is {max_files}"
+            )
+            return JsonResponse(
+                {'error': f'Too many files. Maximum allowed: {max_files}'},
+                status=400,
+            )
+
+        # Use ImageUploadService for processing
+        service = ImageUploadService()
+        results = []
+        success_count = 0
+        error_count = 0
+
+        for uploaded_file in uploaded_files:
+            result = service.process_uploaded_image(uploaded_file, request.user, request=request)
+            results.append(result)
+
+            if result.status == UploadStatus.SUCCESS:
+                success_count += 1
+            else:
+                error_count += 1
+
+        # Log upload summary
+        logger.debug(
+            f"Upload batch completed: User {request.user.email} (ID: {request.user.id}) - "
+            f"{success_count} succeeded, {error_count} failed out of {len(uploaded_files)} files"
+        )
+
+        # Convert dataclass results to dicts for JSON response
+        results_dicts = [result.to_dict() for result in results]
+
+        # Return 200 even if some files failed - client checks individual status
+        return JsonResponse({'files': results_dicts})
+
+
 class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
     """
     Abstract base view for selecting reference images for any entity type.
@@ -233,6 +412,15 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
         """Return the URL for the image picker form action."""
         pass
 
+    def get_upload_url(self, entity) -> Optional[str]:
+        """
+        Return the URL for the image upload modal.
+
+        Default implementation returns None (no upload button).
+        Override to provide an upload URL and enable the upload button.
+        """
+        return None
+
     def get_trip_from_entity(self, entity) -> Trip:
         """
         Extract the Trip from the entity.
@@ -255,7 +443,7 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
             )
         return result
 
-    def get( self, request, *args, **kwargs ) -> HttpResponse:
+    def get(self, request, *args, **kwargs) -> HttpResponse:
 
         entity_uuid_param = self.get_entity_uuid_param_name()
         entity_uuid = kwargs.get(entity_uuid_param)
@@ -284,6 +472,7 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
             'trip': trip,
             'selected_date': selected_date,
             'picker_url': self.get_picker_url(entity),
+            'upload_url': self.get_upload_url(entity),
         }
         return self.modal_response(request, context)
 
