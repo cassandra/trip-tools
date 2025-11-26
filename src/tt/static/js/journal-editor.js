@@ -3107,6 +3107,7 @@
       var mouseY = e.clientY;
       var $children = this.$editor.children('.text-block, div.content-block, h1, h2, h3, h4, h5, h6');
 
+      var foundDropZone = false;
       $children.each(function() {
         var rect = this.getBoundingClientRect();
         var betweenTop = rect.top - 20;
@@ -3115,9 +3116,22 @@
         if (mouseY >= betweenTop && mouseY <= betweenBottom) {
           var $indicator = $('<div class="' + EDITOR_TRANSIENT.CSS_DROP_ZONE_BETWEEN + '"></div>');
           $(this).before($indicator);
+          foundDropZone = true;
           return false;
         }
       });
+
+      // Check if mouse is below the last element (for appending at end)
+      if (!foundDropZone && $children.length > 0) {
+        var $lastChild = $children.last();
+        var lastRect = $lastChild[0].getBoundingClientRect();
+        var afterLastTop = lastRect.bottom - 20;
+
+        if (mouseY >= afterLastTop) {
+          var $indicator = $('<div class="' + EDITOR_TRANSIENT.CSS_DROP_ZONE_BETWEEN + '"></div>');
+          $lastChild.after($indicator);
+        }
+      }
     }
   };
 
@@ -3151,6 +3165,7 @@
 
     var layout = LAYOUT_VALUES.FULL_WIDTH;
     var $insertTarget = null;
+    var insertAfterTarget = false;
 
     if ($textBlock.length && $textBlock.parent().is(this.$editor)) {
       // Dropped into a text block (p or div) - float-right layout
@@ -3181,6 +3196,17 @@
       });
 
       $insertTarget = $(closestElement);
+
+      // Check if dropping after the last element
+      if ($children.length > 0) {
+        var lastChild = $children.get($children.length - 1);
+        var lastRect = lastChild.getBoundingClientRect();
+        if (mouseY > lastRect.bottom - 20) {
+          // Mouse is below the last element - insert after instead of before
+          insertAfterTarget = true;
+          $insertTarget = $(lastChild);
+        }
+      }
     }
 
     // Insert each image using existing logic
@@ -3204,6 +3230,9 @@
           $insertTarget.prepend($wrappedImage);
         } else if ($insertTarget.is(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
           // Insert after the target image wrapper (will be in same group)
+          $insertTarget.after($wrappedImage);
+        } else if (insertAfterTarget) {
+          // Insert after the last element (dropping at end of content)
           $insertTarget.after($wrappedImage);
         } else {
           // Insert before the target element for full-width
