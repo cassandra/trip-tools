@@ -7,7 +7,7 @@
 {% comment %}
 Multi-image upload modal for Journal Entry sidebar.
 Overrides the DONE and X buttons to refresh the image picker gallery
-when closed, so newly uploaded images appear.
+when closed, but only if images were actually uploaded.
 {% endcomment %}
 
 {% block dismiss_button %}
@@ -16,7 +16,7 @@ when closed, so newly uploaded images appear.
         class="w-100 text-center text-white close"
         data-dismiss="modal"
         aria-label="Close modal"
-        onclick="JournalEditor.refreshImagePickerWithRecent();">
+        onclick="JournalEditor.refreshImagePickerIfUploaded();">
   {% icon "close" size="sm" %}
 </button>
 {% endblock %}
@@ -25,7 +25,7 @@ when closed, so newly uploaded images appear.
 <button type="button"
         class="btn btn-primary"
         data-dismiss="modal"
-        onclick="JournalEditor.refreshImagePickerWithRecent();">
+        onclick="JournalEditor.refreshImagePickerIfUploaded();">
   {% icon "save" size="sm" css_class="tt-icon-left" %}
   DONE
 </button>

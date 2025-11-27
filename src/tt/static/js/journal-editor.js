@@ -4743,8 +4743,24 @@
     initImagePickerFilters();
   });
 
+  /**
+   * Refresh image picker only if images were actually uploaded
+   * Called when closing the upload modal - skips refresh if no uploads occurred
+   */
+  function refreshImagePickerIfUploaded() {
+    // Check the uploaded count in the modal
+    var $uploadedCount = $('.uploaded-count');
+    var uploadedCount = parseInt($uploadedCount.text(), 10) || 0;
+
+    if (uploadedCount > 0) {
+      refreshImagePickerWithRecent();
+    }
+    // If no uploads, do nothing - image picker stays as it was
+  }
+
   // Expose functions globally for use in templates
   window.JournalEditor = window.JournalEditor || {};
   window.JournalEditor.refreshImagePickerWithRecent = refreshImagePickerWithRecent;
+  window.JournalEditor.refreshImagePickerIfUploaded = refreshImagePickerIfUploaded;
 
 })(jQuery);
