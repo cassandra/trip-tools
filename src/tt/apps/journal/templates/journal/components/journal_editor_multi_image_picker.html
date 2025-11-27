@@ -23,15 +23,14 @@
           id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID }}"
           name="date"
           {% if not is_recent_mode %}value="{{ entry.date|date:'Y-m-d' }}"{% endif %}
-          onchange-async="true"
       >
       <button
           type="button"
           id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID }}"
-          class="btn btn-sm {% if filter_date == entry.date %}btn-primary{% else %}btn-outline-primary{% endif %} ml-1 flex-shrink-0"
-          title="Show images from {{ entry.date|date:'M j, Y' }}"
-          data-entry-date="{{ entry.date|date:'Y-m-d' }}">
-        {{ entry.date|date:"M j" }}
+          class="btn btn-sm {% if filter_date %}btn-primary{% else %}btn-outline-primary{% endif %} ml-1 flex-shrink-0"
+          title="{% if filter_date %}Show images from {{ filter_date|date:'M j, Y' }}{% else %}No date selected{% endif %}"
+          data-last-used-date="{% if filter_date %}{{ filter_date|date:'Y-m-d' }}{% endif %}">
+        {% if filter_date %}{{ filter_date|date:"M j" }}{% else %}--{% endif %}
       </button>
       <button
           type="button"

@@ -4545,19 +4545,45 @@
     }
 
     /**
-     * Update visual state of Entry Date button
-     * @param {boolean} isActive - Whether showing entry's date
+     * Last Used Date button and tracking
      */
-    var $entryDateBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
-    function updateEntryDateButtonState(isActive) {
-      if ($entryDateBtn.length === 0) {
+    var $lastUsedDateBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
+    // Initialize from button's data attribute (set by server's filter_date)
+    var lastUsedDate = $lastUsedDateBtn.data('last-used-date') || null;
+
+    /**
+     * Update visual state of Last Used Date button
+     * @param {boolean} isActive - Whether date mode is active
+     */
+    function updateLastUsedDateButtonState(isActive) {
+      if ($lastUsedDateBtn.length === 0) {
         return;
       }
       if (isActive) {
-        $entryDateBtn.removeClass('btn-outline-primary').addClass('btn-primary');
+        $lastUsedDateBtn.removeClass('btn-outline-primary').addClass('btn-primary');
       } else {
-        $entryDateBtn.removeClass('btn-primary').addClass('btn-outline-primary');
+        $lastUsedDateBtn.removeClass('btn-primary').addClass('btn-outline-primary');
       }
+    }
+
+    /**
+     * Update the Last Used Date button's label and data attribute
+     * @param {string} dateValue - Date in YYYY-MM-DD format
+     */
+    function updateLastUsedDateButton(dateValue) {
+      if ($lastUsedDateBtn.length === 0) return;
+
+      // Update the data attribute
+      $lastUsedDateBtn.data('last-used-date', dateValue);
+
+      // Update the button label (format: "M j" e.g., "Sep 29")
+      var date = new Date(dateValue + 'T00:00:00');
+      var formatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      $lastUsedDateBtn.text(formatted);
+
+      // Update the title tooltip
+      var fullFormatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      $lastUsedDateBtn.attr('title', 'Show images from ' + fullFormatted);
     }
 
     /**
@@ -4574,7 +4600,7 @@
         success: function() {
           currentMode = 'recent';
           updateRecentButtonState(true);
-          updateEntryDateButtonState(false);
+          updateLastUsedDateButtonState(false);
           $dateInput.val(''); // Clear date input to show we're in Recent mode
           // Re-apply scope filter to newly loaded images
           if (editorInstance && editorInstance.imagePicker) {
@@ -4602,9 +4628,10 @@
         success: function() {
           currentMode = 'date';
           updateRecentButtonState(false);
-          // Highlight entry date button only if date matches entry date
-          var entryDate = $entryDateBtn.data('entry-date');
-          updateEntryDateButtonState(dateValue === entryDate);
+          // Track and update the last used date
+          lastUsedDate = dateValue;
+          updateLastUsedDateButton(dateValue);
+          updateLastUsedDateButtonState(true);
           // Re-apply scope filter to newly loaded images
           if (editorInstance && editorInstance.imagePicker) {
             editorInstance.imagePicker.applyFilter(editorInstance.imagePicker.filterScope);
@@ -4629,38 +4656,33 @@
     });
 
     /**
-     * Handle Entry Date button click
+     * Handle Last Used Date button click
+     * Returns to the previously used date when in Recent mode
      */
-    var $entryDateBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
-    if ($entryDateBtn.length > 0) {
-      $entryDateBtn.on('click', function(e) {
+    if ($lastUsedDateBtn.length > 0) {
+      $lastUsedDateBtn.on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
-        var entryDate = $(this).data('entry-date');
-        if (entryDate && currentMode !== 'date') {
-          $dateInput.val(entryDate);
-          loadDateFilteredImages(entryDate);
+        // Only load if we have a date and it's different from what's currently shown
+        if (lastUsedDate && $dateInput.val() !== lastUsedDate) {
+          $dateInput.val(lastUsedDate);
+          loadDateFilteredImages(lastUsedDate);
         }
       });
     }
 
     /**
      * Handle date input change
-     * The onchange-async attribute will trigger form submission automatically,
-     * but we need to update our mode tracking and button state
+     * Load images for the selected date
      */
     $dateInput.on('change', function() {
       var dateValue = $(this).val();
 
       if (dateValue) {
-        // Date was selected - switch to date mode
-        currentMode = 'date';
-        updateRecentButtonState(false);
-        // Highlight entry date button only if date matches entry date
-        var entryDate = $entryDateBtn.data('entry-date');
-        updateEntryDateButtonState(dateValue === entryDate);
-        // The onchange-async will handle the actual form submission
+        // Load images for the selected date
+        // This updates mode tracking, button states, lastUsedDate, and applies filter
+        loadDateFilteredImages(dateValue);
       }
     });
 
@@ -4677,6 +4699,7 @@
     var $form = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID);
     var $dateInput = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID);
     var $recentBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID);
+    var $lastUsedDateBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
 
     if ($form.length > 0 && $gallery.length > 0) {
       var baseUrl = $form.attr('action');
@@ -4693,6 +4716,10 @@
           }
           if ($recentBtn.length > 0) {
             $recentBtn.removeClass('btn-outline-primary').addClass('btn-primary');
+          }
+          // Show Last Used Date button as inactive (user can click to return to that date)
+          if ($lastUsedDateBtn.length > 0) {
+            $lastUsedDateBtn.removeClass('btn-primary').addClass('btn-outline-primary');
           }
         },
         error: function() {

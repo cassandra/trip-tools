@@ -31,7 +31,8 @@
       "Bash(python src/manage.py check:*)",
       "Bash(xargs cat:*)",
       "Bash(xargs:*)",
-      "Bash(make test-sqlite:*)"
+      "Bash(make test-sqlite:*)",
+      "Bash(make lint:js:*)"
     ],
     "deny": [],
     "ask": []
