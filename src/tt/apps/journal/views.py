@@ -605,11 +605,13 @@ class JournalEditorMultiImagePickerView( LoginRequiredMixin, TripViewMixin, View
             except ValueError:
                 return http_response({'error': 'Invalid date format'}, status=400)
 
+            # Use entry timezone, fall back to journal timezone or UTC for special entries
+            timezone = entry.timezone or entry.journal.timezone or 'UTC'
             accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
                 trip=trip,
                 user=request.user,
                 date=selected_date,
-                timezone=entry.timezone,
+                timezone=timezone,
             )
 
         context = {

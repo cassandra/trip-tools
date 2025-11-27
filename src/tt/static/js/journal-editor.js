@@ -4559,6 +4559,9 @@
       if ($lastUsedDateBtn.length === 0) {
         return;
       }
+      // Remove disabled styling class (for Prologue/Epilogue initial state)
+      $lastUsedDateBtn.removeClass('btn-outline-secondary');
+
       if (isActive) {
         $lastUsedDateBtn.removeClass('btn-outline-primary').addClass('btn-primary');
       } else {
@@ -4572,6 +4575,9 @@
      */
     function updateLastUsedDateButton(dateValue) {
       if ($lastUsedDateBtn.length === 0) return;
+
+      // Enable the button (may have been disabled on initial load for Prologue/Epilogue)
+      $lastUsedDateBtn.prop('disabled', false);
 
       // Update the data attribute
       $lastUsedDateBtn.data('last-used-date', dateValue);
