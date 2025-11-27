@@ -127,7 +127,7 @@ class LabeledEnumField(models.CharField):
             Enum instance
             
         Raises:
-            ValueError: If use_safe_conversion is False and value is invalid
+            ValueError: If use_safe_conversion is False with invalid value
         """
         if self.use_safe_conversion:
             return self.enum_class.from_name_safe(value)

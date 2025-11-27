@@ -151,7 +151,7 @@ class TestSigninManager(BaseTestCase):
         manager = SigninManager()
         manager.do_login(request, verified_email=False)
         
-        # Verify email_verified remains False and no save occurred
+        # Verify email_verified remains False with no saving occurring
         self.assertFalse(self.user.email_verified)
         self.assertEqual(save_call_count, 0)  # No save should be called
         mock_django_login.assert_called_once_with(request, self.user)

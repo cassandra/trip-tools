@@ -1,19 +1,31 @@
 {% extends "images/modals/entity_image_upload.html" %}
+{% load icons %}
 
 {% block modal_dialog_id %}journal-entry-multi-image-upload-modal{% endblock %}
 {% block title_text %}Upload Images{% endblock %}
 
 {% comment %}
 Multi-image upload modal for Journal Entry sidebar.
-Overrides the DONE button to refresh the page when closed,
-so newly uploaded images appear in the image picker gallery.
+Overrides the DONE and X buttons to refresh the image picker gallery
+when closed, so newly uploaded images appear.
 {% endcomment %}
+
+{% block dismiss_button %}
+<button id="modal_dismiss_x"
+        type="button"
+        class="w-100 text-center text-white close"
+        data-dismiss="modal"
+        aria-label="Close modal"
+        onclick="JournalEditor.refreshImagePickerWithRecent();">
+  {% icon "close" size="sm" %}
+</button>
+{% endblock %}
 
 {% block action_right %}
 <button type="button"
         class="btn btn-primary"
+        data-dismiss="modal"
         onclick="JournalEditor.refreshImagePickerWithRecent();">
-  {% load icons %}
   {% icon "save" size="sm" css_class="tt-icon-left" %}
   DONE
 </button>
