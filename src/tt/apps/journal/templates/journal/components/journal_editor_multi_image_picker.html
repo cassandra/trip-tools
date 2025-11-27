@@ -15,11 +15,11 @@
 
   <!-- Date and Scope Filter Form -->
   <form method="get" action="{% url 'journal_editor_multi_images' entry_uuid=entry.uuid %}" data-async="#{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID }}" data-mode="insert" id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID }}">
-    <!-- Date Filter with Recent Button -->
+    <!-- Date Filter with Entry Date and Recent Buttons -->
     <div class="d-flex mb-2">
       <input
           type="date"
-          class="form-control form-control-sm flex-grow-1"
+          class="form-control form-control-sm"
           id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID }}"
           name="date"
           {% if not is_recent_mode %}value="{{ entry.date|date:'Y-m-d' }}"{% endif %}
@@ -27,7 +27,15 @@
       >
       <button
           type="button"
-          class="btn btn-sm {% if is_recent_mode %}btn-primary{% else %}btn-outline-primary{% endif %} ml-1"
+          id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID }}"
+          class="btn btn-sm {% if filter_date == entry.date %}btn-primary{% else %}btn-outline-primary{% endif %} ml-1 flex-shrink-0"
+          title="Show images from {{ entry.date|date:'M j, Y' }}"
+          data-entry-date="{{ entry.date|date:'Y-m-d' }}">
+        {{ entry.date|date:"M j" }}
+      </button>
+      <button
+          type="button"
+          class="btn btn-sm {% if is_recent_mode %}btn-primary{% else %}btn-outline-primary{% endif %} ml-1 flex-shrink-0"
           id="{{ DIVID.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID }}"
           title="Show recently uploaded images">
         Recent

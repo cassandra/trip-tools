@@ -4545,6 +4545,22 @@
     }
 
     /**
+     * Update visual state of Entry Date button
+     * @param {boolean} isActive - Whether showing entry's date
+     */
+    var $entryDateBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
+    function updateEntryDateButtonState(isActive) {
+      if ($entryDateBtn.length === 0) {
+        return;
+      }
+      if (isActive) {
+        $entryDateBtn.removeClass('btn-outline-primary').addClass('btn-primary');
+      } else {
+        $entryDateBtn.removeClass('btn-primary').addClass('btn-outline-primary');
+      }
+    }
+
+    /**
      * Load gallery with recent images
      */
     function loadRecentImages() {
@@ -4558,7 +4574,12 @@
         success: function() {
           currentMode = 'recent';
           updateRecentButtonState(true);
+          updateEntryDateButtonState(false);
           $dateInput.val(''); // Clear date input to show we're in Recent mode
+          // Re-apply scope filter to newly loaded images
+          if (editorInstance && editorInstance.imagePicker) {
+            editorInstance.imagePicker.applyFilter(editorInstance.imagePicker.filterScope);
+          }
         },
         error: function() {
           console.error('Failed to load recent images');
@@ -4581,6 +4602,13 @@
         success: function() {
           currentMode = 'date';
           updateRecentButtonState(false);
+          // Highlight entry date button only if date matches entry date
+          var entryDate = $entryDateBtn.data('entry-date');
+          updateEntryDateButtonState(dateValue === entryDate);
+          // Re-apply scope filter to newly loaded images
+          if (editorInstance && editorInstance.imagePicker) {
+            editorInstance.imagePicker.applyFilter(editorInstance.imagePicker.filterScope);
+          }
         },
         error: function() {
           console.error('Failed to load date-filtered images');
@@ -4601,6 +4629,23 @@
     });
 
     /**
+     * Handle Entry Date button click
+     */
+    var $entryDateBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
+    if ($entryDateBtn.length > 0) {
+      $entryDateBtn.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var entryDate = $(this).data('entry-date');
+        if (entryDate && currentMode !== 'date') {
+          $dateInput.val(entryDate);
+          loadDateFilteredImages(entryDate);
+        }
+      });
+    }
+
+    /**
      * Handle date input change
      * The onchange-async attribute will trigger form submission automatically,
      * but we need to update our mode tracking and button state
@@ -4612,6 +4657,9 @@
         // Date was selected - switch to date mode
         currentMode = 'date';
         updateRecentButtonState(false);
+        // Highlight entry date button only if date matches entry date
+        var entryDate = $entryDateBtn.data('entry-date');
+        updateEntryDateButtonState(dateValue === entryDate);
         // The onchange-async will handle the actual form submission
       }
     });

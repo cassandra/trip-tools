@@ -411,6 +411,7 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
             accessible_images = TripImageHelpers.get_recent_images_for_trip_editors(
                 trip = entry.journal.trip,
             )
+            filter_date = None
         else:
             accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
                 trip = entry.journal.trip,
@@ -418,6 +419,7 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
                 date = entry.date,
                 timezone = entry.timezone,
             )
+            filter_date = entry.date
 
         trip_page_context = TripPageContext(
             active_page = TripPage.JOURNAL,
@@ -442,6 +444,7 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
             'journal_entry_form': journal_entry_form,
             'accessible_images': accessible_images,
             'is_recent_mode': is_recent_mode,
+            'filter_date': filter_date,
             'trip': entry.journal.trip,
         }
         return render(request, 'journal/pages/journal_entry.html', context)

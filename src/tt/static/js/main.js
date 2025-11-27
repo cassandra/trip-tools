@@ -196,6 +196,7 @@
             JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID: 'journal-editor-multi-image-gallery',
             JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID: 'image-filter-form',
             JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID: 'id_image_date_filter',
+            JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID: 'btn-entry-date-images',
             JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID: 'btn-recent-images'
         }
     };
