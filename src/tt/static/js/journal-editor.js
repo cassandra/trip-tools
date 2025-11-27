@@ -2118,7 +2118,7 @@
    * Handle Shift+click range selection
    */
   JournalEditorMultiImagePicker.prototype.handleRangeSelection = function($clickedCard) {
-    var $allCards = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR);
+    var $allCards = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + ':visible');
     var clickedIndex = $allCards.index($clickedCard);
     var startIndex = Math.min(this.lastSelectedIndex, clickedIndex);
     var endIndex = Math.max(this.lastSelectedIndex, clickedIndex);
@@ -2143,7 +2143,7 @@
       $card.addClass(EDITOR_TRANSIENT.CSS_SELECTED);
     }
 
-    var $allCards = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR);
+    var $allCards = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + ':visible');
     this.lastSelectedIndex = $allCards.index($card);
   };
 
