@@ -689,18 +689,15 @@
         }
 
         /**
-         * Update uploaded count
+         * Update uploaded count based on actual grid contents
          */
         function updateUploadedCount() {
             if (!$uploadedCount || $uploadedCount.length === 0) return;
+            if (!$uploadedGrid || $uploadedGrid.length === 0) return;
 
-            var currentCount = parseInt($uploadedCount.text()) || 0;
-            var successCount = uploadQueue.filter(function(item) {
-                var $elem = $('#' + item.id);
-                return $elem.length > 0 && $elem.hasClass('success');
-            }).length;
-
-            $uploadedCount.text(currentCount + successCount);
+            // Count actual image items in the grid (what the user sees)
+            var count = $uploadedGrid.children(Tt.IMAGES_UPLOADED_ITEM_SELECTOR).length;
+            $uploadedCount.text(count);
         }
 
         /**

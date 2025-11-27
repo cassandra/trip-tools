@@ -165,4 +165,6 @@ DIVID = {
     'IMAGE_PICKER_UUID_ATTR': 'image-uuid',
     'IMAGE_PICKER_THUMBNAIL_URL_ATTR': 'thumbnail-url',
     'IMAGE_PICKER_CAPTION_ATTR': 'caption',
+
+    'IMAGES_UPLOADED_ITEM_CLASS': 'uploaded-item-link',
 }

@@ -159,6 +159,10 @@
         IMAGE_PICKER_CAPTION_SELECTOR: '.image-picker-caption',
         IMAGE_PICKER_SET_BTN_SELECTOR: '.image-picker-set-btn',
 
+        // Image Upload - Ready-to-use selectors
+        IMAGES_UPLOADED_ITEM_CLASS: 'uploaded-item-link',
+        IMAGES_UPLOADED_ITEM_SELECTOR: '.uploaded-item-link',
+
         // Journal - Ready-to-use selectors
         JOURNAL_EDITOR_SELECTOR: '#id_entry_text',
         JOURNAL_TITLE_INPUT_SELECTOR: '#id_entry_title',

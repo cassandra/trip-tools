@@ -19,6 +19,30 @@
  *   - Global: Ctrl+/ for help (stub)
  *
  * ============================================================
+ * IMAGE PICKER PANEL
+ * ============================================================
+ *
+ * The sidebar image picker allows browsing trip images by date or recent uploads.
+ * Three filter buttons control which images are displayed:
+ *
+ * - Date Input: Standard date picker to load images from a specific date
+ * - Last Used Date Button: Returns to the previously viewed date after browsing Recent
+ * - Recent Button: Shows recently uploaded images (useful after uploading new images)
+ *
+ * Last Used Date Tracking:
+ * The "last used date" button remembers the most recently viewed date, allowing
+ * users to return to it after viewing Recent images. This is tracked via:
+ * - `lastUsedDate` variable: Tracks the date, initialized from server's filter_date
+ * - `data-last-used-date` attribute: Stores the date on the button element
+ * - Button label: Dynamically updated to show the date (e.g., "Sep 29")
+ *
+ * For Prologue/Epilogue pages (no entry date), the button starts disabled
+ * and becomes active once the user selects a date.
+ *
+ * Scope filters (Unused/Used/All) are client-side only and filter images
+ * based on whether they're already used in the editor content.
+ *
+ * ============================================================
  * HTML CONTRACT: PERSISTENT vs TRANSIENT
  * ============================================================
  *
@@ -43,7 +67,9 @@
  * ARCHITECTURE:
  * - EditorLayoutManager: Manages layout-related DOM manipulations
  * - AutoSaveManager: Handles saving with debouncing and retry logic
+ * - JournalEditorMultiImagePicker: Image picker panel with selection and filtering
  * - JournalEditor: Main orchestrator connecting UI events to managers
+ * - initImagePickerFilters(): Initializes date/recent filter buttons and lastUsedDate tracking
  */
 
 (function($) {
