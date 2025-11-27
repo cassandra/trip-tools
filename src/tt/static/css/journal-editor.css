@@ -366,12 +366,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Image selected state - TRANSIENT */
-.trip-image-wrapper.selected img.trip-image {
-  outline: 3px solid var(--primary-color, #007bff);
-  outline-offset: 2px;
-}
-
 /* Image being dragged - TRANSIENT */
 .trip-image-wrapper.dragging img.trip-image {
   opacity: 0.5;

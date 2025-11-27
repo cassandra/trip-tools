@@ -1211,37 +1211,19 @@
   /**
    * ImageSelectionCoordinator
    *
-   * Ensures mutual exclusivity between picker and editor image selections.
-   * Only one area can have selections at a time.
-   *
-   * Usage:
-   * - Call notifyPickerSelection() when picker selections change
-   * - Call notifyEditorSelection() when editor selections change
-   * - Coordinator will call clearSelection() on the other area as needed
+   * Coordinates image selection state across components.
+   * Currently manages picker selections only.
    */
   function ImageSelectionCoordinator() {
     this.pickerClearCallback = null;
-    this.editorClearCallback = null;
   }
 
   ImageSelectionCoordinator.prototype.registerPicker = function(clearCallback) {
     this.pickerClearCallback = clearCallback;
   };
 
-  ImageSelectionCoordinator.prototype.registerEditor = function(clearCallback) {
-    this.editorClearCallback = clearCallback;
-  };
-
   ImageSelectionCoordinator.prototype.notifyPickerSelection = function(hasSelections) {
-    if (hasSelections && this.editorClearCallback) {
-      this.editorClearCallback();
-    }
-  };
-
-  ImageSelectionCoordinator.prototype.notifyEditorSelection = function(hasSelections) {
-    if (hasSelections && this.pickerClearCallback) {
-      this.pickerClearCallback();
-    }
+    // Placeholder for future coordination needs
   };
 
   // Global singleton
@@ -2239,10 +2221,6 @@
     this.draggedElement = null;
     this.dragSource = null; // 'picker' or 'editor'
 
-    // Editor image selection state
-    this.selectedEditorImages = new Set();
-    this.lastSelectedEditorIndex = null;
-
     // Track usage counts of images in editor (Map<uuid, count>)
     // Used for picker filtering (unused/used/all scopes)
     // Map allows tracking same image appearing multiple times
@@ -2251,12 +2229,6 @@
     // Reference image state
     this.currentReferenceImageUuid = null;
     this.$referenceContainer = $(Tt.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR);
-
-    // Initialize badge manager for editor selections
-    this.editorBadgeManager = new SelectionBadgeManager(this.$statusElement, 'selected-editor-images-count');
-
-    // Register with coordinator
-    imageSelectionCoordinator.registerEditor(this.clearEditorImageSelections.bind(this));
 
     // Initialize managers
     this.editorLayoutManager = new EditorLayoutManager(this.$editor);
@@ -3437,14 +3409,14 @@
   };
 
   /**
-   * Setup image double-click to inspect
-   * Single-click is reserved for future selection feature
+   * Setup image click to inspect
+   * Single-click opens the Image Inspector modal
    */
   JournalEditor.prototype.setupImageClickToInspect = function() {
     var self = this;
 
-    // Double-click to open Image Inspector modal (consistent with picker behavior)
-    this.$editor.on('dblclick', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
+    // Single-click to open Image Inspector modal
+    this.$editor.on('click', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -3460,14 +3432,6 @@
       } else {
         console.warn('No inspect URL found for image:', uuid);
       }
-    });
-
-    // Single-click handler - now implemented for selection
-    this.$editor.on('click', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      self.handleEditorImageClick(this, e);
     });
 
     // Prevent default drag on existing images (handled in setupImageReordering)
@@ -3607,8 +3571,8 @@
   };
 
   /**
-   * Get editor wrappers to move (for multi-image drag-and-drop)
-   * Returns array of jQuery wrapper objects: [$wrapper1, $wrapper2, ...]
+   * Get editor wrappers to move (for drag-and-drop)
+   * Returns array of jQuery wrapper objects: [$wrapper]
    */
   JournalEditor.prototype.getEditorWrappersToMove = function() {
     if (!this.draggedElement) {
@@ -3616,32 +3580,7 @@
     }
 
     var $draggedWrapper = $(this.draggedElement);
-    var $draggedImg = $draggedWrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
-    var draggedUuid = $draggedImg.data(Tt.JOURNAL_UUID_ATTR);
-
-    // Check if dragged wrapper is part of selection
-    var isDraggedSelected = this.selectedEditorImages.has(draggedUuid);
-
-    var wrappersToMove = [];
-
-    if (isDraggedSelected && this.selectedEditorImages.size > 1) {
-      // Multi-image move: get all selected wrappers in DOM order
-      var selectedUuids = this.selectedEditorImages;
-      var self = this;
-      this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
-        var $wrapper = $(this);
-        var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
-        var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
-        if (selectedUuids.has(uuid)) {
-          wrappersToMove.push($wrapper);
-        }
-      });
-    } else {
-      // Single-image move: just the dragged wrapper
-      wrappersToMove.push($draggedWrapper);
-    }
-
-    return wrappersToMove;
+    return [$draggedWrapper];
   };
 
   /**
@@ -3673,28 +3612,10 @@
           $elementsToMark.push($(this.draggedElement));
         }
       } else if (this.dragSource === DRAG_SOURCE.EDITOR) {
+        // Single image drag only (editor multi-select removed)
         var $draggedWrapper = $(this.draggedElement);
-        var $draggedImg = $draggedWrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
-        var draggedUuid = $draggedImg.data(Tt.JOURNAL_UUID_ATTR);
-        var isDraggedSelected = this.selectedEditorImages.has(draggedUuid);
-
-        if (isDraggedSelected && this.selectedEditorImages.size > 1) {
-          // Mark all selected wrappers
-          count = this.selectedEditorImages.size;
-          var selectedUuids = this.selectedEditorImages;
-          var self = this;
-          this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
-            var $wrapper = $(this);
-            var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
-            if (selectedUuids.has($img.data(Tt.JOURNAL_UUID_ATTR))) {
-              $elementsToMark.push($wrapper);
-            }
-          });
-        } else {
-          // Just the dragged wrapper
-          count = 1;
-          $elementsToMark.push($draggedWrapper);
-        }
+        count = 1;
+        $elementsToMark.push($draggedWrapper);
       }
 
       // Apply .dragging class
@@ -3717,97 +3638,6 @@
       // Remove count badges
       $('.drag-count-badge').remove();
     }
-  };
-
-  /**
-   * Handle editor image click with modifier key support
-   */
-  JournalEditor.prototype.handleEditorImageClick = function(img, event) {
-    var $img = $(img);
-    var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
-    var modifiers = getSelectionModifiers(event);
-
-    // Clear text selection (contenteditable conflict prevention)
-    this.clearTextSelection();
-
-    if (modifiers.isShift && this.lastSelectedEditorIndex !== null) {
-      this.handleEditorRangeSelection($img);
-    } else if (modifiers.isCtrlOrCmd) {
-      this.toggleEditorImageSelection($img, uuid);
-    } else {
-      this.clearEditorImageSelections();
-      this.toggleEditorImageSelection($img, uuid);
-    }
-
-    this.updateEditorSelectionUI();
-  };
-
-  /**
-   * Clear text selection in contenteditable
-   */
-  JournalEditor.prototype.clearTextSelection = function() {
-    if (window.getSelection) {
-      var selection = window.getSelection();
-      if (selection.rangeCount > 0) {
-        selection.removeAllRanges();
-      }
-    }
-  };
-
-  /**
-   * Handle Shift+click range selection for editor images
-   */
-  JournalEditor.prototype.handleEditorRangeSelection = function($clickedImg) {
-    var $allImages = this.$editor.find(Tt.JOURNAL_IMAGE_SELECTOR);
-    var clickedIndex = $allImages.index($clickedImg);
-    var startIndex = Math.min(this.lastSelectedEditorIndex, clickedIndex);
-    var endIndex = Math.max(this.lastSelectedEditorIndex, clickedIndex);
-
-    for (var i = startIndex; i <= endIndex; i++) {
-      var $img = $allImages.eq(i);
-      var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
-      this.selectedEditorImages.add(uuid);
-      $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).addClass(EDITOR_TRANSIENT.CSS_SELECTED);
-    }
-  };
-
-  /**
-   * Toggle selection state for a single editor image
-   */
-  JournalEditor.prototype.toggleEditorImageSelection = function($img, uuid) {
-    var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
-
-    if (this.selectedEditorImages.has(uuid)) {
-      this.selectedEditorImages.delete(uuid);
-      $wrapper.removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
-    } else {
-      this.selectedEditorImages.add(uuid);
-      $wrapper.addClass(EDITOR_TRANSIENT.CSS_SELECTED);
-    }
-
-    var $allImages = this.$editor.find(Tt.JOURNAL_IMAGE_SELECTOR);
-    this.lastSelectedEditorIndex = $allImages.index($img);
-  };
-
-  /**
-   * Clear all editor image selections
-   */
-  JournalEditor.prototype.clearEditorImageSelections = function() {
-    this.selectedEditorImages.clear();
-    this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
-    this.lastSelectedEditorIndex = null;
-    this.updateEditorSelectionUI();
-  };
-
-  /**
-   * Update editor selection count badge UI
-   */
-  JournalEditor.prototype.updateEditorSelectionUI = function() {
-    var count = this.selectedEditorImages.size;
-    this.editorBadgeManager.update(count);
-
-    // Notify coordinator when selections change
-    imageSelectionCoordinator.notifyEditorSelection(count > 0);
   };
 
   /**
@@ -3978,16 +3808,10 @@
     // Refresh layout (images removed) + trigger autosave
     this.refreshImageLayout();
     this.handleContentChange();
-
-    // Clear editor selections if multiple wrappers were moved
-    if (wrappersToMove.length > 1) {
-      this.clearEditorImageSelections();
-    }
   };
 
   /**
    * Handle dropping editor or reference images onto picker panel (drag-to-remove)
-   * Supports multi-image removal if multiple images selected
    *
    * This provides an intuitive UX: dragging from picker to editor inserts,
    * so dragging from editor back to picker should remove (reverse operation)
@@ -3998,19 +3822,14 @@
     }
 
     if (this.dragSource === DRAG_SOURCE.EDITOR) {
-      // Get wrappers to remove (1 or many, based on selection)
+      // Get wrapper to remove
       var wrappersToRemove = this.getEditorWrappersToMove();
 
-      // Remove each wrapper (reuses existing removal logic)
+      // Remove the wrapper
       for (var i = 0; i < wrappersToRemove.length; i++) {
         var $wrapper = wrappersToRemove[i];
         var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
         this.removeImage($img);
-      }
-
-      // Clear editor selections if multiple images were removed
-      if (wrappersToRemove.length > 1) {
-        this.clearEditorImageSelections();
       }
     } else if (this.dragSource === DRAG_SOURCE.REFERENCE) {
       // Clear reference image
@@ -4345,12 +4164,11 @@
 
   /**
    * Determine active context for keyboard shortcuts
-   * Returns: 'text' | 'picker' | 'editor-images'
+   * Returns: 'text' | 'picker'
    *
    * Context Priority:
    * 1. Picker selections (highest priority)
-   * 2. Editor image selections
-   * 3. Text editing (default)
+   * 2. Text editing (default)
    */
   JournalEditor.prototype.determineActiveContext = function() {
     // Check if picker has selections
@@ -4358,57 +4176,8 @@
       return DRAG_SOURCE.PICKER;
     }
 
-    // Check if editor has image selections
-    if (this.selectedEditorImages.size > 0) {
-      return 'editor-images';
-    }
-
     // Default to text editing context
     return 'text';
-  };
-
-  /**
-   * Batch remove editor images by UUID set
-   * @param {Set} uuidSet - Set of UUIDs to remove
-   */
-  JournalEditor.prototype.batchRemoveEditorImages = function(uuidSet) {
-    if (uuidSet.size === 0) {
-      return;
-    }
-
-    var self = this;
-
-    // Find and remove all wrappers with matching UUIDs
-    this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
-      var $wrapper = $(this);
-      var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
-      var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
-
-      if (uuidSet.has(uuid)) {
-        $wrapper.remove();
-
-        // Remove from used images tracking (for picker filtering)
-        // Decrement count to handle same image appearing multiple times
-        var currentCount = self.usedImageUUIDs.get(uuid) || 0;
-        if (currentCount > 1) {
-          self.usedImageUUIDs.set(uuid, currentCount - 1);
-        } else {
-          self.usedImageUUIDs.delete(uuid);
-        }
-      }
-    });
-
-    // Update picker filter if it exists
-    if (this.imagePicker) {
-      this.imagePicker.applyFilter(this.imagePicker.filterScope);
-    }
-
-    // Clear selections
-    this.clearEditorImageSelections();
-
-    // Refresh layout (images removed) + trigger autosave
-    this.refreshImageLayout();
-    this.handleContentChange();
   };
 
   /**
@@ -4437,32 +4206,6 @@
     if (this.imagePicker) {
       this.imagePicker.clearAllSelections();
     }
-  };
-
-  /**
-   * Set reference image from editor selection
-   * Called by Ctrl+R keyboard shortcut when editor has selections
-   */
-  JournalEditor.prototype.setReferenceImageFromEditor = function() {
-    if (this.selectedEditorImages.size === 0) {
-      console.log('[Keyboard Shortcut] Ctrl+R: No editor images selected');
-      return;
-    }
-
-    // Only use first selected image (single selection only)
-    var firstUuid = Array.from(this.selectedEditorImages)[0];
-    var imageData = this.getImageDataFromUUID(firstUuid);
-
-    if (!imageData) {
-      console.error('Cannot find picker card for UUID:', firstUuid);
-      return;
-    }
-
-    // Set as reference image
-    this.setReferenceImage(imageData);
-
-    // Clear editor selections after setting
-    this.clearEditorImageSelections();
   };
 
   /**
