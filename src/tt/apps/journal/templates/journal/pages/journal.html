@@ -263,7 +263,7 @@
               {% endif %}
             </div>
             <div class="text-right ml-2 flex-shrink-0">
-              <small class="text-muted d-block">Modified {{ entry.modified_datetime|timesince }} ago</small>
+              <small class="text-muted d-block">Modified {{ entry.modified_datetime|date:"M j, Y, g:i A" }}</small>
               {% if entry.modified_by %}
               <small class="text-muted d-block">by {{ entry.modified_by.first_name|default:entry.modified_by.email }}</small>
               {% endif %}
