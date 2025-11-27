@@ -271,6 +271,12 @@ class JournalEntry( JournalEntryContent ):
     # Version control for optimistic locking
     edit_version = models.IntegerField(default = 1, editable = False)
 
+    # Publishing control
+    include_in_publish = models.BooleanField(
+        default = True,
+        help_text = 'Include this entry when publishing journal to travelog',
+    )
+
     created_datetime = models.DateTimeField(auto_now_add = True)
     modified_datetime = models.DateTimeField(auto_now = True)
     modified_by = models.ForeignKey(

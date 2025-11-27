@@ -661,11 +661,23 @@ class JournalPublishModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         # Create visibility form for optional visibility changes during publish
         visibility_form = JournalVisibilityForm(journal=journal)
 
+        # Get all journal entries for selective publishing UI
+        journal_entries = list(journal.entries.order_by('date'))
+
+        # Calculate counts for progressive disclosure logic
+        total_entries = len(journal_entries)
+        included_entries = sum(1 for entry in journal_entries if entry.include_in_publish)
+        all_entries_included = (included_entries == total_entries)
+
         context = {
             'journal': journal,
             'trip': journal.trip,
             'publishing_status': publishing_status,
             'visibility_form': visibility_form,
+            'journal_entries': journal_entries,
+            'total_entries': total_entries,
+            'included_entries': included_entries,
+            'all_entries_included': all_entries_included,
         }
         return self.modal_response(request, context=context)
 
@@ -688,16 +700,36 @@ class JournalPublishModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         visibility_form = JournalVisibilityForm(request.POST, journal=journal)
 
         if not visibility_form.is_valid():
+            # Get journal entries for re-display on error
+            journal_entries = list(journal.entries.order_by('date'))
+            total_entries = len(journal_entries)
+            included_entries = sum(1 for entry in journal_entries if entry.include_in_publish)
+            all_entries_included = (included_entries == total_entries)
+
             context = {
                 'journal': journal,
                 'trip': journal.trip,
                 'publishing_status': publishing_status,
                 'visibility_form': visibility_form,
+                'journal_entries': journal_entries,
+                'total_entries': total_entries,
+                'included_entries': included_entries,
+                'all_entries_included': all_entries_included,
             }
             return self.modal_response(request, context=context, status=400)
 
         try:
             with transaction.atomic():
+                # Handle entry selection changes
+                selected_entry_uuids = request.POST.getlist('selected_entries')
+
+                # Update include_in_publish for all entries
+                for entry in journal.entries.all():
+                    should_include = str(entry.uuid) in selected_entry_uuids
+                    if entry.include_in_publish != should_include:
+                        entry.include_in_publish = should_include
+                        entry.save(update_fields=['include_in_publish'])
+
                 # Publish the journal
                 travelog = PublishingService.publish_journal(
                     journal=journal,
@@ -729,6 +761,12 @@ class JournalPublishModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
             # Handle validation errors (e.g., no entries to publish)
             logger.warning(f"Failed to publish journal {journal.uuid}: {e}")
 
+            # Get journal entries for re-display on error
+            journal_entries = list(journal.entries.order_by('date'))
+            total_entries = len(journal_entries)
+            included_entries = sum(1 for entry in journal_entries if entry.include_in_publish)
+            all_entries_included = (included_entries == total_entries)
+
             # Re-display modal with error message
             visibility_form.add_error(None, str(e))
             context = {
@@ -736,6 +774,10 @@ class JournalPublishModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
                 'trip': journal.trip,
                 'publishing_status': publishing_status,
                 'visibility_form': visibility_form,
+                'journal_entries': journal_entries,
+                'total_entries': total_entries,
+                'included_entries': included_entries,
+                'all_entries_included': all_entries_included,
             }
             return self.modal_response(request, context=context, status=400)
 
@@ -743,12 +785,22 @@ class JournalPublishModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
             # Handle unexpected errors
             logger.error(f"Error publishing journal {journal.uuid}: {e}", exc_info=True)
 
+            # Get journal entries for re-display on error
+            journal_entries = list(journal.entries.order_by('date'))
+            total_entries = len(journal_entries)
+            included_entries = sum(1 for entry in journal_entries if entry.include_in_publish)
+            all_entries_included = (included_entries == total_entries)
+
             visibility_form.add_error(None, "An unexpected error occurred while publishing.")
             context = {
                 'journal': journal,
                 'trip': journal.trip,
                 'publishing_status': publishing_status,
                 'visibility_form': visibility_form,
+                'journal_entries': journal_entries,
+                'total_entries': total_entries,
+                'included_entries': included_entries,
+                'all_entries_included': all_entries_included,
             }
             return self.modal_response(request, context=context, status=500)
 

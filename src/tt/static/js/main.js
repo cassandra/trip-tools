@@ -417,3 +417,55 @@
         updateRadioVisibility($(this));
     });
 })();
+
+/**
+ * Journal Publish Modal - Selective Entry Publishing
+ *
+ * Handles progressive disclosure and dynamic count updates for the
+ * selective entry publishing feature in the journal publish modal.
+ */
+(function($) {
+    'use strict';
+
+    /**
+     * Update the count of selected entries
+     */
+    function updateEntryCount() {
+        var $checkedBoxes = $('.entry-checkbox:checked');
+        var count = $checkedBoxes.length;
+        $('#publish-entry-count').text(count);
+    }
+
+    /**
+     * Show the entry selection list
+     */
+    function showEntryList(e) {
+        if (e) {
+            e.preventDefault();
+        }
+        $('#all-entries-selected-message').hide();
+        $('#entry-selection-list').show();
+    }
+
+    /**
+     * Hide the entry selection list
+     */
+    function hideEntryList(e) {
+        if (e) {
+            e.preventDefault();
+        }
+        $('#entry-selection-list').hide();
+        $('#all-entries-selected-message').show();
+    }
+
+    // Event handlers
+    $(document).ready(function() {
+        // Update count when checkboxes change
+        $(document).on('change', '.entry-checkbox', updateEntryCount);
+
+        // Show/hide entry list links
+        $(document).on('click', '#show-entry-list-link', showEntryList);
+        $(document).on('click', '#hide-entry-list-link', hideEntryList);
+    });
+
+})(jQuery);

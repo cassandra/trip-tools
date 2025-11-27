@@ -65,12 +65,17 @@ class PublishingStatusHelper:
             return True
 
         # Compare JournalEntry timestamps (entries modified after publish)
+        # Only consider entries that are marked for publishing
         published_datetime = travelog.published_datetime
-        if journal.entries.filter(modified_datetime__gt=published_datetime).exists():
+        if journal.entries.filter(
+            include_in_publish=True,
+            modified_datetime__gt=published_datetime
+        ).exists():
             return True
 
         # Check if entry count changed (entries added or deleted)
-        journal_entry_count = journal.entries.count()
+        # Only count entries marked for publishing
+        journal_entry_count = journal.entries.filter(include_in_publish=True).count()
         travelog_entry_count = travelog.entries.count()
         if journal_entry_count != travelog_entry_count:
             return True

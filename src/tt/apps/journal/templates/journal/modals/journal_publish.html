@@ -76,6 +76,98 @@
     {% include "journal/components/_visibility_form_fields.html" with form=visibility_form journal=journal %}
   </div>
 
+  {# Selective Entry Publishing Section #}
+  {% if journal_entries %}
+  <div class="mb-4">
+    <h6 class="font-weight-bold mb-2">Pages to Publish</h6>
+
+    {# Entry count feedback - always visible #}
+    <div class="mb-2">
+      <small class="text-muted">
+        <strong><span id="publish-entry-count">{{ included_entries }}</span> of {{ total_entries }}</strong>
+        {% if total_entries == 1 %}entry{% else %}entries{% endif %} will be published
+      </small>
+    </div>
+
+    {# Progressive disclosure: Show different UI based on selection state #}
+    {% if all_entries_included %}
+      {# All entries selected: Show condensed view with option to reveal list #}
+      <div id="all-entries-selected-message">
+        <div class="d-flex align-items-start mb-2">
+          <div class="mr-2">
+            {% icon "check-circle" size="sm" css_class="text-success" %}
+          </div>
+          <div>
+            <strong>Publish all pages?</strong>
+            <div>
+              <small class="text-muted">
+                All entries are currently included.
+                <a href="#" id="show-entry-list-link" class="text-primary">Click here</a> to select specific pages.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Hidden checkbox list - shown when user clicks link #}
+      <div id="entry-selection-list" style="display: none;">
+    {% else %}
+      {# Some entries excluded: Show list by default with warning #}
+      <div id="some-entries-excluded-message" class="mb-2">
+        <div class="alert alert-warning py-2 px-3 mb-2">
+          <div class="d-flex align-items-start">
+            <div class="mr-2">
+              {% icon "exclamation-circle" size="sm" %}
+            </div>
+            <small>
+              <strong>Not all pages will be published.</strong> Please review and adjust published pages as needed.
+            </small>
+          </div>
+        </div>
+      </div>
+
+      {# Visible checkbox list #}
+      <div id="entry-selection-list">
+    {% endif %}
+
+        {# Checkbox list for all entries #}
+        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+          {% for entry in journal_entries %}
+          <div class="form-check">
+            <input type="checkbox"
+                   name="selected_entries"
+                   value="{{ entry.uuid }}"
+                   id="entry-checkbox-{{ entry.uuid }}"
+                   class="entry-checkbox form-check-input"
+                   {% if entry.include_in_publish %}checked{% endif %}>
+            <label class="form-check-label" for="entry-checkbox-{{ entry.uuid }}">
+              <strong>{{ entry.title }}</strong>
+              <small class="text-muted">
+                {% if entry.is_prologue %}
+                  (Prologue)
+                {% elif entry.is_epilogue %}
+                  (Epilogue)
+                {% else %}
+                  ({{ entry.date|date:"N j, Y" }})
+                {% endif %}
+              </small>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+
+        {# Option to collapse list if all are selected #}
+        {% if all_entries_included %}
+        <div class="mt-2">
+          <small>
+            <a href="#" id="hide-entry-list-link" class="text-muted">Hide page list</a>
+          </small>
+        </div>
+        {% endif %}
+      </div>
+  </div>
+  {% endif %}
+
   {# Confirmation Message #}
   <div class="alert alert-warning">
     <div class="d-flex align-items-start">
