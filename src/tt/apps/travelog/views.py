@@ -1,7 +1,6 @@
 from datetime import date as date_type
 from uuid import UUID
 
-from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
@@ -13,6 +12,7 @@ from tt.apps.journal.enums import JournalVisibility
 
 from .exceptions import PasswordRequiredException
 from .forms import TravelogPasswordForm
+from .helpers import TravelogPublicListBuilder
 from .mixins import TravelogViewMixin
 from .services import ContentResolutionService, TravelogImageCacheService
 
@@ -29,63 +29,14 @@ class TravelogUserListView(TravelogViewMixin, View):
     """
     def get(self, request: HttpRequest, user_uuid: UUID, *args, **kwargs) -> HttpResponse:
         from django.contrib.auth import get_user_model
-        from tt.apps.trips.models import Trip
-        from .schemas import TravelogListItemData
 
         User = get_user_model()
+        target_user = get_object_or_404(User, uuid=user_uuid)
 
-        # Get target user (404 if not found)
-        target_user = get_object_or_404( User, uuid = user_uuid )
-
-        # Get trips owned by target user
-        trips = Trip.objects.owned_by( target_user )
-
-        # Get journals for these trips that have published travelogs
-        journals = Journal.objects.filter(
-            trip__in = trips,
-            travelogs__is_current = True
-        ).distinct().select_related('trip').prefetch_related('entries', 'entries__reference_image')
-
-        # Build list items with access metadata
-        travelog_items = []
-        for journal in journals:
-            requires_password = False
-
-            try:
-                # Check access using existing mixin logic
-                self._check_journal_access( request, journal )
-            except PasswordRequiredException:
-                # PROTECTED journal without password verification - show with lock icon
-                requires_password = True
-            except ( Http404, PermissionDenied ):
-                # User doesn't have access - exclude from list
-                continue
-
-            # Get date range from entries
-            entries = journal.entries.order_by('date')
-            earliest_date = entries.first().date.strftime('%Y-%m-%d') if entries.exists() else None
-            latest_date = entries.last().date.strftime('%Y-%m-%d') if entries.exists() else None
-
-            display_image = journal.reference_image
-            # Use first entry reference image for display if none explicitly set
-            if not display_image:
-                for entry in entries:
-                    if entry.reference_image:
-                        display_image = entry.reference_image
-                        break
-
-            travelog_items.append( TravelogListItemData(
-                journal = journal,
-                requires_password = requires_password,
-                earliest_entry_date = earliest_date,
-                latest_entry_date = latest_date,
-                display_image = display_image
-            ))
-
-        # Sort by latest entry date (reverse chronological)
-        travelog_items.sort(
-            key = lambda item: item.latest_entry_date or '',
-            reverse = True
+        # Build sorted list of accessible travelogs
+        travelog_items = TravelogPublicListBuilder.build(
+            target_user=target_user,
+            access_checker=lambda journal: self._check_journal_access(request, journal)
         )
 
         context = {

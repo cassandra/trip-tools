@@ -849,6 +849,7 @@ body {
 
 /* Secondary Sidebar (Light Variant) */
 .app-sidebar-secondary {
+  color:var(--black);
   background-color: #f8f9fa;
   border-right: 1px solid var(--line-color);
 }

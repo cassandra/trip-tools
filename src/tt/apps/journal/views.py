@@ -155,7 +155,7 @@ class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
                 journal = journal,
             )
 
-        journal_entries = journal.entries.all() if journal else []
+        journal_entries = list(journal.entries.all()) if journal else []
 
         # Get publishing status
         publishing_status = PublishingStatusHelper.get_publishing_status(journal)
@@ -427,7 +427,7 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
         journal_entries = entry.journal.entries.all()
         journal_page_context = JournalPageContext.create(
             journal = entry.journal,
-            journal_entries = journal_entries,
+            journal_entries = list(journal_entries),
             journal_entry_uuid = entry.uuid,
         )
 

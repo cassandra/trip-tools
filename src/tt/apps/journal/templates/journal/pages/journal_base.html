@@ -14,7 +14,6 @@
 {% endblock %}
 
 {% block sidebar_nav_items %}
-{% if journal_page.journal_entries %}
 {% if trip_page.request_member.can_edit_trip and not journal_page.has_prologue %}
 <li>
   <a href="{% url 'journal_prologue_new' journal_uuid=journal_page.journal.uuid %}" class="text-muted">
@@ -23,13 +22,18 @@
   </a>
 </li>
 {% endif %}
+
+
 {% for entry in journal_page.journal_entries %}
 <li>
   <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"{% if entry.uuid == journal_page.journal_entry_uuid %} class="active" aria-current="page"{% endif %}>
     {{ entry.display_date_short }}
   </a>
 </li>
+{% empty %}
+<li><hr><em class="text-primary pl-4">No Journal Entries</em><hr></li>
 {% endfor %}
+
 {% if trip_page.request_member.can_edit_trip %}
 <li>
   <a href="{% url 'journal_entry_new' journal_uuid=journal_page.journal.uuid %}" class="text-muted">
@@ -37,7 +41,10 @@
     <span>Add New Day</span>
       </a>
 </li>
-{% if not journal_page.has_epilogue %}
+{% endif %}
+
+
+{% if trip_page.request_member.can_edit_trip and not journal_page.has_epilogue %}
 <li>
   <a href="{% url 'journal_epilogue_new' journal_uuid=journal_page.journal.uuid %}" class="text-muted">
     {% icon "plus" size="sm" css_class="tt-icon-left" %}
@@ -45,9 +52,5 @@
   </a>
 </li>
 {% endif %}
-{% else %}
-<li><em>No Journal Entries</em></li>
-{% endif %}
-</ul>
-{% endif %}
+
 {% endblock %}
