@@ -1839,6 +1839,7 @@
     this.lastSavedDate = '';
     this.lastSavedTimezone = '';
     this.lastSavedReferenceImage = '';
+    this.lastSavedIncludeInPublish = true;
   }
 
   /**
@@ -1850,6 +1851,7 @@
     this.lastSavedDate = this.editor.$dateInput.val() || '';
     this.lastSavedTimezone = this.editor.$timezoneInput.val() || '';
     this.lastSavedReferenceImage = this.editor.getReferenceImageUuid();
+    this.lastSavedIncludeInPublish = this.editor.$includeInPublishInput.is(':checked');
     this.hasUnsavedChanges = false;
   };
 
@@ -1863,8 +1865,9 @@
     var dateChanged = (this.editor.$dateInput.val() || '') !== this.lastSavedDate;
     var timezoneChanged = (this.editor.$timezoneInput.val() || '') !== this.lastSavedTimezone;
     var referenceImageChanged = this.editor.getReferenceImageUuid() !== this.lastSavedReferenceImage;
+    var includeInPublishChanged = this.editor.$includeInPublishInput.is(':checked') !== this.lastSavedIncludeInPublish;
 
-    return htmlChanged || titleChanged || dateChanged || timezoneChanged || referenceImageChanged;
+    return htmlChanged || titleChanged || dateChanged || timezoneChanged || referenceImageChanged || includeInPublishChanged;
   };
 
   /**
@@ -1944,7 +1947,8 @@
       title: this.editor.$titleInput.val() || '',
       date: this.editor.$dateInput.val() || '',
       timezone: this.editor.$timezoneInput.val() || '',
-      referenceImageUuid: this.editor.getReferenceImageUuid()
+      referenceImageUuid: this.editor.getReferenceImageUuid(),
+      includeInPublish: this.editor.$includeInPublishInput.is(':checked')
     };
 
     var data = {
@@ -1953,7 +1957,8 @@
       new_title: snapshot.title,
       new_date: snapshot.date,
       new_timezone: snapshot.timezone,
-      reference_image_uuid: snapshot.referenceImageUuid || ''
+      reference_image_uuid: snapshot.referenceImageUuid || '',
+      include_in_publish: snapshot.includeInPublish
     };
 
     $.ajax({
@@ -1972,6 +1977,7 @@
           this.lastSavedDate = snapshot.date;
           this.lastSavedTimezone = snapshot.timezone;
           this.lastSavedReferenceImage = snapshot.referenceImageUuid;
+          this.lastSavedIncludeInPublish = snapshot.includeInPublish;
 
           // Recheck if changes occurred during save
           this.hasUnsavedChanges = this.detectChanges();
@@ -2212,6 +2218,7 @@
     this.$titleInput = this.$form.find('#' + Tt.JOURNAL_TITLE_INPUT_ID);
     this.$dateInput = this.$form.find('#' + Tt.JOURNAL_DATE_INPUT_ID);
     this.$timezoneInput = this.$form.find('#' + Tt.JOURNAL_TIMEZONE_INPUT_ID);
+    this.$includeInPublishInput = this.$form.find('#id_include_in_publish');
     this.$statusElement = this.$form.find('.' + Tt.JOURNAL_SAVE_STATUS_CLASS);
     this.$manualSaveBtn = this.$form.find('.journal-manual-save-btn');
 
@@ -2577,6 +2584,10 @@
     });
 
     this.$timezoneInput.on('change', function() {
+      self.handleContentChange();
+    });
+
+    this.$includeInPublishInput.on('change', function() {
       self.handleContentChange();
     });
 

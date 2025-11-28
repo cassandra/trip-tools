@@ -14,6 +14,8 @@
 {% endblock %}
 
 {% block sidebar_nav_items %}
+{% if journal_page.journal %}
+
 {% if trip_page.request_member.can_edit_trip and not journal_page.has_prologue %}
 <li>
   <a href="{% url 'journal_prologue_new' journal_uuid=journal_page.journal.uuid %}" class="text-muted">
@@ -53,4 +55,5 @@
 </li>
 {% endif %}
 
+{% endif %}
 {% endblock %}

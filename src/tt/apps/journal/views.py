@@ -4,8 +4,9 @@ from typing import Optional, Tuple
 from uuid import UUID
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User as UserType
 from django.db import transaction
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -34,10 +35,11 @@ from .autosave_helpers import (
 from .context import JournalPageContext
 from .enums import JournalVisibility
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
+from .helpers import PublishingStatusHelper, JournalPublishContextBuilder
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE
-from .schemas import PublishingStatusHelper
-from .services import JournalRestoreService
+from .schemas import PublishingStatus
+from .services import JournalRestoreService, JournalPublishingService
 
 from tt.apps.images.helpers import TripImageHelpers
 from tt.apps.images.services import ImagePickerService
@@ -510,7 +512,8 @@ class JournalEntryAutosaveView(LoginRequiredMixin, TripViewMixin, View):
                     new_date = date_change_result.final_date,
                     new_title = date_change_result.final_title,
                     new_timezone = autosave_request.new_timezone,
-                    new_reference_image_uuid = autosave_request.new_reference_image_uuid
+                    new_reference_image_uuid = autosave_request.new_reference_image_uuid,
+                    new_include_in_publish = autosave_request.new_include_in_publish
                 )
 
             return AutosaveResponseBuilder.build_success_response(
@@ -638,119 +641,98 @@ class JournalEditorHelpView(LoginRequiredMixin, ModalView):
         return self.modal_response(request, context=context)
 
 
-class JournalPublishModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
+class JournalPublishModalView(LoginRequiredMixin, TripViewMixin, ModalView):
 
     def get_template_name(self) -> str:
         return 'journal/modals/journal_publish.html'
 
-    def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
-        journal = get_object_or_404(
-            Journal,
-            uuid = journal_uuid,
+    def get( self, request, journal_uuid: UUID, *args, **kwargs ) -> HttpResponse:
+        journal = self._get_journal_and_verify_access( journal_uuid, request.user )
+
+        publishing_status = PublishingStatusHelper.get_publishing_status( journal = journal )
+        visibility_form = JournalVisibilityForm( journal = journal )
+
+        context = JournalPublishContextBuilder.build_modal_context(
+            journal = journal,
+            publishing_status = publishing_status,
+            visibility_form = visibility_form
         )
-        request_member = get_object_or_404(
-            TripMember,
-            trip = journal.trip,
-            user = request.user,
-        )
-        self.assert_is_admin(request_member)
-
-        # Get publishing status for display
-        publishing_status = PublishingStatusHelper.get_publishing_status(journal)
-
-        # Create visibility form for optional visibility changes during publish
-        visibility_form = JournalVisibilityForm(journal=journal)
-
-        context = {
-            'journal': journal,
-            'trip': journal.trip,
-            'publishing_status': publishing_status,
-            'visibility_form': visibility_form,
-        }
-        return self.modal_response(request, context=context)
+        return self.modal_response( request, context = context )
 
     def post(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
-        journal = get_object_or_404(
-            Journal,
-            uuid = journal_uuid,
-        )
-        request_member = get_object_or_404(
-            TripMember,
-            trip = journal.trip,
-            user = request.user,
-        )
-        self.assert_is_admin(request_member)
+        journal = self._get_journal_and_verify_access(journal_uuid, request.user)
 
-        # Get publishing status to check for edge cases
-        publishing_status = PublishingStatusHelper.get_publishing_status(journal)
-
-        # Validate visibility form (if visibility changes are included)
-        visibility_form = JournalVisibilityForm(request.POST, journal=journal)
+        publishing_status = PublishingStatusHelper.get_publishing_status( journal= journal )
+        visibility_form = JournalVisibilityForm( request.POST, journal = journal )
 
         if not visibility_form.is_valid():
-            context = {
-                'journal': journal,
-                'trip': journal.trip,
-                'publishing_status': publishing_status,
-                'visibility_form': visibility_form,
-            }
-            return self.modal_response(request, context=context, status=400)
+            return self._build_error_response(
+                request = request,
+                journal = journal,
+                publishing_status = publishing_status,
+                visibility_form = visibility_form,
+                status = 400
+            )
 
         try:
-            with transaction.atomic():
-                # Publish the journal
-                travelog = PublishingService.publish_journal(
-                    journal=journal,
-                    user=request.user
-                )
-
-                # Apply visibility changes if form was submitted
-                visibility_name = visibility_form.cleaned_data['visibility']
-                visibility = JournalVisibility[visibility_name]
-
-                journal.visibility = visibility
-
-                # Handle password setting based on form state
-                if visibility_form.should_update_password():
-                    password = visibility_form.cleaned_data.get('password')
-                    journal.set_password(password)
-
-                journal.modified_by = request.user
-                journal.save()
+            selected_entries = request.POST.getlist('selected_entries')
+            travelog = JournalPublishingService.publish_with_selections_and_visibility(
+                journal = journal,
+                selected_entry_uuids = selected_entries,
+                visibility_form = visibility_form,
+                user = request.user
+            )
 
             logger.info(
                 f"Journal {journal.uuid} published as Travelog v{travelog.version_number} "
                 f"by user {request.user}"
             )
-
             return self.refresh_response(request)
 
         except ValueError as e:
-            # Handle validation errors (e.g., no entries to publish)
             logger.warning(f"Failed to publish journal {journal.uuid}: {e}")
-
-            # Re-display modal with error message
-            visibility_form.add_error(None, str(e))
-            context = {
-                'journal': journal,
-                'trip': journal.trip,
-                'publishing_status': publishing_status,
-                'visibility_form': visibility_form,
-            }
-            return self.modal_response(request, context=context, status=400)
+            visibility_form.add_error( None, str(e) )
+            return self._build_error_response(
+                request = request,
+                journal = journal,
+                publishing_status = publishing_status,
+                visibility_form = visibility_form,
+                status = 400
+            )
 
         except Exception as e:
-            # Handle unexpected errors
             logger.error(f"Error publishing journal {journal.uuid}: {e}", exc_info=True)
-
             visibility_form.add_error(None, "An unexpected error occurred while publishing.")
-            context = {
-                'journal': journal,
-                'trip': journal.trip,
-                'publishing_status': publishing_status,
-                'visibility_form': visibility_form,
-            }
-            return self.modal_response(request, context=context, status=500)
+            return self._build_error_response(
+                request = request,
+                journal = journal,
+                publishing_status = publishing_status,
+                visibility_form = visibility_form,
+                status = 500
+            )
+
+    def _get_journal_and_verify_access( self, journal_uuid: UUID, user : UserType ) -> Journal:
+        journal = get_object_or_404(Journal, uuid=journal_uuid)
+        request_member = get_object_or_404(
+            TripMember,
+            trip = journal.trip,
+            user = user,
+        )
+        self.assert_is_admin( request_member )
+        return journal
+
+    def _build_error_response( self,
+                               request            : HttpRequest,
+                               journal            : Journal,
+                               publishing_status  : PublishingStatus,
+                               visibility_form    : JournalVisibilityForm,
+                               status             : int      ) -> HttpResponse:
+        context = JournalPublishContextBuilder.build_modal_context(
+            journal = journal,
+            publishing_status = publishing_status,
+            visibility_form = visibility_form
+        )
+        return self.modal_response(request, context=context, status=status)
 
 
 class JournalVersionHistoryView( LoginRequiredMixin, TripViewMixin, ModalView ):

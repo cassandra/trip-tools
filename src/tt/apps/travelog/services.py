@@ -34,7 +34,7 @@ class PublishingService:
         Creates an immutable snapshot of the journal and all its entries.
         Manages version numbering and ensures only one version is marked as current.
         """
-        journal_entries = journal.entries.all()
+        journal_entries = journal.entries.filter(include_in_publish=True)
         if not journal_entries.exists():
             raise ValueError("Cannot publish journal with no entries")
 
