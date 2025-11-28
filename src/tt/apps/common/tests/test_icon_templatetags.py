@@ -12,8 +12,8 @@ from django.template import Template, Context, TemplateSyntaxError
 from django.test import TestCase
 
 from tt.apps.common.templatetags.icons import (
-    icon, icon_list, has_icon,
-    AVAILABLE_ICONS, ICON_SIZES, ICON_COLORS
+    icon, icon_list, has_icon, resolve_icon_name,
+    AVAILABLE_ICONS, ICON_SIZES, ICON_COLORS, ICON_ALIASES
 )
 
 logging.disable(logging.CRITICAL)
@@ -247,8 +247,8 @@ class IconListTagTests(TestCase):
         """icon_list contains known available icons - completeness check."""
         result = icon_list()
 
-        # Check a few known icons are in the list
-        known_icons = ['plus', 'edit', 'delete', 'home']
+        # Check a few known icons are in the list (using canonical names)
+        known_icons = ['plus', 'pencil', 'trash', 'house']
         for icon_name in known_icons:
             self.assertIn(icon_name, result)
 
@@ -368,3 +368,90 @@ class IconTemplateIntegrationTests(TestCase):
         # But rendering should raise TemplateSyntaxError
         with self.assertRaises(TemplateSyntaxError):
             template.render(context)
+
+
+class IconAliasTests(TestCase):
+    """Test icon alias resolution - allows contextual names for icons."""
+
+    def test_resolve_icon_name_returns_canonical_for_alias(self):
+        """resolve_icon_name converts alias to canonical name."""
+        self.assertEqual(resolve_icon_name('alert-triangle'), 'exclamation-triangle')
+        self.assertEqual(resolve_icon_name('warning'), 'exclamation-triangle')
+        self.assertEqual(resolve_icon_name('file-text'), 'book')
+        self.assertEqual(resolve_icon_name('save'), 'check')
+
+    def test_resolve_icon_name_returns_same_for_canonical(self):
+        """resolve_icon_name returns same name for non-aliases."""
+        self.assertEqual(resolve_icon_name('plus'), 'plus')
+        self.assertEqual(resolve_icon_name('exclamation-triangle'), 'exclamation-triangle')
+        self.assertEqual(resolve_icon_name('check'), 'check')
+
+    def test_icon_renders_with_alias_name(self):
+        """Icon tag accepts and renders alias names."""
+        result = icon('alert-triangle')
+        self.assertIn('tt-icon', result)
+        # Should render successfully (not raise error)
+
+    def test_icon_alias_renders_same_as_canonical(self):
+        """Alias renders the same SVG as canonical name."""
+        alias_result = icon('alert-triangle')
+        canonical_result = icon('warning')
+        # Both should render successfully and contain the icon
+        self.assertIn('tt-icon', alias_result)
+        self.assertIn('tt-icon', canonical_result)
+
+    def test_has_icon_returns_true_for_aliases(self):
+        """has_icon returns True for valid aliases."""
+        self.assertTrue(has_icon('alert-triangle'))
+        self.assertTrue(has_icon('warning'))
+        self.assertTrue(has_icon('file-text'))
+        self.assertTrue(has_icon('save'))
+
+    def test_has_icon_still_works_for_canonical_names(self):
+        """has_icon still works for canonical icon names."""
+        self.assertTrue(has_icon('exclamation-triangle'))
+        self.assertTrue(has_icon('book'))
+        self.assertTrue(has_icon('check'))
+
+    def test_icon_error_message_includes_aliases(self):
+        """Error message for invalid icon includes aliases in available list."""
+        with self.assertRaises(TemplateSyntaxError) as cm:
+            icon('nonexistent-icon')
+
+        error_msg = str(cm.exception)
+        # Should include alias names in the available icons list
+        self.assertIn('alert-triangle', error_msg)
+        self.assertIn('file-text', error_msg)
+
+    def test_icon_list_excludes_aliases_by_default(self):
+        """icon_list excludes aliases by default."""
+        result = icon_list()
+        self.assertNotIn('alert-triangle', result)
+        self.assertNotIn('file-text', result)
+        self.assertNotIn('save', result)
+        self.assertNotIn('edit', result)
+        # But includes canonical names
+        self.assertIn('exclamation-triangle', result)
+        self.assertIn('book', result)
+        self.assertIn('check', result)
+        self.assertIn('pencil', result)
+
+    def test_icon_list_includes_aliases_when_requested(self):
+        """icon_list includes aliases when include_aliases=True."""
+        result = icon_list(include_aliases=True)
+        # Should include both canonical names and aliases
+        self.assertIn('exclamation-triangle', result)
+        self.assertIn('alert-triangle', result)
+        self.assertIn('warning', result)
+        self.assertIn('book', result)
+        self.assertIn('file-text', result)
+        self.assertIn('save', result)
+        self.assertIn('edit', result)
+
+    def test_all_aliases_map_to_valid_icons(self):
+        """All defined aliases map to valid canonical icons - integrity check."""
+        for alias, canonical in ICON_ALIASES.items():
+            self.assertIn(
+                canonical, AVAILABLE_ICONS,
+                f'Alias "{alias}" maps to non-existent icon "{canonical}"'
+            )

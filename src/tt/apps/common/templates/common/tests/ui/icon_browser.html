@@ -6,22 +6,25 @@
 <div class="container-fluid m-4">
 
   <h2 class="text-info">Icon Browser</h2>
-  <p class="text-muted">Auto-discovery: {{ total_icons }} icons available</p>
+  <p class="text-muted">{{ total_canonical }} icons + {{ total_aliases }} aliases</p>
 
   <div class="row mb-4">
     <div class="col-12">
       <h3 class="text-primary">All Available Icons</h3>
       <p>Icons displayed with default size (md) and no color override:</p>
-      
+
       <div class="row">
-        {% for icon_name in available_icons %}
+        {% for icon_info in all_icons %}
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
-          <div class="card">
+          <div class="card{% if icon_info.is_alias %} border-secondary{% endif %}">
             <div class="card-body text-center">
               <div class="mb-2">
-                {% icon icon_name size="xl" %}
+                {% icon icon_info.name size="xl" %}
               </div>
-              <small class="text-muted">{{ icon_name }}</small>
+              <small class="text-muted">{{ icon_info.name }}</small>
+              {% if icon_info.is_alias %}
+              <br><small class="text-secondary fst-italic">alias for {{ icon_info.canonical }}</small>
+              {% endif %}
             </div>
           </div>
         </div>

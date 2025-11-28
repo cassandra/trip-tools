@@ -4,6 +4,12 @@
 
 Use the standardized `{% icon %}` template tag for consistent icon rendering. See `tt/apps/common/templatetags/icons.py` for available icons and parameters.
 
+## Icon Naming Guidelines
+
+- **Canonical names** should describe the visual appearance of the SVG (e.g., `triangle`, `check`, `check-circle`)
+- **Aliases** provide contextual names for different uses (e.g., `warning` → `triangle`, `save` → `check`)
+- When creating new icons, name them for what they look like, then add aliases for how they're used
+
 ## UX Principles for Icon Usage
 
 ### Primary Value
@@ -139,6 +145,18 @@ Ensure icon buttons have visible focus indicators:
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+```
+
+## Icon Aliases
+
+Icons can be referenced by alternative names using aliases. See `ICON_ALIASES` in `icons.py` for current mappings.
+
+Both canonical names and aliases work with `{% icon %}`, `has_icon`, and `icon_list`:
+
+```django
+{% icon "save" %}                               {# Canonical name #}
+{% icon "confirm" %}                            {# Alias (if defined) #}
+{% icon_list include_aliases=True as icons %}   {# Include aliases in list #}
 ```
 
 ## Icon Discovery and Creation
