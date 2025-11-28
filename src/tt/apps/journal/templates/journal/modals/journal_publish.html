@@ -2,7 +2,6 @@
 {% load icons %}
 
 {% block modal_dialog_id %}journal-publish-modal{% endblock %}
-
 {% block title_text %}Publish Journal{% endblock %}
 
 {% block preamble %}
@@ -11,187 +10,116 @@
 {% endblock %}
 
 {% block body %}
-  {# Publishing Status Summary #}
-  <div class="mb-4">
-    <h6 class="font-weight-bold mb-2">Publishing Status</h6>
-    {% if publishing_status.has_published_version %}
-      {# Show current version info #}
-      <div class="d-flex align-items-start mb-2">
-        <div class="mr-2">
-          {% icon "book" size="sm" css_class="text-primary" %}
+  {# Compact Status Card #}
+  <div class="card bg-light mb-4">
+    <div class="card-body py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          {% if publishing_status.has_published_version %}
+            <span class="text-muted">Current:</span>
+            <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+            <span class="text-muted ml-2">
+              ({{ publishing_status.current_published_version.published_datetime|date:"M j, Y" }})
+            </span>
+          {% else %}
+            <span class="text-muted">Status:</span>
+            <strong>Never Published</strong>
+          {% endif %}
         </div>
         <div>
-          <div>
-            <strong>Current Version:</strong> {{ publishing_status.current_published_version.version_number }}
-          </div>
-          <small class="text-muted">
-            Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
-            {% if publishing_status.current_published_version.published_by %}
-              by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
-            {% endif %}
-          </small>
+          {% if publishing_status.has_unpublished_changes %}
+            <span class="badge badge-warning">Unpublished Changes</span>
+          {% elif publishing_status.has_published_version %}
+            <span class="badge badge-success">Up to Date</span>
+          {% endif %}
         </div>
       </div>
-
-      {% if publishing_status.has_unpublished_changes %}
-        {# Show unpublished changes indicator #}
-        <div class="d-flex align-items-start">
-          <div class="mr-2">
-            {% icon "exclamation-circle" size="sm" css_class="text-warning" %}
-          </div>
-          <div>
-            <strong class="text-warning">Unpublished Changes Detected</strong>
-            <div><small class="text-muted">Publishing will create version {{ publishing_status.current_published_version.version_number|add:1 }}</small></div>
-          </div>
-        </div>
-      {% else %}
-        {# Show up-to-date status #}
-        <div class="d-flex align-items-start">
-          <div class="mr-2">
-            {% icon "check-circle" size="sm" css_class="text-success" %}
-          </div>
-          <div>
-            <strong class="text-success">Up to Date</strong>
-            <div><small class="text-muted">No unpublished changes detected</small></div>
-          </div>
-        </div>
-      {% endif %}
-    {% else %}
-      {# First-time publishing #}
-      <div class="d-flex align-items-start">
-        <div class="mr-2">
-          {% icon "upload" size="sm" css_class="text-primary" %}
-        </div>
-        <div>
-          <div><strong>Ready for First Publication</strong></div>
-          <small class="text-muted">This will create version 1 of your journal</small>
-        </div>
-      </div>
-    {% endif %}
+    </div>
   </div>
 
-  {# Visibility Controls Section #}
+  {# Visibility Section - Primary Control #}
   <div class="mb-4">
-    <h6 class="font-weight-bold mb-2">Visibility Settings</h6>
+    <label class="font-weight-bold d-block mb-2">
+      {% icon "eye" size="sm" css_class="tt-icon-left text-muted" %}
+      Who can view this journal?
+    </label>
     {% include "journal/components/_visibility_form_fields.html" with form=visibility_form journal=journal %}
   </div>
 
-  {# Selective Entry Publishing Section #}
+  {# Pages Section #}
   {% if journal_entries %}
   <div class="mb-4">
-    <h6 class="font-weight-bold mb-2">Pages to Publish</h6>
-
-    {# Entry count feedback - always visible #}
-    <div class="mb-2">
-      <small class="text-muted">
-        <strong><span id="publish-entry-count">{{ included_entries }}</span> of {{ total_entries }}</strong>
-        {% if total_entries == 1 %}entry{% else %}entries{% endif %} will be published
-      </small>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label class="font-weight-bold mb-0">
+        {% icon "book" size="sm" css_class="tt-icon-left text-muted" %}
+        Pages to Publish
+      </label>
+      <span class="text-muted">{{ total_entries }} pages</span>
     </div>
 
-    {# Progressive disclosure: Show different UI based on selection state #}
-    {% if all_entries_included %}
-      {# All entries selected: Show condensed view with option to reveal list #}
-      <div id="all-entries-selected-message">
-        <div class="d-flex align-items-start mb-2">
-          <div class="mr-2">
-            {% icon "check-circle" size="sm" css_class="text-success" %}
-          </div>
-          <div>
-            <strong>Publish all pages?</strong>
-            <div>
-              <small class="text-muted">
-                All entries are currently included.
-                <a href="#" id="show-entry-list-link" class="text-primary">Click here</a> to select specific pages.
-              </small>
-            </div>
-          </div>
-        </div>
+    {% if not all_entries_included %}
+      {# Warning when not all pages selected #}
+      <div class="alert alert-warning py-2 mb-2">
+        <small>
+          {% icon "warning" size="sm" css_class="tt-icon-left" %}
+          Some pages are excluded from publishing.
+        </small>
       </div>
-
-      {# Hidden checkbox list - shown when user clicks link #}
-      <div id="entry-selection-list" style="display: none;">
-    {% else %}
-      {# Some entries excluded: Show list by default with warning #}
-      <div id="some-entries-excluded-message" class="mb-2">
-        <div class="alert alert-warning py-2 px-3 mb-2">
-          <div class="d-flex align-items-start">
-            <div class="mr-2">
-              {% icon "exclamation-circle" size="sm" %}
-            </div>
-            <small>
-              <strong>Not all pages will be published.</strong> Please review and adjust published pages as needed.
-            </small>
-          </div>
-        </div>
-      </div>
-
-      {# Visible checkbox list #}
-      <div id="entry-selection-list">
     {% endif %}
 
-        {# Checkbox list for all entries #}
-        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+    {# Collapsible page list using Bootstrap collapse #}
+    <div>
+      <a class="text-primary" data-toggle="collapse" href="#page-selection-list" role="button"
+         aria-expanded="{% if not all_entries_included %}true{% else %}false{% endif %}"
+         aria-controls="page-selection-list">
+        {% if all_entries_included %}
+          Review or change page selection
+        {% else %}
+          View page selection
+        {% endif %}
+      </a>
+      <div class="collapse {% if not all_entries_included %}show{% endif %}" id="page-selection-list">
+        <div class="border rounded p-3 mt-2" style="max-height: 250px; overflow-y: auto;">
           {% for entry in journal_entries %}
           <div class="form-check">
             <input type="checkbox"
                    name="selected_entries"
                    value="{{ entry.uuid }}"
-                   id="entry-checkbox-{{ entry.uuid }}"
-                   class="entry-checkbox form-check-input"
+                   id="entry-{{ entry.uuid }}"
+                   class="form-check-input"
                    {% if entry.include_in_publish %}checked{% endif %}>
-            <label class="form-check-label" for="entry-checkbox-{{ entry.uuid }}">
-              <strong>{{ entry.title }}</strong>
-              <small class="text-muted">
-                {% if entry.is_prologue %}
-                  (Prologue)
-                {% elif entry.is_epilogue %}
-                  (Epilogue)
-                {% else %}
-                  ({{ entry.date|date:"N j, Y" }})
-                {% endif %}
-              </small>
+            <label class="form-check-label" for="entry-{{ entry.uuid }}">
+              {% if entry.is_prologue %}
+                <strong>Prologue</strong>
+              {% elif entry.is_epilogue %}
+                <strong>Epilogue</strong>
+              {% else %}
+                <strong>{{ entry.date|date:"M j, Y" }}</strong>
+              {% endif %}
+              <span class="text-muted">- {{ entry.title }}</span>
             </label>
           </div>
           {% endfor %}
         </div>
-
-        {# Option to collapse list if all are selected #}
-        {% if all_entries_included %}
-        <div class="mt-2">
-          <small>
-            <a href="#" id="hide-entry-list-link" class="text-muted">Hide page list</a>
-          </small>
-        </div>
-        {% endif %}
-      </div>
-  </div>
-  {% endif %}
-
-  {# Confirmation Message #}
-  <div class="alert alert-warning">
-    <div class="d-flex align-items-start">
-      <div class="mr-2">
-        {% icon "warning" size="lg" %}
-      </div>
-      <div>
-        <strong>Important:</strong> Publishing creates an immutable snapshot of your journal. Once published, this version cannot be modified. You can always publish new versions with future changes.
       </div>
     </div>
   </div>
+  {% endif %}
 
-  {# Display form-level errors if any #}
+  {# Form errors #}
   {% if visibility_form.non_field_errors %}
-  <div class="alert alert-danger">
-    {{ visibility_form.non_field_errors }}
-  </div>
+  <div class="alert alert-danger">{{ visibility_form.non_field_errors }}</div>
   {% endif %}
 {% endblock %}
 
 {% block action_right %}
 <button type="submit" class="btn btn-primary">
   {% icon "upload" size="sm" css_class="tt-icon-left" %}
-  PUBLISH
+  {% if publishing_status.has_published_version %}
+    PUBLISH VERSION {{ publishing_status.current_published_version.version_number|add:1 }}
+  {% else %}
+    PUBLISH
+  {% endif %}
 </button>
 {% endblock %}
 
