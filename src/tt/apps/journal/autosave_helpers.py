@@ -37,6 +37,7 @@ class JournalAutoSaveRequest:
     new_title                : Optional[str]
     new_timezone             : Optional[str]
     new_reference_image_uuid : Optional[str]
+    new_include_in_publish   : Optional[bool]
 
 
 @dataclass
@@ -239,6 +240,7 @@ class JournalAutoSaveHelper:
             title = data.get('new_title')
             timezone = data.get('new_timezone')
             reference_image_uuid = data.get('reference_image_uuid')
+            include_in_publish = data.get('include_in_publish')
         except json.JSONDecodeError:
             logger.warning('Invalid JSON in auto-save request')
             return None, JsonResponse(
@@ -279,7 +281,8 @@ class JournalAutoSaveHelper:
             new_date = new_date,
             new_title = title,
             new_timezone = timezone,
-            new_reference_image_uuid = new_reference_image_uuid
+            new_reference_image_uuid = new_reference_image_uuid,
+            new_include_in_publish = include_in_publish
         ), None
 
     @classmethod
@@ -335,7 +338,8 @@ class JournalAutoSaveHelper:
                                  new_date                 : Optional[date_class] = None,
                                  new_title                : Optional[str]        = None,
                                  new_timezone             : Optional[str]        = None,
-                                 new_reference_image_uuid : Optional[str]        = None) -> JournalEntry:
+                                 new_reference_image_uuid : Optional[str]        = None,
+                                 new_include_in_publish   : Optional[bool]       = None) -> JournalEntry:
         extra_updates = {}
 
         if new_date is not None:
@@ -357,6 +361,9 @@ class JournalAutoSaveHelper:
                 except TripImage.DoesNotExist:
                     logger.warning(f'TripImage not found for UUID: {new_reference_image_uuid}')
                     # Skip update - don't change reference_image
+
+        if new_include_in_publish is not None:
+            extra_updates['include_in_publish'] = new_include_in_publish
 
         return SharedAutoSaveHelper.update_entry_atomically(
             entry = entry,

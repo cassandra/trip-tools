@@ -105,6 +105,16 @@
               >
               <small class="text-muted mr-2">({{ entry.date|date:"l" }})</small>
               {{ journal_entry_form.timezone }}
+              <div class="form-check ml-3">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="id_include_in_publish"
+                       name="include_in_publish"
+                       {% if entry.include_in_publish %}checked{% endif %}>
+                <label class="form-check-label" for="id_include_in_publish">
+                  Include in publish
+                </label>
+              </div>
             </div>
             {% endif %}
           </div>

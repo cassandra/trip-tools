@@ -358,19 +358,21 @@ class JournalManagerEdgeCasesTestCase(TestCase):
             JournalEntry.objects.create(journal=journal, date=date(2025, 1, 15), timezone='America/New_York')
 
     def test_journal_get_entries_method(self):
-        """Journal.get_entries() should return queryset of journal entries."""
+        """Journal.get_entries() should return only entries with include_in_publish=True."""
         from datetime import date
 
         journal = Journal.objects.create(trip=self.trip, title='Journal', visibility=JournalVisibility.PRIVATE, timezone='UTC')
 
-        entry1 = JournalEntry.objects.create(journal=journal, date=date(2025, 1, 15), timezone='UTC')
-        entry2 = JournalEntry.objects.create(journal=journal, date=date(2025, 1, 16), timezone='UTC')
+        entry1 = JournalEntry.objects.create(journal=journal, date=date(2025, 1, 15), timezone='UTC', include_in_publish=True)
+        entry2 = JournalEntry.objects.create(journal=journal, date=date(2025, 1, 16), timezone='UTC', include_in_publish=False)
+        entry3 = JournalEntry.objects.create(journal=journal, date=date(2025, 1, 17), timezone='UTC', include_in_publish=True)
 
         entries = journal.get_entries()
 
         self.assertEqual(entries.count(), 2)
         self.assertIn(entry1, entries)
-        self.assertIn(entry2, entries)
+        self.assertNotIn(entry2, entries)
+        self.assertIn(entry3, entries)
 
     def test_journal_password_properties(self):
         """Journal password-related properties should work correctly."""

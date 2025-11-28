@@ -11,9 +11,11 @@ from datetime import date
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from tt.apps.journal.forms import JournalVisibilityForm
 from tt.apps.journal.models import Journal, JournalEntry
-from tt.apps.journal.schemas import PublishingStatusHelper, PublishingStatus
 from tt.apps.journal.enums import JournalVisibility
+from tt.apps.journal.helpers import JournalPublishContextBuilder, PublishingStatusHelper
+from tt.apps.journal.schemas import PublishingStatus
 from tt.apps.trips.enums import TripStatus
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 from tt.apps.travelog.models import Travelog, TravelogEntry
@@ -21,6 +23,144 @@ from tt.apps.travelog.models import Travelog, TravelogEntry
 logging.disable(logging.CRITICAL)
 
 User = get_user_model()
+
+
+class TestJournalPublishContextBuilder(TestCase):
+    """Tests for JournalPublishContextBuilder context building."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Test Trip',
+            trip_status=TripStatus.CURRENT,
+        )
+        self.journal = Journal.objects.create(
+            trip=self.trip,
+            title='Test Journal',
+            timezone='UTC',
+            visibility=JournalVisibility.PRIVATE,
+            modified_by=self.user,
+        )
+
+    def test_build_modal_context_includes_all_required_fields(self):
+        """Test that context includes all required template fields."""
+        JournalEntry.objects.create(
+            journal=self.journal,
+            date=date(2025, 1, 1),
+            title='Day 1',
+            include_in_publish=True,
+            modified_by=self.user,
+        )
+
+        publishing_status = PublishingStatus(
+            current_published_version=None,
+            has_unpublished_changes=False,
+            has_published_version=False,
+        )
+        visibility_form = JournalVisibilityForm(journal=self.journal)
+
+        context = JournalPublishContextBuilder.build_modal_context(
+            journal=self.journal,
+            publishing_status=publishing_status,
+            visibility_form=visibility_form
+        )
+
+        # Verify all required fields are present
+        self.assertIn('journal', context)
+        self.assertIn('trip', context)
+        self.assertIn('publishing_status', context)
+        self.assertIn('visibility_form', context)
+        self.assertIn('journal_entries', context)
+        self.assertIn('total_entries', context)
+        self.assertIn('included_entries', context)
+        self.assertIn('all_entries_included', context)
+
+    def test_build_modal_context_correct_values(self):
+        """Test that context values are correct."""
+        JournalEntry.objects.create(
+            journal=self.journal,
+            date=date(2025, 1, 1),
+            title='Day 1',
+            include_in_publish=True,
+            modified_by=self.user,
+        )
+        JournalEntry.objects.create(
+            journal=self.journal,
+            date=date(2025, 1, 2),
+            title='Day 2',
+            include_in_publish=False,
+            modified_by=self.user,
+        )
+
+        publishing_status = PublishingStatus(
+            current_published_version=None,
+            has_unpublished_changes=False,
+            has_published_version=False,
+        )
+        visibility_form = JournalVisibilityForm(journal=self.journal)
+
+        context = JournalPublishContextBuilder.build_modal_context(
+            journal=self.journal,
+            publishing_status=publishing_status,
+            visibility_form=visibility_form
+        )
+
+        self.assertEqual(context['journal'], self.journal)
+        self.assertEqual(context['trip'], self.trip)
+        self.assertEqual(context['publishing_status'], publishing_status)
+        self.assertEqual(context['visibility_form'], visibility_form)
+        self.assertEqual(context['total_entries'], 2)
+        self.assertEqual(context['included_entries'], 1)
+        self.assertFalse(context['all_entries_included'])
+
+    def test_build_modal_context_entries_ordered_by_date(self):
+        """Test that journal entries are returned in date order."""
+        # Created in non-chronological order to test sorting
+        JournalEntry.objects.create(
+            journal=self.journal,
+            date=date(2025, 1, 3),
+            title='Day 3',
+            include_in_publish=True,
+            modified_by=self.user,
+        )
+        JournalEntry.objects.create(
+            journal=self.journal,
+            date=date(2025, 1, 1),
+            title='Day 1',
+            include_in_publish=True,
+            modified_by=self.user,
+        )
+        JournalEntry.objects.create(
+            journal=self.journal,
+            date=date(2025, 1, 2),
+            title='Day 2',
+            include_in_publish=True,
+            modified_by=self.user,
+        )
+
+        publishing_status = PublishingStatus(
+            current_published_version=None,
+            has_unpublished_changes=False,
+            has_published_version=False,
+        )
+        visibility_form = JournalVisibilityForm(journal=self.journal)
+
+        context = JournalPublishContextBuilder.build_modal_context(
+            journal=self.journal,
+            publishing_status=publishing_status,
+            visibility_form=visibility_form
+        )
+
+        entries = context['journal_entries']
+        self.assertEqual(len(entries), 3)
+        self.assertEqual(entries[0].title, 'Day 1')
+        self.assertEqual(entries[1].title, 'Day 2')
+        self.assertEqual(entries[2].title, 'Day 3')
 
 
 class PublishingStatusHelperTestCase(TestCase):

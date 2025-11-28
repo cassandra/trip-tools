@@ -228,7 +228,7 @@ class Journal( JournalContent ):
         ordering = ['-created_datetime']
 
     def get_entries(self):
-        return self.entries.all()
+        return self.entries.filter(include_in_publish=True)
 
     def set_password( self, raw_password ):
         if raw_password:

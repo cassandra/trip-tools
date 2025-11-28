@@ -26,58 +26,34 @@ class PublishingStatus:
         return not self.has_published_version
 
 
-class PublishingStatusHelper:
+@dataclass
+class EntrySelectionStats:
+    """Statistics about journal entry publishing selections."""
+
+    total_entries    : int
+    included_entries : int
+
+    @property
+    def excluded_entries(self) -> int:
+        return self.total_entries - self.included_entries
+
+    @property
+    def all_entries_included(self) -> bool:
+        return self.included_entries == self.total_entries
+
+    @property
+    def none_included(self) -> bool:
+        return self.included_entries == 0
 
     @classmethod
-    def get_publishing_status(cls, journal: Journal) -> PublishingStatus:
-
-        current_travelog = Travelog.objects.get_current( journal )
-        has_published_version = current_travelog is not None
-
-        if has_published_version:
-            has_changes = cls._has_unpublished_changes( journal, current_travelog )
-        else:
-            has_changes = False
-
-        return PublishingStatus(
-            current_published_version = current_travelog,
-            has_unpublished_changes = has_changes,
-            has_published_version = has_published_version,
+    def for_journal(cls, journal: Journal) -> 'EntrySelectionStats':
+        """Calculate selection statistics for a journal."""
+        entries = list(journal.entries.all())
+        included = sum(1 for entry in entries if entry.include_in_publish)
+        return cls(
+            total_entries=len(entries),
+            included_entries=included
         )
 
-    @classmethod
-    def _has_unpublished_changes(cls, journal: Journal, travelog: Travelog) -> bool:
-        """
-        Check if journal has been modified since publication.
 
-        For Journal metadata (title, description): compares content directly since
-        Journal.modified_datetime updates during publish transaction.
-
-        For JournalEntries: compares modification timestamps since entries aren't
-        modified during publish.
-        """
-        # Compare Journal content directly (title, description, reference_image are published fields)
-        if journal.title != travelog.title:
-            return True
-        if journal.description != travelog.description:
-            return True
-        if journal.reference_image_id != travelog.reference_image_id:
-            return True
-
-        # Compare JournalEntry timestamps (entries modified after publish)
-        # Only consider entries that are marked for publishing
-        published_datetime = travelog.published_datetime
-        if journal.entries.filter(
-            include_in_publish=True,
-            modified_datetime__gt=published_datetime
-        ).exists():
-            return True
-
-        # Check if entry count changed (entries added or deleted)
-        # Only count entries marked for publishing
-        journal_entry_count = journal.entries.filter(include_in_publish=True).count()
-        travelog_entry_count = travelog.entries.count()
-        if journal_entry_count != travelog_entry_count:
-            return True
-
-        return False
+    

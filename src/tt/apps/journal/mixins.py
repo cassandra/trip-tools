@@ -5,8 +5,8 @@ from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 
 from .context import JournalPageContext
+from .helpers import PublishingStatusHelper
 from .models import Journal, JournalEntry
-from .schemas import PublishingStatusHelper
 
 
 class JournalViewMixin:

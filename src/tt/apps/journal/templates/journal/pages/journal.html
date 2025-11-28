@@ -258,7 +258,11 @@
               </h5>
               {% if entry.text %}
               <small class="text-muted">{{ entry.display_date_long }}</small>
-              {% else %}
+              {% endif %}
+              {% if not entry.include_in_publish %}
+              <small class="text-danger d-block">Excluded from publish</small>
+              {% endif %}
+              {% if not entry.text %}
               <p class="mb-0 text-muted"><em>Empty entry</em></p>
               {% endif %}
             </div>
