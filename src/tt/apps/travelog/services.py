@@ -9,7 +9,9 @@ from django.db import transaction
 from django.http import Http404
 
 from tt.apps.common.redis_client import get_redis_client
+from tt.apps.common.regex_utils import HtmlRegexPatterns
 from tt.apps.journal.models import Journal, JournalContent
+from tt.environment.constants import TtConst
 from .models import Travelog, TravelogEntry
 from .context import TravelogPageContext
 from .schemas import TravelogImageMetadata
@@ -168,16 +170,22 @@ class TravelogImageCacheService:
     TTL_VERSION = 86400     # 24 hours
 
     # Regex pattern for extracting image UUIDs from HTML
-    # Matches: <img class="trip-image" data-uuid="{UUID}" ...>
+    # Matches: <img class="...trip-image..." data-uuid="{UUID}" ...>
     IMAGE_UUID_PATTERN = re.compile(
-        r'<img[^>]+class="[^"]*trip-image[^"]*"[^>]+data-uuid="([0-9a-f-]{36})"',
+        r'<img' + HtmlRegexPatterns.ANY_ATTRS +
+        HtmlRegexPatterns.class_containing(TtConst.JOURNAL_IMAGE_CLASS) +
+        HtmlRegexPatterns.ANY_ATTRS +
+        HtmlRegexPatterns.uuid_capture('data-' + TtConst.UUID_DATA_ATTR),
         re.IGNORECASE
     )
 
     # Regex pattern for extracting layout from wrapper
-    # Matches: <span class="trip-image-wrapper" data-layout="{LAYOUT}">
+    # Matches: <span class="...trip-image-wrapper..." data-layout="{LAYOUT}">
     LAYOUT_PATTERN = re.compile(
-        r'<span[^>]+class="[^"]*trip-image-wrapper[^"]*"[^>]+data-layout="([^"]+)"',
+        r'<span' + HtmlRegexPatterns.ANY_ATTRS +
+        HtmlRegexPatterns.class_containing(TtConst.JOURNAL_IMAGE_WRAPPER_CLASS) +
+        HtmlRegexPatterns.ANY_ATTRS +
+        HtmlRegexPatterns.attr_capture('data-' + TtConst.LAYOUT_DATA_ATTR),
         re.IGNORECASE
     )
 

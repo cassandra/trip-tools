@@ -467,6 +467,199 @@ class TestTravelogImageCacheService(TestCase):
         self.assertIn('VIEW', cache_key)
 
 
+class TestImageUuidPatternRegex(TestCase):
+    """
+    Direct tests for IMAGE_UUID_PATTERN regex.
+
+    Tests the compiled pattern directly to ensure refactoring
+    to use TtConst doesn't break matching behavior.
+    """
+
+    def test_basic_match(self):
+        """Test basic image tag with class and data-uuid."""
+        html = '<img class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
+
+    def test_class_with_additional_classes_before(self):
+        """Test when trip-image has classes before it."""
+        html = '<img class="other-class trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
+
+    def test_class_with_additional_classes_after(self):
+        """Test when trip-image has classes after it."""
+        html = '<img class="trip-image extra-class" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
+
+    def test_class_with_additional_classes_both_sides(self):
+        """Test when trip-image has classes on both sides."""
+        html = '<img class="before trip-image after" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
+
+    def test_additional_attributes_before_class(self):
+        """Test with additional attributes before class."""
+        html = '<img src="/test.jpg" alt="Test" class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
+
+    def test_additional_attributes_between_class_and_uuid(self):
+        """Test with additional attributes between class and data-uuid."""
+        html = '<img class="trip-image" src="/test.jpg" alt="Test" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
+
+    def test_case_insensitive_tag(self):
+        """Test case insensitivity for img tag."""
+        html = '<IMG class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+
+    def test_case_insensitive_attributes(self):
+        """Test case insensitivity for attributes."""
+        html = '<img CLASS="trip-image" DATA-UUID="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+
+    def test_self_closing_tag(self):
+        """Test self-closing img tag."""
+        html = '<img class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012" />'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNotNone(match)
+
+    def test_no_match_wrong_class(self):
+        """Test no match when class doesn't contain trip-image."""
+        html = '<img class="other-image" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNone(match)
+
+    def test_no_match_missing_data_uuid(self):
+        """Test no match when data-uuid is missing."""
+        html = '<img class="trip-image" src="/test.jpg">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNone(match)
+
+    def test_no_match_invalid_uuid_format(self):
+        """Test no match when UUID format is invalid."""
+        html = '<img class="trip-image" data-uuid="not-a-valid-uuid">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNone(match)
+
+    def test_no_match_wrong_tag(self):
+        """Test no match for non-img tags."""
+        html = '<div class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
+        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
+        self.assertIsNone(match)
+
+    def test_multiple_images_findall(self):
+        """Test finding multiple images in HTML."""
+        html = '''
+        <img class="trip-image" data-uuid="11111111-1111-1111-1111-111111111111">
+        <p>Text</p>
+        <img class="trip-image" data-uuid="22222222-2222-2222-2222-222222222222">
+        '''
+        matches = TravelogImageCacheService.IMAGE_UUID_PATTERN.findall(html)
+        self.assertEqual(len(matches), 2)
+        self.assertEqual(matches[0], '11111111-1111-1111-1111-111111111111')
+        self.assertEqual(matches[1], '22222222-2222-2222-2222-222222222222')
+
+
+class TestLayoutPatternRegex(TestCase):
+    """
+    Direct tests for LAYOUT_PATTERN regex.
+
+    Tests the compiled pattern directly to ensure refactoring
+    to use TtConst doesn't break matching behavior.
+    """
+
+    def test_basic_match_float_right(self):
+        """Test basic wrapper with float-right layout."""
+        html = '<span class="trip-image-wrapper" data-layout="float-right">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'float-right')
+
+    def test_basic_match_full_width(self):
+        """Test basic wrapper with full-width layout."""
+        html = '<span class="trip-image-wrapper" data-layout="full-width">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'full-width')
+
+    def test_class_with_additional_classes_before(self):
+        """Test when trip-image-wrapper has classes before it."""
+        html = '<span class="other-class trip-image-wrapper" data-layout="float-right">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'float-right')
+
+    def test_class_with_additional_classes_after(self):
+        """Test when trip-image-wrapper has classes after it."""
+        html = '<span class="trip-image-wrapper extra-class" data-layout="full-width">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'full-width')
+
+    def test_additional_attributes_before_class(self):
+        """Test with additional attributes before class."""
+        html = '<span id="test" class="trip-image-wrapper" data-layout="float-right">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'float-right')
+
+    def test_additional_attributes_between_class_and_layout(self):
+        """Test with additional attributes between class and data-layout."""
+        html = '<span class="trip-image-wrapper" id="test" data-layout="full-width">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'full-width')
+
+    def test_case_insensitive_tag(self):
+        """Test case insensitivity for span tag."""
+        html = '<SPAN class="trip-image-wrapper" data-layout="float-right">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+
+    def test_case_insensitive_attributes(self):
+        """Test case insensitivity for attributes."""
+        html = '<span CLASS="trip-image-wrapper" DATA-LAYOUT="full-width">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+
+    def test_no_match_wrong_class(self):
+        """Test no match when class doesn't contain trip-image-wrapper."""
+        html = '<span class="other-wrapper" data-layout="float-right">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNone(match)
+
+    def test_no_match_missing_data_layout(self):
+        """Test no match when data-layout is missing."""
+        html = '<span class="trip-image-wrapper">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNone(match)
+
+    def test_no_match_wrong_tag(self):
+        """Test no match for non-span tags."""
+        html = '<div class="trip-image-wrapper" data-layout="float-right">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNone(match)
+
+    def test_arbitrary_layout_value(self):
+        """Test capturing arbitrary layout values."""
+        html = '<span class="trip-image-wrapper" data-layout="custom-layout-123">'
+        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'custom-layout-123')
+
+
 class TestTravelogImageCacheKeySecurity(TestCase):
     """Test cache key generation security."""
 

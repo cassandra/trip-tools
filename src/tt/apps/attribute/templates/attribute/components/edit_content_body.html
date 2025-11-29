@@ -18,7 +18,7 @@ by using the AttributeItemEditContext pattern.
 
 
 <!-- Sticky Panel: Owner Info + Action Bar (always visible) -->
-<div class="{{ TtConst.ATTR_STICKY_PANEL_CLASS }}">
+<div class="attr-sticky-panel">
   <!-- Basic Owner Information (minimal) - only if owner_form provided -->
 
   {% block basic_info %}
@@ -41,8 +41,8 @@ by using the AttributeItemEditContext pattern.
   </div>
   {% endblock %}
   
-  <div class="{{ TtConst.ATTR_ACTION_BAR_CLASS }}">
-    <div class="{{ TtConst.ATTR_ACTION_BAR_CONTENT_CLASS }}">
+  <div class="attr-action-bar">
+    <div class="attr-action-bar-content">
       <!-- Left Side: UPDATE button and vertically stacked message areas -->
       <div class="attr-action-bar-left">
         <button id="{{ attr_page_context.update_button_html_id }}" 
@@ -69,7 +69,7 @@ by using the AttributeItemEditContext pattern.
         </div>
       </div>
       <!-- Right Side: Action buttons -->
-      <div class="{{ TtConst.ATTR_ACTION_BUTTONS_CLASS }}">
+      <div class="attr-action-buttons">
         {% block additional_actions %}
         {% endblock %}
         {% block file_upload_button %}
@@ -92,7 +92,7 @@ by using the AttributeItemEditContext pattern.
 </div>
 <!-- Scrollable Content Area (below sticky panel) -->
 <div id="{{ attr_page_context.scrollable_content_html_id }}"
-     class="{{ TtConst.ATTR_SCROLLABLE_CONTENT_CLASS }}">
+     class="attr-scrollable-content">
   
   <!-- Files Section -->
   {% block files_section %}

@@ -77,9 +77,9 @@
         }
 
         // Get image data from card's data attributes
-        var imageUuid = $card.data(TtConst.IMAGE_PICKER_UUID_ATTR);
-        var thumbnailUrl = $card.data(TtConst.IMAGE_PICKER_THUMBNAIL_URL_ATTR);
-        var caption = $card.data(TtConst.IMAGE_PICKER_CAPTION_ATTR) || 'Untitled';
+        var imageUuid = $card.data(TtConst.IMAGE_UUID_DATA_ATTR);
+        var thumbnailUrl = $card.data(TtConst.THUMBNAIL_URL_DATA_ATTR);
+        var caption = $card.data(TtConst.CAPTION_DATA_ATTR) || 'Untitled';
 
         // Update hidden input (scoped to modal)
         var $uuidInput = $modal.find(TtConst.IMAGE_PICKER_UUID_INPUT_SELECTOR);
@@ -108,7 +108,7 @@
         // Update visual selection state (scoped to modal)
         $modal.find(TtConst.IMAGE_PICKER_CARD_SELECTOR).each(function() {
             var $thisCard = $(this);
-            if ($thisCard.data(TtConst.IMAGE_PICKER_UUID_ATTR) === imageUuid) {
+            if ($thisCard.data(TtConst.IMAGE_UUID_DATA_ATTR) === imageUuid) {
                 $thisCard.css('border-color', '#007bff');
             } else {
                 $thisCard.css('border-color', 'transparent');

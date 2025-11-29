@@ -33,7 +33,6 @@
     C.ATTR_TEXTAREA_SELECTOR = '.' + C.ATTR_TEXTAREA_CLASS;
     C.ATTR_TEXT_VALUE_WRAPPER_SELECTOR = '.' + C.ATTR_TEXT_VALUE_WRAPPER_CLASS;
     C.ATTR_EXPAND_CONTROLS_SELECTOR = '.' + C.ATTR_EXPAND_CONTROLS_CLASS;
-    C.ATTR_AUTO_DISMISS_SELECTOR = '.' + C.ATTR_AUTO_DISMISS_CLASS;
     C.ATTR_DISPLAY_FIELD_SELECTOR = '.' + C.ATTR_DISPLAY_FIELD_CLASS;
     C.ATTR_SHOW_MORE_TEXT_SELECTOR = '.' + C.ATTR_SHOW_MORE_TEXT_CLASS;
     C.ATTR_SHOW_LESS_TEXT_SELECTOR = '.' + C.ATTR_SHOW_LESS_TEXT_CLASS;
@@ -51,13 +50,11 @@
     C.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR = '.' + C.JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS;
     C.JOURNAL_IMAGE_WRAPPER_SELECTOR = '.' + C.JOURNAL_IMAGE_WRAPPER_CLASS;
     C.JOURNAL_IMAGE_SELECTOR = 'img.' + C.JOURNAL_IMAGE_CLASS;
-    C.JOURNAL_FULL_WIDTH_GROUP_SELECTOR = '.' + C.JOURNAL_FULL_WIDTH_GROUP_CLASS;
-    C.JOURNAL_TEXT_BLOCK_SELECTOR = '.' + C.JOURNAL_TEXT_BLOCK_CLASS;
     C.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_SELECTOR = '.' + C.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_CLASS;
 
     // Journal - complex selectors with attribute filters
-    C.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR = '.' + C.JOURNAL_IMAGE_WRAPPER_CLASS + '[' + C.JOURNAL_DATA_LAYOUT_ATTR + '="float-right"]';
-    C.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR = '.' + C.JOURNAL_IMAGE_WRAPPER_CLASS + '[' + C.JOURNAL_DATA_LAYOUT_ATTR + '="full-width"]';
+    C.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR = '.' + C.JOURNAL_IMAGE_WRAPPER_CLASS + '[data-' + C.LAYOUT_DATA_ATTR + '="float-right"]';
+    C.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR = '.' + C.JOURNAL_IMAGE_WRAPPER_CLASS + '[data-' + C.LAYOUT_DATA_ATTR + '="full-width"]';
 
     // Image picker selectors
     C.IMAGE_PICKER_CAPTION_SELECTOR = '.' + C.IMAGE_PICKER_CAPTION_CLASS;
@@ -97,9 +94,6 @@
         },
         submitForm: function( formElement ) {
             return _submitForm( formElement );
-        },
-        togglePasswordField: function( toggleCheckbox ) {
-            return _togglePasswordField( toggleCheckbox );
         },
         toggleDetails: function( elementId ) {
             return _toggleDetails( elementId );
@@ -156,18 +150,6 @@
         let form = $(formElement).closest('form');
         if ( Tt.DEBUG ) { console.debug( 'Submitting form:', formElement, form ); }
         $(form).submit();
-    }
-
-    function _togglePasswordField( toggleCheckbox ) {
-
-        let passwordField = $(toggleCheckbox).closest(Tt.FORM_FIELD_CONTAINER_SELECTOR).find('input[type="password"], input[type="text"]');
-        if ( toggleCheckbox.checked ) {
-            passwordField.attr('type', 'text');
-            $('label[for="' +  $(toggleCheckbox).attr('id') + '"]').text('Hide');
-        } else {
-            passwordField.attr('type', 'password');
-            $('label[for="' +  $(toggleCheckbox).attr('id') + '"]').text('Show');
-        }
     }
 
     function _toggleDetails( elementId ) {

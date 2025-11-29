@@ -539,28 +539,11 @@
         if (window.Tt && window.Tt.attr && window.Tt.attr.dirtyTracking) {
             window.Tt.attr.dirtyTracking.reinitializeContainer($container.attr('id'));
         }
-        
-        // Handle auto-dismiss messages for this container
-        _handleAutoDismissMessages($container);
-        
+
         // Mark this container as initialized
         $container.data(ATTR_INTERNAL.INITIALIZED_DATA_KEY, true);
     }
-    
-    function _handleAutoDismissMessages($container) {
-        const $statusMsg = $container.find(TtConst.ATTR_STATUS_MESSAGE_SELECTOR);
-        const $dismissibleElements = $statusMsg.find(TtConst.ATTR_AUTO_DISMISS_SELECTOR);
-        if ($dismissibleElements.length > 0) {
-            setTimeout(() => {
-                $dismissibleElements.remove();
-                // Hide the entire status message container if it's now empty
-                if ($statusMsg.text().trim() === '') {
-                    $statusMsg.hide();
-                }
-            }, 5000);
-        }
-    }
-    
+
     // Setup custom Ajax handlers for forms and links in this container
     function _setupCustomAjaxHandlers($container) {
         // Handle main form submissions
@@ -736,7 +719,7 @@
     window.markFileForDeletion = function(attributeId, containerSelector = null) {
         // Find the file card, scoped to container if provided
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const $fileCard = scope.find(`${TtConst.ATTR_FILE_CARD_SELECTOR}[${TtConst.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
+        const $fileCard = scope.find(`${TtConst.ATTR_FILE_CARD_SELECTOR}[data-${TtConst.ATTRIBUTE_ID_DATA_ATTR}="${attributeId}"]`);
         if ($fileCard.length === 0) return;
         
         // The display "name" for a file is its attribute.value, *not* attribute.name
@@ -774,7 +757,7 @@
     window.undoFileDeletion = function(attributeId, containerSelector = null) {
         // Find the file card, scoped to container if provided
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const $fileCard = scope.find(`${TtConst.ATTR_FILE_CARD_SELECTOR}[${TtConst.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
+        const $fileCard = scope.find(`${TtConst.ATTR_FILE_CARD_SELECTOR}[data-${TtConst.ATTRIBUTE_ID_DATA_ATTR}="${attributeId}"]`);
         if ($fileCard.length === 0) return;
 
         // The display "name" for a file is its attribute.value, *not* attribute.name
@@ -811,7 +794,7 @@
     window.markAttributeForDeletion = function(attributeId, containerSelector = null) {
         // Find the attribute card, scoped to container if provided
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const $attributeCard = scope.find(`[${TtConst.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
+        const $attributeCard = scope.find(`[data-${TtConst.ATTRIBUTE_ID_DATA_ATTR}="${attributeId}"]`);
         if ($attributeCard.length === 0) return;
         
         const attributeName = $attributeCard.find(TtConst.ATTR_ATTRIBUTE_NAME_SELECTOR).text().trim().replace('•', '').trim();
@@ -840,7 +823,7 @@
     window.undoAttributeDeletion = function(attributeId, containerSelector = null) {
         // Find the attribute card, scoped to container if provided
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const $attributeCard = scope.find(`[${TtConst.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
+        const $attributeCard = scope.find(`[data-${TtConst.ATTRIBUTE_ID_DATA_ATTR}="${attributeId}"]`);
         if ($attributeCard.length === 0) return;
         
         const attributeName = $attributeCard.find(TtConst.ATTR_ATTRIBUTE_NAME_SELECTOR).text().trim().replace('•', '').trim();
@@ -905,12 +888,13 @@
     
     // Update hidden field when boolean checkbox changes
     function _updateBooleanHiddenField(checkbox) {
-        const hiddenFieldId = checkbox.getAttribute(TtConst.DATA_HIDDEN_FIELD_ATTR);
-        const hiddenField = document.getElementById(hiddenFieldId);
-        
-        if (hiddenField) {
+        const $checkbox = $(checkbox);
+        const hiddenFieldId = $checkbox.data(TtConst.HIDDEN_FIELD_DATA_ATTR);
+        const $hiddenField = $('#' + hiddenFieldId);
+
+        if ($hiddenField.length) {
             // Update hidden field value based on checkbox state
-            hiddenField.value = checkbox.checked ? 'True' : 'False';
+            $hiddenField.val($checkbox.prop('checked') ? 'True' : 'False');
         }
     };
     
@@ -947,10 +931,10 @@
         textareas.each(function() {
             const textarea = $(this);
             const wrapper = textarea.closest(TtConst.ATTR_TEXT_VALUE_WRAPPER_SELECTOR);
-            const isOverflowing = wrapper.attr(TtConst.DATA_OVERFLOW_ATTR) === 'true';
-            
+            const isOverflowing = wrapper.data(TtConst.OVERFLOW_DATA_ATTR) === true;
+
             // Check if this is a display field (new pattern) or legacy textarea
-            const hiddenFieldId = textarea.attr(TtConst.DATA_HIDDEN_FIELD_ATTR);
+            const hiddenFieldId = textarea.data(TtConst.HIDDEN_FIELD_DATA_ATTR);
             const hiddenField = hiddenFieldId ? $('#' + hiddenFieldId) : null;
             
             if (isOverflowing) {
@@ -982,8 +966,8 @@
         const overflows = lineCount > 4;
         
         const wrapper = textarea.closest(TtConst.ATTR_TEXT_VALUE_WRAPPER_SELECTOR);
-        wrapper.attr(TtConst.DATA_OVERFLOW_ATTR, overflows ? 'true' : 'false');
-        wrapper.attr(TtConst.DATA_LINE_COUNT_ATTR, lineCount);
+        wrapper.attr('data-' + TtConst.OVERFLOW_DATA_ATTR, overflows ? 'true' : 'false');
+        wrapper.attr('data-' + TtConst.LINE_COUNT_DATA_ATTR, lineCount);
         
         return { lineCount, overflows };
     }
@@ -1066,8 +1050,8 @@
         
         displayTextareas.each(function() {
             const displayField = $(this);
-            const isOverflowing = displayField.attr(TtConst.DATA_OVERFLOW_ATTR) === 'true';
-            const hiddenFieldId = displayField.attr(TtConst.DATA_HIDDEN_FIELD_ATTR);
+            const isOverflowing = displayField.data(TtConst.OVERFLOW_DATA_ATTR) === true;
+            const hiddenFieldId = displayField.data(TtConst.HIDDEN_FIELD_DATA_ATTR);
             const hiddenField = $('#' + hiddenFieldId);
             
             if (isOverflowing && hiddenField.length > 0) {
@@ -1088,9 +1072,9 @@
         const showLessText = $button.find(TtConst.ATTR_SHOW_LESS_TEXT_SELECTOR);
         
         // Get hidden field if using new pattern
-        const hiddenFieldId = displayField.attr(TtConst.DATA_HIDDEN_FIELD_ATTR);
+        const hiddenFieldId = displayField.data(TtConst.HIDDEN_FIELD_DATA_ATTR);
         const hiddenField = hiddenFieldId ? $('#' + hiddenFieldId) : null;
-        
+
         if (displayField.prop('readonly')) {
             // Currently collapsed - expand it (Show More)
             let fullValue;
@@ -1135,7 +1119,7 @@
                 wrapper.find(TtConst.ATTR_EXPAND_CONTROLS_SELECTOR).hide();
                 
                 // Update wrapper state
-                wrapper.attr(TtConst.DATA_OVERFLOW_ATTR, 'false');
+                wrapper.attr('data-' + TtConst.OVERFLOW_DATA_ATTR, 'false');
                 
                 // Sync to hidden field if using new pattern
                 if (hiddenField && hiddenField.length > 0) {
@@ -1170,7 +1154,7 @@
         // Process all display fields within this container
         $container.find(TtConst.ATTR_DISPLAY_FIELD_SELECTOR).each(function() {
             const displayField = $(this);
-            const hiddenFieldId = displayField.attr(TtConst.DATA_HIDDEN_FIELD_ATTR);
+            const hiddenFieldId = displayField.data(TtConst.HIDDEN_FIELD_DATA_ATTR);
             const hiddenField = hiddenFieldId ? $container.find('#' + hiddenFieldId) : null;
             
             if (hiddenField && hiddenField.length > 0) {

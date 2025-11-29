@@ -64,7 +64,7 @@ class JournalEntryForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
-                'id': TtConst.JOURNAL_EDITOR_ID,
+                'id': TtConst.JOURNAL_TITLE_INPUT_ID,
                 'placeholder': 'Entry title',
             }),
             'date': forms.DateInput(attrs={

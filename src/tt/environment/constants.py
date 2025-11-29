@@ -9,11 +9,13 @@ class TtConst:
     - JavaScript access: Use `TtConst.CONSTANT_NAME` (injected via `base.html`)
     - Derived selectors: JavaScript adds CSS selectors in `main.js`
     """
-    DATA_ATTRIBUTE_ID_ATTR               = 'data-attribute-id'
-    DATA_HIDDEN_FIELD_ATTR               = 'data-hidden-field'
-    DATA_OVERFLOW_ATTR                   = 'data-overflow'
-    DATA_LINE_COUNT_ATTR                 = 'data-line-count'
-    DATA_ORIGINAL_VALUE_ATTR             = 'data-original-value'
+    # Data attributes - values are keys for jQuery .data() (without "data-" prefix)
+    # For raw HTML/CSS selectors, prepend "data-" explicitly
+    ATTRIBUTE_ID_DATA_ATTR               = 'attribute-id'
+    HIDDEN_FIELD_DATA_ATTR               = 'hidden-field'
+    OVERFLOW_DATA_ATTR                   = 'overflow'
+    LINE_COUNT_DATA_ATTR                 = 'line-count'
+    ORIGINAL_VALUE_DATA_ATTR             = 'original-value'
 
     # Attribute Editing
     ATTR_FILE_INPUT_CLASS                = 'attr-file-input'
@@ -41,7 +43,6 @@ class TtConst:
     ATTR_TEXTAREA_CLASS                  = 'attr-textarea'
     ATTR_TEXT_VALUE_WRAPPER_CLASS        = 'attr-text-value-wrapper'
     ATTR_EXPAND_CONTROLS_CLASS           = 'attr-expand-controls'
-    ATTR_AUTO_DISMISS_CLASS              = 'attr-auto-dismiss'
     ATTR_DISPLAY_FIELD_CLASS             = 'display-field'
     ATTR_SHOW_MORE_TEXT_CLASS            = 'show-more-text'
     ATTR_SHOW_LESS_TEXT_CLASS            = 'show-less-text'
@@ -56,29 +57,24 @@ class TtConst:
     JOURNAL_ENTRY_FORM_CLASS             = 'journal-entry-form'
     JOURNAL_SAVE_STATUS_CLASS            = 'journal-save-status'
     JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS = 'journal-editor-multi-image-card'
-    JOURNAL_CURRENT_VERSION_ATTR         = 'current-version'
-    JOURNAL_IMAGE_UUID_ATTR              = 'image-uuid'
-    IMAGE_PICKER_UUID_ATTR               = 'image-uuid'
-    JOURNAL_REFERENCE_IMAGE_UUID_ATTR    = 'reference-image-uuid'
-    JOURNAL_AUTOSAVE_URL_ATTR            = 'autosave-url'
+    CURRENT_VERSION_DATA_ATTR            = 'current-version'
+    IMAGE_UUID_DATA_ATTR                 = 'image-uuid'
+    UUID_DATA_ATTR                       = 'uuid'
+    REFERENCE_IMAGE_UUID_DATA_ATTR       = 'reference-image-uuid'
+    AUTOSAVE_URL_DATA_ATTR               = 'autosave-url'
     JOURNAL_IMAGE_WRAPPER_CLASS          = 'trip-image-wrapper'
     JOURNAL_IMAGE_CLASS                  = 'trip-image'
-    JOURNAL_FULL_WIDTH_GROUP_CLASS       = 'full-width-image-group'
     JOURNAL_FLOAT_MARKER_CLASS           = 'has-float-image'
-    JOURNAL_DATA_LAYOUT_ATTR             = 'data-layout'
-    JOURNAL_UUID_ATTR                    = 'uuid'
-    JOURNAL_DATA_UUID_ATTR               = 'data-uuid'
-    JOURNAL_TEXT_BLOCK_CLASS             = 'text-block'
+    LAYOUT_DATA_ATTR                     = 'layout'
     JOURNAL_CONTENT_BLOCK_CLASS          = 'content-block'
     JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_CLASS = 'journal-editor-multi-image-panel-header'
-    JOURNAL_INSPECT_URL_ATTR             = 'inspect-url'
-    JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR = 'inspect-url'
-    JOURNAL_EDITOR_MULTI_IMAGE_URL_ATTR  = 'image-url'
-    JOURNAL_EDITOR_MULTI_IMAGE_CAPTION_ATTR = 'caption'
+    INSPECT_URL_DATA_ATTR                = 'inspect-url'
+    IMAGE_URL_DATA_ATTR                  = 'image-url'
+    CAPTION_DATA_ATTR                    = 'caption'
+    THUMBNAIL_URL_DATA_ATTR              = 'thumbnail-url'
 
     # Image Picker
     IMAGE_PICKER_CAPTION_CLASS           = 'image-picker-caption'
-    IMAGE_PICKER_CAPTION_ATTR            = 'caption'
     TRIP_IMAGE_CAPTION_CLASS             = 'trip-image-caption'
     JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS = 'journal-reference-image-container'
     JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS = 'journal-reference-image-placeholder'
@@ -89,7 +85,6 @@ class TtConst:
     IMAGE_PICKER_UUID_INPUT_CLASS        = 'image-picker-uuid-input'
     IMAGE_PICKER_PREVIEW_CLASS           = 'image-picker-preview'
     IMAGE_PICKER_SET_BTN_CLASS           = 'image-picker-set-btn'
-    IMAGE_PICKER_THUMBNAIL_URL_ATTR      = 'thumbnail-url'
 
     # Images Upload
     IMAGES_UPLOADED_ITEM_CLASS           = 'uploaded-item-link'
@@ -106,33 +101,6 @@ class TtConst:
     JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID = 'id_image_date_filter'
     JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID = 'btn-entry-date-images'
     JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID = 'btn-recent-images'
-
-    # Attribute module template-only constants
-    ATTR_CONTENT_ID                      = 'attr-content'
-    ATTR_FILE_GRID_ID                    = 'attr-file-grid'
-    ATTR_FILE_GRID_CLASS                 = 'attr-file-grid'
-    ATTR_FILE_NAME_CLASS                 = 'attr-file-filename'
-    ATTR_ADD_ATTRIBUTE_BTN_ID            = 'attr-add-attribute-btn'
-    ATTR_SCROLLABLE_CONTENT_ID           = 'attr-scrollable-content'
-    ATTR_SCROLLABLE_CONTENT_CLASS        = 'attr-scrollable-content'
-    ATTR_STICKY_PANEL_CLASS              = 'attr-sticky-panel'
-    ATTR_ACTION_BAR_CLASS                = 'attr-action-bar'
-    ATTR_ACTION_BAR_CONTENT_CLASS        = 'attr-action-bar-content'
-    ATTR_ACTION_BUTTONS_CLASS            = 'attr-action-buttons'
-    ATTR_HISTORY_INLINE_CONTENT_CLASS    = 'attr-history-inline-content'
-    ATTR_HISTORY_HEADER_CLASS            = 'attr-history-header'
-    ATTR_HISTORY_CLOSE_CLASS             = 'attr-history-close'
-    ATTR_HISTORY_CURRENT_CLASS           = 'attr-history-current'
-    ATTR_HISTORY_RECORDS_CLASS           = 'attr-history-records'
-    ATTR_HISTORY_RECORD_CLASS            = 'attr-history-record'
-    ATTR_HISTORY_TOGGLE_CLASS            = 'attr-history-toggle'
-    ATTR_HISTORY_EMPTY_CLASS             = 'attr-history-empty'
-    ATTR_ATTRIBUTE_HEADER_CLASS          = 'attr-attribute-header'
-    ATTR_ATTRIBUTE_ACTIONS_CLASS         = 'attr-attribute-actions'
-    ATTR_ATTRIBUTE_VALUE_CLASS           = 'attr-attribute-value'
-    ATTR_TEXT_VALUE_CLASS                = 'attr-text-value'
-    ATTR_SECRET_CHECKBOX_CLASS           = 'attr-secret-checkbox'
-    ATTR_INLINE_HISTORY_CLASS            = 'attr-inline-history'
 
     @classmethod
     def to_json_dict_str(cls):

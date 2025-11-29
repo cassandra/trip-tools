@@ -101,7 +101,7 @@
             
             let originalValue = this.getFieldValue(field);
             this.state.originalValues.set(field.id, originalValue);
-            field.setAttribute(TtConst.DATA_ORIGINAL_VALUE_ATTR, originalValue);
+            field.setAttribute('data-' + TtConst.ORIGINAL_VALUE_DATA_ATTR, originalValue);
         },
         
         // Get normalized field value
@@ -363,7 +363,7 @@
             
             const displayFields = form.querySelectorAll(TtConst.ATTR_DISPLAY_FIELD_SELECTOR);
             displayFields.forEach(displayField => {
-                const hiddenFieldId = displayField.getAttribute(TtConst.DATA_HIDDEN_FIELD_ATTR);
+                const hiddenFieldId = displayField.getAttribute('data-' + TtConst.HIDDEN_FIELD_DATA_ATTR);
                 const hiddenField = hiddenFieldId ? document.getElementById(hiddenFieldId) : null;
                 
                 if (hiddenField && !displayField.readOnly && !displayField.classList.contains('truncated')) {

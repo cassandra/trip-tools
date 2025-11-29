@@ -30,8 +30,6 @@ from django.contrib.auth.models import User as UserType
 from django.forms import ModelForm, BaseInlineFormSet
 from django.db.models import Model
 
-from tt.environment.constants import TtConst
-
 from .forms import AttributeUploadForm
 from .models import AttributeModel
 
@@ -92,7 +90,7 @@ class AttributePageEditContext:
     
     @property
     def content_html_id(self) -> str:
-        return f"{TtConst.ATTR_CONTENT_ID}{self.id_suffix}"
+        return f"attr-content{self.id_suffix}"
     
     @property
     def dirty_msg_html_id(self) -> str:
@@ -104,7 +102,7 @@ class AttributePageEditContext:
     
     @property
     def scrollable_content_html_id(self) -> str:
-        return f"{TtConst.ATTR_SCROLLABLE_CONTENT_ID}{self.id_suffix}"
+        return f"attr-scrollable-content{self.id_suffix}"
 
     @property
     def status_msg_html_id(self) -> str:
@@ -220,7 +218,7 @@ class AttributeItemEditContext( AttributePageEditContext ):
     
     @property
     def file_grid_html_id(self) -> str:
-        return f"{TtConst.ATTR_FILE_GRID_ID}{self.id_suffix}"
+        return f"attr-file-grid{self.id_suffix}"
     
     @property
     def upload_form_container_html_id(self) -> str:
@@ -228,7 +226,7 @@ class AttributeItemEditContext( AttributePageEditContext ):
     
     @property
     def add_attribute_button_html_id(self) -> str:
-        return f"{TtConst.ATTR_ADD_ATTRIBUTE_BTN_ID}{self.id_suffix}"
+        return f"attr-add-attribute-btn{self.id_suffix}"
     
     def to_template_context(self) -> Dict[str, Any]:
         template_context = super().to_template_context()

@@ -27,7 +27,7 @@ Individual attribute attribute card with value editing and actions
   {% endif %}
   
   <!-- Attribute Header -->
-  <div class="{{ TtConst.ATTR_ATTRIBUTE_HEADER_CLASS }}">
+  <div class="attr-attribute-header">
     {% if attribute_form.instance.pk %}
     <div class="{{ TtConst.ATTR_ATTRIBUTE_NAME_CLASS }}">
       {% include "attribute/components/name_field.html" %}
@@ -55,7 +55,7 @@ Individual attribute attribute card with value editing and actions
     </div>
     {% endif %}
     
-    <div class="{{ TtConst.ATTR_ATTRIBUTE_ACTIONS_CLASS }}">
+    <div class="attr-attribute-actions">
       <!-- Reorder Controls (disabled until Issue #80, hidden if allow_reordering is False) -->
       {% if attribute_form.instance.pk and attribute_form.allow_reordering %}
       <button type="button" 
@@ -101,7 +101,7 @@ Individual attribute attribute card with value editing and actions
   </div>
   
   <!-- Attribute Value -->
-  <div class="{{ TtConst.ATTR_ATTRIBUTE_VALUE_CLASS }}">
+  <div class="attr-attribute-value">
     {% if not attribute_form.instance.pk %}
       <!-- New attribute form -->
       <div class="mb-2">
@@ -131,20 +131,20 @@ Individual attribute attribute card with value editing and actions
         {% include "attribute/components/value_types/attribute_value_secret.html" %}
       {% else %}
         <!-- TEXT and other types use textarea -->
-        <div class="{{ TtConst.ATTR_TEXT_VALUE_CLASS }}">
+        <div class="attr-text-value">
           {% include "attribute/components/value_types/attribute_value_text.html" %}
         </div>
       {% endif %}
     {% else %}
       <!-- New attribute - always use textarea (TEXT behavior) -->
-      <div class="{{ TtConst.ATTR_TEXT_VALUE_CLASS }}">
+      <div class="attr-text-value">
         {% include "attribute/components/value_types/attribute_value_text.html" %}
       </div>
     {% endif %}
-    
+
     <!-- Secret checkbox for new properties -->
     {% if not attribute_form.instance.pk %}
-      <div class="{{ TtConst.ATTR_SECRET_CHECKBOX_CLASS }}">
+      <div class="attr-secret-checkbox">
         <div class="custom-control custom-checkbox">
           {{ attribute_form.secret }}
           <label class="custom-control-label" for="{{ attribute_form.secret.id_for_label }}">
@@ -157,8 +157,8 @@ Individual attribute attribute card with value editing and actions
   
   <!-- Inline History Target (empty until populated) -->
   {% if attribute_form.instance.pk %}
-    <div id="{{ attr_item_context|history_target_id:attribute_form.instance.pk }}" 
-         class="{{ TtConst.ATTR_INLINE_HISTORY_CLASS }}">
+    <div id="{{ attr_item_context|history_target_id:attribute_form.instance.pk }}"
+         class="attr-inline-history">
     </div>
   {% endif %}
 </div>

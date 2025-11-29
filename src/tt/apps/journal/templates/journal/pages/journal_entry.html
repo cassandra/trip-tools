@@ -46,7 +46,7 @@
                aria-label="Change reference image">
             {% endif %}
               <div class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS }}"
-                   data-{{ TtConst.JOURNAL_REFERENCE_IMAGE_UUID_ATTR }}="{% if entry.reference_image %}{{ entry.reference_image.uuid }}{% endif %}">
+                   data-{{ TtConst.REFERENCE_IMAGE_UUID_DATA_ATTR }}="{% if entry.reference_image %}{{ entry.reference_image.uuid }}{% endif %}">
 
                 <!-- Placeholder state: Camera icon (drop zone) - shown when no reference image -->
                 <div class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS }}{% if entry.reference_image %} d-none{% endif %}">
@@ -60,7 +60,7 @@
                        alt="{% if entry.reference_image %}{{ entry.reference_image.caption|default:'Reference' }}{% endif %}"
                        class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS }}"
                        draggable="true"
-                       data-{{ TtConst.JOURNAL_INSPECT_URL_ATTR }}="{% if entry.reference_image %}{% url 'images_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_uuid={{ trip.uuid }}{% endif %}">
+                       data-{{ TtConst.INSPECT_URL_DATA_ATTR }}="{% if entry.reference_image %}{% url 'images_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_uuid={{ trip.uuid }}{% endif %}">
                   <button type="button"
                           class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS }}"
                           title="Clear reference image">&times;</button>

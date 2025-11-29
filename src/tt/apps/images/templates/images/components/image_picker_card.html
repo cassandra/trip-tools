@@ -7,9 +7,9 @@ Context variables:
 {% endcomment %}
 
 <div class="{{ TtConst.IMAGE_PICKER_CARD_CLASS }}"
-     data-{{ TtConst.IMAGE_PICKER_UUID_ATTR }}="{{ image.uuid }}"
-     data-{{ TtConst.IMAGE_PICKER_THUMBNAIL_URL_ATTR }}="{{ image.thumbnail_image.url }}"
-     data-{{ TtConst.IMAGE_PICKER_CAPTION_ATTR }}="{{ image.caption|default:'Untitled' }}"
+     data-{{ TtConst.IMAGE_UUID_DATA_ATTR }}="{{ image.uuid }}"
+     data-{{ TtConst.THUMBNAIL_URL_DATA_ATTR }}="{{ image.thumbnail_image.url }}"
+     data-{{ TtConst.CAPTION_DATA_ATTR }}="{{ image.caption|default:'Untitled' }}"
      tabindex="0"
      role="button"
      aria-label="Select {{ image.caption|default:'untitled image' }}">
