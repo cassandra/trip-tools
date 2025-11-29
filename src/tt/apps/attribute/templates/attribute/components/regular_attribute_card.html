@@ -6,8 +6,8 @@ V2 Attribute Card Component
 Individual attribute attribute card with value editing and actions
 {% endcomment %}
 
-<div class="{{ DIVID.ATTR_V2_ATTRIBUTE_CARD_CLASS }}{% if not attribute_form.instance.pk %} {{ DIVID.ATTR_V2_NEW_ATTRIBUTE_CLASS }}{% endif %}" 
-     data-attribute-id="{{ attribute_form.instance.pk }}" 
+<div class="{{ TtConst.ATTR_ATTRIBUTE_CARD_CLASS }}{% if not attribute_form.instance.pk %} {{ TtConst.ATTR_NEW_ATTRIBUTE_CLASS }}{% endif %}" 
+     {{ TtConst.DATA_ATTRIBUTE_ID_ATTR }}="{{ attribute_form.instance.pk }}" 
      data-url-detect="true"
      data-order-index="{{ forloop.counter }}"
      data-value-type="{{ attribute_form.instance.value_type.name|default:'text' }}"
@@ -27,35 +27,35 @@ Individual attribute attribute card with value editing and actions
   {% endif %}
   
   <!-- Attribute Header -->
-  <div class="{{ DIVID.ATTR_V2_ATTRIBUTE_HEADER_CLASS }}">
+  <div class="{{ TtConst.ATTR_ATTRIBUTE_HEADER_CLASS }}">
     {% if attribute_form.instance.pk %}
-    <div class="{{ DIVID.ATTR_V2_ATTRIBUTE_NAME_CLASS }}">
+    <div class="{{ TtConst.ATTR_ATTRIBUTE_NAME_CLASS }}">
       {% include "attribute/components/name_field.html" %}
     </div>
 
     {% if attribute_form.name.errors %}
-    <div class="attr-v2-field-errors">
+    <div class="attr-field-errors">
       {% for error in attribute_form.name.errors %}
-      <div class="attr-v2-error-text">{{ error }}</div>
+      <div class="attr-error-text">{{ error }}</div>
       {% endfor %}
     </div>
     {% endif %}
       
     {% else %}
-      <h6 class="{{ DIVID.ATTR_V2_ATTRIBUTE_NAME_CLASS }}">
+      <h6 class="{{ TtConst.ATTR_ATTRIBUTE_NAME_CLASS }}">
         {% icon "plus" size="sm" css_class="tt-icon-left" %}Add New
       </h6>
     {% endif %}
 
     {% if attribute_form.non_field_errors %}
-    <div class="attr-v2-non-field-errors">
+    <div class="attr-non-field-errors">
       {% for err in attribute_form.non_field_errors %}
-      <div class="attr-v2-error-item">{{ err }}</div>
+      <div class="attr-error-item">{{ err }}</div>
       {% endfor %}
     </div>
     {% endif %}
     
-    <div class="{{ DIVID.ATTR_V2_ATTRIBUTE_ACTIONS_CLASS }}">
+    <div class="{{ TtConst.ATTR_ATTRIBUTE_ACTIONS_CLASS }}">
       <!-- Reorder Controls (disabled until Issue #80, hidden if allow_reordering is False) -->
       {% if attribute_form.instance.pk and attribute_form.allow_reordering %}
       <button type="button" 
@@ -76,7 +76,7 @@ Individual attribute attribute card with value editing and actions
       
       {% if attribute_form.instance.pk and not attribute_form.suppress_history %}
         <a href="{% attr_history_url attr_item_context attribute_form.instance.pk %}"
-           class="btn btn-sm btn-outline-secondary {{ DIVID.ATTR_V2_HISTORY_LINK_CLASS }}"
+           class="btn btn-sm btn-outline-secondary {{ TtConst.ATTR_HISTORY_LINK_CLASS }}"
            title="View history">
           {% icon "history" size="sm" %}
         </a>
@@ -84,13 +84,13 @@ Individual attribute attribute card with value editing and actions
       
       {% if attribute_form.instance.pk and attribute_form.instance.attribute_type.can_delete %}
         <button type="button" 
-                class="{{ DIVID.ATTR_V2_DELETE_BTN_CLASS }}"
+                class="{{ TtConst.ATTR_DELETE_BTN_CLASS }}"
                 title="Delete attribute"
                 onclick="markAttributeForDeletion('{{ attribute_form.instance.pk }}', '#{{ attr_page_context.container_html_id }}')" >
           {% icon "delete" size="sm" %}
         </button>
         <button type="button" 
-                class="btn btn-sm btn-outline-warning {{ DIVID.ATTR_V2_UNDO_BTN_CLASS }}"
+                class="btn btn-sm btn-outline-warning {{ TtConst.ATTR_UNDO_BTN_CLASS }}"
                 title="Undo delete"
                 onclick="undoAttributeDeletion('{{ attribute_form.instance.pk }}', '#{{ attr_page_context.container_html_id }}')"
                 style="display: none;">
@@ -101,16 +101,16 @@ Individual attribute attribute card with value editing and actions
   </div>
   
   <!-- Attribute Value -->
-  <div class="{{ DIVID.ATTR_V2_ATTRIBUTE_VALUE_CLASS }}">
+  <div class="{{ TtConst.ATTR_ATTRIBUTE_VALUE_CLASS }}">
     {% if not attribute_form.instance.pk %}
       <!-- New attribute form -->
       <div class="mb-2">
         {{ attribute_form.name.label_tag }}
         {{ attribute_form.name }}
         {% if attribute_form.name.errors %}
-          <div class="attr-v2-field-errors">
+          <div class="attr-field-errors">
             {% for error in attribute_form.name.errors %}
-            <div class="attr-v2-error-text">{{ error }}</div>
+            <div class="attr-error-text">{{ error }}</div>
             {% endfor %}
           </div>
         {% endif %}
@@ -131,20 +131,20 @@ Individual attribute attribute card with value editing and actions
         {% include "attribute/components/value_types/attribute_value_secret.html" %}
       {% else %}
         <!-- TEXT and other types use textarea -->
-        <div class="{{ DIVID.ATTR_V2_TEXT_VALUE_CLASS }}">
+        <div class="{{ TtConst.ATTR_TEXT_VALUE_CLASS }}">
           {% include "attribute/components/value_types/attribute_value_text.html" %}
         </div>
       {% endif %}
     {% else %}
       <!-- New attribute - always use textarea (TEXT behavior) -->
-      <div class="{{ DIVID.ATTR_V2_TEXT_VALUE_CLASS }}">
+      <div class="{{ TtConst.ATTR_TEXT_VALUE_CLASS }}">
         {% include "attribute/components/value_types/attribute_value_text.html" %}
       </div>
     {% endif %}
     
     <!-- Secret checkbox for new properties -->
     {% if not attribute_form.instance.pk %}
-      <div class="{{ DIVID.ATTR_V2_SECRET_CHECKBOX_CLASS }}">
+      <div class="{{ TtConst.ATTR_SECRET_CHECKBOX_CLASS }}">
         <div class="custom-control custom-checkbox">
           {{ attribute_form.secret }}
           <label class="custom-control-label" for="{{ attribute_form.secret.id_for_label }}">
@@ -158,7 +158,7 @@ Individual attribute attribute card with value editing and actions
   <!-- Inline History Target (empty until populated) -->
   {% if attribute_form.instance.pk %}
     <div id="{{ attr_item_context|history_target_id:attribute_form.instance.pk }}" 
-         class="{{ DIVID.ATTR_V2_INLINE_HISTORY_CLASS }}">
+         class="{{ TtConst.ATTR_INLINE_HISTORY_CLASS }}">
     </div>
   {% endif %}
 </div>

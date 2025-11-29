@@ -19,38 +19,38 @@
   {% endif %}
 
   <!-- Upload Zone -->
-  <div class="upload-zone" id="{{ DIVID.IMAGES_UPLOAD_ZONE_ID }}">
+  <div class="upload-zone" id="{{ TtConst.IMAGES_UPLOAD_ZONE_ID }}">
     <div class="upload-icon">
       {% icon "upload" size="xl" %}
     </div>
     <h2 class="upload-title">Drag & Drop Photos Here</h2>
     <p class="upload-subtitle">or</p>
-    <button class="btn btn-upload" type="button" onclick="document.getElementById('{{ DIVID.IMAGES_FILE_INPUT_ID }}').click()">
+    <button class="btn btn-upload" type="button" onclick="document.getElementById('{{ TtConst.IMAGES_FILE_INPUT_ID }}').click()">
       Choose Files from Computer
     </button>
     <p class="upload-hint">
       Supports JPG, PNG{% if heif_support_available %}, HEIC{% endif %} • Max 20MB per file • Multiple files allowed
     </p>
-    <input type="file" id="{{ DIVID.IMAGES_FILE_INPUT_ID }}" multiple accept="image/jpeg,image/jpg,image/png{% if heif_support_available %},image/heic{% endif %}" style="display: none;">
+    <input type="file" id="{{ TtConst.IMAGES_FILE_INPUT_ID }}" multiple accept="image/jpeg,image/jpg,image/png{% if heif_support_available %},image/heic{% endif %}" style="display: none;">
   </div>
 
   <!-- Upload Progress Section -->
-  <div class="upload-progress-section" id="{{ DIVID.IMAGES_PROGRESS_SECTION_ID }}">
+  <div class="upload-progress-section" id="{{ TtConst.IMAGES_PROGRESS_SECTION_ID }}">
     <div class="progress-header">
       <h3 class="progress-title">Uploading</h3>
-      <span class="progress-count" id="{{ DIVID.IMAGES_PROGRESS_COUNT_ID }}">0 of 0 files</span>
+      <span class="progress-count" id="{{ TtConst.IMAGES_PROGRESS_COUNT_ID }}">0 of 0 files</span>
     </div>
-    <div id="{{ DIVID.IMAGES_FILE_PROGRESS_LIST_ID }}"></div>
+    <div id="{{ TtConst.IMAGES_FILE_PROGRESS_LIST_ID }}"></div>
   </div>
 
   <!-- Uploaded Images Grid -->
   <div class="uploaded-section">
     <div class="uploaded-header">
       <h3 class="uploaded-title">Your Photos</h3>
-      <span class="uploaded-count" id="{{ DIVID.IMAGES_UPLOADED_COUNT_ID }}">{{ uploaded_images.count }}</span>
+      <span class="uploaded-count" id="{{ TtConst.IMAGES_UPLOADED_COUNT_ID }}">{{ uploaded_images.count }}</span>
     </div>
 
-    <div class="uploaded-grid" id="{{ DIVID.IMAGES_UPLOADED_GRID_ID }}">
+    <div class="uploaded-grid" id="{{ TtConst.IMAGES_UPLOADED_GRID_ID }}">
       {% if uploaded_images %}
         {% for image in uploaded_images %}
         {% include "images/components/image_grid_item.html" with trip_image=image %}
@@ -71,13 +71,13 @@
 $(document).ready(function() {
     // Initialize upload component using the configurable factory
     Tt.createImageUpload({
-        uploadZoneSelector: '#{{ DIVID.IMAGES_UPLOAD_ZONE_ID }}',
-        fileInputSelector: '#{{ DIVID.IMAGES_FILE_INPUT_ID }}',
-        progressSectionSelector: '#{{ DIVID.IMAGES_PROGRESS_SECTION_ID }}',
-        progressCountSelector: '#{{ DIVID.IMAGES_PROGRESS_COUNT_ID }}',
-        fileProgressListSelector: '#{{ DIVID.IMAGES_FILE_PROGRESS_LIST_ID }}',
-        uploadedGridSelector: '#{{ DIVID.IMAGES_UPLOADED_GRID_ID }}',
-        uploadedCountSelector: '#{{ DIVID.IMAGES_UPLOADED_COUNT_ID }}',
+        uploadZoneSelector: '#{{ TtConst.IMAGES_UPLOAD_ZONE_ID }}',
+        fileInputSelector: '#{{ TtConst.IMAGES_FILE_INPUT_ID }}',
+        progressSectionSelector: '#{{ TtConst.IMAGES_PROGRESS_SECTION_ID }}',
+        progressCountSelector: '#{{ TtConst.IMAGES_PROGRESS_COUNT_ID }}',
+        fileProgressListSelector: '#{{ TtConst.IMAGES_FILE_PROGRESS_LIST_ID }}',
+        uploadedGridSelector: '#{{ TtConst.IMAGES_UPLOADED_GRID_ID }}',
+        uploadedCountSelector: '#{{ TtConst.IMAGES_UPLOADED_COUNT_ID }}',
         maxFiles: 50
     });
 });

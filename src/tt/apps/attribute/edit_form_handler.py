@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import QuerySet
 from django.http import HttpRequest
 
-from tt.constants import DIVID
+from tt.environment.constants import TtConst
 from tt.testing.dev_overrides import DevOverrideManager
 
 from .forms import AttributeUploadForm
@@ -82,7 +82,7 @@ class AttributeEditFormHandler:
     def process_file_deletions( self,
                                 attr_item_context  : AttributeItemEditContext,
                                 request       : HttpRequest           ) -> None:
-        file_deletes: List[str] = request.POST.getlist( DIVID['ATTR_V2_DELETE_FILE_ATTR'] )
+        file_deletes: List[str] = request.POST.getlist( TtConst.ATTR_DELETE_FILE_ATTR )
         if not file_deletes:
             return
         

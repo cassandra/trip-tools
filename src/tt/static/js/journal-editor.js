@@ -250,7 +250,7 @@
       this.unwrapNestedTags($root, 'em');
 
       // Remove unnecessary spans with no attributes
-      $root.find('span:not([class]):not([style]):not([data-layout])').each(function() {
+      $root.find('span:not([class]):not([style]):not([' + TtConst.JOURNAL_DATA_LAYOUT_ATTR + '])').each(function() {
         var $span = $(this);
         $span.replaceWith($span.html());
       });
@@ -442,17 +442,17 @@
         // Check if element is allowed at top level
         if (tagName === 'p') {
           // Paragraph: ensure it has text-block class
-          if (!$node.hasClass(Tt.JOURNAL_TEXT_BLOCK_CLASS)) {
+          if (!$node.hasClass(TtConst.JOURNAL_TEXT_BLOCK_CLASS)) {
             nodesToProcess.push({type: 'addTextBlockClass', node: node});
           }
         } else if (tagName === 'div') {
           // Div: must be text-block or content-block
-          var hasTextBlock = $node.hasClass(Tt.JOURNAL_TEXT_BLOCK_CLASS);
-          var hasContentBlock = $node.hasClass(Tt.JOURNAL_CONTENT_BLOCK_CLASS);
+          var hasTextBlock = $node.hasClass(TtConst.JOURNAL_TEXT_BLOCK_CLASS);
+          var hasContentBlock = $node.hasClass(TtConst.JOURNAL_CONTENT_BLOCK_CLASS);
 
           if (!hasTextBlock && !hasContentBlock) {
             // Check if it's an image wrapper (legacy or malformed)
-            if ($node.hasClass(Tt.JOURNAL_IMAGE_WRAPPER_CLASS) || $node.hasClass(Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS)) {
+            if ($node.hasClass(TtConst.JOURNAL_IMAGE_WRAPPER_CLASS) || $node.hasClass(TtConst.JOURNAL_FULL_WIDTH_GROUP_CLASS)) {
               // Will be handled by wrapFullWidthImageGroups()
               // For now, skip processing
             } else {
@@ -469,7 +469,7 @@
         } else if (['ul', 'ol', 'blockquote', 'pre'].indexOf(tagName) !== -1) {
           // Block elements - will be wrapped by wrapOrphanBlockElements()
           // No action needed here
-        } else if (tagName === 'span' && $node.hasClass(Tt.JOURNAL_IMAGE_WRAPPER_CLASS)) {
+        } else if (tagName === 'span' && $node.hasClass(TtConst.JOURNAL_IMAGE_WRAPPER_CLASS)) {
           // Image wrapper spans are allowed
           // No action needed
         } else {
@@ -486,7 +486,7 @@
       switch (item.type) {
         case 'wrapText':
           // Wrap naked text in p.text-block
-          var $p = $('<p class="text-block"></p>');
+          var $p = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>');
           $node.wrap($p);
           break;
 
@@ -497,7 +497,7 @@
 
         case 'addTextBlockClass':
           // Add text-block class to paragraph
-          $node.addClass(Tt.JOURNAL_TEXT_BLOCK_CLASS);
+          $node.addClass(TtConst.JOURNAL_TEXT_BLOCK_CLASS);
           break;
 
         case 'unwrapDiv':
@@ -509,7 +509,7 @@
 
         case 'wrapElement':
           // Wrap invalid element in p.text-block
-          var $wrapper = $('<p class="text-block"></p>');
+          var $wrapper = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>');
           $node.wrap($wrapper);
           break;
       }
@@ -679,8 +679,8 @@
       switch (t.type) {
         case 'splitTextWithBr':
           // Create two paragraphs from text-BR-text
-          var $p1 = $('<p class="text-block"></p>').text($(t.textBefore).text());
-          var $p2 = $('<p class="text-block"></p>').text($(t.textAfter).text());
+          var $p1 = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>').text($(t.textBefore).text());
+          var $p2 = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>').text($(t.textAfter).text());
 
           // Replace textBefore with p1
           $(t.textBefore).replaceWith($p1);
@@ -692,7 +692,7 @@
 
         case 'wrapTextBefore':
           // Wrap text before BR in paragraph, remove BR
-          var $p = $('<p class="text-block"></p>').text($(t.textNode).text());
+          var $p = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>').text($(t.textNode).text());
           $(t.textNode).replaceWith($p);
           $(t.brNode).remove();
           break;
@@ -700,7 +700,7 @@
         case 'wrapTextAfter':
           // Remove BR, wrap text after in paragraph
           $(t.brNode).remove();
-          var $pAfter = $('<p class="text-block"></p>').text($(t.textNode).text());
+          var $pAfter = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>').text($(t.textNode).text());
           $(t.textNode).replaceWith($pAfter);
           break;
 
@@ -734,12 +734,12 @@
 
         // Check if already wrapped in text-block
         var $parent = $blockElement.parent();
-        if ($parent.hasClass(Tt.JOURNAL_TEXT_BLOCK_CLASS)) {
+        if ($parent.hasClass(TtConst.JOURNAL_TEXT_BLOCK_CLASS)) {
           return; // Already properly wrapped
         }
 
         // Wrap in div.text-block
-        var $wrapper = $('<div class="text-block"></div>');
+        var $wrapper = $('<div class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></div>');
         $blockElement.wrap($wrapper);
       });
     });
@@ -762,7 +762,7 @@
     var headingSelectors = 'h1, h2, h3, h4, h5, h6';
 
     // Process all text-blocks that contain headings
-    $editor.find('.text-block').each(function() {
+    $editor.find(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR).each(function() {
       var $textBlock = $(this);
       var $headings = $textBlock.find(headingSelectors);
 
@@ -775,7 +775,7 @@
         var $heading = $(this);
 
         // Re-query parent (may have changed if previous heading was split)
-        var $currentTextBlock = $heading.closest('.text-block');
+        var $currentTextBlock = $heading.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
         if ($currentTextBlock.length === 0) {
           return; // Heading already moved to top level
         }
@@ -793,16 +793,16 @@
 
         if (hasBefore && hasAfter) {
           // Case 1: Content before AND after → 3 elements
-          var $newBeforeBlock = $('<div class="text-block"></div>');
-          var $newAfterBlock = $('<div class="text-block"></div>');
+          var $newBeforeBlock = $('<div class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></div>');
+          var $newAfterBlock = $('<div class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></div>');
 
           $newBeforeBlock.append($before);
           $newAfterBlock.append($after);
 
           // Preserve float-right image in first block
-          var hasFloatImage = $currentTextBlock.hasClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+          var hasFloatImage = $currentTextBlock.hasClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
           if (hasFloatImage) {
-            $newBeforeBlock.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+            $newBeforeBlock.addClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
           }
 
           // Replace text-block with 3 elements
@@ -813,12 +813,12 @@
         }
         else if (hasBefore) {
           // Case 2: Content only before → 2 elements
-          var $beforeBlock = $('<div class="text-block"></div>');
+          var $beforeBlock = $('<div class="' + TtConst.JOURNAL_TEXT_BLOCK_SELECTOR + '"></div>');
           $beforeBlock.append($before);
 
           // Preserve float-right image class
-          if ($currentTextBlock.hasClass(Tt.JOURNAL_FLOAT_MARKER_CLASS)) {
-            $beforeBlock.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+          if ($currentTextBlock.hasClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS)) {
+            $beforeBlock.addClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
           }
 
           $currentTextBlock.before($beforeBlock);
@@ -827,7 +827,7 @@
         }
         else if (hasAfter) {
           // Case 3: Content only after → 2 elements
-          var $afterBlock = $('<div class="text-block"></div>');
+          var $afterBlock = $('<div class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></div>');
           $afterBlock.append($after);
 
           $currentTextBlock.before($heading);
@@ -843,7 +843,7 @@
     });
 
     // Also handle headings inside p.text-block (shouldn't happen, but be defensive)
-    $editor.find('p.text-block').each(function() {
+    $editor.find('p.' + TtConst.JOURNAL_TEXT_BLOCK_CLASS).each(function() {
       var $p = $(this);
       var $headings = $p.find(headingSelectors);
 
@@ -871,7 +871,7 @@
    */
   function enforceOneBlockPerTextBlock($editor) {
     // Process div.text-block elements
-    $editor.find('div.text-block').each(function() {
+    $editor.find('div.' + TtConst.JOURNAL_TEXT_BLOCK_CLASS).each(function() {
       var $div = $(this);
       var blockSelectors = 'ul, ol, blockquote, pre, p';
       var $blockElements = $div.children(blockSelectors);
@@ -881,12 +881,12 @@
       }
 
       // Has multiple block elements - need to split
-      var hasFloatImage = $div.hasClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+      var hasFloatImage = $div.hasClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
       var $floatImage = null;
 
       // Find float-right image if exists
       if (hasFloatImage) {
-        $floatImage = $div.children('.trip-image-wrapper[data-layout="float-right"]').first();
+        $floatImage = $div.children(TtConst.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR).first();
       }
 
       var isFirst = true;
@@ -897,24 +897,24 @@
 
         if (tagName === 'p') {
           // Convert paragraph to p.text-block
-          var $newP = $('<p class="text-block"></p>');
+          var $newP = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>');
           $newP.html($block.html());
 
           // First block gets float-right image
           if (isFirst && hasFloatImage && $floatImage) {
-            $newP.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+            $newP.addClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
             $newP.prepend($floatImage);
           }
 
           $div.before($newP);
         } else {
           // Wrap other block elements in new div.text-block
-          var $newDiv = $('<div class="text-block"></div>');
+          var $newDiv = $('<div class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></div>');
           $newDiv.append($block.clone());
 
           // First block gets float-right image
           if (isFirst && hasFloatImage && $floatImage) {
-            $newDiv.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+            $newDiv.addClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
             $newDiv.prepend($floatImage);
           }
 
@@ -929,7 +929,7 @@
     });
 
     // Process p.text-block that somehow contains nested paragraphs
-    $editor.find('p.text-block').each(function() {
+    $editor.find('p.' + TtConst.JOURNAL_TEXT_BLOCK_CLASS).each(function() {
       var $p = $(this);
       var $nestedPs = $p.find('p');
 
@@ -954,24 +954,24 @@
    * @param {jQuery} $editor - jQuery-wrapped contenteditable element
    */
   function convertImageOnlyTextBlocks($editor) {
-    $editor.find('.text-block').each(function() {
+    $editor.find(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR).each(function() {
       var $textBlock = $(this);
 
       // Get text content (excluding images)
       var $clone = $textBlock.clone();
-      $clone.find('.trip-image-wrapper').remove();
+      $clone.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR).remove();
       var textContent = $clone.text().trim();
 
       if (textContent.length === 0) {
         // Text block contains only images, no text
-        var $images = $textBlock.find('.trip-image-wrapper');
+        var $images = $textBlock.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
 
         if ($images.length > 0) {
           // Change all images to full-width layout
-          $images.attr('data-layout', 'full-width');
+          $images.attr( TtConst.JOURNAL_DATA_LAYOUT_ATTR, 'full-width');
 
           // Replace text-block with content-block
-          var $contentBlock = $('<div class="content-block full-width-image-group"></div>');
+          var $contentBlock = $('<div class="' + TtConst.JOURNAL_CONTENT_BLOCK_CLASS + ' ' + TtConst.JOURNAL_FULL_WIDTH_GROUP_CLASS + '"></div>');
           $contentBlock.append($images);
           $textBlock.replaceWith($contentBlock);
         } else {
@@ -995,7 +995,7 @@
 
     if ($editor.children().length === 0) {
       // Editor is completely empty - add cursor placeholder
-      $editor.append('<p class="text-block"><br></p>');
+      $editor.append('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"><br></p>');
     }
   }
 
@@ -1038,7 +1038,7 @@
       var endTextOffset = preEndRange.toString().length;
 
       // Also store visual element reference for fallback
-      var $closestBlock = $(range.endContainer).closest('.text-block, h1, h2, h3, h4, h5, h6');
+      var $closestBlock = $(range.endContainer).closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR + ', h1, h2, h3, h4, h5, h6');
       var blockIndex = $closestBlock.length ? $editor.children().index($closestBlock) : 0;
 
       return {
@@ -1257,7 +1257,7 @@
       }
 
       // Find picker card with this UUID
-      var $card = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
+      var $card = $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + TtConst.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
 
       if ($card.length === 0) {
         console.warn('[ImageDataService] No picker card found for UUID:', uuid);
@@ -1265,11 +1265,11 @@
       }
 
       // Extract all data from card in one pass
-      var imageUuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+      var imageUuid = $card.data(TtConst.JOURNAL_IMAGE_UUID_ATTR);
       var $img = $card.find('img');
       var url = $img.attr('src') || '';
       var caption = $img.attr('alt') || '';
-      var inspectUrl = $card.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR) || '';
+      var inspectUrl = $card.data(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR) || '';
 
       if (!imageUuid) {
         console.error('[ImageDataService] Picker card missing data-image-uuid for UUID:', uuid);
@@ -1719,9 +1719,9 @@
    */
   EditorLayoutManager.prototype.wrapFullWidthImageGroups = function() {
     // Remove existing wrappers first
-    this.$editor.find('.' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS).each(function() {
+    this.$editor.find(TtConst.JOURNAL_FULL_WIDTH_GROUP_SELECTOR).each(function() {
       var $group = $(this);
-      $group.children(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR).unwrap();
+      $group.children(TtConst.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR).unwrap();
     });
 
     // Group consecutive full-width images
@@ -1730,7 +1730,7 @@
 
     this.$editor.children().each(function() {
       var $child = $(this);
-      if ($child.is(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
+      if ($child.is(TtConst.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
         currentGroup.push(this);
       } else {
         if (currentGroup.length > 0) {
@@ -1747,7 +1747,7 @@
 
     // Wrap each group with content-block class per spec
     groups.forEach(function(group) {
-      $(group).wrapAll('<div class="content-block ' + Tt.JOURNAL_FULL_WIDTH_GROUP_CLASS + '"></div>');
+      $(group).wrapAll('<div class="' + TtConst.JOURNAL_CONTENT_BLOCK_CLASS + ' ' + TtConst.JOURNAL_FULL_WIDTH_GROUP_CLASS + '"></div>');
     });
   };
 
@@ -1758,13 +1758,13 @@
    */
   EditorLayoutManager.prototype.markFloatParagraphs = function() {
     // Remove existing marks from all text blocks
-    this.$editor.find('.text-block').removeClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+    this.$editor.find(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR).removeClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
 
     // Mark text blocks (both <p> and <div>) with float-right images
-    this.$editor.find('.text-block').each(function() {
+    this.$editor.find(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR).each(function() {
       var $textBlock = $(this);
-      if ($textBlock.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR).length > 0) {
-        $textBlock.addClass(Tt.JOURNAL_FLOAT_MARKER_CLASS);
+      if ($textBlock.find(TtConst.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR).length > 0) {
+        $textBlock.addClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
       }
     });
   };
@@ -1774,7 +1774,7 @@
    * Called on page load to add buttons to wrappers from saved content
    */
   EditorLayoutManager.prototype.ensureDeleteButtons = function() {
-    this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
+    this.$editor.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
       var $wrapper = $(this);
 
       // Check if delete button already exists
@@ -1983,7 +1983,7 @@
           this.hasUnsavedChanges = this.detectChanges();
 
           this.editor.currentVersion = response.version;
-          this.editor.$editor.data('current-version', response.version);
+          this.editor.$editor.data(TtConst.JOURNAL_CURRENT_VERSION_ATTR, response.version);
           this.retryCount = 0;
 
           if (this.maxTimeout) {
@@ -2064,7 +2064,7 @@
     this.filterScope = 'unused'; // Default filter: 'unused' | 'used' | 'all'
 
     // Initialize badge manager
-    var $headerTitle = this.$panel.find(Tt.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_SELECTOR + ' h5');
+    var $headerTitle = this.$panel.find(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_SELECTOR + ' h5');
     this.badgeManager = new SelectionBadgeManager($headerTitle, 'selected-images-count');
 
     // Register with coordinator
@@ -2080,13 +2080,13 @@
     var self = this;
 
     // Click handler for image selection
-    $(document).on('click', Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
+    $(document).on('click', TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
       e.preventDefault();
       self.handleImageClick(this, e);
     });
 
     // Double-click handler for opening inspector modal
-    $(document).on('dblclick', Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
+    $(document).on('dblclick', TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
       e.preventDefault();
       self.handleImageDoubleClick(this);
     });
@@ -2105,7 +2105,7 @@
    */
   JournalEditorMultiImagePicker.prototype.handleImageClick = function(card, event) {
     var $card = $(card);
-    var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+    var uuid = $card.data(TtConst.JOURNAL_IMAGE_UUID_ATTR);
     var modifiers = getSelectionModifiers(event);
 
     if (modifiers.isShift && this.lastSelectedIndex !== null) {
@@ -2124,14 +2124,14 @@
    * Handle Shift+click range selection
    */
   JournalEditorMultiImagePicker.prototype.handleRangeSelection = function($clickedCard) {
-    var $allCards = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + ':visible');
+    var $allCards = $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + ':visible');
     var clickedIndex = $allCards.index($clickedCard);
     var startIndex = Math.min(this.lastSelectedIndex, clickedIndex);
     var endIndex = Math.max(this.lastSelectedIndex, clickedIndex);
 
     for (var i = startIndex; i <= endIndex; i++) {
       var $card = $allCards.eq(i);
-      var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+      var uuid = $card.data(TtConst.JOURNAL_IMAGE_UUID_ATTR);
       this.selectedImages.add(uuid);
       $card.addClass(EDITOR_TRANSIENT.CSS_SELECTED);
     }
@@ -2149,7 +2149,7 @@
       $card.addClass(EDITOR_TRANSIENT.CSS_SELECTED);
     }
 
-    var $allCards = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + ':visible');
+    var $allCards = $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + ':visible');
     this.lastSelectedIndex = $allCards.index($card);
   };
 
@@ -2158,7 +2158,7 @@
    */
   JournalEditorMultiImagePicker.prototype.clearAllSelections = function() {
     this.selectedImages.clear();
-    $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
+    $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
     this.lastSelectedIndex = null;
   };
 
@@ -2178,7 +2178,7 @@
    */
   JournalEditorMultiImagePicker.prototype.handleImageDoubleClick = function(card) {
     var $card = $(card);
-    var inspectUrl = $card.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
+    var inspectUrl = $card.data(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
 
     if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
       AN.get(inspectUrl);
@@ -2193,9 +2193,9 @@
     this.filterScope = scope;
     var usedImageUUIDs = this.editor.usedImageUUIDs;
 
-    $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
+    $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
       var $card = $(this);
-      var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+      var uuid = $card.data(TtConst.JOURNAL_IMAGE_UUID_ATTR);
       // Check if count > 0 to handle same image appearing multiple times
       var isUsed = (usedImageUUIDs.get(uuid) || 0) > 0;
 
@@ -2214,16 +2214,15 @@
    */
   function JournalEditor($editor) {
     this.$editor = $editor;
-    this.$form = $editor.closest(Tt.JOURNAL_ENTRY_FORM_SELECTOR);
-    this.$titleInput = this.$form.find('#' + Tt.JOURNAL_TITLE_INPUT_ID);
-    this.$dateInput = this.$form.find('#' + Tt.JOURNAL_DATE_INPUT_ID);
-    this.$timezoneInput = this.$form.find('#' + Tt.JOURNAL_TIMEZONE_INPUT_ID);
+    this.$form = $editor.closest(TtConst.JOURNAL_ENTRY_FORM_SELECTOR);
+    this.$titleInput = this.$form.find(TtConst.JOURNAL_TITLE_INPUT_ID_SELECTOR);
+    this.$dateInput = this.$form.find(TtConst.JOURNAL_DATE_INPUT_ID_SELECTOR);
+    this.$timezoneInput = this.$form.find(TtConst.JOURNAL_TIMEZONE_INPUT_SELECTOR);
     this.$includeInPublishInput = this.$form.find('#id_include_in_publish');
-    this.$statusElement = this.$form.find('.' + Tt.JOURNAL_SAVE_STATUS_CLASS);
+    this.$statusElement = this.$form.find(TtConst.JOURNAL_SAVE_STATUS_SELECTOR);
     this.$manualSaveBtn = this.$form.find('.journal-manual-save-btn');
 
-    this.entryPk = $editor.data(Tt.JOURNAL_ENTRY_PK_ATTR);
-    this.currentVersion = $editor.data(Tt.JOURNAL_CURRENT_VERSION_ATTR) || 1;
+    this.currentVersion = $editor.data(TtConst.JOURNAL_CURRENT_VERSION_ATTR) || 1;
 
     this.draggedElement = null;
     this.dragSource = null; // 'picker' or 'editor'
@@ -2235,12 +2234,12 @@
 
     // Reference image state
     this.currentReferenceImageUuid = null;
-    this.$referenceContainer = $(Tt.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR);
+    this.$referenceContainer = $(TtConst.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR);
 
     // Initialize managers
     this.editorLayoutManager = new EditorLayoutManager(this.$editor);
 
-    var autosaveUrl = $editor.data(Tt.JOURNAL_AUTOSAVE_URL_ATTR);
+    var autosaveUrl = $editor.data(TtConst.JOURNAL_AUTOSAVE_URL_ATTR);
     var csrfToken = this.getCSRFToken();
     this.autoSaveManager = new AutoSaveManager(this, autosaveUrl, csrfToken);
 
@@ -2320,9 +2319,9 @@
     var self = this;
     this.usedImageUUIDs.clear();
 
-    this.$editor.find(Tt.JOURNAL_IMAGE_SELECTOR).each(function() {
+    this.$editor.find(TtConst.JOURNAL_IMAGE_SELECTOR).each(function() {
       var $img = $(this);
-      var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+      var uuid = $img.data(TtConst.JOURNAL_UUID_ATTR);
       if (uuid) {
         var currentCount = self.usedImageUUIDs.get(uuid) || 0;
         self.usedImageUUIDs.set(uuid, currentCount + 1);
@@ -2336,7 +2335,7 @@
    */
   JournalEditor.prototype.initializeReferenceImage = function() {
     if (this.$referenceContainer.length) {
-      var refImageUuid = this.$referenceContainer.data(Tt.JOURNAL_REFERENCE_IMAGE_UUID_ATTR);
+      var refImageUuid = this.$referenceContainer.data(TtConst.JOURNAL_REFERENCE_IMAGE_UUID_ATTR);
       if (refImageUuid) {
         this.currentReferenceImageUuid = refImageUuid;
       }
@@ -2397,7 +2396,7 @@
       // Create paragraph elements for each line
       var $paragraphs = [];
       for (var i = 0; i < nonEmptyLines.length; i++) {
-        var $p = $('<p class="text-block"></p>').text(nonEmptyLines[i]);
+        var $p = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>').text(nonEmptyLines[i]);
         $paragraphs.push($p[0]);
       }
 
@@ -2408,7 +2407,7 @@
       // 3. Cursor at end of paragraph -> insert after
       // 4. Cursor in middle of paragraph -> split it
 
-      var $currentBlock = $(range.startContainer).closest('.text-block, h1, h2, h3, h4, h5, h6');
+      var $currentBlock = $(range.startContainer).closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR + ', h1, h2, h3, h4, h5, h6');
 
       if ($currentBlock.length === 0) {
         // Not in a block, find insertion point
@@ -2422,7 +2421,7 @@
           }
         } else {
           // Insert before closest block element
-          var $closestBlock = $(insertionPoint).closest('.text-block, h1, h2, h3, h4, h5, h6');
+          var $closestBlock = $(insertionPoint).closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR + ', h1, h2, h3, h4, h5, h6');
           if ($closestBlock.length) {
             $closestBlock.before($paragraphs);
           } else {
@@ -2467,7 +2466,7 @@
             $currentBlock.after($paragraphs);
 
             // Create new paragraph for 'after' content
-            var $afterP = $('<p class="text-block"></p>').text(afterText);
+            var $afterP = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"></p>').text(afterText);
             $($paragraphs[$paragraphs.length - 1]).after($afterP);
           }
         }
@@ -2737,8 +2736,8 @@
           // ESCAPE AFTER: Create new paragraph after list
           e.preventDefault();
 
-          var $textBlockContainer = $list.closest('.text-block');
-          var $newParagraph = $('<p class="text-block"><br></p>');
+          var $textBlockContainer = $list.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
+          var $newParagraph = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"><br></p>');
           $textBlockContainer.after($newParagraph);
 
           // Move cursor to new paragraph
@@ -2755,8 +2754,8 @@
           // ESCAPE BEFORE: Create new paragraph before list
           e.preventDefault();
 
-          var $textBlockContainer = $list.closest('.text-block');
-          var $newParagraph = $('<p class="text-block"><br></p>');
+          var $textBlockContainer = $list.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
+          var $newParagraph = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"><br></p>');
           $textBlockContainer.before($newParagraph);
 
           // Move cursor to new paragraph
@@ -2784,8 +2783,8 @@
           // ESCAPE AFTER: Create new paragraph after block
           e.preventDefault();
 
-          var $textBlockContainer = $blockParent.closest('.text-block');
-          var $newParagraph = $('<p class="text-block"><br></p>');
+          var $textBlockContainer = $blockParent.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
+          var $newParagraph = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"><br></p>');
           $textBlockContainer.after($newParagraph);
 
           // Move cursor to new paragraph
@@ -2802,8 +2801,8 @@
           // ESCAPE BEFORE: Create new paragraph before block
           e.preventDefault();
 
-          var $textBlockContainer = $blockParent.closest('.text-block');
-          var $newParagraph = $('<p class="text-block"><br></p>');
+          var $textBlockContainer = $blockParent.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
+          var $newParagraph = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"><br></p>');
           $textBlockContainer.before($newParagraph);
 
           // Move cursor to new paragraph
@@ -2843,11 +2842,11 @@
         if ($allItems.first()[0] === $li[0]) {
           e.preventDefault();
 
-          var $textBlockContainer = $list.closest('.text-block');
+          var $textBlockContainer = $list.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
 
           // If list has only one item, remove entire text-block and create paragraph
           if ($allItems.length === 1) {
-            var $newParagraph = $('<p class="text-block"><br></p>');
+            var $newParagraph = $('<p class=' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"><br></p>');
             $textBlockContainer.replaceWith($newParagraph);
 
             // Move cursor to new paragraph
@@ -2882,11 +2881,11 @@
         if ($paragraphs.first()[0] === $p[0]) {
           e.preventDefault();
 
-          var $textBlockContainer = $blockParent.closest('.text-block');
+          var $textBlockContainer = $blockParent.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
 
           // If blockquote has only one paragraph, remove entire text-block and create paragraph
           if ($paragraphs.length === 1) {
-            var $newParagraph = $('<p class="text-block"><br></p>');
+            var $newParagraph = $('<p class="' + TtConst.JOURNAL_TEXT_BLOCK_CLASS + '"><br></p>');
             $textBlockContainer.replaceWith($newParagraph);
 
             // Move cursor to new paragraph
@@ -3052,7 +3051,7 @@
 
     // Make picker images draggable (already set in HTML)
     // Handle dragstart from picker
-    $(document).on('dragstart', Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
+    $(document).on('dragstart', TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
       self.draggedElement = this;
       self.dragSource = DRAG_SOURCE.PICKER;
 
@@ -3065,7 +3064,7 @@
     });
 
     // Handle dragend from picker
-    $(document).on('dragend', Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
+    $(document).on('dragend', TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR, function(e) {
       // Visual cleanup only - state cleanup happens in drop handlers
       self.updateDraggingVisuals(false);
       self.clearDropZones();
@@ -3096,7 +3095,7 @@
 
     this.$editor.on('dragleave', function(e) {
       // Only remove if we're leaving the editor completely
-      if (!$(e.relatedTarget).closest('.' + Tt.JOURNAL_EDITOR_CLASS).length) {
+      if (!$(e.relatedTarget).closest(TtConst.JOURNAL_EDITOR_SELECTOR).length) {
         $(this).removeClass(EDITOR_TRANSIENT.CSS_DRAG_OVER);
         self.clearDropZones();
       }
@@ -3105,7 +3104,7 @@
     this.$editor.on('drop', function(e) {
       // Check if drop is actually on reference container - if so, let it handle the drop
       var $target = $(e.target);
-      if ($target.closest(Tt.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR).length) {
+      if ($target.closest(TtConst.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR).length) {
         return; // Don't preventDefault, don't stopPropagation - let reference handler get it
       }
 
@@ -3138,7 +3137,7 @@
     });
 
     // Make picker panel a drop target for editor and reference images (drag-to-remove)
-    var $pickerGallery = $('.journal-editor-multi-image-gallery');
+    var $pickerGallery = $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_SELECTOR);
     if ($pickerGallery.length) {
       $pickerGallery.on('dragover', function(e) {
         // Allow drops from editor or reference (removal), not from picker (no-op)
@@ -3151,7 +3150,7 @@
 
       $pickerGallery.on('dragleave', function(e) {
         // Only remove if we're leaving the gallery completely
-        if (!$(e.relatedTarget).closest('.journal-editor-multi-image-gallery').length) {
+        if (!$(e.relatedTarget).closest(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_SELECTOR).length) {
           $(this).removeClass('drop-target-active');
         }
       });
@@ -3171,8 +3170,8 @@
    */
   JournalEditor.prototype.showDropZones = function(e) {
     var $target = $(e.target);
-    var $textBlock = $target.closest('.text-block');
-    var $imageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
+    var $textBlock = $target.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
+    var $imageWrapper = $target.closest(TtConst.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
     // Clear existing indicators
     this.clearDropZones();
@@ -3187,7 +3186,7 @@
     } else {
       // Mouse is between blocks - show between indicator
       var mouseY = e.clientY;
-      var $children = this.$editor.children('.text-block, div.content-block, h1, h2, h3, h4, h5, h6');
+      var $children = this.$editor.children(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR + ', div.' + TtConst.JOURNAL_CONTENT_BLOCK_CLASS + ', h1, h2, h3, h4, h5, h6');
 
       var foundDropZone = false;
       $children.each(function() {
@@ -3221,8 +3220,8 @@
    * Clear drop zone indicators
    */
   JournalEditor.prototype.clearDropZones = function() {
-    this.$editor.find('.text-block').removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
-    this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    this.$editor.find(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
+    this.$editor.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
     this.$editor.find('.' + EDITOR_TRANSIENT.CSS_DROP_ZONE_BETWEEN).remove();
   };
 
@@ -3242,8 +3241,8 @@
 
     // Determine drop layout and target (same logic as before)
     var $target = $(e.target);
-    var $textBlock = $target.closest('.text-block');
-    var $imageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
+    var $textBlock = $target.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
+    var $imageWrapper = $target.closest(TtConst.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
     var layout = LAYOUT_VALUES.FULL_WIDTH;
     var $insertTarget = null;
@@ -3263,7 +3262,7 @@
 
       // Find the closest block to insert before/after
       var mouseY = e.clientY;
-      var $children = this.$editor.children('.text-block, div.content-block, h1, h2, h3, h4, h5, h6');
+      var $children = this.$editor.children(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR + ', div.' + TtConst.JOURNAL_CONTENT_BLOCK_CLASS + ', h1, h2, h3, h4, h5, h6');
       var closestElement = null;
       var minDistance = Infinity;
 
@@ -3310,7 +3309,7 @@
         if (layout === LAYOUT_VALUES.FLOAT_RIGHT) {
           // Insert at beginning of paragraph for float-right
           $insertTarget.prepend($wrappedImage);
-        } else if ($insertTarget.is(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
+        } else if ($insertTarget.is(TtConst.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR)) {
           // Insert after the target image wrapper (will be in same group)
           $insertTarget.after($wrappedImage);
         } else if (insertAfterTarget) {
@@ -3336,13 +3335,13 @@
 
     // NOW enforce 2-image limit per paragraph (after all insertions)
     if (layout === LAYOUT_VALUES.FLOAT_RIGHT) {
-      var existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+      var existingWrappers = $insertTarget.find(TtConst.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
       var evicted = false;
       while (existingWrappers.length > 2) {
         // Remove rightmost (last) wrapper - FIFO eviction
         // Use helper to ensure usage tracking is updated
         this._removeWrapperAndUpdateUsage(existingWrappers.last());
-        existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+        existingWrappers = $insertTarget.find(TtConst.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
         evicted = true;
       }
 
@@ -3371,22 +3370,22 @@
     var $img = $('<img>', {
       'src': url,
       'alt': caption,
-      'class': Tt.JOURNAL_IMAGE_CLASS,
+      'class': TtConst.JOURNAL_IMAGE_CLASS,
     });
-    $img.attr('data-' + Tt.JOURNAL_UUID_ATTR, uuid);
+    $img.attr(TtConst.JOURNAL_DATA_UUID_ATTR, uuid);
     $img.attr('draggable', true);
 
     // Create wrapper with layout attribute
     var $wrapper = $('<span>', {
-      'class': Tt.JOURNAL_IMAGE_WRAPPER_CLASS
+      'class': TtConst.JOURNAL_IMAGE_WRAPPER_CLASS
     });
-    $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR, layout);
+    $wrapper.attr(TtConst.JOURNAL_DATA_LAYOUT_ATTR, layout);
 
     // Create caption span if caption exists and is non-empty
     var $captionSpan = null;
     if (caption && $.trim(caption).length > 0) {
       $captionSpan = $('<span>', {
-        'class': 'trip-image-caption',
+        'class': TtConst.TRIP_IMAGE_CAPTION_CLASS,
         'text': caption
       });
     }
@@ -3427,7 +3426,7 @@
     var self = this;
 
     // Single-click to open Image Inspector modal
-    this.$editor.on('click', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
+    this.$editor.on('click', TtConst.JOURNAL_IMAGE_SELECTOR, function(e) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -3435,8 +3434,8 @@
       var uuid = $img.data('uuid');
 
       // Get inspect URL from the corresponding picker card
-      var $pickerCard = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
-      var inspectUrl = $pickerCard.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
+      var $pickerCard = $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + TtConst.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
+      var inspectUrl = $pickerCard.data(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
 
       if (inspectUrl) {
         AN.get(inspectUrl);
@@ -3446,7 +3445,7 @@
     });
 
     // Prevent default drag on existing images (handled in setupImageReordering)
-    this.$editor.on('dragstart', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
+    this.$editor.on('dragstart', TtConst.JOURNAL_IMAGE_SELECTOR, function(e) {
       // This is handled in setupImageReordering
     });
   };
@@ -3470,7 +3469,7 @@
 
     var self = this;
     var $draggedCard = $(this.draggedElement);
-    var draggedUuid = $draggedCard.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+    var draggedUuid = $draggedCard.data(TtConst.JOURNAL_IMAGE_UUID_ATTR);
 
     // Check if dragged card is part of selection
     var isDraggedSelected = this.imagePicker.selectedImages.has(draggedUuid);
@@ -3480,9 +3479,9 @@
     if (isDraggedSelected && this.imagePicker.selectedImages.size > 1) {
       // Multi-image insert: get all selected cards in DOM order
       var selectedUuids = this.imagePicker.selectedImages;
-      $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
+      $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
         var $card = $(this);
-        var uuid = $card.data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+        var uuid = $card.data(TtConst.JOURNAL_IMAGE_UUID_ATTR);
         if (selectedUuids.has(uuid)) {
           var imageData = self.getImageDataFromUUID(uuid);
           if (imageData) {
@@ -3507,7 +3506,7 @@
    * @returns {Object|null} {uuid, url, caption} or null if not found
    */
   JournalEditor.prototype.getImageDataFromUUID = function(uuid) {
-    var $card = $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + Tt.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
+    var $card = $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + TtConst.JOURNAL_IMAGE_UUID_ATTR + '="' + uuid + '"]');
 
     if (!$card.length) {
       return null;
@@ -3515,8 +3514,8 @@
 
     return {
       uuid: uuid,
-      url: $card.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_URL_ATTR),
-      caption: $card.data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CAPTION_ATTR) || 'Untitled'
+      url: $card.data(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_URL_ATTR),
+      caption: $card.data(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CAPTION_ATTR) || 'Untitled'
     };
   };
 
@@ -3543,8 +3542,8 @@
 
       // Get UUID from the single wrapper
       var $wrapper = wrappersToMove[0];
-      var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
-      var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+      var $img = $wrapper.find(TtConst.JOURNAL_IMAGE_SELECTOR);
+      var uuid = $img.data(TtConst.JOURNAL_UUID_ATTR);
 
       // Look up full image data from picker card
       return this.getImageDataFromUUID(uuid);
@@ -3572,7 +3571,7 @@
       return;
     }
 
-    var $target = this.$referenceContainer.find('.journal-reference-image-placeholder, .journal-reference-image-preview');
+    var $target = this.$referenceContainer.find(TtConst.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR + ', ' + TtConst.JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR);
 
     if (visible) {
       $target.addClass(EDITOR_TRANSIENT.CSS_DROP_ZONE_ACTIVE);
@@ -3604,16 +3603,16 @@
       var $elementsToMark = [];
 
       if (this.dragSource === DRAG_SOURCE.PICKER && this.imagePicker) {
-        var draggedUuid = $(this.draggedElement).data(Tt.JOURNAL_IMAGE_UUID_ATTR);
+        var draggedUuid = $(this.draggedElement).data(TtConst.JOURNAL_IMAGE_UUID_ATTR);
         var isDraggedSelected = this.imagePicker.selectedImages.has(draggedUuid);
 
         if (isDraggedSelected && this.imagePicker.selectedImages.size > 1) {
           // Mark all selected cards
           count = this.imagePicker.selectedImages.size;
           var selectedUuids = this.imagePicker.selectedImages;
-          $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
+          $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).each(function() {
             var $card = $(this);
-            if (selectedUuids.has($card.data(Tt.JOURNAL_IMAGE_UUID_ATTR))) {
+            if (selectedUuids.has($card.data(TtConst.JOURNAL_IMAGE_UUID_ATTR))) {
               $elementsToMark.push($card);
             }
           });
@@ -3643,8 +3642,8 @@
       }
     } else {
       // Remove .dragging class from all elements
-      $(Tt.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
-      this.$editor.find(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+      $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
+      this.$editor.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeClass(EDITOR_TRANSIENT.CSS_DRAGGING);
 
       // Remove count badges
       $('.drag-count-badge').remove();
@@ -3658,9 +3657,9 @@
     var self = this;
 
     // Handle dragstart for images already in editor
-    this.$editor.on('dragstart', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
+    this.$editor.on('dragstart', TtConst.JOURNAL_IMAGE_SELECTOR, function(e) {
       var $img = $(this);
-      var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+      var $wrapper = $img.closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
 
       self.draggedElement = $wrapper[0]; // Store wrapper, not image
       self.dragSource = DRAG_SOURCE.EDITOR;
@@ -3673,7 +3672,7 @@
     });
 
     // Handle dragend for images in editor
-    this.$editor.on('dragend', Tt.JOURNAL_IMAGE_SELECTOR, function(e) {
+    this.$editor.on('dragend', TtConst.JOURNAL_IMAGE_SELECTOR, function(e) {
       // Visual cleanup only - state cleanup happens in drop handlers
       self.updateDraggingVisuals(false);
       self.clearDropZones();
@@ -3702,7 +3701,7 @@
     var wrappersData = [];
     for (var i = 0; i < wrappersToMove.length; i++) {
       var $wrapper = wrappersToMove[i];
-      var oldLayout = $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR);
+      var oldLayout = $wrapper.attr(TtConst.JOURNAL_DATA_LAYOUT_ATTR);
       wrappersData.push({
         element: $wrapper.get(0),  // Store raw DOM element
         $wrapper: $wrapper,
@@ -3713,7 +3712,7 @@
 
     // Determine target layout and position (same logic as before)
     var $target = $(e.target);
-    var $textBlock = $target.closest('.text-block');
+    var $textBlock = $target.closest(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR);
     var newLayout = LAYOUT_VALUES.FULL_WIDTH;
     var $insertTarget = null;
     var insertMode = null; // 'prepend-paragraph', 'after-wrapper', 'before-element', 'append-editor'
@@ -3728,7 +3727,7 @@
       newLayout = LAYOUT_VALUES.FULL_WIDTH;
 
       // Check if dropping on/near a specific full-width image wrapper
-      var $targetImageWrapper = $target.closest(Tt.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
+      var $targetImageWrapper = $target.closest(TtConst.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
 
       if ($targetImageWrapper.length && $targetImageWrapper.closest(this.$editor).length) {
         // Dropping on a specific full-width image - insert after it (within same group)
@@ -3737,7 +3736,7 @@
       } else {
         // Dropped between major sections - find closest block or group
         var mouseY = e.clientY;
-        var $children = this.$editor.children('.text-block, div.content-block, h1, h2, h3, h4, h5, h6');
+        var $children = this.$editor.children(TtConst.JOURNAL_TEXT_BLOCK_SELECTOR + ', div.' + TtConst.JOURNAL_CONTENT_BLOCK_CLASS + ', h1, h2, h3, h4, h5, h6');
         var closestElement = null;
         var minDistance = Infinity;
 
@@ -3792,7 +3791,7 @@
 
       // Update layout attribute if changed
       if (newLayout !== wrapperData.oldLayout) {
-        $wrapper.attr('data-' + Tt.JOURNAL_LAYOUT_ATTR, newLayout);
+        $wrapper.attr(TtConst.JOURNAL_DATA_LAYOUT_ATTR, newLayout);
       }
 
       $lastMoved = $wrapper;
@@ -3800,13 +3799,13 @@
 
     // NOW enforce 2-image limit per paragraph (after all insertions)
     if (insertMode === 'prepend-paragraph') {
-      var existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+      var existingWrappers = $insertTarget.find(TtConst.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
       var evicted = false;
       while (existingWrappers.length > 2) {
         // Remove rightmost (last) wrapper - FIFO eviction
         // Use helper to ensure usage tracking is updated
         this._removeWrapperAndUpdateUsage(existingWrappers.last());
-        existingWrappers = $insertTarget.find(Tt.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+        existingWrappers = $insertTarget.find(TtConst.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
         evicted = true;
       }
 
@@ -3839,7 +3838,7 @@
       // Remove the wrapper
       for (var i = 0; i < wrappersToRemove.length; i++) {
         var $wrapper = wrappersToRemove[i];
-        var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+        var $img = $wrapper.find(TtConst.JOURNAL_IMAGE_SELECTOR);
         this.removeImage($img);
       }
     } else if (this.dragSource === DRAG_SOURCE.REFERENCE) {
@@ -3866,8 +3865,8 @@
       e.preventDefault();
       e.stopPropagation();
 
-      var $wrapper = $(this).closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
-      var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
+      var $wrapper = $(this).closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+      var $img = $wrapper.find(TtConst.JOURNAL_IMAGE_SELECTOR);
 
       self.removeImage($img);
     });
@@ -3882,10 +3881,10 @@
 
           // Check if we're at an image
           var $img = null;
-          if (node.nodeType === Node.ELEMENT_NODE && $(node).is(Tt.JOURNAL_IMAGE_SELECTOR)) {
+          if (node.nodeType === Node.ELEMENT_NODE && $(node).is(TtConst.JOURNAL_IMAGE_SELECTOR)) {
             $img = $(node);
           } else if (node.nodeType === Node.ELEMENT_NODE) {
-            $img = $(node).find(Tt.JOURNAL_IMAGE_SELECTOR).first();
+            $img = $(node).find(TtConst.JOURNAL_IMAGE_SELECTOR).first();
           }
 
           if ($img && $img.length) {
@@ -3910,8 +3909,8 @@
    */
   JournalEditor.prototype._removeWrapperAndUpdateUsage = function($wrapper) {
     // Extract UUID before removing
-    var $img = $wrapper.find(Tt.JOURNAL_IMAGE_SELECTOR);
-    var uuid = $img.data(Tt.JOURNAL_UUID_ATTR);
+    var $img = $wrapper.find(TtConst.JOURNAL_IMAGE_SELECTOR);
+    var uuid = $img.data(TtConst.JOURNAL_UUID_ATTR);
 
     // Remove wrapper from DOM
     $wrapper.remove();
@@ -3935,7 +3934,7 @@
    */
   JournalEditor.prototype.removeImage = function($img) {
     // Get wrapper and remove it (updates usage tracking)
-    var $wrapper = $img.closest(Tt.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+    var $wrapper = $img.closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
     var uuid = this._removeWrapperAndUpdateUsage($wrapper);
 
     // Update picker filter if image was tracked
@@ -3978,7 +3977,7 @@
 
     this.$referenceContainer.on('dragleave', function(e) {
       // Only remove if we're leaving the container completely
-      if (!$(e.relatedTarget).closest(Tt.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR).length) {
+      if (!$(e.relatedTarget).closest(TtConst.JOURNAL_REFERENCE_IMAGE_CONTAINER_SELECTOR).length) {
         self.setReferenceDropZoneVisible(false);
       }
     });
@@ -4010,23 +4009,23 @@
     });
 
     // Setup clear button click
-    this.$referenceContainer.on('click', Tt.JOURNAL_REFERENCE_IMAGE_CLEAR_SELECTOR, function(e) {
+    this.$referenceContainer.on('click', TtConst.JOURNAL_REFERENCE_IMAGE_CLEAR_SELECTOR, function(e) {
       e.preventDefault();
       e.stopPropagation();
       self.clearReferenceImage();
     });
 
     // Setup double-click to open inspector
-    this.$referenceContainer.on('dblclick', Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
+    this.$referenceContainer.on('dblclick', TtConst.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
       e.preventDefault();
-      var inspectUrl = $(this).data(Tt.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
+      var inspectUrl = $(this).data(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR);
       if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
         AN.get(inspectUrl);
       }
     });
 
     // Setup reference image dragging (for drag-to-remove)
-    this.$referenceContainer.on('dragstart', Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
+    this.$referenceContainer.on('dragstart', TtConst.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
       self.draggedElement = this;
       self.dragSource = DRAG_SOURCE.REFERENCE;
 
@@ -4034,7 +4033,7 @@
       e.originalEvent.dataTransfer.setData('text/plain', '');
     });
 
-    this.$referenceContainer.on('dragend', Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
+    this.$referenceContainer.on('dragend', TtConst.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR, function(e) {
       // Visual cleanup happens in drop handlers
       self.draggedElement = null;
       self.dragSource = null;
@@ -4058,16 +4057,16 @@
 
     // Update state
     this.currentReferenceImageUuid = completeData.uuid;
-    this.$referenceContainer.data(Tt.JOURNAL_REFERENCE_IMAGE_UUID_ATTR, this.currentReferenceImageUuid);
+    this.$referenceContainer.data(TtConst.JOURNAL_REFERENCE_IMAGE_UUID_ATTR, this.currentReferenceImageUuid);
 
     // Update preview image attributes
-    var $preview = this.$referenceContainer.find(Tt.JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR);
-    var $placeholder = this.$referenceContainer.find(Tt.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR);
-    var $img = $preview.find(Tt.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR);
+    var $preview = this.$referenceContainer.find(TtConst.JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR);
+    var $placeholder = this.$referenceContainer.find(TtConst.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR);
+    var $img = $preview.find(TtConst.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR);
 
     $img.attr('src', completeData.url);
     $img.attr('alt', completeData.caption || 'Reference');
-    $img.attr('data-inspect-url', completeData.inspectUrl);
+    $img.attr('data-' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_INSPECT_URL_ATTR, completeData.inspectUrl);
 
     // Show preview, hide placeholder
     $placeholder.addClass('d-none');
@@ -4083,11 +4082,11 @@
   JournalEditor.prototype.clearReferenceImage = function() {
     // Update state - set to null (matches title/date/timezone pattern)
     this.currentReferenceImageUuid = null;
-    this.$referenceContainer.data(Tt.JOURNAL_REFERENCE_IMAGE_UUID_ATTR, '');
+    this.$referenceContainer.data(TtConst.JOURNAL_REFERENCE_IMAGE_UUID_ATTR, '');
 
     // Hide preview, show placeholder
-    this.$referenceContainer.find(Tt.JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR).addClass('d-none');
-    this.$referenceContainer.find(Tt.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR).removeClass('d-none');
+    this.$referenceContainer.find(TtConst.JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR).addClass('d-none');
+    this.$referenceContainer.find(TtConst.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_SELECTOR).removeClass('d-none');
 
     // Trigger autosave (will send empty string to backend to clear the field)
     this.handleContentChange();
@@ -4255,7 +4254,7 @@
    * Initialize editor on document ready
    */
   $(document).ready(function() {
-    var $editor = $('#' + Tt.JOURNAL_EDITOR_ID);
+    var $editor = $(TtConst.JOURNAL_EDITOR_ID_SELECTOR);
 
     if ($editor.length && $editor.attr('contenteditable') === 'true') {
       editorInstance = new JournalEditor($editor);
@@ -4299,10 +4298,10 @@
    * Handles Recent button and date picker interaction
    */
   function initImagePickerFilters() {
-    var $form = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID);
-    var $dateInput = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID);
-    var $recentBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID);
-    var $gallery = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID);
+    var $form = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID);
+    var $dateInput = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID);
+    var $recentBtn = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID);
+    var $gallery = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID);
 
     if ($form.length === 0 || $dateInput.length === 0 || $recentBtn.length === 0) {
       return; // Not on a page with image picker
@@ -4327,7 +4326,7 @@
     /**
      * Last Used Date button and tracking
      */
-    var $lastUsedDateBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
+    var $lastUsedDateBtn = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
     // Initialize from button's data attribute (set by server's filter_date)
     var lastUsedDate = $lastUsedDateBtn.data('last-used-date') || null;
 
@@ -4481,11 +4480,11 @@
    * Called after upload completion to show newly uploaded images
    */
   function refreshImagePickerWithRecent() {
-    var $gallery = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID);
-    var $form = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID);
-    var $dateInput = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID);
-    var $recentBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID);
-    var $lastUsedDateBtn = $('#' + Tt.DIVID.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
+    var $gallery = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID);
+    var $form = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID);
+    var $dateInput = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID);
+    var $recentBtn = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID);
+    var $lastUsedDateBtn = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
 
     if ($form.length > 0 && $gallery.length > 0) {
       var baseUrl = $form.attr('action');

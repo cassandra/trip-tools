@@ -42,7 +42,8 @@
   </head>
   <body>
     <script>
-     window.TtClientConfig = {{ tt_client_config.to_json_dict|safe }};
+     window.TtClientConfig = {{ tt_client_config.to_json_dict_str|safe }};
+     window.TtConst = {{ TtConst.to_json_dict_str|safe }};
      window.AN_VERSION = window.TtClientConfig.VERSION;
     </script>
     {% javascript 'js_before_content' %}

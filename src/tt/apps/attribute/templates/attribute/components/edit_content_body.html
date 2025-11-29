@@ -18,21 +18,21 @@ by using the AttributeItemEditContext pattern.
 
 
 <!-- Sticky Panel: Owner Info + Action Bar (always visible) -->
-<div class="{{ DIVID.ATTR_V2_STICKY_PANEL_CLASS }}">
+<div class="{{ TtConst.ATTR_STICKY_PANEL_CLASS }}">
   <!-- Basic Owner Information (minimal) - only if owner_form provided -->
 
   {% block basic_info %}
-  <div class="attr-v2-basic-info">
+  <div class="attr-basic-info">
     {% if owner_form %}
     {% if owner_form.non_field_errors %}
-    <div class="attr-v2-non-field-errors">
+    <div class="attr-non-field-errors">
       {% for err in owner_form.non_field_errors %}
-      <div class="attr-v2-error-item">{{ err }}</div>
+      <div class="attr-error-item">{{ err }}</div>
       {% endfor %}
     </div>
     {% endif %}
   
-    <div class="attr-v2-owner-fields }}">
+    <div class="attr-owner-fields }}">
       {% block owner_fields %}
       <!-- Subclasses should override this block to provide owner-specific fields -->
       {% endblock %}
@@ -41,25 +41,25 @@ by using the AttributeItemEditContext pattern.
   </div>
   {% endblock %}
   
-  <div class="{{ DIVID.ATTR_V2_ACTION_BAR_CLASS }}">
-    <div class="{{ DIVID.ATTR_V2_ACTION_BAR_CONTENT_CLASS }}">
+  <div class="{{ TtConst.ATTR_ACTION_BAR_CLASS }}">
+    <div class="{{ TtConst.ATTR_ACTION_BAR_CONTENT_CLASS }}">
       <!-- Left Side: UPDATE button and vertically stacked message areas -->
-      <div class="attr-v2-action-bar-left">
+      <div class="attr-action-bar-left">
         <button id="{{ attr_page_context.update_button_html_id }}" 
                 type="submit" 
-                class="btn btn-outline-primary {{ DIVID.ATTR_V2_UPDATE_BTN_CLASS }}"
+                class="btn btn-outline-primary {{ TtConst.ATTR_UPDATE_BTN_CLASS }}"
                 name="action" 
                 value="update">
           {% icon "save" size="sm" css_class="tt-icon-left" %}
           {{ attr_page_context.update_button_label }}
         </button>
         <!-- Vertically stacked message areas -->
-        <div class="attr-v2-message-stack">
+        <div class="attr-message-stack">
           <div id="{{ attr_page_context.dirty_msg_html_id }}"
-               class="{{ DIVID.ATTR_V2_DIRTY_MESSAGE_CLASS }}">
+               class="{{ TtConst.ATTR_DIRTY_MESSAGE_CLASS }}">
           </div>
           <div id="{{ attr_page_context.status_msg_html_id }}"
-               class="{{ DIVID.ATTR_V2_STATUS_MESSAGE_CLASS }}">
+               class="{{ TtConst.ATTR_STATUS_MESSAGE_CLASS }}">
             {% if success_message %}
             <span class="text-success">{{ success_message }}</span>
             {% elif error_message %}
@@ -69,7 +69,7 @@ by using the AttributeItemEditContext pattern.
         </div>
       </div>
       <!-- Right Side: Action buttons -->
-      <div class="{{ DIVID.ATTR_V2_ACTION_BUTTONS_CLASS }}">
+      <div class="{{ TtConst.ATTR_ACTION_BUTTONS_CLASS }}">
         {% block additional_actions %}
         {% endblock %}
         {% block file_upload_button %}
@@ -92,7 +92,7 @@ by using the AttributeItemEditContext pattern.
 </div>
 <!-- Scrollable Content Area (below sticky panel) -->
 <div id="{{ attr_page_context.scrollable_content_html_id }}"
-     class="{{ DIVID.ATTR_V2_SCROLLABLE_CONTENT_CLASS }}">
+     class="{{ TtConst.ATTR_SCROLLABLE_CONTENT_CLASS }}">
   
   <!-- Files Section -->
   {% block files_section %}

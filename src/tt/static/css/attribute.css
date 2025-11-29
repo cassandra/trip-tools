@@ -1,13 +1,13 @@
 /* Attribute V2 System Styles - Fresh Start */
 
 /* Container Structure */
-.attr-v2-container {
+.attr-container {
     /* Remove default form margins for better layout control */
     margin: 0;
 }
 
 /* Sticky Panel (Entity Info + Action Bar - Always Visible) */
-.attr-v2-sticky-panel {
+.attr-sticky-panel {
     position: sticky;
     top: 0;
     z-index: 10;
@@ -17,24 +17,24 @@
 }
 
 /* Entity Info Section (Minimal - Name/Type) */
-.attr-v2-entity-info {
+.attr-entity-info {
     padding: 0.5rem 0 0.25rem 0;
 }
 
 /* Action Bar */
-.attr-v2-action-bar {
+.attr-action-bar {
     padding: 0.25rem 0;
     background-color: var(--white);
 }
 
-.attr-v2-action-bar-content {
+.attr-action-bar-content {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
 /* Left group: button and messages */
-.attr-v2-action-bar-left {
+.attr-action-bar-left {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -42,13 +42,13 @@
 }
 
 /* Message stack */
-.attr-v2-message-stack {
+.attr-message-stack {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 }
 
-.attr-v2-update-btn {
+.attr-update-btn {
     min-height: 44px; /* Touch-friendly primary action */
     min-width: 80px;
     padding: 0.75rem 1.5rem;
@@ -56,7 +56,7 @@
 }
 
 /* Right group: action buttons */
-.attr-v2-action-buttons {
+.attr-action-buttons {
     display: flex;
     gap: 0.5rem;
     align-items: center;
@@ -64,21 +64,21 @@
     margin-left: auto; /* Push to right */
 }
 
-.attr-v2-action-buttons button {
+.attr-action-buttons button {
     min-height: 44px; /* Touch-friendly minimum */
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
     border-radius: 0.25rem;
 }
 
-.attr-v2-status-message {
+.attr-status-message {
     font-size: 0.875rem;
     color: var(--secondary-text-color);
     font-style: italic;
 }
 
 /* Status message variants */
-.attr-v2-status-message.success {
+.attr-status-message.success {
     color: var(--success-color, #28a745);
     background-color: var(--success-bg-light);
     padding: 0.25rem 0.5rem;
@@ -90,42 +90,42 @@
     gap: 0.25rem;
 }
 
-.attr-v2-status-message.success::before {
+.attr-status-message.success::before {
     content: '✓';
     font-weight: bold;
     color: var(--success-color, #28a745);
 }
 
 /* Scrollable Content Area (Natural Scrolling) */
-.attr-v2-scrollable-content {
+.attr-scrollable-content {
     padding: 1rem 0;
     /* Natural scrolling - no height restrictions or overflow settings */
 }
 
 /* Touch-friendly Form Controls - Consistent heights */
-.attr-v2-container input,
-.attr-v2-container select,
-.attr-v2-container textarea {
+.attr-container input,
+.attr-container select,
+.attr-container textarea {
     min-height: 44px; /* Touch-friendly minimum for form inputs */
     padding: 0.75rem;
     font-size: 0.875rem;
     border-radius: 0.375rem;
 }
 
-.attr-v2-container input[type="text"],
-.attr-v2-container input[type="email"],
-.attr-v2-container input[type="url"],
-.attr-v2-container select {
+.attr-container input[type="text"],
+.attr-container input[type="email"],
+.attr-container input[type="url"],
+.attr-container select {
     height: 44px; /* Exact height for single-line inputs */
 }
 
-.attr-v2-container textarea {
+.attr-container textarea {
     min-height: 44px;
     resize: vertical;
 }
 
 /* Section Titles - Reduced size to match mockup */
-.attr-v2-section-title {
+.attr-section-title {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--secondary-text-color);
@@ -137,18 +137,18 @@
 }
 
 /* File Grid Layout */
-.attr-v2-file-section {
+.attr-file-section {
     margin-bottom: 2rem;
 }
 
-.attr-v2-file-grid {
+.attr-file-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     margin-top: 0.75rem;
 }
 
-.attr-v2-file-card {
+.attr-file-card {
     /* No border or padding on main card - components handle their own styling */
     border-radius: 0.375rem;
     background: transparent;
@@ -158,7 +158,7 @@
     overflow: hidden; /* Maintain rounded corners */
 }
 
-.attr-v2-file-thumbnail {
+.attr-file-thumbnail {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -176,7 +176,7 @@
     cursor: pointer;
 }
 
-.attr-v2-file-type-label {
+.attr-file-type-label {
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--text-color);
@@ -185,7 +185,7 @@
     letter-spacing: 0.05em;
 }
 
-.attr-v2-file-info {
+.attr-file-info {
     flex-grow: 1;
     background: var(--white);
     border: 1px solid var(--line-color);
@@ -194,7 +194,7 @@
     padding: 0.75rem;
 }
 
-.attr-v2-file-name {
+.attr-file-name {
     font-size: 0.875rem;
     font-weight: 500;
     margin-bottom: 0.25rem;
@@ -202,7 +202,7 @@
 }
 
 /* File title input - styled to appear like text initially */
-.attr-v2-file-title-input {
+.attr-file-title-input {
     font-size: 0.875rem;
     font-weight: 500;
     margin-bottom: 0.25rem;
@@ -223,8 +223,8 @@
 }
 
 /* Focused and activated state - stronger input appearance */
-.attr-v2-file-title-input:focus,
-.attr-v2-file-title-input.activated {
+.attr-file-title-input:focus,
+.attr-file-title-input.activated {
     border-color: var(--primary-color, #007bff);
     background: var(--white, #ffffff);
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
@@ -232,13 +232,13 @@
 }
 
 /* Hover state - subtle indication it's interactive */
-.attr-v2-file-title-input:hover:not(:focus) {
+.attr-file-title-input:hover:not(:focus) {
     border-color: var(--line-color, #dee2e6);
     background: rgba(0, 0, 0, 0.02);
 }
 
 /* Attribute title input - styled to appear like text initially */
-.attr-v2-title-input {
+.attr-title-input {
     font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
@@ -259,34 +259,34 @@
     line-height: inherit;
 }
 /* Focused and activated state - stronger input appearance */
-.attr-v2-title-input:focus,
-.attr-v2-title-input.activated {
+.attr-title-input:focus,
+.attr-title-input.activated {
     border-color: var(--primary-color, #007bff);
     background: var(--white, #ffffff);
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     outline: none;
 }
 /* Hover state - subtle indication it's interactive */
-.attr-v2-title-input:hover:not(:focus) {
+.attr-title-input:hover:not(:focus) {
     border-color: var(--line-color, #dee2e6);
     background: rgba(0, 0, 0, 0.02);
 }
 
 /* Truncated textarea styling - indicate it's clickable */
-.attr-v2-textarea.truncated[readonly] {
+.attr-textarea.truncated[readonly] {
     cursor: pointer;
 }
-.attr-v2-textarea.truncated[readonly]:hover {
+.attr-textarea.truncated[readonly]:hover {
     background-color: rgba(0, 0, 0, 0.02);
 }
 
-.attr-v2-file-filename {
+.attr-file-filename {
     font-size: 0.75rem;
     color: var(--muted-color);
     word-break: break-word;
 }
 
-.attr-v2-file-actions {
+.attr-file-actions {
     display: flex;
     gap: 0.25rem;
     justify-content: center;
@@ -295,7 +295,7 @@
     border-top: 1px solid var(--line-color);
 }
 
-.attr-v2-file-actions button {
+.attr-file-actions button {
     min-height: 44px; /* Touch-friendly minimum */
     min-width: 44px;
     padding: 0.375rem;
@@ -304,7 +304,7 @@
 }
 
 /* Reorder Controls - Overlay in upper right of thumbnail */
-.attr-v2-reorder-controls {
+.attr-reorder-controls {
     position: absolute;
     top: 4px;
     right: 4px;
@@ -318,37 +318,37 @@
 }
 
 /* Disable thumbnail hover when hovering over reorder controls */
-.attr-v2-file-thumbnail:hover:has(.attr-v2-reorder-controls:hover) {
+.attr-file-thumbnail:hover:has(.attr-reorder-controls:hover) {
     background-color: var(--background-color) !important;
     transform: none !important;
 }
 
 /* Enhance reorder controls hover state */
-.attr-v2-reorder-controls:hover {
+.attr-reorder-controls:hover {
     background: rgba(255, 255, 255, 1);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Ensure buttons within controls maintain their hover states */
-.attr-v2-reorder-controls button:hover {
+.attr-reorder-controls button:hover {
     background-color: var(--background-color);
     border-color: var(--line-color);
 }
 
 /* JavaScript-based hover state override */
-.attr-v2-file-thumbnail.reorder-hover:hover {
+.attr-file-thumbnail.reorder-hover:hover {
     background-color: var(--background-color) !important;
     transform: none !important;
 }
 
 /* Fallback for browsers that don't support :has() - JavaScript handles it */
 @supports not selector(:has(*)) {
-    .attr-v2-file-thumbnail:hover:has(.attr-v2-reorder-controls:hover) {
+    .attr-file-thumbnail:hover:has(.attr-reorder-controls:hover) {
         /* This won't work in unsupported browsers, JS handles it instead */
     }
 }
 
-.attr-v2-reorder-controls button {
+.attr-reorder-controls button {
     /* Touch-friendly size with small visual appearance */
     min-width: 24px;
     min-height: 24px;
@@ -363,7 +363,7 @@
     justify-content: center;
 }
 
-.attr-v2-reorder-controls button:disabled {
+.attr-reorder-controls button:disabled {
     opacity: 0.3;
     cursor: not-allowed;
     background-color: var(--background-color);
@@ -371,23 +371,23 @@
     color: var(--muted-color);
 }
 
-.attr-v2-reorder-controls button:disabled:hover {
+.attr-reorder-controls button:disabled:hover {
     transform: none;
     box-shadow: none;
 }
 
 /* Attribute List Layout */
-.attr-v2-attribute-section {
+.attr-attribute-section {
     margin-bottom: 2rem;
 }
 
-.attr-v2-attribute-list {
+.attr-attribute-list {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 
-.attr-v2-attribute-card {
+.attr-attribute-card {
     border: 1px solid var(--line-color);
     border-radius: 0.375rem;
     padding: 0.75rem;
@@ -395,18 +395,18 @@
     transition: all 0.2s ease;
 }
 
-.attr-v2-attribute-card[is_editable="false"] {
+.attr-attribute-card[is_editable="false"] {
     background-color: #e0e0e0;
 }
                                               
-.attr-v2-attribute-header {
+.attr-attribute-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 0.5rem;
 }
 
-.attr-v2-attribute-name {
+.attr-attribute-name {
     font-size: 0.875rem;
     font-weight: 500;
     margin: 0;
@@ -418,12 +418,12 @@
     min-width: 200px; /* Ensure minimum usable width */
 }
 
-.attr-v2-attribute-actions {
+.attr-attribute-actions {
     display: flex;
     gap: 0.25rem;
 }
 
-.attr-v2-attribute-actions button {
+.attr-attribute-actions button {
     padding: 0.375rem;
     min-width: 44px; /* Touch-friendly minimum */
     min-height: 44px; /* Touch-friendly minimum */
@@ -434,12 +434,12 @@
     font-size: 0.875rem;
 }
 
-.attr-v2-attribute-actions button:hover {
+.attr-attribute-actions button:hover {
     background: var(--background-color);
     color: var(--text-color);
 }
 
-.attr-v2-attribute-value {
+.attr-attribute-value {
     margin-top: 0.5rem;
 }
 
@@ -447,14 +447,14 @@
 
 
 /* Error State (validation failures) */
-.attr-v2-file-card.error,
-.attr-v2-attribute-card.error {
+.attr-file-card.error,
+.attr-attribute-card.error {
     border-left: 3px solid var(--danger-color);
     background-color: rgba(220, 53, 69, 0.1);
     box-shadow: 0 2px 4px rgba(220, 53, 69, 0.1);
 }
 
-.attr-v2-error-message {
+.attr-error-message {
     color: var(--danger-color);
     font-size: 0.875rem;
     margin-top: 0.25rem;
@@ -464,14 +464,14 @@
 }
 
 /* Loading State (during operations) */
-.attr-v2-file-card.loading,
-.attr-v2-attribute-card.loading {
+.attr-file-card.loading,
+.attr-attribute-card.loading {
     opacity: 0.7;
     pointer-events: none;
     position: relative;
 }
 
-.attr-v2-loading-overlay {
+.attr-loading-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -484,7 +484,7 @@
     border-radius: 0.25rem;
 }
 
-.attr-v2-loading-spinner {
+.attr-loading-spinner {
     width: 20px;
     height: 20px;
     border: 2px solid var(--line-color);
@@ -494,14 +494,14 @@
 }
 
 /* Success State (after successful operations) */
-.attr-v2-file-card.success,
-.attr-v2-attribute-card.success {
+.attr-file-card.success,
+.attr-attribute-card.success {
     border-left: 3px solid var(--success-color);
     background-color: var(--success-bg-light);
     transition: all 0.3s ease;
 }
 
-.attr-v2-success-message {
+.attr-success-message {
     color: var(--success-color);
     font-size: 0.875rem;
     margin-top: 0.25rem;
@@ -511,7 +511,7 @@
 }
 
 
-.attr-v2-undo-delete {
+.attr-undo-delete {
     margin-top: 0.5rem;
     padding: 0.5rem;
     background: rgba(255, 193, 7, 0.1);
@@ -519,7 +519,7 @@
     border-radius: 0.25rem;
 }
 
-.attr-v2-undo-delete button {
+.attr-undo-delete button {
     min-height: 32px;
     padding: 0.25rem 0.75rem;
 }
@@ -549,123 +549,123 @@
 /* Smooth Transitions for All Interactive Elements */
 
 /* Card State Transitions */
-.attr-v2-file-card,
-.attr-v2-attribute-card {
+.attr-file-card,
+.attr-attribute-card {
     transition: all 0.2s ease-in-out;
 }
 
-.attr-v2-file-card:hover,
-.attr-v2-attribute-card:hover {
+.attr-file-card:hover,
+.attr-attribute-card:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Button Transitions */
-.attr-v2-action-buttons button,
-.attr-v2-file-actions button,
-.attr-v2-attribute-actions button,
-.attr-v2-reorder-controls button,
-.attr-v2-update-btn {
+.attr-action-buttons button,
+.attr-file-actions button,
+.attr-attribute-actions button,
+.attr-reorder-controls button,
+.attr-update-btn {
     transition: all 0.15s ease;
 }
 
-.attr-v2-action-buttons button:hover,
-.attr-v2-file-actions button:hover,
-.attr-v2-attribute-actions button:hover,
-.attr-v2-reorder-controls button:hover:not(:disabled),
-.attr-v2-update-btn:hover {
+.attr-action-buttons button:hover,
+.attr-file-actions button:hover,
+.attr-attribute-actions button:hover,
+.attr-reorder-controls button:hover:not(:disabled),
+.attr-update-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Form Element Transitions */
-.attr-v2-container input,
-.attr-v2-container select,
-.attr-v2-container textarea {
+.attr-container input,
+.attr-container select,
+.attr-container textarea {
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.attr-v2-container input:focus,
-.attr-v2-container select:focus,
-.attr-v2-container textarea:focus {
+.attr-container input:focus,
+.attr-container select:focus,
+.attr-container textarea:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.2rem rgba(23, 112, 114, 0.25);
     outline: none;
 }
 
 /* Enhanced focus states for buttons and interactive elements */
-.attr-v2-action-buttons button:focus,
-.attr-v2-file-actions button:focus,
-.attr-v2-attribute-actions button:focus,
-.attr-v2-reorder-controls button:focus,
-.attr-v2-update-btn:focus {
+.attr-action-buttons button:focus,
+.attr-file-actions button:focus,
+.attr-attribute-actions button:focus,
+.attr-reorder-controls button:focus,
+.attr-update-btn:focus {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
     box-shadow: 0 0 0 0.2rem rgba(23, 112, 114, 0.25);
 }
 
 /* Update button prominence changes based on dirty state */
-.attr-v2-update-btn.form-dirty {
+.attr-update-btn.form-dirty {
     background-color: var(--primary-color, #007bff) !important;
     border-color: var(--primary-color, #007bff) !important;
     color: white !important;
 }
 
-.attr-v2-update-btn.form-dirty:hover {
+.attr-update-btn.form-dirty:hover {
     background-color: var(--primary-color-dark, #0056b3) !important;
     border-color: var(--primary-color-dark, #0056b3) !important;
     color: white !important;
 }
 
-.attr-v2-update-btn.form-dirty:focus {
+.attr-update-btn.form-dirty:focus {
     background-color: var(--primary-color, #007bff) !important;
     border-color: var(--primary-color, #007bff) !important;
     color: white !important;
     box-shadow: 0 0 0 0.2rem rgba(23, 112, 114, 0.25) !important;
 }
 
-.attr-v2-reorder-controls button:focus:disabled {
+.attr-reorder-controls button:focus:disabled {
     outline-color: var(--muted-color);
     box-shadow: 0 0 0 0.2rem rgba(126, 126, 129, 0.25);
 }
 
 /* Card focus states for keyboard navigation */
-.attr-v2-file-card:focus-within,
-.attr-v2-attribute-card:focus-within {
+.attr-file-card:focus-within,
+.attr-attribute-card:focus-within {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }
 
 /* Add form focus enhancement */
-.attr-v2-add-form:focus-within {
+.attr-add-form:focus-within {
     box-shadow: 0 4px 12px rgba(23, 112, 114, 0.15);
 }
 
 /* Add Form Animation */
-.attr-v2-add-form {
+.attr-add-form {
     transition: all 0.3s ease;
     animation: fadeIn 0.3s ease when visible;
 }
 
-.attr-v2-add-form.collapsed {
+.attr-add-form.collapsed {
     display: none;
 }
 
-.attr-v2-add-form:not(.collapsed) {
+.attr-add-form:not(.collapsed) {
     animation: fadeIn 0.3s ease;
 }
 
 /* Status Message Transitions */
-.attr-v2-status-message {
+.attr-status-message {
     transition: opacity 0.25s ease, color 0.25s ease;
 }
 
 /* Thumbnail Hover Effect */
-.attr-v2-file-thumbnail {
+.attr-file-thumbnail {
     transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
-.attr-v2-file-thumbnail:hover {
+.attr-file-thumbnail:hover {
     background-color: var(--primary-color-light, #e7f3ff);
     transform: scale(1.02);
 }
@@ -681,7 +681,7 @@
     }
     
     /* File grid: 2 columns on very small screens */
-    .attr-v2-file-grid {
+    .attr-file-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
     }
@@ -690,25 +690,25 @@
 /* Mobile Landscape (576px to 1023px) - Keep 3 columns */
 @media (min-width: 576px) and (max-width: 1023px) {
     /* File grid maintains 3 columns */
-    .attr-v2-file-grid {
+    .attr-file-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 0.875rem;
     }
     
     /* Action bar may stack buttons vertically on very small landscape */
-    .attr-v2-action-bar-content {
+    .attr-action-bar-content {
         flex-direction: column;
         gap: 0.75rem;
         align-items: stretch;
     }
     
-    .attr-v2-action-buttons {
+    .attr-action-buttons {
         justify-content: center;
         flex-wrap: wrap;
     }
     
     /* Attrribute actions stack vertically */
-    .attr-v2-attribute-actions {
+    .attr-attribute-actions {
         flex-direction: column;
         gap: 0.25rem;
         align-items: flex-end;
@@ -723,27 +723,27 @@
     }
     
     /* File grid: 3 columns optimal */
-    .attr-v2-file-grid {
+    .attr-file-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
     }
     
     /* Action bar horizontal layout */
-    .attr-v2-action-bar-content {
+    .attr-action-bar-content {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
     }
     
     /* Enhanced hover effects for mouse/trackpad */
-    .attr-v2-file-card:hover,
-    .attr-v2-attribute-card:hover {
+    .attr-file-card:hover,
+    .attr-attribute-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
     
     /* Better button spacing */
-    .attr-v2-attribute-actions {
+    .attr-attribute-actions {
         flex-direction: row;
         gap: 0.25rem;
     }
@@ -752,30 +752,30 @@
 /* Desktop (1200px+) - SECONDARY TARGET */
 @media (min-width: 1200px) {
     /* Enhanced layout with more space - maintain 3 columns */
-    .attr-v2-file-grid {
+    .attr-file-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 1.25rem;
     }
     
     /* More generous spacing */
-    .attr-v2-scrollable-content {
+    .attr-scrollable-content {
         padding: 1.5rem 0;
     }
     
-    .attr-v2-attribute-list {
+    .attr-attribute-list {
         gap: 1rem;
     }
     
     /* Enhanced hover effects */
-    .attr-v2-file-card:hover,
-    .attr-v2-attribute-card:hover {
+    .attr-file-card:hover,
+    .attr-attribute-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     }
     
     /* Larger touch targets can be more refined */
-    .attr-v2-reorder-controls button,
-    .attr-v2-attribute-actions button {
+    .attr-reorder-controls button,
+    .attr-attribute-actions button {
         min-width: 32px;
         min-height: 32px;
         padding: 8px;
@@ -785,12 +785,12 @@
 /* High DPI / Retina Displays */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     /* Sharper borders and shadows */
-    .attr-v2-file-card,
-    .attr-v2-attribute-card {
+    .attr-file-card,
+    .attr-attribute-card {
         border-width: 0.5px;
     }
     
-    .attr-v2-sticky-panel {
+    .attr-sticky-panel {
         border-bottom-width: 0.5px;
     }
 }
@@ -798,21 +798,21 @@
 /* Touch Device Optimizations */
 @media (hover: none) and (pointer: coarse) {
     /* Touch-only devices: remove hover effects, ensure touch targets */
-    .attr-v2-file-card:hover,
-    .attr-v2-attribute-card:hover,
-    .attr-v2-file-thumbnail:hover,
-    .attr-v2-action-buttons button:hover,
-    .attr-v2-file-actions button:hover,
-    .attr-v2-attribute-actions button:hover {
+    .attr-file-card:hover,
+    .attr-attribute-card:hover,
+    .attr-file-thumbnail:hover,
+    .attr-action-buttons button:hover,
+    .attr-file-actions button:hover,
+    .attr-attribute-actions button:hover {
         transform: none;
         box-shadow: none;
         background-color: initial;
     }
     
     /* Ensure all touch targets are adequate */
-    .attr-v2-attribute-actions button,
-    .attr-v2-file-actions button,
-    .attr-v2-reorder-controls button {
+    .attr-attribute-actions button,
+    .attr-file-actions button,
+    .attr-reorder-controls button {
         min-height: 44px; /* Touch-friendly standard */
         min-width: 44px;
         padding: 10px;
@@ -822,29 +822,29 @@
 /* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
     /* Disable animations for users who prefer reduced motion */
-    .attr-v2-file-card,
-    .attr-v2-attribute-card,
-    .attr-v2-action-buttons button,
-    .attr-v2-file-actions button,
-    .attr-v2-attribute-actions button,
-    .attr-v2-reorder-controls button,
-    .attr-v2-container input,
-    .attr-v2-container select,
-    .attr-v2-container textarea,
-    .attr-v2-add-form,
-    .attr-v2-file-thumbnail {
+    .attr-file-card,
+    .attr-attribute-card,
+    .attr-action-buttons button,
+    .attr-file-actions button,
+    .attr-attribute-actions button,
+    .attr-reorder-controls button,
+    .attr-container input,
+    .attr-container select,
+    .attr-container textarea,
+    .attr-add-form,
+    .attr-file-thumbnail {
         animation: none;
         transition: none;
     }
     
     
-    .attr-v2-loading-spinner {
+    .attr-loading-spinner {
         animation: spin 0.1s linear infinite;
     }
 }
 
 /* Add Attrribute Form */
-.attr-v2-add-form {
+.attr-add-form {
     border: 1px solid var(--line-color);
     border-radius: 0.375rem;
     background: var(--white);
@@ -854,11 +854,11 @@
     overflow: hidden;
 }
 
-.attr-v2-add-form.collapsed {
+.attr-add-form.collapsed {
     display: none;
 }
 
-.attr-v2-add-form-header {
+.attr-add-form-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -867,18 +867,18 @@
     background: var(--background-color);
 }
 
-.attr-v2-add-form-header h6 {
+.attr-add-form-header h6 {
     margin: 0;
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-color);
 }
 
-.attr-v2-add-form-content {
+.attr-add-form-content {
     padding: 1rem;
 }
 
-.attr-v2-add-form-actions {
+.attr-add-form-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -888,22 +888,22 @@
 }
 
 /* Add form field layout improvements */
-.attr-v2-add-form-content .row {
+.attr-add-form-content .row {
     align-items: end;
 }
 
-.attr-v2-add-form-content .custom-control {
+.attr-add-form-content .custom-control {
     padding-top: 0.5rem;
 }
 
 /* Enhanced icon alignment for V2 components */
-.attr-v2-action-buttons .tt-icon-left,
-.attr-v2-file-actions .tt-icon,
-.attr-v2-attribute-actions .tt-icon {
+.attr-action-buttons .tt-icon-left,
+.attr-file-actions .tt-icon,
+.attr-attribute-actions .tt-icon {
     vertical-align: middle;
 }
 
-.attr-v2-action-buttons button .tt-icon-left {
+.attr-action-buttons button .tt-icon-left {
     margin-right: 0.5rem;
 }
 
@@ -911,23 +911,23 @@
 /* SECRET FIELD STYLING                                                  */
 /* ====================================================================== */
 
-.attr-v2-secret-field {
+.attr-secret-field {
     position: relative;
 }
 
-.attr-v2-secret-input-wrapper {
+.attr-secret-input-wrapper {
     position: relative;
     display: flex;
     align-items: stretch;
 }
 
-.attr-v2-secret-input-wrapper input,
-.attr-v2-secret-input-wrapper textarea {
+.attr-secret-input-wrapper input,
+.attr-secret-input-wrapper textarea {
     flex: 1;
     padding-right: 44px; /* Space for toggle button */
 }
 
-.attr-v2-secret-toggle {
+.attr-secret-toggle {
     position: absolute;
     right: 4px;
     top: 50%;
@@ -943,76 +943,76 @@
     justify-content: center;
 }
 
-.attr-v2-secret-toggle:hover {
+.attr-secret-toggle:hover {
     background: var(--hover-background-color);
     border-color: #adb5bd;
 }
 
-.attr-v2-secret-toggle:focus {
+.attr-secret-toggle:focus {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
     border-color: var(--primary-color);
 }
 
 /* Secret field in hidden state */
-.attr-v2-secret-field.hidden input,
-.attr-v2-secret-field.hidden textarea {
+.attr-secret-field.hidden input,
+.attr-secret-field.hidden textarea {
     -webkit-text-security: disc;
     font-family: 'Courier New', monospace;
     letter-spacing: 0.1em;
 }
 
 /* Fallback for browsers that don't support text-security */
-.attr-v2-secret-field.hidden input:not([type="password"]),
-.attr-v2-secret-field.hidden textarea {
+.attr-secret-field.hidden input:not([type="password"]),
+.attr-secret-field.hidden textarea {
     color: transparent;
     text-shadow: 0 0 0 #495057;
 }
 
 /* Touch device optimizations */
 @media (max-width: 768px) {
-    .attr-v2-secret-toggle {
+    .attr-secret-toggle {
         min-width: 44px;
         height: 44px;
     }
 }
 
 /* Secret field readonly visual indicators */
-.attr-v2-secret-input[readonly] {
+.attr-secret-input[readonly] {
     background-color: #f8f9fa;
     cursor: default;
     border-color: #dee2e6;
 }
 
-.attr-v2-secret-input[readonly]:focus {
+.attr-secret-input[readonly]:focus {
     background-color: #f8f9fa;
     border-color: #dee2e6;
     box-shadow: none;
 }
 
 /* When secret field is editable (shown), give it normal input styling */
-.attr-v2-secret-input[type="text"]:not([readonly]) {
+.attr-secret-input[type="text"]:not([readonly]) {
     background-color: #ffffff;
     cursor: text;
 }
 
-.attr-v2-secret-input[type="text"]:not([readonly]):focus {
+.attr-secret-input[type="text"]:not([readonly]):focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.2rem rgba(23, 112, 114, 0.25);
 }
 
 /* Secret checkbox positioning and alignment */
-.attr-v2-secret-checkbox {
+.attr-secret-checkbox {
     margin-top: 0.75rem;
     margin-bottom: 0.5rem;
 }
 
-.attr-v2-secret-checkbox .custom-control {
+.attr-secret-checkbox .custom-control {
     display: flex;
     align-items: center;
 }
 
-.attr-v2-secret-checkbox .custom-control-label {
+.attr-secret-checkbox .custom-control-label {
     line-height: 1;
     padding-top: 0;
     margin-bottom: 0;
@@ -1024,7 +1024,7 @@
 /* ====================================================================== */
 
 /* Dirty message area in sticky panel */
-.attr-v2-dirty-message {
+.attr-dirty-message {
     font-size: 0.875rem;
     color: transparent;
     transition: all 0.2s ease-in-out;
@@ -1033,7 +1033,7 @@
     border-radius: 0.25rem;
 }
 
-.attr-v2-dirty-message.active {
+.attr-dirty-message.active {
     color: #8B4513; /* Darker brown text for better contrast */
     background-color: #FFF3CD; /* Light warning background */
     border-left: 3px solid var(--warning-color);
@@ -1041,19 +1041,19 @@
 }
 
 /* Field-level dirty indicators */
-.attr-v2-field-dirty {
+.attr-field-dirty {
     border-left: 3px solid var(--warning-color) !important;
     background-color: rgba(255, 193, 7, 0.05) !important;
     transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
-.attr-v2-field-dirty:focus {
+.attr-field-dirty:focus {
     border-left-color: var(--primary-color) !important;
     box-shadow: -3px 0 0 0 var(--primary-color), 0 0 0 0.2rem rgba(23, 112, 114, 0.25);
 }
 
 /* Dirty indicator dot */
-.attr-v2-dirty-indicator {
+.attr-dirty-indicator {
     display: inline-block;
     margin-left: 0.5rem;
     color: var(--warning-color);
@@ -1064,7 +1064,7 @@
 }
 
 /* Attrribute name dirty styling - fallback approach for broader browser support */
-.attr-v2-attribute-name.has-dirty-indicator {
+.attr-attribute-name.has-dirty-indicator {
     font-weight: 600;
     color: var(--warning-color);
 }
@@ -1077,44 +1077,44 @@
 
 /* Modern browser support with :has() */
 @supports selector(:has(*)) {
-    .attr-v2-attribute-name:has(.attr-v2-dirty-indicator) {
+    .attr-attribute-name:has(.attr-dirty-indicator) {
         font-weight: 600;
         color: var(--warning-color);
     }
     
-    .form-group:has(.attr-v2-field-dirty) small {
+    .form-group:has(.attr-field-dirty) small {
         color: var(--warning-color);
         font-weight: 500;
     }
     
-    .attr-v2-new-attribute .attr-v2-attribute-name:has(.attr-v2-dirty-indicator) {
+    .attr-new-attribute .attr-attribute-name:has(.attr-dirty-indicator) {
         color: var(--primary-color);
     }
 }
 
 /* New attribute form dirty state - different styling */
-.attr-v2-new-attribute .attr-v2-field-dirty {
+.attr-new-attribute .attr-field-dirty {
     border-left-color: var(--primary-color) !important;
     background-color: rgba(23, 112, 114, 0.08) !important;
 }
 
-.attr-v2-new-attribute .attr-v2-dirty-indicator {
+.attr-new-attribute .attr-dirty-indicator {
     color: var(--primary-color);
 }
 
-.attr-v2-new-attribute .attr-v2-attribute-name.has-dirty-indicator {
+.attr-new-attribute .attr-attribute-name.has-dirty-indicator {
     color: var(--primary-color);
 }
 
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
-    .attr-v2-dirty-indicator {
+    .attr-dirty-indicator {
         animation: none;
         opacity: 1;
     }
     
-    .attr-v2-field-dirty,
-    .attr-v2-dirty-message {
+    .attr-field-dirty,
+    .attr-dirty-message {
         transition: none;
     }
 }
@@ -1123,7 +1123,7 @@
 /* ADD ATTRIBUTE FORM STYLING                                             */
 /* ====================================================================== */
 
-.attr-v2-add-form {
+.attr-add-form {
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     background: var(--background-color);
@@ -1132,11 +1132,11 @@
     transition: all 0.3s ease;
 }
 
-.attr-v2-add-form.collapsed {
+.attr-add-form.collapsed {
     display: none;
 }
 
-.attr-v2-add-form-header {
+.attr-add-form-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1145,17 +1145,17 @@
     border-bottom: 1px solid #dee2e6;
 }
 
-.attr-v2-add-form-header h6 {
+.attr-add-form-header h6 {
     margin: 0;
     font-weight: 600;
     color: var(--text-color);
 }
 
-.attr-v2-add-form-content {
+.attr-add-form-content {
     padding: 1rem;
 }
 
-.attr-v2-add-form-actions {
+.attr-add-form-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1168,7 +1168,7 @@
 /* COMPACT BASIC INFO HEADER                                              */
 /* ====================================================================== */
 
-.attr-v2-basic-info {
+.attr-basic-info {
     background: var(--white);
     border: 1px solid var(--line-color);
     border-radius: 0.375rem;
@@ -1176,21 +1176,21 @@
     margin-bottom: 0.5rem;
 }
 
-.attr-v2-basic-info .row {
+.attr-basic-info .row {
     margin-left: -0.375rem;
     margin-right: -0.375rem;
 }
 
-.attr-v2-basic-info [class*="col-"] {
+.attr-basic-info [class*="col-"] {
     padding-left: 0.375rem;
     padding-right: 0.375rem;
 }
 
 /* Force block layout for labels - very specific selector */
-.attr-v2-basic-info .form-group small,
-.attr-v2-basic-info .form-group .text-muted,
-.attr-v2-basic-info small,
-.attr-v2-basic-info .text-muted {
+.attr-basic-info .form-group small,
+.attr-basic-info .form-group .text-muted,
+.attr-basic-info small,
+.attr-basic-info .text-muted {
     display: block !important;
     font-size: 0.75rem !important;
     color: var(--muted-color) !important;
@@ -1203,18 +1203,18 @@
     clear: both !important;
 }
 
-.attr-v2-basic-info .form-control-sm {
+.attr-basic-info .form-control-sm {
     font-size: 0.875rem;
     padding: 0.375rem 0.5rem;
     height: calc(1.5em + 0.75rem + 2px);
     width: 100%; /* Ensure full width */
 }
 
-.attr-v2-basic-info .form-control {
+.attr-basic-info .form-control {
     width: 100%; /* Ensure full width for all form controls */
 }
 
-.attr-v2-basic-info select.form-control-sm {
+.attr-basic-info select.form-control-sm {
     padding-right: 1.75rem;
     background-position: right 0.375rem center;
     background-size: 16px 12px;
@@ -1224,24 +1224,24 @@
 }
 
 /* Ensure columns don't break layout */
-.attr-v2-basic-info .col-md-8,
-.attr-v2-basic-info .col-md-4,
-.attr-v2-basic-info .col-sm-6 {
+.attr-basic-info .col-md-8,
+.attr-basic-info .col-md-4,
+.attr-basic-info .col-sm-6 {
     min-width: 0; /* Allow flex shrinking */
 }
 
 /* Remove bottom margin from form groups in header */
-.attr-v2-basic-info .form-group {
+.attr-basic-info .form-group {
     margin-bottom: 0;
 }
 
 /* Error state styling */
-.attr-v2-basic-info .form-control.is-invalid,
-.attr-v2-basic-info .form-control:invalid {
+.attr-basic-info .form-control.is-invalid,
+.attr-basic-info .form-control:invalid {
     border-color: var(--danger-color);
 }
 
-.attr-v2-basic-info .invalid-feedback {
+.attr-basic-info .invalid-feedback {
     font-size: 0.75rem;
     margin-top: 0.25rem;
 }
@@ -1251,13 +1251,13 @@
 /* ====================================================================== */
 
 /* Non-field errors container - page level (owner form) */
-.attr-v2-sticky-panel .attr-v2-non-field-errors {
+.attr-sticky-panel .attr-non-field-errors {
     border-left: 3px solid #dc2626;
     padding-left: 1rem;
     margin: 0.5rem 0;
 }
 
-.attr-v2-sticky-panel .attr-v2-non-field-errors .attr-v2-error-item {
+.attr-sticky-panel .attr-non-field-errors .attr-error-item {
     color: #dc2626;
     font-size: 0.875rem;
     margin: 0.25rem 0;
@@ -1266,7 +1266,7 @@
     gap: 0.5rem;
 }
 
-.attr-v2-sticky-panel .attr-v2-non-field-errors .attr-v2-error-item:before {
+.attr-sticky-panel .attr-non-field-errors .attr-error-item:before {
     content: "•";
     color: #dc2626;
     font-weight: bold;
@@ -1274,13 +1274,13 @@
 }
 
 /* Formset non-form errors (same style as owner non-field errors) */
-.attr-v2-formset-errors {
+.attr-formset-errors {
     border-left: 3px solid #dc2626;
     padding-left: 1rem;
     margin: 0.5rem 0;
 }
 
-.attr-v2-formset-errors .attr-v2-error-item {
+.attr-formset-errors .attr-error-item {
     color: #dc2626;
     font-size: 0.875rem;
     margin: 0.25rem 0;
@@ -1289,7 +1289,7 @@
     gap: 0.5rem;
 }
 
-.attr-v2-formset-errors .attr-v2-error-item:before {
+.attr-formset-errors .attr-error-item:before {
     content: "•";
     color: #dc2626;
     font-weight: bold;
@@ -1297,12 +1297,12 @@
 }
 
 /* Non-field errors - individual attribute card level (most subtle) */
-.attr-v2-attribute-card .attr-v2-non-field-errors {
+.attr-attribute-card .attr-non-field-errors {
     margin: 0.5rem 0 0 0;
     padding: 0;
 }
 
-.attr-v2-attribute-card .attr-v2-non-field-errors .attr-v2-error-item {
+.attr-attribute-card .attr-non-field-errors .attr-error-item {
     color: #dc2626;
     font-size: 0.8125rem;
     margin: 0.25rem 0;
@@ -1311,7 +1311,7 @@
     gap: 0.375rem;
 }
 
-.attr-v2-attribute-card .attr-v2-non-field-errors .attr-v2-error-item:before {
+.attr-attribute-card .attr-non-field-errors .attr-error-item:before {
     content: "•";
     color: #dc2626;
     font-weight: bold;
@@ -1319,7 +1319,7 @@
 }
 
 /* Field-level errors */
-.attr-v2-field-errors {
+.attr-field-errors {
     color: #dc2626;
     font-size: 0.8125rem;
     margin-top: 0.25rem;
@@ -1328,13 +1328,13 @@
     gap: 0.125rem;
 }
 
-.attr-v2-field-errors .attr-v2-error-text {
+.attr-field-errors .attr-error-text {
     display: flex;
     align-items: flex-start;
     gap: 0.375rem;
 }
 
-.attr-v2-field-errors .attr-v2-error-text:before {
+.attr-field-errors .attr-error-text:before {
     content: "•";
     color: #dc2626;
     font-weight: bold;
@@ -1342,14 +1342,14 @@
 }
 
 /* Invalid form controls */
-.attr-v2-attribute-card .form-control.is-invalid,
-.attr-v2-basic-info .form-control.is-invalid {
+.attr-attribute-card .form-control.is-invalid,
+.attr-basic-info .form-control.is-invalid {
     border-color: #dc2626;
     background-image: none;
 }
 
-.attr-v2-attribute-card .form-control.is-invalid:focus,
-.attr-v2-basic-info .form-control.is-invalid:focus {
+.attr-attribute-card .form-control.is-invalid:focus,
+.attr-basic-info .form-control.is-invalid:focus {
     border-color: #dc2626;
     box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.25);
 }
@@ -1358,11 +1358,11 @@
 /* INLINE HISTORY STYLING                                                */
 /* ====================================================================== */
 
-.attr-v2-inline-history {
+.attr-inline-history {
     margin-top: 0.75rem;
 }
 
-.attr-v2-history-inline-content {
+.attr-history-inline-content {
     background: var(--highlight-background-color);
     border: 1px solid var(--line-color);
     border-radius: 0.375rem;
@@ -1370,7 +1370,7 @@
     font-size: 0.875rem;
 }
 
-.attr-v2-history-header {
+.attr-history-header {
     margin-bottom: 0.5rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--line-color);
@@ -1379,45 +1379,45 @@
     align-items: center;
 }
 
-.attr-v2-history-close {
+.attr-history-close {
     color: var(--danger-color);
     text-decoration: none;
 }
 
-.attr-v2-history-close:hover {
+.attr-history-close:hover {
     color: var(--danger-color);
     text-decoration: none;
 }
 
-.attr-v2-history-current {
+.attr-history-current {
     font-size: 0.8125rem;
 }
 
-.attr-v2-history-current .badge-primary {
+.attr-history-current .badge-primary {
     background-color: var(--success-color);
     border-color: var(--success-color);
 }
 
-.attr-v2-history-toggle .btn-link {
+.attr-history-toggle .btn-link {
     color: var(--text-color);
     text-decoration: none;
 }
 
-.attr-v2-history-toggle .btn-link:hover {
+.attr-history-toggle .btn-link:hover {
     color: var(--primary-color);
     text-decoration: underline;
 }
 
-.attr-v2-history-record {
+.attr-history-record {
     padding: 0.375rem 0;
     border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
-.attr-v2-history-record:last-child {
+.attr-history-record:last-child {
     border-bottom: none;
 }
 
-.attr-v2-history-record .badge {
+.attr-history-record .badge {
     font-size: 0.75rem;
     max-width: 300px;
     overflow: hidden;
@@ -1427,7 +1427,7 @@
     vertical-align: top;
 }
 
-.attr-v2-history-current .badge {
+.attr-history-current .badge {
     font-size: 0.75rem;
     max-width: 300px;
     overflow: hidden;
@@ -1437,18 +1437,18 @@
     vertical-align: top;
 }
 
-.attr-v2-history-record .btn-xs {
+.attr-history-record .btn-xs {
     font-size: 0.75rem;
     padding: 0.125rem 0.5rem;
     line-height: 1.2;
 }
 
-.attr-v2-history-toggle {
+.attr-history-toggle {
     padding-top: 0.5rem;
     border-top: 1px solid rgba(0,0,0,0.05);
 }
 
-.attr-v2-history-empty {
+.attr-history-empty {
     text-align: center;
     padding: 1rem 0;
     color: var(--muted-color);
@@ -1459,18 +1459,18 @@
 /* ====================================================================== */
 
 /* File Card Deletion Styling */
-.attr-v2-file-card.marked-for-deletion {
+.attr-file-card.marked-for-deletion {
     opacity: 0.9;
     transition: all 0.3s ease;
 }
 
-.attr-v2-file-card.marked-for-deletion .attr-v2-file-thumbnail {
+.attr-file-card.marked-for-deletion .attr-file-thumbnail {
     position: relative;
     background: linear-gradient(rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.1)), 
                 repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);
 }
 
-.attr-v2-file-card.marked-for-deletion .attr-v2-file-thumbnail::after {
+.attr-file-card.marked-for-deletion .attr-file-thumbnail::after {
     content: "PENDING DELETION";
     position: absolute;
     top: 50%;
@@ -1487,13 +1487,13 @@
     z-index: 10;
 }
 
-.attr-v2-file-card.marked-for-deletion .attr-v2-file-info {
+.attr-file-card.marked-for-deletion .attr-file-info {
     border-color: var(--danger-color);
     background: rgba(220, 53, 69, 0.05);
 }
 
 /* Attrribute Card Deletion Styling */
-.attr-v2-attribute-card.marked-for-deletion {
+.attr-attribute-card.marked-for-deletion {
     position: relative;
     background: rgba(220, 53, 69, 0.05);
     border-left: 4px solid var(--danger-color);
@@ -1502,7 +1502,7 @@
     transition: all 0.3s ease;
 }
 
-.attr-v2-attribute-card.marked-for-deletion::after {
+.attr-attribute-card.marked-for-deletion::after {
     content: "PENDING DELETION";
     position: absolute;
     top: 50%;
@@ -1520,19 +1520,19 @@
 }
 
 /* Keep inputs interactive but let watermark show through */
-.attr-v2-attribute-card.marked-for-deletion .form-control,
-.attr-v2-attribute-card.marked-for-deletion textarea,
-.attr-v2-attribute-card.marked-for-deletion input {
+.attr-attribute-card.marked-for-deletion .form-control,
+.attr-attribute-card.marked-for-deletion textarea,
+.attr-attribute-card.marked-for-deletion input {
     position: relative;
     background-color: rgba(255, 255, 255, 0.9);
 }
 
 /* Undo button visibility when marked for deletion */
-.marked-for-deletion .attr-v2-delete-btn {
+.marked-for-deletion .attr-delete-btn {
     display: none !important;
 }
 
-.marked-for-deletion .attr-v2-undo-btn {
+.marked-for-deletion .attr-undo-btn {
     display: inline-flex !important;
 }
 
@@ -1541,24 +1541,24 @@
 /* ====================================================================== */
 
 /* Task 1: Standardize delete icon colors to red */
-.attr-v2-attribute-actions .attr-v2-delete-btn {
+.attr-attribute-actions .attr-delete-btn {
     color: #dc3545 !important;
     border-color: #dc3545 !important;
 }
 
-.attr-v2-attribute-actions .attr-v2-delete-btn:hover {
+.attr-attribute-actions .attr-delete-btn:hover {
     background-color: #dc3545 !important;
     color: white !important;
 }
 
 /* Task 2: Style "Add New Attrribute" form for visual distinction */
-.attr-v2-new-attribute {
+.attr-new-attribute {
     background-color: rgba(23, 112, 114, 0.05) !important;
     border: 2px dashed rgba(23, 112, 114, 0.3) !important;
     border-radius: 8px;
 }
 
-.attr-v2-new-attribute .attr-v2-attribute-header h6 {
+.attr-new-attribute .attr-attribute-header h6 {
     color: var(--primary-color);
     font-weight: 600;
     font-style: italic;
@@ -1566,7 +1566,7 @@
 
 
 /* Task 3: Make Add File and Add Attrribute buttons consistent size */
-.attr-v2-action-buttons label.btn {
+.attr-action-buttons label.btn {
     min-height: 44px;
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
@@ -1579,7 +1579,7 @@
 }
 
 /* Task 4: Make attribute name/labels more prominent than values */
-.attr-v2-attribute-name {
+.attr-attribute-name {
     font-size: 0.9rem !important;
     font-weight: 600 !important;
     color: var(--primary-text-color) !important;
@@ -1590,7 +1590,7 @@
 /* Touch device optimizations */
 @media (max-width: 768px) {
     
-    .attr-v2-add-form-actions {
+    .attr-add-form-actions {
         flex-direction: column;
         gap: 0.75rem;
         align-items: stretch;

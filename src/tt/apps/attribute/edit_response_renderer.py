@@ -139,7 +139,7 @@ class AttributeEditResponseRenderer:
         return render_to_string(
             attr_item_context.content_body_template_name,
             template_context,
-            request = request,  # Needed for context processors (CSRF, DIVID, etc.)
+            request = request,  # Needed for context processors (CSRF, etc.)
         )
 
     def get_updated_form_data(
@@ -173,7 +173,7 @@ class AttributeEditResponseRenderer:
                 'file_upload_url': attr_item_context.file_upload_url,
                 'attr_item_context': attr_item_context
             },
-            request = request,  # Needed for context processors (CSRF, DIVID, etc.)
+            request = request,  # Needed for context processors (CSRF, etc.)
         )
     
     def render_upload_success_response(
@@ -404,6 +404,6 @@ class AttributeEditResponseRenderer:
         return render_to_string(
             attr_page_context.content_body_template_name,
             template_context,
-            request = request,  # Needed for context processors (CSRF, DIVID, etc.)
+            request = request,  # Needed for context processors (CSRF, etc.)
         )
         

@@ -19,6 +19,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from django.http import QueryDict
 
+from tt.environment.constants import TtConst
+
 from tt.testing.base_test_case import MockRequest, MockSession
 from tt.apps.attribute.edit_context import AttributeItemEditContext
 from tt.apps.attribute.edit_form_handler import AttributeEditFormHandler
@@ -234,9 +236,8 @@ class AttributeEditFormHandlerTestMixin(AttributeFrameworkTestMixin, ABC):
         # Create request with file deletion data
         request = MockRequest()
         # Create QueryDict to simulate Django POST behavior
-        from tt.constants import DIVID
         query_dict = QueryDict(mutable=True)
-        query_dict.setlist(DIVID['ATTR_V2_DELETE_FILE_ATTR'], [str(file_attr.id)])
+        query_dict.setlist(TtConst.ATTR_DELETE_FILE_ATTR, [str(file_attr.id)])
         request.POST = query_dict
         request.session = MockSession()
         

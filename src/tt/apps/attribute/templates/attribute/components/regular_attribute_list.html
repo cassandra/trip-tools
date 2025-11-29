@@ -1,20 +1,20 @@
 {% if regular_attributes_formset %}
 {{ regular_attributes_formset.management_form }}
-<div class="attr-v2-attribute-section">
+<div class="attr-attribute-section">
   {% if title %}
-  <h6 class="attr-v2-section-title">{{ title }}</h6>
+  <h6 class="attr-section-title">{{ title }}</h6>
   {% endif %}
 
   {% if regular_attributes_formset.non_form_errors %}
-  <div class="attr-v2-formset-errors"
+  <div class="attr-formset-errors"
        style="width: 450px; overflow: hidden; word-wrap: break-word;">
     {% for err in regular_attributes_formset.non_form_errors %}
-    <div class="attr-v2-error-item" style="word-break: break-word;">{{ err }}</div>
+    <div class="attr-error-item" style="word-break: break-word;">{{ err }}</div>
     {% endfor %}
   </div>
   {% endif %}
   
-  <div class="attr-v2-attribute-list">
+  <div class="attr-attribute-list">
     {% for attribute_form in regular_attributes_formset %}
       {% include "attribute/components/regular_attribute_card.html" with attribute_form=attribute_form %}
     {% endfor %}

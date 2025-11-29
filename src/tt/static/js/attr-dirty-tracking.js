@@ -18,8 +18,8 @@
         DIRTY_INDICATOR_CHAR: '●',
         DIRTY_INDICATOR_TITLE: 'This field has been modified',
 
-        FIELD_DIRTY_CLASS: 'attr-v2-field-dirty',
-        DIRTY_INDICATOR_CLASS: 'attr-v2-dirty-indicator',
+        FIELD_DIRTY_CLASS: 'attr-field-dirty',
+        DIRTY_INDICATOR_CLASS: 'attr-dirty-indicator',
     };
     
     // Create namespace  
@@ -36,8 +36,8 @@
         
         // Instance-specific configuration
         this.config = {
-            formSelector: Tt.ATTR_V2_FORM_CLASS_SELECTOR,
-            messageContainerSelector: Tt.ATTR_V2_DIRTY_MESSAGE_SELECTOR,
+            formSelector: TtConst.ATTR_FORM_CLASS_SELECTOR,
+            messageContainerSelector: TtConst.ATTR_DIRTY_MESSAGE_SELECTOR,
             debounceDelay: DIRTY_TRACKING_INTERNAL.DEBOUNCE_DELAY,
             dirtyFieldClass: DIRTY_TRACKING_INTERNAL.FIELD_DIRTY_CLASS,
             dirtyIndicatorClass: DIRTY_TRACKING_INTERNAL.DIRTY_INDICATOR_CLASS
@@ -81,7 +81,7 @@
             }
             
             // Attribute form fields
-            const attributeFields = form.querySelectorAll(`${Tt.ATTR_V2_ATTRIBUTE_CARD_SELECTOR} input, ${Tt.ATTR_V2_ATTRIBUTE_CARD_SELECTOR} textarea, ${Tt.ATTR_V2_ATTRIBUTE_CARD_SELECTOR} select`);
+            const attributeFields = form.querySelectorAll(`${TtConst.ATTR_ATTRIBUTE_CARD_SELECTOR} input, ${TtConst.ATTR_ATTRIBUTE_CARD_SELECTOR} textarea, ${TtConst.ATTR_ATTRIBUTE_CARD_SELECTOR} select`);
             attributeFields.forEach(field => {
                 // Skip hidden management form fields
                 if (field.type === 'hidden' && field.name.includes('_')) return;
@@ -89,7 +89,7 @@
             });
             
             // File title input fields
-            const fileTitleFields = form.querySelectorAll(Tt.ATTR_V2_FILE_TITLE_INPUT_SELECTOR);
+            const fileTitleFields = form.querySelectorAll(TtConst.ATTR_FILE_TITLE_INPUT_SELECTOR);
             fileTitleFields.forEach(field => {
                 this.captureFieldValue(field);
             });
@@ -101,7 +101,7 @@
             
             let originalValue = this.getFieldValue(field);
             this.state.originalValues.set(field.id, originalValue);
-            field.setAttribute('data-original-value', originalValue);
+            field.setAttribute(TtConst.DATA_ORIGINAL_VALUE_ATTR, originalValue);
         },
         
         // Get normalized field value
@@ -121,7 +121,7 @@
             const currentValue = this.getFieldValue(field);
             
             // Special handling for new attribute forms - consider them dirty if they have content
-            const isNewAttributeField = field.closest(Tt.ATTR_V2_NEW_ATTRIBUTE_SELECTOR);
+            const isNewAttributeField = field.closest(TtConst.ATTR_NEW_ATTRIBUTE_SELECTOR);
             if (isNewAttributeField && field.name.includes('-name') && currentValue.length > 0) {
                 return true;
             }
@@ -148,7 +148,7 @@
             $container.on('submit.dirty-tracking', this.config.formSelector, this.handleFormSubmission.bind(this));
             
             // Handle file title input activation - delegate to container
-            $container.on('focus.dirty-tracking', '.' + Tt.ATTR_V2_FILE_TITLE_INPUT_CLASS, (e) => {
+            $container.on('focus.dirty-tracking', TtConst.ATTR_FILE_TITLE_INPUT_SELECTOR, (e) => {
                 $(e.target).addClass('activated');
             });
         },
@@ -207,7 +207,7 @@
             field.classList.add(this.config.dirtyFieldClass);
             
             // For file title inputs, add activated class for persistent styling
-            if (field.classList.contains(Tt.ATTR_V2_FILE_TITLE_INPUT_CLASS)) {
+            if (field.classList.contains(TtConst.ATTR_FILE_TITLE_INPUT_CLASS)) {
                 field.classList.add('activated');
             }
             
@@ -242,17 +242,17 @@
         // Get appropriate container for field indicator
         getFieldContainer: function(field) {
             // For file title inputs, use the file info container
-            if (field.classList.contains(Tt.ATTR_V2_FILE_TITLE_INPUT_CLASS)) {
-                const fileInfo = field.closest(Tt.ATTR_V2_FILE_INFO_SELECTOR);
+            if (field.classList.contains(TtConst.ATTR_FILE_TITLE_INPUT_CLASS)) {
+                const fileInfo = field.closest(TtConst.ATTR_FILE_INFO_SELECTOR);
                 if (fileInfo) {
                     return field; // Use the input itself as container for positioning
                 }
             }
             
             // For attribute cards, use the attribute header
-            const attributeCard = field.closest(Tt.ATTR_V2_ATTRIBUTE_CARD_SELECTOR);
+            const attributeCard = field.closest(TtConst.ATTR_ATTRIBUTE_CARD_SELECTOR);
             if (attributeCard) {
-                return attributeCard.querySelector(Tt.ATTR_V2_ATTRIBUTE_NAME_SELECTOR);
+                return attributeCard.querySelector(TtConst.ATTR_ATTRIBUTE_NAME_SELECTOR);
             }
             
             // For entity name, use the form group
@@ -276,7 +276,7 @@
         // Insert dirty indicator in appropriate position
         insertDirtyIndicator: function(container, indicator) {
             // For attribute names, append to the end
-            if (container.classList.contains(Tt.ATTR_V2_ATTRIBUTE_NAME_CLASS)) {
+            if (container.classList.contains(TtConst.ATTR_ATTRIBUTE_NAME_CLASS)) {
                 container.appendChild(indicator);
             } else {
                 // For other containers, insert at the end
@@ -287,7 +287,7 @@
         // Add fallback CSS classes for browsers without :has() support
         addFallbackClasses: function(container, field) {
             // For attribute names
-            if (container.classList.contains(Tt.ATTR_V2_ATTRIBUTE_NAME_CLASS)) {
+            if (container.classList.contains(TtConst.ATTR_ATTRIBUTE_NAME_CLASS)) {
                 container.classList.add('has-dirty-indicator');
             }
             
@@ -301,7 +301,7 @@
         // Remove fallback CSS classes
         removeFallbackClasses: function(container, field) {
             // For attribute names
-            if (container.classList.contains(Tt.ATTR_V2_ATTRIBUTE_NAME_CLASS)) {
+            if (container.classList.contains(TtConst.ATTR_ATTRIBUTE_NAME_CLASS)) {
                 container.classList.remove('has-dirty-indicator');
             }
             
@@ -325,13 +325,13 @@
             // Update message area
             if (dirtyCount === 0) {
                 messageContainer.textContent = '';
-                messageContainer.className = Tt.ATTR_V2_DIRTY_MESSAGE_CLASS;
+                messageContainer.className = TtConst.ATTR_DIRTY_MESSAGE_CLASS;
             } else {
                 const message = dirtyCount === 1 
                     ? DIRTY_TRACKING_INTERNAL.SINGLE_FIELD_MESSAGE
                     : DIRTY_TRACKING_INTERNAL.MULTIPLE_FIELDS_MESSAGE_TEMPLATE.replace('{count}', dirtyCount);
                 messageContainer.textContent = message;
-                messageContainer.className = `${Tt.ATTR_V2_DIRTY_MESSAGE_CLASS} active`;
+                messageContainer.className = `${TtConst.ATTR_DIRTY_MESSAGE_CLASS} active`;
             }
             
             // Update button prominence
@@ -340,7 +340,7 @@
         
         // Update UPDATE button prominence based on dirty state
         updateButtonProminence: function(isDirty) {
-            const $updateButton = $(this.container).find(Tt.ATTR_V2_UPDATE_BTN_SELECTOR);
+            const $updateButton = $(this.container).find(TtConst.ATTR_UPDATE_BTN_SELECTOR);
             if ($updateButton.length === 0) return;
 
             if (isDirty) {
@@ -361,9 +361,9 @@
             const form = this.container.querySelector(this.config.formSelector);
             if (!form) return;
             
-            const displayFields = form.querySelectorAll(Tt.ATTR_V2_DISPLAY_FIELD_SELECTOR);
+            const displayFields = form.querySelectorAll(TtConst.ATTR_DISPLAY_FIELD_SELECTOR);
             displayFields.forEach(displayField => {
-                const hiddenFieldId = displayField.getAttribute('data-hidden-field');
+                const hiddenFieldId = displayField.getAttribute(TtConst.DATA_HIDDEN_FIELD_ATTR);
                 const hiddenField = hiddenFieldId ? document.getElementById(hiddenFieldId) : null;
                 
                 if (hiddenField && !displayField.readOnly && !displayField.classList.contains('truncated')) {
@@ -446,7 +446,7 @@
         
         // Bulk Operations  
         initializeAll: function() {
-            const containers = document.querySelectorAll(Tt.ATTR_V2_CONTAINER_SELECTOR);
+            const containers = document.querySelectorAll(TtConst.ATTR_CONTAINER_SELECTOR);
             containers.forEach(container => {
                 if (container.id) {
                     const instance = this.getInstance(container.id);
@@ -469,9 +469,9 @@
         
         // Event Handling
         handleFormSuccess: function(event) {
-            const form = event.target.closest(Tt.ATTR_V2_FORM_CLASS_SELECTOR);
+            const form = event.target.closest(TtConst.ATTR_FORM_CLASS_SELECTOR);
             if (form) {
-                const container = form.closest(Tt.ATTR_V2_CONTAINER_SELECTOR);
+                const container = form.closest(TtConst.ATTR_CONTAINER_SELECTOR);
                 if (container && container.id) {
                     const instance = this.getInstance(container.id);
                     instance.handleFormSuccess(event);

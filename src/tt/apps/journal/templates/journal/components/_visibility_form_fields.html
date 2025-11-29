@@ -51,9 +51,9 @@
              id="{{ radio.id_for_label }}"
              class="password-action-radio form-check-input"
              {% if radio.data.value == 'SET_NEW' %}
-             data-show-when-checked="#password-section .attr-v2-secret-input-wrapper"
+             data-show-when-checked="#password-section .{{ TtConst.ATTR_SECRET_INPUT_WRAPPER_CLASS }}"
              {% else %}
-             data-hide-when-checked="#password-section .attr-v2-secret-input-wrapper"
+             data-hide-when-checked="#password-section .{{ TtConst.ATTR_SECRET_INPUT_WRAPPER_CLASS }}"
              {% endif %}
              {% if radio.data.selected %}checked{% endif %}>
       <label class="form-check-label" for="{{ radio.id_for_label }}">
@@ -65,14 +65,14 @@
   {% endif %}
 
   {# Password input field #}
-  <div class="attr-v2-secret-input-wrapper">
+  <div class="{{ TtConst.ATTR_SECRET_INPUT_WRAPPER_CLASS }}">
     {{ form.password }}
     <button type="button"
-            class="btn btn-sm btn-outline-secondary attr-v2-secret-toggle"
+            class="btn btn-sm btn-outline-secondary attr-secret-toggle"
             onclick="Tt.attr.toggleSecretField(this)"
             title="Show password">
-      <span class="attr-v2-icon-show">{% icon "eye" size="sm" %}</span>
-      <span class="attr-v2-icon-hide" style="display: none;">{% icon "eye-off" size="sm" %}</span>
+      <span class="{{ TtConst.ATTR_ICON_SHOW_CLASS }}">{% icon "eye" size="sm" %}</span>
+      <span class="{{ TtConst.ATTR_ICON_HIDE_CLASS }}" style="display: none;">{% icon "eye-off" size="sm" %}</span>
     </button>
   </div>
 

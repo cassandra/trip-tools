@@ -34,7 +34,7 @@ Subclasses must define these blocks:
       data-async="modal"
       id="reference-image-picker-form">
   {% csrf_token %}
-  <input type="hidden" name="image_uuid" class="{{ DIVID.IMAGE_PICKER_UUID_INPUT_CLASS }}" value="">
+  <input type="hidden" name="image_uuid" class="{{ TtConst.IMAGE_PICKER_UUID_INPUT_CLASS }}" value="">
 {% endblock %}
 
 {% block body %}
@@ -44,7 +44,7 @@ Subclasses must define these blocks:
     <div class="mb-3">
       <label class="font-weight-bold d-block mb-2">Selected Reference Image:</label>
       <div class="d-flex align-items-center">
-        <div class="{{ DIVID.IMAGE_PICKER_PREVIEW_CLASS }}"
+        <div class="{{ TtConst.IMAGE_PICKER_PREVIEW_CLASS }}"
              style="width: 120px; height: 120px; border: 2px solid #dee2e6; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
           {% if entity.reference_image and entity.reference_image.thumbnail_image %}
           <img src="{{ entity.reference_image.thumbnail_image.url }}"
@@ -59,7 +59,7 @@ Subclasses must define these blocks:
         <div class="ml-3">
           <p class="mb-1 text-muted small">
             <strong>Current:</strong>
-            <span class="{{ DIVID.IMAGE_PICKER_CAPTION_CLASS }}">
+            <span class="{{ TtConst.IMAGE_PICKER_CAPTION_CLASS }}">
               {% if entity.reference_image %}
                 {{ entity.reference_image.caption|default:"No caption" }}
               {% else %}
@@ -114,7 +114,7 @@ Subclasses must define these blocks:
 
 {% block action_right %}
 <button type="submit"
-        class="btn btn-primary {{ DIVID.IMAGE_PICKER_SET_BTN_CLASS }}"
+        class="btn btn-primary {{ TtConst.IMAGE_PICKER_SET_BTN_CLASS }}"
         form="reference-image-picker-form"
         disabled>
   {% icon "save" size="sm" css_class="tt-icon-left" %}

@@ -2,18 +2,18 @@
 
 {% block account_content %}
 <div id="{{ attr_page_context.container_html_id }}" 
-     class="{{ DIVID.ATTR_V2_CONTAINER_CLASS }}"> 
+     class="{{ TtConst.ATTR_CONTAINER_CLASS }}"> 
 
-  <div class="{{ DIVID.ATTR_V2_FORM_CLASS }}">
+  <div class="{{ TtConst.ATTR_FORM_CLASS }}">
     <form id="{{ attr_page_context.form_html_id }}"
           action="{% if selected_subsystem_id %}{% url 'config_settings' subsystem_id=selected_subsystem_id %}{% else %}{% url 'config_settings' %}{% endif %}" 
           method="post" 
-          class="{{ DIVID.ATTR_V2_FORM_CLASS }} form">
+          class="{{ TtConst.ATTR_FORM_CLASS }} form">
       {% csrf_token %}
       
       <!-- Main content wrapper for updates -->
       <div id="{{ attr_page_context.content_html_id }}" 
-           class="{{ DIVID.ATTR_V2_CONTENT_CLASS }}">
+           class="attr-content">
         {% include "config/components/subsystem_edit_content_body.html" %}
       </div>
     </form>

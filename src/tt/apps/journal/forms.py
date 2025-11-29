@@ -1,6 +1,7 @@
 from django import forms
 
 from tt.constants import TIMEZONE_NAME_LIST
+from tt.environment.constants import TtConst
 
 from .enums import JournalVisibility
 from .models import Journal, JournalEntry
@@ -53,7 +54,7 @@ class JournalEntryForm(forms.ModelForm):
         choices = [(tz, tz) for tz in TIMEZONE_NAME_LIST],
         widget = forms.Select(attrs={
             'class': 'form-control',
-            'id': 'id_entry_timezone',
+            'id': TtConst.JOURNAL_TIMEZONE_INPUT_ID,
         })
     )
 
@@ -63,12 +64,12 @@ class JournalEntryForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
-                'id': 'id_entry_title',
+                'id': TtConst.JOURNAL_EDITOR_ID,
                 'placeholder': 'Entry title',
             }),
             'date': forms.DateInput(attrs={
                 'class': 'form-control',
-                'id': 'id_entry_date',
+                'id': TtConst.JOURNAL_DATE_INPUT_ID,
                 'type': 'date',
             }),
         }

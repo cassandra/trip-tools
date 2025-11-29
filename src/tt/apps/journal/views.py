@@ -44,7 +44,7 @@ from .services import JournalRestoreService, JournalPublishingService
 from tt.apps.images.helpers import TripImageHelpers
 from tt.apps.images.services import ImagePickerService
 
-from tt.constants import DIVID
+from tt.environment.constants import TtConst
 
 from tt.apps.travelog.models import Travelog
 from tt.apps.travelog.services import PublishingService
@@ -627,7 +627,7 @@ class JournalEditorMultiImagePickerView( LoginRequiredMixin, TripViewMixin, View
             request=request
         )
 
-        return http_response({'insert': {DIVID['JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID']: gallery_html}})
+        return http_response({'insert': {TtConst.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID: gallery_html}})
 
 
 class JournalEditorHelpView(LoginRequiredMixin, ModalView):

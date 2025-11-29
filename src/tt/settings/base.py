@@ -151,8 +151,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 
-                'tt.context_processors.constants_context',
                 'tt.environment.context_processors.client_config',
+                'tt.environment.context_processors.shared_constants',
                 'tt.apps.config.context_processors.settings_context',
             ],
         },

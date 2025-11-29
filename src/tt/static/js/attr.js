@@ -8,13 +8,13 @@
     'use strict';
     
     // Internal constants - JS-only, no server dependency
-    const ATTR_V2_INTERNAL = {
+    const ATTR_INTERNAL = {
         // State management data keys (different granularity levels)
-        INITIALIZED_DATA_KEY: 'attr-v2-initialized',      // Container-level flag
-        PROCESSED_DATA_KEY: 'attr-v2-processed',          // Element-level flag
+        INITIALIZED_DATA_KEY: 'attr-initialized',      // Container-level flag
+        PROCESSED_DATA_KEY: 'attr-processed',          // Element-level flag
         
         // Event namespaces
-        AJAX_EVENT_NAMESPACE: 'attr-v2-ajax',
+        AJAX_EVENT_NAMESPACE: 'attr-ajax',
         OVERFLOW_EVENT_NAMESPACE: 'input.overflow',
         
         // HTTP/AJAX constants
@@ -138,7 +138,7 @@
             }
             
             // Find the container and sync textarea values to hidden fields before submission
-            const $container = $form.closest(Tt.ATTR_V2_CONTAINER_SELECTOR);
+            const $container = $form.closest(TtConst.ATTR_CONTAINER_SELECTOR);
             if ($container.length > 0) {
                 _syncTextareaValuesToHiddenFields($container);
             }
@@ -148,10 +148,10 @@
             const method = $form.attr('method') || 'POST';
             
             // Add CSRF token if not already present
-            if (!formData.has(ATTR_V2_INTERNAL.CSRF_TOKEN_NAME)) {
-                const csrfToken = $(`[name=${ATTR_V2_INTERNAL.CSRF_TOKEN_NAME}]`).val();
+            if (!formData.has(ATTR_INTERNAL.CSRF_TOKEN_NAME)) {
+                const csrfToken = $(`[name=${ATTR_INTERNAL.CSRF_TOKEN_NAME}]`).val();
                 if (csrfToken) {
-                    formData.append(ATTR_V2_INTERNAL.CSRF_TOKEN_NAME, csrfToken);
+                    formData.append(ATTR_INTERNAL.CSRF_TOKEN_NAME, csrfToken);
                 }
             }
             
@@ -162,7 +162,7 @@
                 processData: false,
                 contentType: false,
                 headers: {
-                    [ATTR_V2_INTERNAL.XML_HTTP_REQUEST_HEADER]: 'XMLHttpRequest'
+                    [ATTR_INTERNAL.XML_HTTP_REQUEST_HEADER]: 'XMLHttpRequest'
                 }
             }).done((response) => {
                 this.handleFormSuccess(response, $form, options);
@@ -177,7 +177,7 @@
                 url: url,
                 method: 'GET',
                 headers: {
-                    [ATTR_V2_INTERNAL.XML_HTTP_REQUEST_HEADER]: 'XMLHttpRequest'
+                    [ATTR_INTERNAL.XML_HTTP_REQUEST_HEADER]: 'XMLHttpRequest'
                 }
             }).done((response) => {
                 // Handle response for content loading
@@ -424,16 +424,16 @@
         showStatusMessage: function(message, type = STATUS_TYPE.INFO, $element = null, timeout = null) {
             // If $element is provided, find its container (or itself if it IS the container)
             // Otherwise use the first container on the page
-            const $container = $element ? $($element).closest(Tt.ATTR_V2_CONTAINER_SELECTOR) : $(Tt.ATTR_V2_CONTAINER_SELECTOR).first();
-            const $statusMsg = $container.find(Tt.ATTR_V2_STATUS_MESSAGE_SELECTOR);
+            const $container = $element ? $($element).closest(TtConst.ATTR_CONTAINER_SELECTOR) : $(TtConst.ATTR_CONTAINER_SELECTOR).first();
+            const $statusMsg = $container.find(TtConst.ATTR_STATUS_MESSAGE_SELECTOR);
             
             if ($statusMsg.length === 0) return;
             
             // Map type to CSS class
-            const cssClass = type === STATUS_TYPE.SUCCESS ? ATTR_V2_INTERNAL.STATUS_SUCCESS_CLASS : 
-                           type === STATUS_TYPE.ERROR ? ATTR_V2_INTERNAL.STATUS_ERROR_CLASS : 
-                           type === STATUS_TYPE.WARNING ? ATTR_V2_INTERNAL.STATUS_WARNING_CLASS :
-                           ATTR_V2_INTERNAL.STATUS_INFO_CLASS;
+            const cssClass = type === STATUS_TYPE.SUCCESS ? ATTR_INTERNAL.STATUS_SUCCESS_CLASS : 
+                           type === STATUS_TYPE.ERROR ? ATTR_INTERNAL.STATUS_ERROR_CLASS : 
+                           type === STATUS_TYPE.WARNING ? ATTR_INTERNAL.STATUS_WARNING_CLASS :
+                           ATTR_INTERNAL.STATUS_INFO_CLASS;
             
             // Set default timeout based on type if not provided
             if (timeout === null) {
@@ -442,7 +442,7 @@
             
             // Update message with proper styling
             $statusMsg.text(message)
-                     .removeClass(`${ATTR_V2_INTERNAL.STATUS_SUCCESS_CLASS} ${ATTR_V2_INTERNAL.STATUS_ERROR_CLASS} ${ATTR_V2_INTERNAL.STATUS_INFO_CLASS} ${ATTR_V2_INTERNAL.STATUS_WARNING_CLASS}`)
+                     .removeClass(`${ATTR_INTERNAL.STATUS_SUCCESS_CLASS} ${ATTR_INTERNAL.STATUS_ERROR_CLASS} ${ATTR_INTERNAL.STATUS_INFO_CLASS} ${ATTR_INTERNAL.STATUS_WARNING_CLASS}`)
                      .addClass(cssClass + ' ml-2')  // ml-2 for consistency with existing usage
                      .show();
             
@@ -450,7 +450,7 @@
             if (timeout > 0) {
                 setTimeout(() => {
                     $statusMsg.text('')
-                             .attr('class', `${Tt.ATTR_V2_STATUS_MESSAGE_CLASS} ml-2`);  // Reset to base class
+                             .attr('class', `${TtConst.ATTR_STATUS_MESSAGE_CLASS} ml-2`);  // Reset to base class
                 }, timeout);
             }
         }
@@ -464,7 +464,7 @@
     // No longer using antinode.js - initialization handled by custom Ajax callbacks
     
     // Listen for any modal shown events and initialize V2 containers
-    $(document).on('shown.bs.modal', ATTR_V2_INTERNAL.MODAL_SELECTOR, function(e) {
+    $(document).on('shown.bs.modal', ATTR_INTERNAL.MODAL_SELECTOR, function(e) {
         _initializeAllContainers();
         e.stopPropagation(); // Prevent bubbling to other handlers
     });
@@ -484,7 +484,7 @@
             return;
         }
 
-        const $form = $container.find(Tt.ATTR_V2_FORM_CLASS_SELECTOR);
+        const $form = $container.find(TtConst.ATTR_FORM_CLASS_SELECTOR);
         if ($form.length === 0) {
             console.warn('Tt.attr.updateFormAction: No form found in container:', containerId);
             return;
@@ -495,7 +495,7 @@
 
         // Update form display label if provided
         if (labelText) {
-            const $label = $container.find(Tt.ATTR_V2_FORM_DISPLAY_LABEL_SELECTOR);
+            const $label = $container.find(TtConst.ATTR_FORM_DISPLAY_LABEL_SELECTOR);
             if ($label.length > 0) {
                 $label.text(labelText);
             }
@@ -509,14 +509,14 @@
     // Multi-instance container initialization
     function _initializeAllContainers() {
         // Initialize all attribute editing containers found on page
-        $(Tt.ATTR_V2_CONTAINER_SELECTOR).each(function() {
+        $(TtConst.ATTR_CONTAINER_SELECTOR).each(function() {
             _initializeContainer($(this));
         });
     }
     
     function _initializeContainer($container) {
         // Check if this container is already initialized to prevent double-initialization
-        if ($container.data(ATTR_V2_INTERNAL.INITIALIZED_DATA_KEY)) {
+        if ($container.data(ATTR_INTERNAL.INITIALIZED_DATA_KEY)) {
             // Always reprocess AJAX handlers to handle newly loaded content
             _setupCustomAjaxHandlers($container);
             // Re-initialize textareas after content updates (DOM may have changed)
@@ -544,12 +544,12 @@
         _handleAutoDismissMessages($container);
         
         // Mark this container as initialized
-        $container.data(ATTR_V2_INTERNAL.INITIALIZED_DATA_KEY, true);
+        $container.data(ATTR_INTERNAL.INITIALIZED_DATA_KEY, true);
     }
     
     function _handleAutoDismissMessages($container) {
-        const $statusMsg = $container.find(Tt.ATTR_V2_STATUS_MESSAGE_SELECTOR);
-        const $dismissibleElements = $statusMsg.find(Tt.ATTR_V2_AUTO_DISMISS_SELECTOR);
+        const $statusMsg = $container.find(TtConst.ATTR_STATUS_MESSAGE_SELECTOR);
+        const $dismissibleElements = $statusMsg.find(TtConst.ATTR_AUTO_DISMISS_SELECTOR);
         if ($dismissibleElements.length > 0) {
             setTimeout(() => {
                 $dismissibleElements.remove();
@@ -564,16 +564,16 @@
     // Setup custom Ajax handlers for forms and links in this container
     function _setupCustomAjaxHandlers($container) {
         // Handle main form submissions
-        const $forms = $container.find(`form${Tt.ATTR_V2_FORM_CLASS_SELECTOR}`);
+        const $forms = $container.find(`form${TtConst.ATTR_FORM_CLASS_SELECTOR}`);
         $forms.each(function(index) {
             const form = this;
             const $form = $(form);
             
             // Remove any existing handlers to avoid duplicates
-            $form.off(`submit.${ATTR_V2_INTERNAL.AJAX_EVENT_NAMESPACE}`);
+            $form.off(`submit.${ATTR_INTERNAL.AJAX_EVENT_NAMESPACE}`);
             
             // Add custom Ajax submission handler
-            $form.on(`submit.${ATTR_V2_INTERNAL.AJAX_EVENT_NAMESPACE}`, function(e) {
+            $form.on(`submit.${ATTR_INTERNAL.AJAX_EVENT_NAMESPACE}`, function(e) {
                 e.preventDefault();
                 
                 _ajax.submitFormWithAjax(form);
@@ -581,19 +581,19 @@
         });
         
         // Handle history links
-        const $historyLinks = $container.find(Tt.ATTR_V2_HISTORY_LINK_SELECTOR);
+        const $historyLinks = $container.find(TtConst.ATTR_HISTORY_LINK_SELECTOR);
         $historyLinks.each(function() {
             const $link = $(this);
             
             // Skip if already processed
-            if ($link.data(ATTR_V2_INTERNAL.PROCESSED_DATA_KEY)) {
+            if ($link.data(ATTR_INTERNAL.PROCESSED_DATA_KEY)) {
                 return;
             }
             
-            $link.data(ATTR_V2_INTERNAL.PROCESSED_DATA_KEY, true);
-            $link.off(`click.${ATTR_V2_INTERNAL.AJAX_EVENT_NAMESPACE}`);
+            $link.data(ATTR_INTERNAL.PROCESSED_DATA_KEY, true);
+            $link.off(`click.${ATTR_INTERNAL.AJAX_EVENT_NAMESPACE}`);
             
-            $link.on(`click.${ATTR_V2_INTERNAL.AJAX_EVENT_NAMESPACE}`, function(e) {
+            $link.on(`click.${ATTR_INTERNAL.AJAX_EVENT_NAMESPACE}`, function(e) {
                 e.preventDefault();
                 
                 const url = $link.attr('href');
@@ -606,27 +606,27 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 }).done((response) => {
-                    _ajax.handleFormSuccess(response, $container.find(Tt.ATTR_V2_FORM_CLASS_SELECTOR));
+                    _ajax.handleFormSuccess(response, $container.find(TtConst.ATTR_FORM_CLASS_SELECTOR));
                 }).fail((xhr) => {
-                    _ajax.handleFormError(xhr, $container.find(Tt.ATTR_V2_FORM_CLASS_SELECTOR));
+                    _ajax.handleFormError(xhr, $container.find(TtConst.ATTR_FORM_CLASS_SELECTOR));
                 });
             });
         });
         
         // Handle value restore links  
-        const $restoreLinks = $container.find(Tt.ATTR_V2_RESTORE_LINK_SELECTOR);
+        const $restoreLinks = $container.find(TtConst.ATTR_RESTORE_LINK_SELECTOR);
         $restoreLinks.each(function() {
             const $link = $(this);
             
             // Skip if already processed
-            if ($link.data(ATTR_V2_INTERNAL.PROCESSED_DATA_KEY)) {
+            if ($link.data(ATTR_INTERNAL.PROCESSED_DATA_KEY)) {
                 return;
             }
             
-            $link.data(ATTR_V2_INTERNAL.PROCESSED_DATA_KEY, true);
-            $link.off(`click.${ATTR_V2_INTERNAL.AJAX_EVENT_NAMESPACE}`);
+            $link.data(ATTR_INTERNAL.PROCESSED_DATA_KEY, true);
+            $link.off(`click.${ATTR_INTERNAL.AJAX_EVENT_NAMESPACE}`);
             
-            $link.on(`click.${ATTR_V2_INTERNAL.AJAX_EVENT_NAMESPACE}`, function(e) {
+            $link.on(`click.${ATTR_INTERNAL.AJAX_EVENT_NAMESPACE}`, function(e) {
                 e.preventDefault();
                 
                 const url = $link.attr('href');
@@ -639,26 +639,26 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 }).done((response) => {
-                    _ajax.handleFormSuccess(response, $container.find(Tt.ATTR_V2_FORM_CLASS_SELECTOR));
+                    _ajax.handleFormSuccess(response, $container.find(TtConst.ATTR_FORM_CLASS_SELECTOR));
                 }).fail((xhr) => {
-                    _ajax.handleFormError(xhr, $container.find(Tt.ATTR_V2_FORM_CLASS_SELECTOR));
+                    _ajax.handleFormError(xhr, $container.find(TtConst.ATTR_FORM_CLASS_SELECTOR));
                 });
             });
         });
         
         // Handle file upload forms - find the context-specific file input
-        const $fileInput = $container.find(Tt.ATTR_V2_FILE_INPUT_SELECTOR);
+        const $fileInput = $container.find(TtConst.ATTR_FILE_INPUT_SELECTOR);
         
         if ($fileInput.length > 0) {
             // Skip if already processed
-            if ($fileInput.data(ATTR_V2_INTERNAL.PROCESSED_DATA_KEY)) {
+            if ($fileInput.data(ATTR_INTERNAL.PROCESSED_DATA_KEY)) {
                 return;
             }
             
-            $fileInput.data(ATTR_V2_INTERNAL.PROCESSED_DATA_KEY, true);
-            $fileInput.off(`change.${ATTR_V2_INTERNAL.AJAX_EVENT_NAMESPACE}`);
+            $fileInput.data(ATTR_INTERNAL.PROCESSED_DATA_KEY, true);
+            $fileInput.off(`change.${ATTR_INTERNAL.AJAX_EVENT_NAMESPACE}`);
             
-            $fileInput.on(`change.${ATTR_V2_INTERNAL.AJAX_EVENT_NAMESPACE}`, function(e) {
+            $fileInput.on(`change.${ATTR_INTERNAL.AJAX_EVENT_NAMESPACE}`, function(e) {
                 const fileInput = this;
                 const $uploadForm = $fileInput.closest('form');
                 
@@ -679,16 +679,16 @@
 
     function _setupBasicEventListeners($container) {
         // Simple ENTER key prevention for attribute forms - scoped to this container
-        const $forms = $container.find(`form${Tt.ATTR_V2_FORM_CLASS_SELECTOR}`);
+        const $forms = $container.find(`form${TtConst.ATTR_FORM_CLASS_SELECTOR}`);
         
         $forms.each(function() {
             const form = this;
             
             // Remove any existing keydown handlers to avoid duplicates
-            $(form).off('keydown.attr-v2-enter');
+            $(form).off('keydown.attr-enter');
             
             // Prevent ENTER from submitting forms (except textareas and submit buttons)
-            $(form).on('keydown.attr-v2-enter', function(event) {
+            $(form).on('keydown.attr-enter', function(event) {
                 if (event.key === 'Enter' && 
                     event.target.tagName !== 'TEXTAREA' && 
                     event.target.type !== 'submit') {
@@ -703,7 +703,7 @@
     function _showAddAttribute(containerSelector = null) {
         // Find the last attribute card (should be the empty extra form)
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const attributeCards = scope.find(Tt.ATTR_V2_ATTRIBUTE_CARD_SELECTOR);
+        const attributeCards = scope.find(TtConst.ATTR_ATTRIBUTE_CARD_SELECTOR);
         
         if (attributeCards.length > 0) {
             const lastCard = attributeCards[attributeCards.length - 1];
@@ -736,20 +736,20 @@
     window.markFileForDeletion = function(attributeId, containerSelector = null) {
         // Find the file card, scoped to container if provided
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const $fileCard = scope.find(`${Tt.ATTR_V2_FILE_CARD_SELECTOR}[${Tt.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
+        const $fileCard = scope.find(`${TtConst.ATTR_FILE_CARD_SELECTOR}[${TtConst.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
         if ($fileCard.length === 0) return;
         
         // The display "name" for a file is its attribute.value, *not* attribute.name
-        const fileValue = $fileCard.find(Tt.ATTR_V2_FILE_TITLE_INPUT_SELECTOR).val().trim();
+        const fileValue = $fileCard.find(TtConst.ATTR_FILE_TITLE_INPUT_SELECTOR).val().trim();
 
         // Find and mark the server-rendered DELETE field for deletion
-        const $deleteField = $fileCard.find(`input[name="${Tt.ATTR_V2_DELETE_FILE_ATTR}"]`);
+        const $deleteField = $fileCard.find(`input[name="${TtConst.ATTR_DELETE_FILE_ATTR}"]`);
         if ($deleteField.length > 0) {
             // Set value to the attribute ID to mark for deletion
             $deleteField.val(attributeId);
             
             // Directly notify dirty tracking system
-            const $container = $fileCard.closest(Tt.ATTR_V2_CONTAINER_SELECTOR);
+            const $container = $fileCard.closest(TtConst.ATTR_CONTAINER_SELECTOR);
             if ($container.length > 0 && window.Tt.attr.dirtyTracking) {
                 const containerId = $container.attr('id');
                 const instance = window.Tt.attr.dirtyTracking.getInstance(containerId);
@@ -764,8 +764,8 @@
         $fileCard.addClass('marked-for-deletion');
         
         // Hide delete button and show undo button (both server-rendered)
-        $fileCard.find(Tt.ATTR_V2_DELETE_BTN_SELECTOR).hide();
-        $fileCard.find(Tt.ATTR_V2_UNDO_BTN_SELECTOR).show();
+        $fileCard.find(TtConst.ATTR_DELETE_BTN_SELECTOR).hide();
+        $fileCard.find(TtConst.ATTR_UNDO_BTN_SELECTOR).show();
         
         // Show status message (scoped to container)
         _ajax.showStatusMessage(`"${fileValue}" will be deleted when you save`, STATUS_TYPE.WARNING, scope);
@@ -774,19 +774,19 @@
     window.undoFileDeletion = function(attributeId, containerSelector = null) {
         // Find the file card, scoped to container if provided
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const $fileCard = scope.find(`${Tt.ATTR_V2_FILE_CARD_SELECTOR}[${Tt.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
+        const $fileCard = scope.find(`${TtConst.ATTR_FILE_CARD_SELECTOR}[${TtConst.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
         if ($fileCard.length === 0) return;
 
         // The display "name" for a file is its attribute.value, *not* attribute.name
-        const fileValue = $fileCard.find(Tt.ATTR_V2_FILE_TITLE_INPUT_SELECTOR).val().trim();
+        const fileValue = $fileCard.find(TtConst.ATTR_FILE_TITLE_INPUT_SELECTOR).val().trim();
 
         // Unmark the DELETE field
-        const $deleteField = $fileCard.find(`input[name="${Tt.ATTR_V2_DELETE_FILE_ATTR}"]`);
+        const $deleteField = $fileCard.find(`input[name="${TtConst.ATTR_DELETE_FILE_ATTR}"]`);
         if ($deleteField.length > 0) {
             $deleteField.val("");
             
             // Directly notify dirty tracking system
-            const $container = $fileCard.closest(Tt.ATTR_V2_CONTAINER_SELECTOR);
+            const $container = $fileCard.closest(TtConst.ATTR_CONTAINER_SELECTOR);
             if ($container.length > 0 && window.Tt.attr.dirtyTracking) {
                 const containerId = $container.attr('id');
                 const instance = window.Tt.attr.dirtyTracking.getInstance(containerId);
@@ -798,8 +798,8 @@
         $fileCard.removeClass('marked-for-deletion');
         
         // Show delete button and hide undo button (both server-rendered)
-        $fileCard.find(Tt.ATTR_V2_DELETE_BTN_SELECTOR).show();
-        $fileCard.find(Tt.ATTR_V2_UNDO_BTN_SELECTOR).hide();
+        $fileCard.find(TtConst.ATTR_DELETE_BTN_SELECTOR).show();
+        $fileCard.find(TtConst.ATTR_UNDO_BTN_SELECTOR).hide();
         
         // Show status message (scoped to container)
         _ajax.showStatusMessage(`Deletion of "${fileValue}" cancelled`, STATUS_TYPE.SUCCESS, scope);
@@ -811,10 +811,10 @@
     window.markAttributeForDeletion = function(attributeId, containerSelector = null) {
         // Find the attribute card, scoped to container if provided
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const $attributeCard = scope.find(`[${Tt.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
+        const $attributeCard = scope.find(`[${TtConst.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
         if ($attributeCard.length === 0) return;
         
-        const attributeName = $attributeCard.find(Tt.ATTR_V2_ATTRIBUTE_NAME_SELECTOR).text().trim().replace('•', '').trim();
+        const attributeName = $attributeCard.find(TtConst.ATTR_ATTRIBUTE_NAME_SELECTOR).text().trim().replace('•', '').trim();
         
         // Find and mark the server-rendered DELETE field for deletion
         const $deleteField = $attributeCard.find('input[name$="-DELETE"]');
@@ -830,8 +830,8 @@
         $attributeCard.addClass('marked-for-deletion');
         
         // Hide delete button and show undo button (both server-rendered)
-        $attributeCard.find(Tt.ATTR_V2_DELETE_BTN_SELECTOR).hide();
-        $attributeCard.find(Tt.ATTR_V2_UNDO_BTN_SELECTOR).show();
+        $attributeCard.find(TtConst.ATTR_DELETE_BTN_SELECTOR).hide();
+        $attributeCard.find(TtConst.ATTR_UNDO_BTN_SELECTOR).show();
         
         // Show status message (scoped to container)
         _ajax.showStatusMessage(`"${attributeName}" will be deleted when you save`, STATUS_TYPE.WARNING, scope);
@@ -840,10 +840,10 @@
     window.undoAttributeDeletion = function(attributeId, containerSelector = null) {
         // Find the attribute card, scoped to container if provided
         const scope = containerSelector ? $(containerSelector) : $(document);
-        const $attributeCard = scope.find(`[${Tt.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
+        const $attributeCard = scope.find(`[${TtConst.DATA_ATTRIBUTE_ID_ATTR}="${attributeId}"]`);
         if ($attributeCard.length === 0) return;
         
-        const attributeName = $attributeCard.find(Tt.ATTR_V2_ATTRIBUTE_NAME_SELECTOR).text().trim().replace('•', '').trim();
+        const attributeName = $attributeCard.find(TtConst.ATTR_ATTRIBUTE_NAME_SELECTOR).text().trim().replace('•', '').trim();
         
         // Unmark the DELETE field
         const $deleteField = $attributeCard.find('input[name$="-DELETE"]');
@@ -855,8 +855,8 @@
         $attributeCard.removeClass('marked-for-deletion');
         
         // Show delete button and hide undo button (both server-rendered)
-        $attributeCard.find(Tt.ATTR_V2_DELETE_BTN_SELECTOR).show();
-        $attributeCard.find(Tt.ATTR_V2_UNDO_BTN_SELECTOR).hide();
+        $attributeCard.find(TtConst.ATTR_DELETE_BTN_SELECTOR).show();
+        $attributeCard.find(TtConst.ATTR_UNDO_BTN_SELECTOR).hide();
         
         // Show status message (scoped to container)
         _ajax.showStatusMessage(`Deletion of "${attributeName}" cancelled`, STATUS_TYPE.SUCCESS, scope);
@@ -864,9 +864,9 @@
 
     function _toggleSecretField(button) {
         const $button = $(button);
-        const $input = $button.closest(Tt.ATTR_V2_SECRET_INPUT_WRAPPER_SELECTOR).find(Tt.ATTR_V2_SECRET_INPUT_SELECTOR);
-        const $showIcon = $button.find(Tt.ATTR_V2_ICON_SHOW_SELECTOR);
-        const $hideIcon = $button.find(Tt.ATTR_V2_ICON_HIDE_SELECTOR);
+        const $input = $button.closest(TtConst.ATTR_SECRET_INPUT_WRAPPER_SELECTOR).find(TtConst.ATTR_SECRET_INPUT_SELECTOR);
+        const $showIcon = $button.find(TtConst.ATTR_ICON_SHOW_SELECTOR);
+        const $hideIcon = $button.find(TtConst.ATTR_ICON_HIDE_SELECTOR);
         const isPassword = $input.attr('type') === 'password';
         
         // Check if field is disabled (non-editable attributes should stay disabled)
@@ -905,7 +905,7 @@
     
     // Update hidden field when boolean checkbox changes
     function _updateBooleanHiddenField(checkbox) {
-        const hiddenFieldId = checkbox.getAttribute(Tt.DATA_HIDDEN_FIELD_ATTR);
+        const hiddenFieldId = checkbox.getAttribute(TtConst.DATA_HIDDEN_FIELD_ATTR);
         const hiddenField = document.getElementById(hiddenFieldId);
         
         if (hiddenField) {
@@ -918,7 +918,7 @@
     // Initialize autosize for all textareas in the modal
     function _initializeAutosizeTextareas() {
         // Initialize autosize for existing textareas, but exclude truncated ones
-        const textareas = $(Tt.ATTR_V2_TEXTAREA_SELECTOR).not('.truncated');
+        const textareas = $(TtConst.ATTR_TEXTAREA_SELECTOR).not('.truncated');
         if (textareas.length > 0) {
             autosize(textareas);
             
@@ -933,8 +933,8 @@
     function _reinitializeTextareas($container = null) {
         // Find textareas that need initialization (scoped to container if provided)
         const textareas = $container ? 
-            $container.find(Tt.ATTR_V2_TEXTAREA_SELECTOR) : 
-            $(Tt.ATTR_V2_TEXTAREA_SELECTOR);
+            $container.find(TtConst.ATTR_TEXTAREA_SELECTOR) : 
+            $(TtConst.ATTR_TEXTAREA_SELECTOR);
         
         // Remove any previous autosize instances to avoid duplicates
         textareas.each(function() {
@@ -946,11 +946,11 @@
         // Initialize overflow state based on server-rendered attributes
         textareas.each(function() {
             const textarea = $(this);
-            const wrapper = textarea.closest(Tt.ATTR_V2_TEXT_VALUE_WRAPPER_SELECTOR);
-            const isOverflowing = wrapper.attr(Tt.DATA_OVERFLOW_ATTR) === 'true';
+            const wrapper = textarea.closest(TtConst.ATTR_TEXT_VALUE_WRAPPER_SELECTOR);
+            const isOverflowing = wrapper.attr(TtConst.DATA_OVERFLOW_ATTR) === 'true';
             
             // Check if this is a display field (new pattern) or legacy textarea
-            const hiddenFieldId = textarea.attr(Tt.DATA_HIDDEN_FIELD_ATTR);
+            const hiddenFieldId = textarea.attr(TtConst.DATA_HIDDEN_FIELD_ATTR);
             const hiddenField = hiddenFieldId ? $('#' + hiddenFieldId) : null;
             
             if (isOverflowing) {
@@ -964,7 +964,7 @@
         
         // THEN: Apply autosize only to editable, non-truncated textareas 
         // (readonly textareas don't need dynamic resizing)
-        const editableTextareas = $(Tt.ATTR_V2_TEXTAREA_SELECTOR).not('.truncated').not('[readonly]');
+        const editableTextareas = $(TtConst.ATTR_TEXTAREA_SELECTOR).not('.truncated').not('[readonly]');
         if (editableTextareas.length > 0) {
             autosize(editableTextareas);
         }
@@ -981,9 +981,9 @@
         const lineCount = (content.match(/\n/g) || []).length + 1;
         const overflows = lineCount > 4;
         
-        const wrapper = textarea.closest(Tt.ATTR_V2_TEXT_VALUE_WRAPPER_SELECTOR);
-        wrapper.attr(Tt.DATA_OVERFLOW_ATTR, overflows ? 'true' : 'false');
-        wrapper.attr(Tt.DATA_LINE_COUNT_ATTR, lineCount);
+        const wrapper = textarea.closest(TtConst.ATTR_TEXT_VALUE_WRAPPER_SELECTOR);
+        wrapper.attr(TtConst.DATA_OVERFLOW_ATTR, overflows ? 'true' : 'false');
+        wrapper.attr(TtConst.DATA_LINE_COUNT_ATTR, lineCount);
         
         return { lineCount, overflows };
     }
@@ -1007,11 +1007,11 @@
         displayField.attr('rows', 4);
         displayField.attr('readonly', 'readonly');
         displayField.prop('readonly', true);
-        displayField.addClass(ATTR_V2_INTERNAL.TRUNCATED_CLASS);
+        displayField.addClass(ATTR_INTERNAL.TRUNCATED_CLASS);
         
         // Show expand controls
-        const wrapper = displayField.closest(Tt.ATTR_V2_TEXT_VALUE_WRAPPER_SELECTOR);
-        const expandControls = wrapper.find(Tt.ATTR_V2_EXPAND_CONTROLS_SELECTOR);
+        const wrapper = displayField.closest(TtConst.ATTR_TEXT_VALUE_WRAPPER_SELECTOR);
+        const expandControls = wrapper.find(TtConst.ATTR_EXPAND_CONTROLS_SELECTOR);
         expandControls.show();
         
         // Add click handler to make textarea clickable for expansion
@@ -1052,22 +1052,22 @@
         textarea.attr('rows', 4);
         textarea.attr('readonly', 'readonly');
         textarea.prop('readonly', true);
-        textarea.addClass(ATTR_V2_INTERNAL.TRUNCATED_CLASS);
+        textarea.addClass(ATTR_INTERNAL.TRUNCATED_CLASS);
         
         // Show expand controls
-        const wrapper = textarea.closest(Tt.ATTR_V2_TEXT_VALUE_WRAPPER_SELECTOR);
-        const expandControls = wrapper.find(Tt.ATTR_V2_EXPAND_CONTROLS_SELECTOR);
+        const wrapper = textarea.closest(TtConst.ATTR_TEXT_VALUE_WRAPPER_SELECTOR);
+        const expandControls = wrapper.find(TtConst.ATTR_EXPAND_CONTROLS_SELECTOR);
         expandControls.show();
     }
     
     function _initializeExpandableTextareas() {
         // Initialize based on server-rendered overflow state using hidden field pattern
-        const displayTextareas = $(Tt.ATTR_V2_DISPLAY_FIELD_SELECTOR);
+        const displayTextareas = $(TtConst.ATTR_DISPLAY_FIELD_SELECTOR);
         
         displayTextareas.each(function() {
             const displayField = $(this);
-            const isOverflowing = displayField.attr(Tt.DATA_OVERFLOW_ATTR) === 'true';
-            const hiddenFieldId = displayField.attr(Tt.DATA_HIDDEN_FIELD_ATTR);
+            const isOverflowing = displayField.attr(TtConst.DATA_OVERFLOW_ATTR) === 'true';
+            const hiddenFieldId = displayField.attr(TtConst.DATA_HIDDEN_FIELD_ATTR);
             const hiddenField = $('#' + hiddenFieldId);
             
             if (isOverflowing && hiddenField.length > 0) {
@@ -1081,14 +1081,14 @@
     // Global function for expand/collapse button (namespaced) - enhanced for hidden field pattern
     function _toggleExpandedView(button) {
         const $button = $(button);
-        const wrapper = $button.closest(Tt.ATTR_V2_TEXT_VALUE_WRAPPER_SELECTOR);
-        const displayField = wrapper.find(Tt.ATTR_V2_DISPLAY_FIELD_SELECTOR
-                                          + ', ' + Tt.ATTR_V2_TEXTAREA_SELECTOR); // Support both new and legacy
-        const showMoreText = $button.find(Tt.ATTR_V2_SHOW_MORE_TEXT_SELECTOR);
-        const showLessText = $button.find(Tt.ATTR_V2_SHOW_LESS_TEXT_SELECTOR);
+        const wrapper = $button.closest(TtConst.ATTR_TEXT_VALUE_WRAPPER_SELECTOR);
+        const displayField = wrapper.find(TtConst.ATTR_DISPLAY_FIELD_SELECTOR
+                                          + ', ' + TtConst.ATTR_TEXTAREA_SELECTOR); // Support both new and legacy
+        const showMoreText = $button.find(TtConst.ATTR_SHOW_MORE_TEXT_SELECTOR);
+        const showLessText = $button.find(TtConst.ATTR_SHOW_LESS_TEXT_SELECTOR);
         
         // Get hidden field if using new pattern
-        const hiddenFieldId = displayField.attr(Tt.DATA_HIDDEN_FIELD_ATTR);
+        const hiddenFieldId = displayField.attr(TtConst.DATA_HIDDEN_FIELD_ATTR);
         const hiddenField = hiddenFieldId ? $('#' + hiddenFieldId) : null;
         
         if (displayField.prop('readonly')) {
@@ -1108,7 +1108,7 @@
             displayField.attr('rows', Math.max(lineCount, 5));
             displayField.prop('readonly', false);
             displayField.attr('readonly', false); // Remove readonly attribute
-            displayField.removeClass(ATTR_V2_INTERNAL.TRUNCATED_CLASS);
+            displayField.removeClass(ATTR_INTERNAL.TRUNCATED_CLASS);
             
             showMoreText.hide();
             showLessText.show();
@@ -1131,11 +1131,11 @@
                 // Content now fits in 4 lines - remove truncation UI
                 displayField.attr('rows', lineCount);
                 displayField.prop('readonly', false);
-                displayField.removeClass(ATTR_V2_INTERNAL.TRUNCATED_CLASS);
-                wrapper.find(Tt.ATTR_V2_EXPAND_CONTROLS_SELECTOR).hide();
+                displayField.removeClass(ATTR_INTERNAL.TRUNCATED_CLASS);
+                wrapper.find(TtConst.ATTR_EXPAND_CONTROLS_SELECTOR).hide();
                 
                 // Update wrapper state
-                wrapper.attr(Tt.DATA_OVERFLOW_ATTR, 'false');
+                wrapper.attr(TtConst.DATA_OVERFLOW_ATTR, 'false');
                 
                 // Sync to hidden field if using new pattern
                 if (hiddenField && hiddenField.length > 0) {
@@ -1168,14 +1168,14 @@
     // Sync textarea values to hidden fields before form submission
     function _syncTextareaValuesToHiddenFields($container) {
         // Process all display fields within this container
-        $container.find(Tt.ATTR_V2_DISPLAY_FIELD_SELECTOR).each(function() {
+        $container.find(TtConst.ATTR_DISPLAY_FIELD_SELECTOR).each(function() {
             const displayField = $(this);
-            const hiddenFieldId = displayField.attr(Tt.DATA_HIDDEN_FIELD_ATTR);
+            const hiddenFieldId = displayField.attr(TtConst.DATA_HIDDEN_FIELD_ATTR);
             const hiddenField = hiddenFieldId ? $container.find('#' + hiddenFieldId) : null;
             
             if (hiddenField && hiddenField.length > 0) {
                 // Only sync if display field is NOT showing truncated data
-                if (!displayField.prop('readonly') && !displayField.hasClass(ATTR_V2_INTERNAL.TRUNCATED_CLASS)) {
+                if (!displayField.prop('readonly') && !displayField.hasClass(ATTR_INTERNAL.TRUNCATED_CLASS)) {
                     // Display field contains user's edits - copy to hidden field
                     const displayValue = displayField.val();
                     hiddenField.val(displayValue);

@@ -16,7 +16,7 @@ class ClientConfig:
     VERSION       : str
     TRIP_ID       : int
     
-    def to_json_dict(self) -> dict:
+    def to_json_dict_str(self) -> str:
         """
         Convert to dictionary suitable for JSON serialization in templates.
         Ensures proper JavaScript boolean/null handling.

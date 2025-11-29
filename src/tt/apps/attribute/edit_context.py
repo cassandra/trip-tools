@@ -30,7 +30,7 @@ from django.contrib.auth.models import User as UserType
 from django.forms import ModelForm, BaseInlineFormSet
 from django.db.models import Model
 
-from tt.constants import DIVID
+from tt.environment.constants import TtConst
 
 from .forms import AttributeUploadForm
 from .models import AttributeModel
@@ -59,7 +59,7 @@ class AttributePageEditContext:
     @property
     def id_suffix(self) -> str:
         """
-        Get the suffix to append to DIVID constants for unique element IDs.
+        Get the suffix to append to TtConst constants for unique element IDs.
         
         This creates namespaced IDs that prevent conflicts when multiple 
         attribute editing contexts exist on the same page.
@@ -88,31 +88,31 @@ class AttributePageEditContext:
 
     @property
     def container_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_CONTAINER_ID']}{self.id_suffix}"
+        return f"attr-container{self.id_suffix}"
     
     @property
     def content_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_CONTENT_ID']}{self.id_suffix}"
+        return f"{TtConst.ATTR_CONTENT_ID}{self.id_suffix}"
     
     @property
     def dirty_msg_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_DIRTY_MESSAGE_ID']}{self.id_suffix}"
+        return f"attr-dirty-message{self.id_suffix}"
     
     @property
     def form_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_FORM_ID']}{self.id_suffix}"
+        return f"attr-form{self.id_suffix}"
     
     @property
     def scrollable_content_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_SCROLLABLE_CONTENT_ID']}{self.id_suffix}"
+        return f"{TtConst.ATTR_SCROLLABLE_CONTENT_ID}{self.id_suffix}"
 
     @property
     def status_msg_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_STATUS_MESSAGE_ID']}{self.id_suffix}"
+        return f"attr-status-message{self.id_suffix}"
     
     @property
     def update_button_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_UPDATE_BTN_ID']}{self.id_suffix}"
+        return f"attr-update-btn{self.id_suffix}"
     
     @property
     def update_button_label(self) -> str:
@@ -216,19 +216,19 @@ class AttributeItemEditContext( AttributePageEditContext ):
     
     @property
     def file_input_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_FILE_INPUT_ID']}{self.id_suffix}"
+        return f"attr-file-input{self.id_suffix}"
     
     @property
     def file_grid_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_FILE_GRID_ID']}{self.id_suffix}"
+        return f"{TtConst.ATTR_FILE_GRID_ID}{self.id_suffix}"
     
     @property
     def upload_form_container_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_UPLOAD_FORM_CONTAINER_ID']}{self.id_suffix}"
+        return f"attr-upload-form-container{self.id_suffix}"
     
     @property
     def add_attribute_button_html_id(self) -> str:
-        return f"{DIVID['ATTR_V2_ADD_ATTRIBUTE_BTN_ID']}{self.id_suffix}"
+        return f"{TtConst.ATTR_ADD_ATTRIBUTE_BTN_ID}{self.id_suffix}"
     
     def to_template_context(self) -> Dict[str, Any]:
         template_context = super().to_template_context()

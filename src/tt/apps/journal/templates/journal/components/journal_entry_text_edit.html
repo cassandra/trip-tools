@@ -78,11 +78,11 @@
 
   <!-- ContentEditable Editor -->
   <div
-    class="{{ DIVID.JOURNAL_EDITOR_CLASS }}"
-    id="{{ DIVID.JOURNAL_EDITOR_ID }}"
+    class="{{ TtConst.JOURNAL_EDITOR_CLASS }}"
+    id="{{ TtConst.JOURNAL_EDITOR_ID }}"
     contenteditable="true"
-    data-{{ DIVID.JOURNAL_CURRENT_VERSION_ATTR }}="{{ entry.edit_version }}"
-    data-{{ DIVID.JOURNAL_AUTOSAVE_URL_ATTR }}="{% url 'journal_entry_autosave' entry_uuid=entry.uuid %}"
+    data-{{ TtConst.JOURNAL_CURRENT_VERSION_ATTR }}="{{ entry.edit_version }}"
+    data-{{ TtConst.JOURNAL_AUTOSAVE_URL_ATTR }}="{% url 'journal_entry_autosave' entry_uuid=entry.uuid %}"
     data-placeholder="Start writing your journal entry..."
     role="textbox"
     aria-label="Journal entry content"
@@ -90,6 +90,6 @@
   >{{ entry.text|safe }}</div>
 
   <!-- Hidden textarea for form fallback (non-JS) -->
-  <textarea class="d-none" name="text" id="{{ DIVID.JOURNAL_EDITOR_ID }}_fallback">{{ entry.text }}</textarea>
+  <textarea class="d-none" name="text" id="{{ TtConst.JOURNAL_EDITOR_ID }}_fallback">{{ entry.text }}</textarea>
 
 </div>

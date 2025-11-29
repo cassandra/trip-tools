@@ -3,7 +3,7 @@ Enum Attribute Value Component
 Renders a select dropdown for enum attributes using the attribute's choices
 {% endcomment %}
 
-<div class="attr-v2-enum-value">
+<div class="attr-enum-value">
   <select id="{{ attribute_form.value.id_for_label }}"
           name="{{ attribute_form.value.html_name }}"
           class="form-control"
@@ -16,9 +16,9 @@ Renders a select dropdown for enum attributes using the attribute's choices
     {% endfor %}
   </select>
   {% if attribute_form.value.errors %}
-    <div class="attr-v2-field-errors">
+    <div class="attr-field-errors">
       {% for error in attribute_form.value.errors %}
-      <div class="attr-v2-error-text">{{ error }}</div>
+      <div class="attr-error-text">{{ error }}</div>
       {% endfor %}
     </div>
   {% endif %}

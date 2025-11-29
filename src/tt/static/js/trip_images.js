@@ -48,13 +48,13 @@
     // Initialize delegated event handlers for image picker cards
     $(document).ready(function() {
         // Delegated click handler for image picker cards
-        $('body').on('click', Tt.IMAGE_PICKER_CARD_SELECTOR, function(e) {
+        $('body').on('click', TtConst.IMAGE_PICKER_CARD_SELECTOR, function(e) {
             e.preventDefault();
             _selectReferenceImage(this);
         });
 
         // Delegated keyboard handler for image picker cards (Enter/Space)
-        $('body').on('keydown', Tt.IMAGE_PICKER_CARD_SELECTOR, function(e) {
+        $('body').on('keydown', TtConst.IMAGE_PICKER_CARD_SELECTOR, function(e) {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 _selectReferenceImage(this);
@@ -63,7 +63,7 @@
     });
 
     function _selectReferenceImage(clickedElement) {
-        var $card = $(clickedElement).closest(Tt.IMAGE_PICKER_CARD_SELECTOR);
+        var $card = $(clickedElement).closest(TtConst.IMAGE_PICKER_CARD_SELECTOR);
         if ($card.length === 0) {
             console.warn('selectReferenceImage: Could not find image picker card');
             return;
@@ -77,16 +77,16 @@
         }
 
         // Get image data from card's data attributes
-        var imageUuid = $card.data(Tt.IMAGE_PICKER_UUID_ATTR);
-        var thumbnailUrl = $card.data(Tt.IMAGE_PICKER_THUMBNAIL_URL_ATTR);
-        var caption = $card.data(Tt.IMAGE_PICKER_CAPTION_ATTR) || 'Untitled';
+        var imageUuid = $card.data(TtConst.IMAGE_PICKER_UUID_ATTR);
+        var thumbnailUrl = $card.data(TtConst.IMAGE_PICKER_THUMBNAIL_URL_ATTR);
+        var caption = $card.data(TtConst.IMAGE_PICKER_CAPTION_ATTR) || 'Untitled';
 
         // Update hidden input (scoped to modal)
-        var $uuidInput = $modal.find(Tt.IMAGE_PICKER_UUID_INPUT_SELECTOR);
+        var $uuidInput = $modal.find(TtConst.IMAGE_PICKER_UUID_INPUT_SELECTOR);
         $uuidInput.val(imageUuid);
 
         // Update preview image (scoped to modal)
-        var $preview = $modal.find(Tt.IMAGE_PICKER_PREVIEW_SELECTOR);
+        var $preview = $modal.find(TtConst.IMAGE_PICKER_PREVIEW_SELECTOR);
         var $img = $('<img>')
             .attr('src', thumbnailUrl)
             .attr('alt', 'Selected reference')
@@ -98,17 +98,17 @@
         $preview.empty().append($img);
 
         // Update caption text (scoped to modal)
-        var $caption = $modal.find(Tt.IMAGE_PICKER_CAPTION_SELECTOR);
+        var $caption = $modal.find(TtConst.IMAGE_PICKER_CAPTION_SELECTOR);
         $caption.text(caption);
 
         // Enable the SET button (scoped to modal)
-        var $setBtn = $modal.find(Tt.IMAGE_PICKER_SET_BTN_SELECTOR);
+        var $setBtn = $modal.find(TtConst.IMAGE_PICKER_SET_BTN_SELECTOR);
         $setBtn.prop('disabled', false);
 
         // Update visual selection state (scoped to modal)
-        $modal.find(Tt.IMAGE_PICKER_CARD_SELECTOR).each(function() {
+        $modal.find(TtConst.IMAGE_PICKER_CARD_SELECTOR).each(function() {
             var $thisCard = $(this);
-            if ($thisCard.data(Tt.IMAGE_PICKER_UUID_ATTR) === imageUuid) {
+            if ($thisCard.data(TtConst.IMAGE_PICKER_UUID_ATTR) === imageUuid) {
                 $thisCard.css('border-color', '#007bff');
             } else {
                 $thisCard.css('border-color', 'transparent');
@@ -696,7 +696,7 @@
             if (!$uploadedGrid || $uploadedGrid.length === 0) return;
 
             // Count actual image items in the grid (what the user sees)
-            var count = $uploadedGrid.children(Tt.IMAGES_UPLOADED_ITEM_SELECTOR).length;
+            var count = $uploadedGrid.children(TtConst.IMAGES_UPLOADED_ITEM_SELECTOR).length;
             $uploadedCount.text(count);
         }
 

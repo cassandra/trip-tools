@@ -3,7 +3,7 @@ Boolean Attribute Value Component
 Renders a checkbox input for boolean attributes
 {% endcomment %}
 
-<div class="attr-v2-boolean-value">
+<div class="attr-boolean-value">
   <!-- Hidden field with actual string value for form submission -->
   <input type="hidden" 
          name="{{ attribute_form.value.html_name }}"
@@ -14,8 +14,8 @@ Renders a checkbox input for boolean attributes
   <div class="custom-control custom-checkbox">
     <input type="checkbox" 
            id="{{ attribute_form.value.id_for_label }}"
-           class="custom-control-input attr-v2-boolean-checkbox"
-           data-hidden-field="hidden-{{ attribute_form.value.id_for_label }}"
+           class="custom-control-input attr-boolean-checkbox"
+           {{ TtConst.DATA_HIDDEN_FIELD_ATTR }}="hidden-{{ attribute_form.value.id_for_label }}"
            {% if attribute_form.value.value == "True" or attribute_form.value.value == True %}checked{% endif %}
            {% if attribute_form.instance and not attribute_form.instance.is_editable %}disabled="true"{% endif %}
            onchange="Tt.attr.updateBooleanHiddenField(this)" />
@@ -24,9 +24,9 @@ Renders a checkbox input for boolean attributes
     </label>
   </div>
   {% if attribute_form.value.errors %}
-    <div class="attr-v2-field-errors">
+    <div class="attr-field-errors">
       {% for error in attribute_form.value.errors %}
-        <div class="attr-v2-error-text">{{ error }}</div>
+        <div class="attr-error-text">{{ error }}</div>
       {% endfor %}
     </div>
   {% endif %}

@@ -4,8 +4,8 @@ V2 File Card Component
 Individual file attribute card with preview, actions, and metadata
 {% endcomment %}
 
-<div class="{{ DIVID.ATTR_V2_FILE_CARD_CLASS }}" 
-     data-attribute-id="{{ attribute.id }}" 
+<div class="{{ TtConst.ATTR_FILE_CARD_CLASS }}" 
+     {{ TtConst.DATA_ATTRIBUTE_ID_ATTR }}="{{ attribute.id }}" 
      data-url-detect="true"
      data-order-index="{{ forloop.counter }}"
      data-thumbnail-ready="true"
@@ -14,34 +14,34 @@ Individual file attribute card with preview, actions, and metadata
   
   <!-- Hidden field for deletion marking -->
   <input type="hidden" 
-         name="{{ DIVID.ATTR_V2_DELETE_FILE_ATTR }}" 
+         name="{{ TtConst.ATTR_DELETE_FILE_ATTR }}" 
          value="" 
-         data-attribute-id="{{ attribute.id }}">
+         {{ TtConst.DATA_ATTRIBUTE_ID_ATTR }}="{{ attribute.id }}">
   
   <!-- File Preview/Thumbnail Area -->
-  <div class="attr-v2-file-thumbnail" 
+  <div class="attr-file-thumbnail" 
        onclick="window.open('{{ attribute.file_value.url }}', '_blank');" 
        title="Tap to view file">
     {% comment %}Content-type specific placeholder icons{% endcomment %}
     {% if attribute.file_mime_type|slice:':5' == "image" %}
       {% icon "camera" size="lg" %}
-      <div class="attr-v2-file-type-label">IMAGE</div>
+      <div class="attr-file-type-label">IMAGE</div>
     {% elif attribute.file_mime_type == "application/pdf" %}
       {% icon "upload" size="lg" %}
-      <div class="attr-v2-file-type-label">PDF</div>
+      <div class="attr-file-type-label">PDF</div>
     {% elif attribute.file_mime_type|slice:':4' == "text" %}
       {% icon "edit" size="lg" %}
-      <div class="attr-v2-file-type-label">TEXT</div>
+      <div class="attr-file-type-label">TEXT</div>
     {% elif attribute.file_mime_type|slice:':5' == "video" %}
       {% icon "video" size="lg" %}
-      <div class="attr-v2-file-type-label">VIDEO</div>
+      <div class="attr-file-type-label">VIDEO</div>
     {% else %}
       {% icon "upload" size="lg" %}
-      <div class="attr-v2-file-type-label">FILE</div>
+      <div class="attr-file-type-label">FILE</div>
     {% endif %}
     
     <!-- Reorder Controls (overlay in upper right) -->
-    <div class="attr-v2-reorder-controls" 
+    <div class="attr-reorder-controls" 
          onclick="event.stopPropagation();"
          onmouseenter="this.parentElement.classList.add('reorder-hover');"
          onmouseleave="this.parentElement.classList.remove('reorder-hover');">
@@ -63,18 +63,18 @@ Individual file attribute card with preview, actions, and metadata
   </div>
   
   <!-- File Info -->
-  <div class="{{ DIVID.ATTR_V2_FILE_INFO_CLASS }}">
+  <div class="{{ TtConst.ATTR_FILE_INFO_CLASS }}">
     <input type="text" 
            id="{{ attr_item_context|file_title_field_name:attribute.id }}"
            name="{{ attr_item_context|file_title_field_name:attribute.id }}" 
            value="{{ attribute.value }}" 
-           class="{{ DIVID.ATTR_V2_FILE_TITLE_INPUT_CLASS }}"
+           class="{{ TtConst.ATTR_FILE_TITLE_INPUT_CLASS }}"
            placeholder="Enter file title"
            maxlength="255">
-    <div class="{{ DIVID.ATTR_V2_FILE_NAME_CLASS }}">{{ attribute.name }}</div>
+    <div class="{{ TtConst.ATTR_FILE_NAME_CLASS }}">{{ attribute.name }}</div>
     
     <!-- File Actions -->
-  <div class="attr-v2-file-actions">
+  <div class="attr-file-actions">
     <button type="button" 
             class="btn btn-sm btn-outline-primary"
             onclick="window.open('{{ attribute.file_value.url }}', '_blank');"
@@ -84,13 +84,13 @@ Individual file attribute card with preview, actions, and metadata
     
     {% if attribute.attribute_type.can_delete %}
       <button type="button" 
-              class="btn btn-sm btn-outline-danger {{ DIVID.ATTR_V2_DELETE_BTN_CLASS }}"
+              class="btn btn-sm btn-outline-danger {{ TtConst.ATTR_DELETE_BTN_CLASS }}"
               onclick="markFileForDeletion('{{ attribute.id }}', '#{{ attr_page_context.container_html_id }}')"
               title="Delete file">
         {% icon "delete" size="sm" %}
       </button>
       <button type="button" 
-              class="btn btn-sm btn-outline-secondary {{ DIVID.ATTR_V2_UNDO_BTN_CLASS }}"
+              class="btn btn-sm btn-outline-secondary {{ TtConst.ATTR_UNDO_BTN_CLASS }}"
               onclick="undoFileDeletion('{{ attribute.id }}', '#{{ attr_page_context.container_html_id }}')"
               title="Undo deletion"
               style="display: none;">

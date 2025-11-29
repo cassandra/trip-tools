@@ -28,7 +28,7 @@
   <div class="journal-editor-panel mt-2">
 
     <!-- Editor Form -->
-    <form class="{{ DIVID.JOURNAL_ENTRY_FORM_CLASS }}" method="post">
+    <form class="{{ TtConst.JOURNAL_ENTRY_FORM_CLASS }}" method="post">
       {% csrf_token %}
 
       <!-- Compact Header: Two columns -->
@@ -45,24 +45,24 @@
                role="button"
                aria-label="Change reference image">
             {% endif %}
-              <div class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS }}"
-                   data-{{ DIVID.JOURNAL_REFERENCE_IMAGE_UUID_ATTR }}="{% if entry.reference_image %}{{ entry.reference_image.uuid }}{% endif %}">
+              <div class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_CONTAINER_CLASS }}"
+                   data-{{ TtConst.JOURNAL_REFERENCE_IMAGE_UUID_ATTR }}="{% if entry.reference_image %}{{ entry.reference_image.uuid }}{% endif %}">
 
                 <!-- Placeholder state: Camera icon (drop zone) - shown when no reference image -->
-                <div class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS }}{% if entry.reference_image %} d-none{% endif %}">
+                <div class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_PLACEHOLDER_CLASS }}{% if entry.reference_image %} d-none{% endif %}">
                   {% icon "camera" size="lg" %}
                   <span class="journal-reference-drop-hint">Drop reference image</span>
                 </div>
 
                 <!-- Preview state: Show thumbnail + clear button - shown when reference image set -->
-                <div class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_PREVIEW_CLASS }}{% if not entry.reference_image %} d-none{% endif %}">
+                <div class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_PREVIEW_CLASS }}{% if not entry.reference_image %} d-none{% endif %}">
                   <img src="{% if entry.reference_image %}{{ entry.reference_image.thumbnail_image.url }}{% endif %}"
                        alt="{% if entry.reference_image %}{{ entry.reference_image.caption|default:'Reference' }}{% endif %}"
-                       class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS }}"
+                       class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS }}"
                        draggable="true"
-                       data-{{ DIVID.JOURNAL_INSPECT_URL_ATTR }}="{% if entry.reference_image %}{% url 'images_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_uuid={{ trip.uuid }}{% endif %}">
+                       data-{{ TtConst.JOURNAL_INSPECT_URL_ATTR }}="{% if entry.reference_image %}{% url 'images_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_uuid={{ trip.uuid }}{% endif %}">
                   <button type="button"
-                          class="{{ DIVID.JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS }}"
+                          class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS }}"
                           title="Clear reference image">&times;</button>
                 </div>
               </div>
@@ -77,11 +77,11 @@
           <div>
             <!-- Title (full width in left column) -->
             <div class="form-group form-inline mb-2">
-              <label for="{{ DIVID.JOURNAL_TITLE_INPUT_ID }}" class="font-weight-bold mr-2">Title:</label>
+              <label for="{{ TtConst.JOURNAL_TITLE_INPUT_ID }}" class="font-weight-bold mr-2">Title:</label>
               <input
                   type="text"
                   class="form-control flex-grow-1"
-                  id="{{ DIVID.JOURNAL_TITLE_INPUT_ID }}"
+                  id="{{ TtConst.JOURNAL_TITLE_INPUT_ID }}"
                   name="title"
                   value="{{ entry.title }}"
                   placeholder="Enter journal entry title..."
@@ -95,11 +95,11 @@
             </div>
             {% else %}
             <div class="form-inline">
-              <label for="{{ DIVID.JOURNAL_DATE_INPUT_ID }}" class="font-weight-bold mr-2">Date:</label>
+              <label for="{{ TtConst.JOURNAL_DATE_INPUT_ID }}" class="font-weight-bold mr-2">Date:</label>
               <input
                   type="date"
                   class="form-control mr-2"
-                  id="{{ DIVID.JOURNAL_DATE_INPUT_ID }}"
+                  id="{{ TtConst.JOURNAL_DATE_INPUT_ID }}"
                   name="date"
                   value="{{ entry.date|date:'Y-m-d' }}"
               >
@@ -126,7 +126,7 @@
                     title="Save now">
               Save
             </button>
-            <span class="badge badge-secondary {{ DIVID.JOURNAL_SAVE_STATUS_CLASS }}">
+            <span class="badge badge-secondary {{ TtConst.JOURNAL_SAVE_STATUS_CLASS }}">
               Saved 2 seconds ago
             </span>
           </div>
