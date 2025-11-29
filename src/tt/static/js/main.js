@@ -3,7 +3,7 @@
     // ==========================================================================
     // TtConst Selector Derivation
     // ==========================================================================
-    // TtConst is injected by server via base.html with all shared constants.
+    // TtConst is injected by server via <script> in pages/base.html with all shared constants.
     // Here we extend it with derived CSS selectors for JavaScript use.
 
     const C = window.TtConst;

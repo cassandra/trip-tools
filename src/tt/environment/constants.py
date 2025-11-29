@@ -5,12 +5,18 @@ class TtConst:
     """
     Single source of truth for constants shared between Python and JavaScript.
 
-    - Template access: Use `{{ TtConst.CONSTANT_NAME }}` (injected via context processor)
-    - JavaScript access: Use `TtConst.CONSTANT_NAME` (injected via `base.html`)
-    - Derived selectors: JavaScript adds CSS selectors in `main.js`
+    Usage:
+        - Template access: Use `{{ TtConst.CONSTANT_NAME }}` (injected via context processor)
+        - JavaScript access: Use `TtConst.CONSTANT_NAME` (via <script> in `pages/base.html`)
+
+    Conventions:
+        - Javascript responsible for defining derived CSS selector versions as needed
+
+    Data attributes
+       - values are keys for jQuery .data() (without "data-" prefix)
+       - convention is to name with "_DATA_ATTR" suffix
+       - For raw HTML/CSS selectors, prepend "data-" explicitly
     """
-    # Data attributes - values are keys for jQuery .data() (without "data-" prefix)
-    # For raw HTML/CSS selectors, prepend "data-" explicitly
     ATTRIBUTE_ID_DATA_ATTR               = 'attribute-id'
     HIDDEN_FIELD_DATA_ATTR               = 'hidden-field'
     OVERFLOW_DATA_ATTR                   = 'overflow'
