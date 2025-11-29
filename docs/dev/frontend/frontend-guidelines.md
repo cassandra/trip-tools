@@ -73,14 +73,14 @@ return {
 
 ## Client-Server Namespace Sharing
 
-- We do not use magic strings as they need to be referenced in multiple places.
-- We gathered strings that need to be shared between client and server in `src/tt/constants.py:DIVID`:
-- This `DIVID` dict are injected into the template context automatically. 
-- On the Javascript side, we gather all these same ids in a single place at the beginning of the main.css.
-- All other Javascript modules use the Hi.<NAME> namespacing to refer to these.
-- All DOM ids and classes that are shared between client and server must adhere to our `DIVID` pattern
+We use a **single source of truth** for constants shared between Python and JavaScript, eliminating duplication and drift risk.
 
-In this way, there is at most two places these ids are used as strings, and both client and server can referenced more safely.
+- **Source of truth**: `src/tt/environment/constants.py` defines all shared constants
+- **Template access**: Use `{{ TtConst.CONSTANT_NAME }}`
+- **JavaScript access**: Use `TtConst.CONSTANT_NAME` (injected via `base.html`)
+- **Derived selectors**: JavaScript adds CSS selectors in `main.js` (e.g., `TtConst.FOO_SELECTOR` derived from `TtConst.FOO_CLASS`)
+
+**Namespace separation**: `TtConst` holds constants/selectors (data), `Tt` holds utility functions (behavior).
 
 ## JavaScript Standards
 

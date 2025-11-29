@@ -5,7 +5,12 @@ import json
 @dataclass(frozen=True)
 class SharedConstants:
     """
-    String values that are needed on client and server side to ensure single source of truth.
+    This is the **single source of truth** for constants shared between Python and
+    JavaScript, eliminating duplication and drift risk.
+
+    - Template access: Use `{{ TtConst.CONSTANT_NAME }}` (injected via context processor)
+    - JavaScript access: Use `TtConst.CONSTANT_NAME` (injected via `base.html`)
+    - Derived selectors: JavaScript concern. Adds CSS selectors in `main.js`
     """
     DATA_ATTRIBUTE_ID_ATTR  : str  = 'data-attribute-id'
     DATA_HIDDEN_FIELD_ATTR  : str  = 'data-hidden-field'
