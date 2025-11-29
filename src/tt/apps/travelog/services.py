@@ -172,20 +172,20 @@ class TravelogImageCacheService:
     # Regex pattern for extracting image UUIDs from HTML
     # Matches: <img class="...trip-image..." data-uuid="{UUID}" ...>
     IMAGE_UUID_PATTERN = re.compile(
-        r'<img' + HtmlRegexPatterns.ANY_ATTRS +
-        HtmlRegexPatterns.class_containing(TtConst.JOURNAL_IMAGE_CLASS) +
-        HtmlRegexPatterns.ANY_ATTRS +
-        HtmlRegexPatterns.uuid_capture('data-' + TtConst.UUID_DATA_ATTR),
+        r'<img' + HtmlRegexPatterns.ANY_ATTRS
+        + HtmlRegexPatterns.class_containing(TtConst.JOURNAL_IMAGE_CLASS)
+        + HtmlRegexPatterns.ANY_ATTRS
+        + HtmlRegexPatterns.uuid_capture('data-' + TtConst.UUID_DATA_ATTR),
         re.IGNORECASE
     )
 
     # Regex pattern for extracting layout from wrapper
     # Matches: <span class="...trip-image-wrapper..." data-layout="{LAYOUT}">
     LAYOUT_PATTERN = re.compile(
-        r'<span' + HtmlRegexPatterns.ANY_ATTRS +
-        HtmlRegexPatterns.class_containing(TtConst.JOURNAL_IMAGE_WRAPPER_CLASS) +
-        HtmlRegexPatterns.ANY_ATTRS +
-        HtmlRegexPatterns.attr_capture('data-' + TtConst.LAYOUT_DATA_ATTR),
+        r'<span' + HtmlRegexPatterns.ANY_ATTRS
+        + HtmlRegexPatterns.class_containing(TtConst.JOURNAL_IMAGE_WRAPPER_CLASS)
+        + HtmlRegexPatterns.ANY_ATTRS
+        + HtmlRegexPatterns.attr_capture('data-' + TtConst.LAYOUT_DATA_ATTR),
         re.IGNORECASE
     )
 
