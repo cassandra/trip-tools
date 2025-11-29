@@ -1,0 +1,50 @@
+{% extends "trips/pages/trips_base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block trip_content %}
+<div class="m-3">
+  <div>
+    <h1 class="h2 mb-1">Bookings</h1>
+    <p class="text-muted">Manage your bookings for the trip.</p>
+  </div>
+
+  <div class="tt-page-explanation">
+    <h2>The Problems</h2>
+    <ul>
+      <li>The things you have already booked are scattered across many sites.</li>
+      <li>There's no good connection between things you need to book versus things you already booked.</li>
+      <li>The things you need to book requires you to keep a to-do list and/or create calendar reminders.</li>
+      <li>What you've booked and your itinerary are tightly related, but not identical.</li>
+      <li>Tracking shared expenses is complicated.</li>
+    </ul>
+    <h2>The Solution</h2>
+    <ul>
+      <li>A tight integration with your itinerary with bookings really just being the financial view.</li>
+      <li>Allow creation of "to-do" items to be booked with optional timeframes and reminders.</li>
+      <li>Seemless connection between your itinerary and bookings.</li>
+      <li>Tracking cancellation policies.</li>
+      <li>Tracking payment methods and dates charged or to-be charged.</li>
+      <li>Ability to track shared expenses.</li>
+    </ul>
+    <h2>Existing Tools</h2>
+    <ul>
+      <li><strong>TripIt</strong>
+        <ul>
+          <li>Great for aggregating existing bookings, but not to-do bookings.</li>
+          <li>Good for building itinerary, but not everything in an itinerary maps to a booking.</li>
+          <li>The user interface is relatively poor.</li>
+          <li>Seems to be lightly supported since they were bought.</li>
+          <li>Used to have an API which would be great to itegrate with, but is no longer offered .</li>
+        </ul>
+      </li>
+      <li><strong>Tricount</strong>
+        <ul>
+          <li>Great tool for tracking shared expenses, but not integrated with anything else.
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

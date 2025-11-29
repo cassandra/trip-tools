@@ -1,0 +1,54 @@
+{% extends "trips/pages/trips_base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block trip_content %}
+<div class="m-3">
+  <div>
+    <h1 class="h2 mb-1">Locations</h1>
+    <p class="text-muted">All the places.</p>
+  </div>
+
+  <div class="tt-page-explanation">
+    <h2>The Problems</h2>
+    <ul>
+      <li>There is no centralized place to accumulate information about the places in your trip.
+        <ul>
+          <li>Sources and links: e.g., who recommeneded it and what did they have to say.</li>
+          <li>It's location on a map.</li>
+          <li>How interesting is it to you? e.g., must-see, marginal</li>
+          <li>What's its rating and from where?</li>
+          <li>Pricing? Days and hours they are open</li>
+          <li>Contact information and links.</li>
+          <li>Does it need advanced booking? Have you booked it yet?</li>
+          <li>Have you written a review about it</li>
+        </ul>
+      </li>
+    </ul>
+    <h2>The Solution</h2>
+    <ul>
+      <li>Location is the central concept to tie all trip data together.</li>
+      <li>The physical location is a primary attribute for trip planning and execution.
+        <ul>
+          <li>It is required for transportation planning.</li>
+          <li>It is essential for deciding on lodging.</li>
+          <li>It is important for planning daily itineraries.</li>
+        </ul>
+      </li>
+      <li>Visual plot of locations on a map to use in planning a trip, while on the trip and when journaling about the trip.</li>
+    </ul>
+    <h2>Existing Tools</h2>
+    <ul>
+      <li><strong>Google Maps</strong>
+        <ul>
+          <li>Great for visually plotting locations.</li>
+          <li>Bookmarks do not allow richer set of attributes.</li>
+          <li>The "My Maps" feature is better, but treated like a step-child with a clunky interface.</li>
+          <li>"My Maps" has some, but limited means of adding more attributes.</li>
+          <li>Does not integrate well with anything else.</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -60,7 +60,6 @@ Understanding our goals will help you contribute more effectively:
 ## Getting Help
 
 ### Documentation
-- **[FAQ](docs/FAQ.md)** - Common questions and answers
 - **[Development Guide](docs/Development.md)** - Comprehensive setup and workflow guide
 - **[Coding Standards](docs/dev/shared/coding-standards.md)** - Code organization and style guide
 

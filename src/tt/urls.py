@@ -36,10 +36,13 @@ urlpatterns = [
     re_path( r'^notify/', include('tt.apps.notify.urls' )),
     re_path( r'^dashboard/', include('tt.apps.dashboard.urls' )),
     re_path( r'^trips/', include('tt.apps.trips.urls' )),
+    re_path( r'^locations/', include('tt.apps.locations.urls' )),
     re_path( r'^itineraries/', include('tt.apps.itineraries.urls' )),
     re_path( r'^images/', include('tt.apps.images.urls' )),
+    re_path( r'^bookings/', include('tt.apps.bookings.urls' )),
     re_path( r'^journal/', include('tt.apps.journal.urls' )),
     re_path( r'^travelog/', include('tt.apps.travelog.urls' )),
+    re_path( r'^reviews/', include('tt.apps.reviews.urls' )),
     re_path( r'^', include('tt.apps.members.urls' )),
 
     # Custom error pages

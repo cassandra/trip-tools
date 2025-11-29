@@ -55,7 +55,7 @@ class TripCreateModalView(ModalView):
 class TripHomeView( TripViewMixin, ModalView ):
 
     def get_template_name(self) -> str:
-        return 'trips/pages/trip-home.html'
+        return 'trips/pages/trips_home.html'
 
     def get(self, request, trip_uuid : UUID, *args, **kwargs):
         request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
@@ -73,7 +73,7 @@ class TripHomeView( TripViewMixin, ModalView ):
         context = {
             'trip_page': trip_page_context,
         }
-        return render( request, 'trips/pages/trip-home.html', context )
+        return render( request, 'trips/pages/trips_home.html', context )
 
 
 class TripEditModalView( LoginRequiredMixin, TripViewMixin, ModalView ):

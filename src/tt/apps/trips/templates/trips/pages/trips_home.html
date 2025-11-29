@@ -1,0 +1,58 @@
+{% extends "trips/pages/trips_base.html" %}
+{% load static %}
+
+{% block trip_content %}
+<div class="m-3">
+  <div>
+    <h1 class="h2 mb-1">Trip Overview</h1>
+    <p class="text-muted">All the things.</p>
+  </div>
+
+  <div class="tt-page-explanation">
+    <h2>The Problem</h2>
+    <ul>
+      <li>You want to an overview of your trip data based on your current context.</li>
+    </ul>
+    <h2>The Solution</h2>
+    <ul>
+      <li>An overview page showing most important trip information based on the current state.</li>
+      <li>See action items and trip-related important dates.</li>
+      <li>Still planning?
+        <ul>
+          <li>See all the locations I am considering for the trip.</li>
+          <li>Add a new location or view and edit an existing one.</li>
+          <li>Add a prefrred transportation or lodging.</li>
+          <li>View and compare preferred transportation and/or lodging options.</li>
+          <li>Generate possible itineraries.</li>
+          <li>Add an itinerary constraint. e.g., holidays to avoid.</li>
+        </ul>
+      </li>
+      <li>In the process of booking?
+        <ul>
+          <li>Itinerary overview and status.</li>
+          <li>What's booked and what's left to book?</li>
+          <li>Add a new booking.</li>
+          <li>Change a booking.</li>
+          <li>Add a new location or view and edit an existing one.</li>
+        </ul>
+      </li>
+      <li>Already on the trip?
+        <ul>
+          <li>View a map of my surroundings.</li>
+          <li>View a map with today's itinerary locations</li>
+          <li>View today's itinerary.</li>
+          <li>Add notes to your daily travel diary.</li>
+          <li>Add restaurant or other location review notes.</li>
+        </ul>
+      </li>
+      <li>Trip over?
+        <ul>
+          <li>Write a travel journal.</li>
+          <li>Upload and manage images for journals.</li>
+          <li>Publish your travel journal.</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

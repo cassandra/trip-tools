@@ -1,0 +1,55 @@
+{% extends "trips/pages/trips_base.html" %}
+{% load static %}
+{% load icons %}
+
+{% block trip_content %}
+<div class="m-3">
+  <div>
+    <h1 class="h2 mb-1">Reviews</h1>
+    <p class="text-muted">Manage reviews related to this trip.</p>
+  </div>
+
+  <div class="tt-page-explanation">
+    <h2>The Problems</h2>
+    <ul>
+      <li>Reviews for different categories of things need to be posted to different places.</li>
+      <li>The same review might need to be posted to multiple places.</li>
+      <li>You want to have a place to put your "raw" review thoughts for later word-smithing</li>
+      <li>You want to refer to, or copy parts of your reviews into a travel log.</li>
+    </ul>
+    <h2>The Solution</h2>
+    <ul>
+        <li>Provide a central place to capture all your reviews, both in their draft and refined forms.</li>
+        <li>Integration with the Trip Tools Journal feature will allow easy reference while authoring your journal entries without having to remember where and what you posted.</li>
+        <li>Initially, you can then cut-and-paste to the sites you want, with a deeper integration to help post as a longer term feature.</li>
+    </ul>
+    <h2>Existing Tools</h2>
+    <ul>
+      <li><strong>Booking.com</strong>
+        <ul>
+          <li>Good for hotel reviews since they require confirmed stays.</li>
+          <li>Broadening business scope has them losing focus on lodging: not a good sign for the future.</li>
+        </ul>
+      </li>
+      <li><strong>Tripadvisor</strong>
+        <ul>
+          <li>Maybe still OK for tour and activity-related reviews?</li>
+          <li>Has already lost focus on the core travel features: money, money, money.</li>
+        </ul>
+      </li>
+      <li><strong>Google</strong>
+        <ul>
+          <li>Good for restaurant reviews since most convenient when looking things up on a map.</li>
+        </ul>
+      </li>
+      <li><strong>A Million Other Sites</strong>
+        <ul>
+          <li>Too many sites. Too much spam. Too hard to find a trustworthy source.</li>
+        </ul>
+      </li>
+    </ul>       
+
+  </div>
+  
+</div>
+{% endblock %}

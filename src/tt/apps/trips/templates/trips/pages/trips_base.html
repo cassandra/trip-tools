@@ -37,19 +37,19 @@
   </a>
 </li>
 <li>
+  <a href="{% url 'locations_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'locations' %} class="active" aria-current="page"{% endif %}>
+    {% icon "map-pin" size="sm" %}
+    <span>Locations</span>
+  </a>
+</li>
+<li>
   <a href="{% url 'itineraries_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'itinerary' %} class="active" aria-current="page"{% endif %}>
     {% icon "clock" size="sm" %}
     <span>Itinerary</span>
   </a>
 </li>
 <li>
-  <a href="#"{% if trip_page.active_page.value == 'locations' %} class="active" aria-current="page"{% endif %}>
-    {% icon "map-pin" size="sm" %}
-    <span>Locations</span>
-  </a>
-</li>
-<li>
-  <a href="#"{% if trip_page.active_page.value == 'bookings' %} class="active" aria-current="page"{% endif %}>
+  <a href="{% url 'bookings_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'bookings' %} class="active" aria-current="page"{% endif %}>
     {% icon "layers" size="sm" %}
     <span>Bookings</span>
   </a>
@@ -61,7 +61,7 @@
   </a>
 </li>
 <li>
-  <a href="#"{% if trip_page.active_page.value == 'reviews' %} class="active" aria-current="page"{% endif %}>
+  <a href="{% url 'reviews_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'reviews' %} class="active" aria-current="page"{% endif %}>
     {% icon "edit" size="sm" %}
     <span>Reviews</span>
   </a>

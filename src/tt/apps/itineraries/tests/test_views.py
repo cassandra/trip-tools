@@ -67,13 +67,13 @@ class ItineraryHomeViewTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-    def test_itinerary_home_uses_trip_base_template(self):
-        """Test that itinerary template extends trip_base.html."""
+    def test_itinerary_home_uses_trips_base_template(self):
+        """Test that itinerary template extends trips_base.html."""
         self.client.force_login(self.user)
         response = self.client.get(self.itinerary_home_url)
 
         template_names = [t.name for t in response.templates]
-        self.assertIn('trips/pages/trip_base.html', template_names)
+        self.assertIn('trips/pages/trips_base.html', template_names)
         self.assertIn('pages/base.html', template_names)
 
     def test_itinerary_home_includes_trip_page_context(self):

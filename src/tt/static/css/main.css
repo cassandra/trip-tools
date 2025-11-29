@@ -1051,6 +1051,76 @@ body {
     padding: 0.35em 0.65em;
 }
 
+/* Page Explanation - Styling for vision/coming-soon feature descriptions */
+.tt-page-explanation {
+    background: linear-gradient(135deg, var(--info-bg-light) 0%, #f0f7f7 100%);
+    border: 1px solid var(--primary-color);
+    border-left: 4px solid var(--primary-color);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(23, 112, 114, 0.08);
+}
+
+.tt-page-explanation::before {
+    content: "Future Feature";
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: var(--on-primary-color);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.75rem;
+    border-radius: 3px;
+    position: absolute;
+    top: -0.6rem;
+    left: 1rem;
+}
+
+.tt-page-explanation h1,
+.tt-page-explanation h2,
+.tt-page-explanation h3,
+.tt-page-explanation h4 {
+    color: var(--primary-highlight-color);
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+}
+
+.tt-page-explanation h1:first-of-type,
+.tt-page-explanation h2:first-of-type,
+.tt-page-explanation h3:first-of-type {
+    padding-top: 0.5rem; /* Space for the "Coming Soon" badge */
+}
+
+.tt-page-explanation p {
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+}
+
+.tt-page-explanation p:last-child {
+    margin-bottom: 0;
+}
+
+.tt-page-explanation ul,
+.tt-page-explanation ol {
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+}
+
+.tt-page-explanation li {
+    margin-bottom: 0.35rem;
+    line-height: 1.5;
+}
+
+.tt-page-explanation strong {
+    color: var(--primary-highlight-color);
+}
+
+
 /* ========================================
    Unified Diff Display Styles
    For text conflict resolution

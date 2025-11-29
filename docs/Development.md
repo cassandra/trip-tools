@@ -7,13 +7,15 @@
 - Python 3.11 (or higher) - installed.
 - Redis - installed and running.
 - A GitHub account.
+- Database
+    - MySQL is the default config, but it can be changed to SQLite.
 
 ## Tech Stack
 
 - Django 4.2 (back-end)
 - Javascript using jQuery 3.7 (front-end)
 - Bootstrap 4 (CSS)
-- SQLite (database)
+- MySQL or SQLite (database)
 - Redis (caching)
 
 ## Getting Started

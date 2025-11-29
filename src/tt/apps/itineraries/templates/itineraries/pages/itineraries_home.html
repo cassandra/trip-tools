@@ -1,0 +1,41 @@
+{% extends "trips/pages/trips_base.html" %}
+{% load static %}
+
+{% block trip_content %}
+<div class="m-3">
+  <div>
+    <h1 class="h2 mb-1">Itinerary</h1>
+    <p class="text-muted">Day by day.</p>
+  </div>
+
+  <div class="tt-page-explanation">
+    <h2>The Problems</h2>
+    <ul>
+      <li>Creating a trip itinerary is mostly manually duplicating information from other sources.</li>
+      <li>Updating an itinerary is not linked to other trip change activities.</li>
+    </ul>
+    <h2>The Solution</h2>
+    <ul>
+      <li>A itinerary that is deeply integrated with location data, planning, bookings, to-do items.</li>
+      <li>Planning integration to automate itinerary generation.</li>
+    </ul>
+    <h2>Existing Tools</h2>
+    <ul>
+      <li><strong>TripIt</strong>
+        <ul>
+          <li>Good for building itinerary, but not everything in an itinerary maps to a booking.</li>
+          <li>The user interface is relatively poor.</li>
+          <li>Seems to be lightly supported since they were bought.</li>
+          <li>Used to have an API which would be great to itegrate with, but is no longer offered .</li>
+        </ul>
+      </li>
+      <li><strong>Spreadsheets</strong>
+        <ul>
+          <li>Great tool for creating itineries, but burden is on you and not integrated.
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
