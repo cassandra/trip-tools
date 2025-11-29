@@ -7,6 +7,7 @@ class TripPage(str, Enum):
     """Enum for trip-related pages."""
 
     OVERVIEW   = 'trip_overview'
+    PLANNING   = 'planning'
     ITINERARY  = 'itinerary'
     LOCATIONS  = 'locations'
     BOOKINGS   = 'bookings'

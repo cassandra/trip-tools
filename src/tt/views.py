@@ -167,20 +167,9 @@ class HealthView( View ):
 class HomeView( View ):
 
     def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return not_authorized_response( request, message = 'You must be logged in.' )
+        return render( request, 'pages/home.html' )
 
-        user_trips = Trip.objects.for_user( request.user )
-
-        if not user_trips.exists():
-            redirect_url = reverse( 'start' )
-            return HttpResponseRedirect( redirect_url )
-
-        # Redirect to dashboard
-        redirect_url = reverse( 'dashboard_home' )
-        return HttpResponseRedirect( redirect_url )
-        
-        
+    
 class StartView( View ):
 
     def get(self, request, *args, **kwargs):

@@ -38,6 +38,7 @@ urlpatterns = [
     re_path( r'^trips/', include('tt.apps.trips.urls' )),
     re_path( r'^locations/', include('tt.apps.locations.urls' )),
     re_path( r'^itineraries/', include('tt.apps.itineraries.urls' )),
+    re_path( r'^planning/', include('tt.apps.planning.urls' )),
     re_path( r'^images/', include('tt.apps.images.urls' )),
     re_path( r'^bookings/', include('tt.apps.bookings.urls' )),
     re_path( r'^journal/', include('tt.apps.journal.urls' )),

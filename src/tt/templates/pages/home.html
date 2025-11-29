@@ -1,0 +1,311 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block head_css %}
+<style>
+.tt-home-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.tt-home-hero {
+  text-align: center;
+  padding: 3rem 0 2rem 0;
+}
+
+.tt-home-hero .logo {
+  max-height: 80px;
+  margin-bottom: 1rem;
+}
+
+.tt-home-hero h1 {
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.tt-home-hero .tagline {
+  font-size: 1.25rem;
+  color: var(--muted-color);
+  margin-bottom: 1.5rem;
+}
+
+.tt-home-hero .intro {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  max-width: 700px;
+  margin: 0 auto 2rem auto;
+}
+
+.tt-home-hero .cta-section {
+  margin-bottom: 1rem;
+}
+
+.tt-home-hero .cta-btn {
+  padding: 0.75rem 2.5rem;
+  font-size: 1.1rem;
+}
+
+.tt-home-hero .invite-notice {
+  font-size: 0.9rem;
+  color: var(--muted-color);
+  font-style: italic;
+}
+
+.tt-home-section {
+  padding: 2.5rem 0;
+  border-top: 1px solid var(--line-color);
+}
+
+.tt-home-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 1.25rem;
+}
+
+.tt-home-section p {
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.tt-home-section ul {
+  line-height: 1.7;
+}
+
+.tt-home-section li {
+  margin-bottom: 0.5rem;
+}
+
+.tt-home-screenshots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 2rem 0;
+  justify-content: center;
+}
+
+.tt-home-screenshot {
+  flex: 1 1 400px;
+  max-width: 100%;
+  text-align: center;
+}
+
+.tt-home-screenshot img {
+  max-width: 100%;
+  border: 1px solid var(--line-color);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.tt-home-screenshot .caption {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--muted-color);
+}
+
+.tt-home-coming-soon {
+  background-color: var(--info-bg-light);
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.tt-home-coming-soon h3 {
+  color: var(--primary-highlight-color);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.tt-home-coming-soon ul {
+  margin-bottom: 0;
+  padding-left: 1.25rem;
+}
+
+.tt-home-cta-box {
+  background: linear-gradient(135deg, var(--info-bg-light) 0%, #f0f7f7 100%);
+  border: 1px solid var(--primary-color);
+  border-radius: 6px;
+  padding: 2rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.tt-home-cta-box h3 {
+  color: var(--primary-highlight-color);
+  margin-bottom: 1rem;
+}
+
+.tt-home-cta-box p {
+  margin-bottom: 1.5rem;
+}
+
+.tt-home-footer {
+  text-align: center;
+  padding: 2rem 0;
+  border-top: 1px solid var(--line-color);
+  color: var(--muted-color);
+  font-size: 0.9rem;
+}
+
+.tt-home-footer a {
+  color: var(--primary-color);
+}
+
+@media (max-width: 600px) {
+  .tt-home-page {
+    padding: 1rem;
+  }
+
+  .tt-home-hero {
+    padding: 2rem 0 1.5rem 0;
+  }
+
+  .tt-home-hero .intro {
+    font-size: 1rem;
+  }
+
+  .tt-home-section {
+    padding: 2rem 0;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tt-home-page">
+
+  <!-- Hero Section -->
+  <div class="tt-home-hero">
+    <img src="{% static 'img/tt-logo-467x200.png' %}" alt="Trip Tools" class="logo">
+    <h1>Trip Tools</h1>
+    <p class="tagline">Open source trip planning, management, and journaling</p>
+
+    <p class="intro">
+      There are lots of great tools for managing trips. The problem? You need to use
+      <em>lots</em> of them. Planning in one app, bookings in another, itineraries in a
+      spreadsheet, photos scattered everywhere. We believe the entire lifecycle of a trip
+      is one problem - and we're building the solution.
+    </p>
+
+    <div class="cta-section">
+      {% if user.is_authenticated %}
+      <a href="{% url 'dashboard_home' %}" class="btn btn-primary cta-btn">Go to Dashboard</a>
+      {% else %}
+      <a href="{% url 'user_signin' %}" class="btn btn-primary cta-btn">Sign In</a>
+      {% endif %}
+    </div>
+
+    <p class="invite-notice">Currently in early access (invite only)</p>
+  </div>
+
+  <!-- The Vision Section -->
+  <div class="tt-home-section">
+    <h2>Why Trip Tools?</h2>
+
+    <p>
+      A trip isn't just planning, or just managing bookings, or just sharing photos afterward.
+      It's all of these things, connected. But existing tools force you to juggle multiple apps,
+      cut and paste between them, maintain separate logins, and somehow keep everything in sync.
+    </p>
+
+    <p>
+      Trip Tools takes a different approach: <strong>one place for your entire trip lifecycle</strong>.
+      Pre-trip research and planning. Comparing options and making decisions. Managing bookings
+      and itineraries. Capturing memories during the trip. Writing and sharing your travel journal
+      afterward. All connected, all in one place.
+    </p>
+
+    <p>
+      We're building this because we needed it ourselves. And we're building it open source
+      because we believe travel tools should work for travelers, not for ad revenue.
+    </p>
+  </div>
+
+  <!-- Available Now Section -->
+  <div class="tt-home-section">
+    <h2>Available Now: Journal &amp; Travelog</h2>
+
+    <p>
+      We're starting with the post-trip experience - because that's where your memories live.
+      The Journal feature lets you write rich travel journals with photos, then publish them
+      as beautiful public travelogs to share with friends and family.
+    </p>
+
+    <ul>
+      <li><strong>Rich text editor</strong> with drag-and-drop image insertion</li>
+      <li><strong>Auto-save</strong> with conflict detection - never lose your work</li>
+      <li><strong>Flexible publishing</strong> - private, password-protected, or public</li>
+      <li><strong>6 color themes</strong> for your published travelog</li>
+      <li><strong>Version history</strong> - publish updates while preserving previous versions</li>
+    </ul>
+
+    <div class="tt-home-screenshots">
+      <div class="tt-home-screenshot">
+        <img src="{% static 'img/home/journal-editor.png' %}" alt="Journal Editor">
+        <p class="caption">Write your journal with a rich text editor</p>
+      </div>
+      <div class="tt-home-screenshot">
+        <img src="{% static 'img/home/published-travelog.png' %}" alt="Published Travelog">
+        <p class="caption">Publish as a beautiful travelog to share</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coming Soon Section -->
+  <div class="tt-home-section">
+    <h2>Where We're Headed</h2>
+
+    <p>
+      The Journal is just the beginning. We're building toward a complete trip management
+      platform that handles every phase of your journey:
+    </p>
+
+    <div class="tt-home-coming-soon">
+      <h3>Coming Soon</h3>
+      <ul>
+        <li><strong>Planning</strong> - Compare options for lodging, transportation, and activities</li>
+        <li><strong>Locations</strong> - Organize all your places with maps and rich details</li>
+        <li><strong>Itineraries</strong> - Day-by-day schedules connected to your locations and bookings</li>
+        <li><strong>Bookings</strong> - Track what's booked, what's pending, and shared expenses</li>
+        <li><strong>Reviews</strong> - Capture your thoughts on places you visit</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Early Access & Contributing Section -->
+  <div class="tt-home-section">
+    <h2>Early Access &amp; Contributing</h2>
+
+    <p>
+      Trip Tools is in early development. We're currently invite-only while we build out
+      the core features and ensure a stable experience for early users.
+    </p>
+
+    <p>
+      This is an open source project, and we welcome contributors of all kinds - whether
+      you want to write code, improve the design, or just share feedback on what would
+      make this useful for your trips.
+    </p>
+
+    <div class="tt-home-cta-box">
+      <h3>Want to Help Build This?</h3>
+      <p>
+        Check out the project on GitHub to see the roadmap, report issues,
+        or contribute to development.
+      </p>
+      <a href="https://github.com/cassandra/trip-tools" class="btn btn-outline-primary" target="_blank" rel="noopener">
+        View on GitHub
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="tt-home-footer">
+    <p>
+      <a href="https://github.com/cassandra/trip-tools" target="_blank" rel="noopener">GitHub</a>
+      &nbsp;&middot;&nbsp;
+      Open Source (MIT License)
+    </p>
+  </div>
+
+</div>
+{% endblock %}

@@ -9,6 +9,8 @@ We welcome all kinds of contributions! Whether you want to use the software and 
 ### User Contributions
 *The foundation of open source - real users with real needs*
 
+**Try it now:** Visit [triptools.net](https://triptools.net) to test the live version.
+
 **What we need:**
 - Test the software with real use cases
 - Report bugs and usability issues

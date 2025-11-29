@@ -2,75 +2,74 @@
 
 # Trip Tools
 
-Open source trip planning, trip management and trip journaling.
+Open source trip planning, management, and journaling.
+
+## Try It Now
+
+Visit **[triptools.net](https://triptools.net)** to create your first travel journal in minutes. No setup required.
 
 ## Why Trip Tools?
 
-**The Problem:** There are lots of good tools you can use for managing your trips. 
+**The Problem:** There are lots of good tools for managing trips. Why is that a problem? Because you need to use *lots* of tools.
 
-Why is that a problem?  Because you need to use **lots** of tools.  
+A trip isn't just planning, or just managing bookings, or just sharing photos. Tools tend to focus on one piece of the puzzle, creating data silos. The burden falls on you to juggle them all: cutting and pasting, multiple logins, different formats. Planning with others just makes it worse - now you need to share a slew of different services and documents.
 
-A trip is not just about planning, it is not just about managing your bookings and it is not just about sharing your travel logs/photos. Tools tend to focus on only one part of your overall "trip problem" which create data silos/ The burden is put on you to juggle and try to stitch these all together: cutting and pasting, multiple logins, different formats, etc.  Planning a trip with others just exacerbates the problem: e.g., now you need to "invite" or "share" a slew of different services/documents.
+**Our Solution:** We view the entire lifecycle of a trip as one problem. Pre-trip research, comparisons, bookings, data needed during travel, post-trip journaling and photo sharing - all connected and accessible from a single place.
 
-**Our Solution:** We view the entire life-cycle of a trip as one problem. Pre-trip research, comparisons, bookings, data needed on the travel days themselves, post-trip journaling/photo sharing, etc.  This is the problem we aim to solve:
+## Features
 
-   *Making everything connected an accessible from a single place by connecting all the data at each phase of a trip's lifecycle.*
+### Available Now: Journal & Travelog
+
+Create and share beautiful travel journals:
+
+- **Rich text editor** with drag-and-drop image insertion
+- **Auto-save** with conflict detection and visual diffs
+- **Image management** with multi-file upload and EXIF metadata extraction
+- **Publishing system** - convert private journals to public travelogs
+- **Visibility controls** - Private, Password-Protected, or Public
+- **6 color themes** for published travelogs
+- **Version history** with restore capabilities
+
+### Coming Soon
+
+- **Trips** - Central hub adapting to your trip phase
+- **Locations** - The organizing principle tying all trip data together
+- **Itineraries** - Day-by-day planning integrated with locations and bookings
+- **Bookings** - Financial and operational tracking with shared expenses
+- **Reviews** - Centralized review management for post-trip reflection
 
 ## Project Status
 
-**Early Development** We are just getting started. We have the main post-trip features currently available:
+**Early Development** - We're just getting started. The Journal/Travelog feature is fully functional and ready to use. Other features are in planning and development.
 
-1. Journal Creation & Editing
-    - Rich text editor with drag-and-drop image insertion
-    - Auto-save with conflict detection and visual diffs
-    - Reference image system for entries
-    - Version history with restore capabilities
-2. Publishing System
-    - Convert private journals to public travelogs
-    - Three visibility levels: PRIVATE, PROTECTED (password), PUBLIC
-    - Immutable snapshots preserve published versions
-    - Password protection with session-based access
-3. Image Management
-    - Multi-file upload with processing
-    - EXIF metadata extraction (GPS, timestamps)
-    - Image resizing for web and thumbnails
-    - Permission-based access control
-4. Public Viewing
-    - Clean travelog interface with 6 color themes
-    - Table of contents navigation
-    - Image gallery with date-based browsing
-    - Responsive design for all devices
+We welcome contributors who want to help build the vision.
 
 ## Contributing
 
 We welcome all types of contributions:
 
-**Users:** Try the app and share your experience - what works, what doesn't, what's missing
-
-**Developers:** Help improve the codebase. Built with Django, JavaScript, and Bootstrap. See [Development](docs/Development.md).
-
-**Designers:** Help us improve the user experience and visual design. We'd love your input on making this more intuitive and beautiful.
+- **Users:** Try [triptools.net](https://triptools.net) and share your experience
+- **Developers:** Help build new features. See [Development](docs/Development.md) for setup.
+- **Designers:** Help improve the user experience and visual design
 
 See [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-## Architecture & Security
+## Architecture & Philosophy
 
 - **Privacy-first:** Your data is your data. No third-party services get access.
-- **Local-first:** You can host and run this at home if you like.
-- **Django backend:** Mature, secure web framework
-
-For technical details, see our [Development Documentation](docs/Development.md).
+- **Local-first:** Self-host on your own infrastructure if you prefer.
+- **Django backend:** Built on a mature, secure web framework.
 
 ---
 
 ## Resources
 
-### Contributors  
+### For Contributors
 - [Contributing](CONTRIBUTING.md) - How to get involved
 - [Development](docs/Development.md) - Technical setup and guidelines
 - [Code of Conduct](CODE_OF_CONDUCT.md) - Community standards
 - [Security](SECURITY.md) - Security policy and reporting
 
 ### Project
-- [ChangeLog](CHANGELOG.md) - Release history
+- [Changelog](CHANGELOG.md) - Release history
 - [License](LICENSE.md) - MIT License terms

@@ -43,6 +43,12 @@
   </a>
 </li>
 <li>
+  <a href="{% url 'planning_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'planning' %} class="active" aria-current="page"{% endif %}>
+    {% icon "lightbulb" size="sm" %}
+    <span>Planning</span>
+  </a>
+</li>
+<li>
   <a href="{% url 'itineraries_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'itinerary' %} class="active" aria-current="page"{% endif %}>
     {% icon "clock" size="sm" %}
     <span>Itinerary</span>
