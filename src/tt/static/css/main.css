@@ -132,6 +132,15 @@ a.clickable-card:active {
     color: var(--black);
 }
 
+.border-primary {
+  border-color: var(--primary-color) !important;
+
+}
+.border-secondary {
+  border-color: var(--secondary-color) !important;
+
+}
+
 .bg-primary, .bg-info, .btn-primary, .btn-info {
     color: var(--on-primary-color) !important;
     background-color: var(--primary-color) !important;
