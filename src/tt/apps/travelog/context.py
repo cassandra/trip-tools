@@ -22,7 +22,7 @@ class TravelogPageContext:
     journal        : Journal
     content_type   : ContentType
     version_number : Optional[int] = None  # Only for VERSION content type
-
+    
     def is_draft(self) -> bool:
         return bool( self.content_type.is_draft )
 

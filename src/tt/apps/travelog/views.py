@@ -12,6 +12,7 @@ from tt.apps.journal.enums import JournalVisibility
 
 from .exceptions import PasswordRequiredException
 from .forms import TravelogPasswordForm
+from .helpers import TravelogHelpers
 from .mixins import TravelogViewMixin
 from .services import (
     ContentResolutionService,
@@ -82,12 +83,21 @@ class TravelogTableOfContentsView(TravelogViewMixin, View):
         )
 
         entries = list( content.get_entries().order_by('date') )
+        if len(entries) == 1:
+            redirect_url = TravelogHelpers.create_travelog_day_url(
+                request = request,
+                journal = travelog_page_context.journal,
+                entry = entries[0],
+            )
+            return HttpResponseRedirect( redirect_url )
+        
         toc_page = TocPageBuilder.build( entries = entries )
 
         context = {
             'content': content,
             'toc_page': toc_page,
             'travelog_page': travelog_page_context,
+            'is_multi_page': bool( len(entries) > 1 ),
             'journal': travelog_page_context.journal,
         }
         return render(request, 'travelog/pages/travelog_toc.html', context)
@@ -129,6 +139,7 @@ class TravelogDayView(TravelogViewMixin, View):
             'content': content,
             'day_page': day_page,
             'travelog_page': travelog_page_context,
+            'is_multi_page': bool( len(entries) > 1 ),
             'journal': travelog_page_context.journal,
         }
         return render(request, 'travelog/pages/travelog_day.html', context)
@@ -160,6 +171,7 @@ class TravelogImageGalleryView(TravelogViewMixin, View):
         content = ContentResolutionService.resolve_content(
             travelog_page_context = travelog_page_context,
         )
+        is_multi_page = bool( content.get_entries().count() > 1 )
 
         # Get cached images (cache already invalidated in mixin if refresh=true)
         all_images = TravelogImageCacheService.get_images(
@@ -194,6 +206,7 @@ class TravelogImageGalleryView(TravelogViewMixin, View):
             'images': page_images,
             'pagination': pagination,
             'travelog_page': travelog_page_context,
+            'is_multi_page': is_multi_page,
             'journal': travelog_page_context.journal,
         }
 
@@ -225,6 +238,7 @@ class TravelogImageBrowseView(TravelogViewMixin, View):
         content = ContentResolutionService.resolve_content(
             travelog_page_context = travelog_page_context,
         )
+        is_multi_page = bool( content.get_entries().count() > 1 )
 
         # Get cached images (cache already invalidated in mixin if refresh=true)
         all_images = TravelogImageCacheService.get_images(
@@ -266,6 +280,7 @@ class TravelogImageBrowseView(TravelogViewMixin, View):
             'prev_image': prev_image,
             'next_image': next_image,
             'travelog_page': travelog_page_context,
+            'is_multi_page': is_multi_page,
             'journal': travelog_page_context.journal,
         }
 

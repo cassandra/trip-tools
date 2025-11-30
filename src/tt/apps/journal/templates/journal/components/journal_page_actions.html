@@ -1,0 +1,25 @@
+{% load icons %}
+{% load travelog_tags %}
+
+<div class="mb-3">
+  <div class="btn-toolbar justify-content-between" role="toolbar">
+    <div class="btn-group" role="group">
+      <a class="btn btn-success btn-lg"
+         href="{% url 'journal_publish' journal_uuid=journal.uuid %}"
+         data-async="modal"
+         title="Publish your latest changes as a new version"
+         {% if not trip_page.request_member.permission_level.is_admin %}disabled{% elif publishing_status.is_published_without_changes %}disabled{% endif %}>
+        {% icon "upload" size="sm" css_class="tt-icon-left" %}
+        {% if publishing_status.has_published_version %}Publish Changes{% else %}Publish First Version{% endif %}
+      </a>
+      <a href="{% travelog_url 'travelog_toc' journal.uuid version='draft' %}"
+         target="_blank"
+         class="btn btn-outline-primary btn-lg"
+         title="Preview how your journal will appear to readers"
+         {% if not trip_page.request_member.can_edit_trip %}onclick="return false;" style="pointer-events: none; opacity: 0.65;"{% endif %}>
+        {% icon "eye" size="sm" css_class="tt-icon-left" %}
+        Preview
+      </a>
+    </div>
+  </div>
+</div>

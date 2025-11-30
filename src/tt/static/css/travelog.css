@@ -943,7 +943,7 @@ h3 {
   background: linear-gradient(135deg, var(--primary-color) 0%,
               var(--primary-highlight-color) 100%);
   color: var(--on-primary-color);
-  padding: 1.5rem 2rem;
+  padding: 0.5rem 2rem 1.5rem 2rem;
   text-align: center;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }

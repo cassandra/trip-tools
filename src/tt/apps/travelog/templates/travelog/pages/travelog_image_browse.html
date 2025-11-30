@@ -7,14 +7,7 @@
 {% block travelog_content %}
 {# Browse header - back to TOC on left, back to Gallery on right #}
 <header class="journal-header">
-  <nav class="d-flex justify-content-between align-items-center small">
-    <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
-      &larr; Table of Contents
-    </a>
-    <a href="{% travelog_url 'travelog_gallery' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
-      {% icon "camera" size="sm" %} Image Gallery
-    </a>
-  </nav>
+  {% include "travelog/components/travelog_header_nav.html" with show_toc=True show_image_gallery=True %}
   <div class="text-center">
     <h1 class="journal-title">{{ content.title }}</h1>
     <p class="journal-subtitle">

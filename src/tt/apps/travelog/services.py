@@ -436,7 +436,7 @@ class TravelogImageCacheService:
             if not entry.text:
                 continue
 
-            entry_date = entry.date.strftime('%Y-%m-%d')
+            entry_date = entry.date.isoformat()
             entry_images = cls._extract_images_from_html(
                 entry.text,
                 entry_date,

@@ -2,6 +2,12 @@
 Helper classes and functions for travelog operations.
 """
 from datetime import date
+from urllib.parse import urlencode
+
+from django.http import HttpRequest
+from django.urls import reverse
+
+from tt.apps.journal.models import Journal, JournalEntryContent
 
 
 class TravelogHelpers:
@@ -43,3 +49,23 @@ class TravelogHelpers:
         else:
             # Different years: "December 28, 2024 - January 5, 2025"
             return f"{start_date.strftime('%B %-d, %Y')} - {end_date.strftime('%B %-d, %Y')}"
+
+    @classmethod
+    def create_travelog_day_url( cls,
+                                 request  : HttpRequest,
+                                 journal  : Journal,
+                                 entry    : JournalEntryContent ) -> str:
+        url = reverse( 'travelog_day',
+                       kwargs = { 'journal_uuid': journal.uuid,
+                                  'date': entry.date.isoformat() } )
+        
+        query_params = {}
+        version_param = request.GET.get('version')
+        if version_param:
+            query_params['version'] = version_param
+
+        if query_params:
+            query = urlencode(query_params)
+            url = f"{url}?{query}"
+        return url
+

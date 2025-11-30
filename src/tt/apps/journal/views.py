@@ -176,6 +176,7 @@ class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
             'journal_page': journal_page_context,
             'journal': journal,
             'journal_entries': journal_entries,
+            'journal_entry_count': len(journal_entries),
             'publishing_status': publishing_status,
         }
 

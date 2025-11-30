@@ -5,16 +5,20 @@
 
 {% block travelog_content %}
 <header class="journal-header">
-  <nav class="d-flex justify-content-between align-items-center small">
-    <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
-      &larr; Table of Contents
-    </a>
-    <span></span>{# Empty span for flexbox spacing #}
-  </nav>
+  {% if is_multi_page %}
+  {% include "travelog/components/travelog_header_nav.html" with show_toc=True show_image_gallery=True %}
+  {% else %}
+  {% include "travelog/components/travelog_header_nav.html" with show_toc=False show_image_gallery=True %}
+  {% endif %}
   <div class="text-center">
     <h1 class="journal-title">{{ content.title }}</h1>
     <p class="journal-subtitle">
-      {% trip_date_span day_page.first_day_date day_page.last_day_date as date_span %}{% if date_span %}{{ date_span }} &bull; {% endif %}{{ day_page.day_count }} Day{% if day_page.day_count != 1 %}s{% endif %}
+      {% trip_date_span day_page.first_day_date day_page.last_day_date as date_span %}
+      {% if date_span %}{{ date_span }}{% endif %}
+      {% if date_span and is_multi_page %} &bull; {% endif %}
+      {% if is_multi_page %}
+      {{ day_page.day_count }} Day{% if day_page.day_count != 1 %}s{% endif %}
+      {% endif %}
     </p>
   </div>
 </header>
@@ -22,6 +26,7 @@
 <!-- Main Container with Sidebar -->
 <div class="journal-container">
   <!-- TOC Sidebar -->
+  {% if is_multi_page %}
   <aside class="toc-sidebar">
     <div class="toc-title">Table of Contents</div>
     <ul class="toc-list">
@@ -56,12 +61,13 @@
       {% endfor %}
     </ul>
   </aside>
-
+  {% endif %}
+  
   <!-- Content Area -->
   <main class="journal-content-main">
     <article class="day-section">
       <header class="day-header">
-        <h1 class="day-title">{% if day_page.current_entry.day_number %}Day {{ day_page.current_entry.day_number }}: {% endif %}{{ day_page.current_entry.entry.title }}</h1>
+        <h1 class="day-title">{% if is_multi_page and day_page.current_entry.day_number %}Day {{ day_page.current_entry.day_number }}: {% endif %}{{ day_page.current_entry.entry.title }}</h1>
         {% if day_page.current_entry.entry.title %}
         <p class="day-subtitle">{{ day_page.current_entry.entry.display_date_long }}</p>
         {% endif %}
@@ -71,6 +77,7 @@
         {{ day_page.current_entry.entry.text|safe }}
       </div>
 
+      {% if is_multi_page %}
       <!-- Day Navigation -->
       <nav class="day-navigation">
         {% if day_page.current_entry.has_previous %}
@@ -102,6 +109,8 @@
         </a>
       </div>
       {% endif %}
+      {% endif %}
+      
     </article>
   </main>
 </div>
