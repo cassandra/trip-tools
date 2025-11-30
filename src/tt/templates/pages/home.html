@@ -70,6 +70,34 @@
   border-left: 3px solid var(--secondary-color);
 }
 
+/* Page gradient background wrapper */
+.tt-page-gradient {
+  background: linear-gradient(135deg, #f0f7f7 0%, #fef5f3 100%);
+  min-height: 100vh;
+}
+
+/* Hero icon circles */
+.tt-hero-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  margin: 0 auto 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(23, 112, 114, 0.3);
+  font-size: 1.2rem;
+}
+
+/* Open source badge */
+.tt-badge-subtle {
+  background: rgba(23, 112, 114, 0.1);
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 /* Responsive carousel */
 @media (max-width: 768px) {
   .tt-carousel-wrap {
@@ -108,20 +136,39 @@
 {% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px;">
-
-  <!-- Hero Section -->
-  <div class="text-center my-3">
-    <img src="{% static 'img/tt-logo-467x200.png' %}" alt="Trip Tools" class="mb-2" style="max-height: 70px;">
-    <p class="lead text-muted mb-4"><span class="font-weight-bold text-primary">Trip Tools:</span> Your entire trip, one place. Open source.</p>
-
-    <!-- Value Proposition -->
-    <div class="bg-light rounded text-center my-3">
-      <p class="mb-0" style="font-size: 1.1rem; line-height: 1.6;">
-        Planning in one app. Bookings in another. Itinerary in a spreadsheet. Photos everywhere.
-        <strong>Trip Tools brings it all together</strong> - from first research to final photo album.
-      </p>
+<div class="tt-page-gradient">
+<!-- Hero Section -->
+<div class="text-center pt-4 pb-2 px-4">
+  <img src="{% static 'img/tt-logo-467x200.png' %}" alt="Trip Tools" style="max-height: 55px;">
+  <h1 class="h4 mt-4 mb-4 text-primary font-weight-bold">
+    Your entire trip, one place
+  </h1>
+  <div class="d-flex justify-content-center flex-wrap mb-4" style="gap: 2rem;">
+    <div class="text-center">
+      <div class="tt-hero-icon">
+        <span style="color: white;">&#x1F4DD;</span>
+      </div>
+      <span class="small text-secondary">Planning</span>
     </div>
+    <div class="text-center">
+      <div class="tt-hero-icon">
+        <span style="color: white;">&#x1F4C5;</span>
+      </div>
+      <span class="small text-secondary">Itineraries</span>
+    </div>
+    <div class="text-center">
+      <div class="tt-hero-icon">
+        <span style="color: white;">&#x1F4F7;</span>
+      </div>
+      <span class="small text-secondary">Memories</span>
+    </div>
+  </div>
+  <p class="mb-0 text-secondary" style="max-width: 520px; margin: 0 auto; font-size: 1rem; line-height: 1.6;">
+    From first research to final photo album, all connected.
+  </p>
+</div>
+
+<div class="container" style="max-width: 1000px;">
 
     <!-- Screenshot Carousel -->
     <div class="tt-carousel-wrap mx-auto py-3">
@@ -162,15 +209,14 @@
       </div>
     </div>
 
-    <div class="my-3">
+    <div class="text-center my-3">
       {% if user.is_authenticated %}
       <a href="{% url 'dashboard_home' %}" class="btn btn-primary btn-lg px-5">Go to Dashboard</a>
       {% else %}
       <a href="{% url 'user_signin' %}" class="btn btn-primary btn-lg px-5">Sign In</a>
       {% endif %}
     </div>
-    <p class="small text-muted font-italic">Currently in early access (invite only)</p>
-  </div>
+    <p class="text-center small text-muted font-italic">Currently in early access (invite only)</p>
 
   <!-- Journal Feature Section -->
   <div class="py-4 border-top">
@@ -286,11 +332,14 @@
   <!-- Footer -->
   <div class="text-center py-4 border-top text-muted small">
     <p class="mb-0">
+      &copy; {% now "Y" as current_year %}{% if current_year == "2025" %}2025{% else %}2025&ndash;{{ current_year }}{% endif %} POMDP, Inc.
+      &nbsp;&middot;&nbsp;
       <a href="https://github.com/cassandra/trip-tools" target="_blank" rel="noopener">GitHub</a>
       &nbsp;&middot;&nbsp;
-      Open Source (MIT License)
+      MIT License
     </p>
   </div>
 
 </div>
+</div>{# .tt-page-gradient #}
 {% endblock %}
