@@ -12,55 +12,68 @@
 {% block body_class %}theme-current{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h1>{{ target_user.get_full_name }}'s Travelogs</h1>
-  <p class="subtitle">Journey through my adventures around the world</p>
+{# User list header - styled like journal headers but standalone #}
+<header class="journal-header">
+  <div class="text-center">
+    <h1 class="journal-title">{{ target_user.get_full_name }}'s Travelogs</h1>
+    <p class="journal-subtitle">
+      Journey through my adventures around the world
+    </p>
+  </div>
+</header>
 
-  {% if travelog_items %}
-  <div class="card-grid">
-    {% for item in travelog_items %}
-    <div>
-      <a href="{% travelog_url 'travelog_toc' item.journal.uuid %}" class="clickable-card">
-        <div class="card">
-          {% if item.display_image and item.display_image.thumbnail_image %}
-          <img src="{{ item.display_image.thumbnail_image.url }}" alt="{{ item.journal.title }}" class="card-image">
-          {% else %}
-          <div class="card-image placeholder-image"></div>
-          {% endif %}
-
-          <div class="card-content">
-            <h3 class="card-title">
-              {{ item.journal.title }}
-              {% if item.requires_password %}
-              <span class="lock-icon" title="Password Required">
-                <span style="display: inline-block; width: 20px; height: 20px; vertical-align: middle;">
-                  {% icon "shield" css_class="lock-icon-svg" aria_label="Password Required" %}
-                </span>
-              </span>
-              {% endif %}
-            </h3>
-
-            {% if item.earliest_entry_date and item.latest_entry_date %}
-            <div class="card-date">
-              {% if item.earliest_entry_date == item.latest_entry_date %}
-              {{ item.earliest_entry_date|date:"F j, Y" }}
-              {% else %}
-              {{ item.earliest_entry_date|date:"F j" }} - {{ item.latest_entry_date|date:"F j, Y" }}
-              {% endif %}
+<div class="user-list-container py-4">
+  <div class="container-fluid px-4">
+    {% if travelog_items %}
+    <div class="row">
+      {% for item in travelog_items %}
+      <div class="col-12 col-sm-6 col-md-4 col-xl-3 mb-4">
+        <a href="{% travelog_url 'travelog_toc' item.journal.uuid %}" class="text-decoration-none">
+          <div class="card card-hover h-100">
+            {% if item.display_image and item.display_image.thumbnail_image %}
+            <div class="entry-card-image">
+              <img src="{{ item.display_image.thumbnail_image.url }}" alt="{{ item.journal.title }}">
+            </div>
+            {% else %}
+            <div class="entry-card-image placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
             </div>
             {% endif %}
-
-            {% if item.journal.description %}
-            <p class="card-description">{{ item.journal.description|truncatewords:20 }}</p>
-            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title mb-1">
+                {{ item.journal.title }}
+                {% if item.requires_password %}
+                <span class="ml-1" title="Password Required">
+                  {% icon "lock" size="sm" color="secondary" %}
+                </span>
+                {% endif %}
+              </h5>
+              <p class="text-muted small mb-0">
+                {% if item.earliest_entry_date and item.latest_entry_date %}
+                  {% trip_date_span item.earliest_entry_date item.latest_entry_date as date_span %}
+                  {% if date_span %}{{ date_span }}{% endif %}
+                  {% if item.day_count %} &bull; {{ item.day_count }} Day{% if item.day_count != 1 %}s{% endif %}{% endif %}
+                {% endif %}
+              </p>
+            </div>
           </div>
-        </div>
-      </a>
+        </a>
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+    {% else %}
+    <div class="text-center p-5 bg-light border rounded">
+      <div class="text-muted mb-3">
+        {% icon "book-open" size="lg" %}
+      </div>
+      <h3 class="h5">No Travelogs Yet</h3>
+      <p class="text-muted mb-0">No published travelogs found for this user.</p>
+    </div>
+    {% endif %}
   </div>
-  {% else %}
-  <p>No published travelogs found for this user.</p>
-  {% endif %}
 </div>
 {% endblock %}

@@ -54,6 +54,3 @@ class EntrySelectionStats:
             total_entries=len(entries),
             included_entries=included
         )
-
-
-    

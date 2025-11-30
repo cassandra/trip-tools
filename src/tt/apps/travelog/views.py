@@ -12,9 +12,14 @@ from tt.apps.journal.enums import JournalVisibility
 
 from .exceptions import PasswordRequiredException
 from .forms import TravelogPasswordForm
-from .helpers import TravelogPublicListBuilder
 from .mixins import TravelogViewMixin
-from .services import ContentResolutionService, TravelogImageCacheService
+from .services import (
+    ContentResolutionService,
+    TravelogImageCacheService,
+    TravelogPublicListBuilder,
+    DayPageBuilder,
+    TocPageBuilder,
+)
 
 
 class TravelogUserListView(TravelogViewMixin, View):
@@ -76,12 +81,12 @@ class TravelogTableOfContentsView(TravelogViewMixin, View):
             travelog_page_context = travelog_page_context,
         )
 
-        # Get entries (works for both Journal and Travelog)
-        entries = content.get_entries().order_by('date')
+        entries = list( content.get_entries().order_by('date') )
+        toc_page = TocPageBuilder.build( entries = entries )
 
         context = {
             'content': content,
-            'entries': entries,
+            'toc_page': toc_page,
             'travelog_page': travelog_page_context,
             'journal': travelog_page_context.journal,
         }
@@ -94,12 +99,6 @@ class TravelogDayView(TravelogViewMixin, View):
     No authentication required - access controlled by journal visibility and password.
 
     Content type determined by ?version= query parameter.
-
-    TODO: Implement public journal day view functionality.
-    - Fetch journal entry for specified date
-    - Display entry text (rendered markdown), images, navigation
-    - Previous/next day navigation
-    - Back to TOC link
     """
 
     def get( self,
@@ -108,33 +107,30 @@ class TravelogDayView(TravelogViewMixin, View):
              date          : date_type,
              *args, **kwargs             ) -> HttpResponse:
         try:
-            travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
+            travelog_page_context = self.get_travelog_page_context(
+                request = request,
+                journal_uuid = journal_uuid,
+            )
         except PasswordRequiredException:
-            return self.password_redirect_response( request = request, journal_uuid = journal_uuid )
+            return self.password_redirect_response(
+                request = request,
+                journal_uuid = journal_uuid,
+            )
 
         content = ContentResolutionService.resolve_content(
             travelog_page_context = travelog_page_context,
         )
-
-        # Get all entries ordered by date
-        entries = content.get_entries().order_by('date')
-
-        entry = entries.filter( date = date ).first()
-        if not entry:
-            raise Http404()
-
-        prev_entry = entries.filter( date__lt = date ).order_by('-date').first()
-        next_entry = entries.filter( date__gt = date ).order_by('date').first()
-
+        entries = list( content.get_entries().order_by('date') )
+        day_page = DayPageBuilder.build(
+            entries = entries,
+            target_date = date,
+        )
         context = {
             'content': content,
-            'entry': entry,
-            'prev_entry': prev_entry,
-            'next_entry': next_entry,
+            'day_page': day_page,
             'travelog_page': travelog_page_context,
             'journal': travelog_page_context.journal,
         }
-
         return render(request, 'travelog/pages/travelog_day.html', context)
 
 
@@ -258,7 +254,7 @@ class TravelogImageBrowseView(TravelogViewMixin, View):
             raise Http404(f"Image {image_uuid} not found in this journal")
 
         # Fetch the TripImage object
-        trip_image = TripImage.objects.filter(uuid=current_image.uuid).first()
+        trip_image = TripImage.objects.filter( uuid = current_image.uuid ).first()
 
         context = {
             'content': content,

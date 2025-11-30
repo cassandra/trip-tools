@@ -3,16 +3,22 @@
     All Rights Reserved.
 */
 
-/* ===========================================
-   GLOBAL CONSTANTS
-   Universal colors that don't change with themes
-   =========================================== */
+/* =============================================================================
+   SECTION 1: GLOBAL CONSTANTS (Non-Themeable)
+   Universal values that stay consistent across all themes
+   ============================================================================= */
 :root {
+  /* System font stacks (defaults, can be overridden by themes) */
+  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-serif-alt: Palatino, "Palatino Linotype", "Book Antiqua", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+
   /* Universal constants */
   --white: #fdfdfd;
   --black: #020204;
 
-  /* Semantic colors (not theme-specific) */
+  /* Semantic colors (NOT themed - consistent UX for status indicators) */
   --tertiary-color: #020204;
   --on-tertiary-color: #ffffff;
   --tertiary-highlight-color: #7e7e81;
@@ -37,8 +43,15 @@
   --secondary-color: #F45F36;
   --on-secondary-color: #ffffff;
   --secondary-highlight-color: #F8AD98;
+  --secondary-header-text-color: #222233;
   --background-gradient-start: #f5f7fa;
-  --background-gradient-end: #c3cfe2;
+  --background-gradient-end: #fefefe;
+  --border-color: #177072;
+  --sidebar-bg: rgba(23, 112, 114, 0.08);
+  --content-bg: #fefefe;
+  --container-bg: #fefefe;
+  --font-heading: var(--font-serif);
+  --font-body: var(--font-sans);
 }
 
 html {
@@ -176,6 +189,33 @@ a.clickable-card:active {
     background-color: var(--muted-color) !important;
 }
 
+/* Outline button overrides for app theming */
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    background-color: transparent !important;
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    color: var(--on-primary-color) !important;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-outline-secondary {
+    color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+    background-color: transparent !important;
+}
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active {
+    color: var(--on-secondary-color) !important;
+    background-color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+}
+
 /* Pagination styling overrides for app theming */
 .pagination-lg .page-link {
     color: var(--primary-color) !important;
@@ -233,96 +273,155 @@ a.clickable-card:active {
     color: var(--muted-color);
 }
 
-/* ===========================================
-   TRAVELOG THEME SYSTEM
-   Six color schemes for published travelogs
-   Usage: Add theme class to container element
-   Example: <div class="theme-current">...</div>
-   =========================================== */
+/* =============================================================================
+   SECTION 2: THEME DEFINITIONS
+   Six complete theme specifications with colors, fonts, and borders
+   Applied via body class: <body class="theme-current">
+   ============================================================================= */
 
-/* Theme 1: Current (Teal & Coral) - DEFAULT */
+/* Theme 1: Default (Teal & Coral) - Classic, professional
+   Serif headings for elegance, clean sans body for readability */
 .theme-current {
+  /* Colors */
   --primary-color: #177072;
   --on-primary-color: #ffffff;
   --primary-highlight-color: #115354;
   --secondary-color: #F45F36;
   --on-secondary-color: #ffffff;
   --secondary-highlight-color: #F8AD98;
+  --secondary-header-text-color: #222233;
   --background-gradient-start: #f5f7fa;
-  --background-gradient-end: #c3cfe2;
+  --background-gradient-end: #fefefe;
+  --border-color: #177072;
+  --sidebar-bg: rgba(23, 112, 114, 0.08);
+  --content-bg: #fefefe;
+  --container-bg: #fefefe;
+  /* Fonts */
+  --font-heading: Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Theme 2: Warm Sunset (Amber & Red) */
+/* Theme 2: Warm Sunset (Amber & Warm Red) - Inviting, traditional
+   Palatino headings for warmth, clean sans body */
 .theme-sunset {
-  --primary-color: #D97706;
+  /* Colors */
+  --primary-color: #B45309;
   --on-primary-color: #ffffff;
-  --primary-highlight-color: #B45309;
+  --primary-highlight-color: #92400E;
   --secondary-color: #DC2626;
   --on-secondary-color: #ffffff;
   --secondary-highlight-color: #F87171;
-  --background-gradient-start: #fef3c7;
-  --background-gradient-end: #fed7aa;
+  --secondary-header-text-color: #222233;
+  --background-gradient-start: #fffbeb;
+  --background-gradient-end: #fffdfb;
+  --border-color: #B45309;
+  --sidebar-bg: rgba(180, 83, 9, 0.08);
+  --content-bg: #fffdfb;
+  --container-bg: #fffdfb;
+  /* Fonts */
+  --font-heading: Palatino, "Palatino Linotype", "Book Antiqua", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Theme 3: Ocean Blue (Sky & Cyan) */
+/* Theme 3: Ocean Blue (Deep Blue & Cyan) - Cool, modern, refreshing
+   All sans-serif for clean, contemporary feel */
 .theme-ocean {
+  /* Colors */
   --primary-color: #0369A1;
   --on-primary-color: #ffffff;
   --primary-highlight-color: #075985;
   --secondary-color: #0891B2;
   --on-secondary-color: #ffffff;
   --secondary-highlight-color: #67E8F9;
-  --background-gradient-start: #e0f2fe;
-  --background-gradient-end: #bae6fd;
+  --secondary-header-text-color: #222233;
+  --background-gradient-start: #f0f9ff;
+  --background-gradient-end: #fdfdff;
+  --border-color: #0369A1;
+  --sidebar-bg: rgba(3, 105, 161, 0.08);
+  --content-bg: #fdfdff;
+  --container-bg: #fdfdff;
+  /* Fonts */
+  --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Theme 4: Forest Green (Emerald & Lime) */
+/* Theme 4: Forest Green (Emerald & Lime) - Natural, earthy, organic
+   Georgia headings for warmth, clean sans body */
 .theme-forest {
+  /* Colors */
   --primary-color: #047857;
   --on-primary-color: #ffffff;
   --primary-highlight-color: #065f46;
-  --secondary-color: #84CC16;
+  --secondary-color: #65A30D;
   --on-secondary-color: #ffffff;
-  --secondary-highlight-color: #BEF264;
-  --background-gradient-start: #ecfdf5;
-  --background-gradient-end: #d1fae5;
+  --secondary-highlight-color: #A3E635;
+  --secondary-header-text-color: #222233;
+  --background-gradient-start: #f0fdf4;
+  --background-gradient-end: #fdfdfb;
+  --border-color: #047857;
+  --sidebar-bg: rgba(4, 120, 87, 0.08);
+  --content-bg: #fdfdfb;
+  --container-bg: #fdfdfb;
+  /* Fonts */
+  --font-heading: Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Theme 5: Purple Dreams (Violet & Pink) */
+/* Theme 5: Purple Dreams (Violet & Pink) - Creative, bold, modern
+   All sans-serif for contemporary, artistic feel */
 .theme-purple {
+  /* Colors */
   --primary-color: #7C3AED;
   --on-primary-color: #ffffff;
   --primary-highlight-color: #6D28D9;
   --secondary-color: #EC4899;
   --on-secondary-color: #ffffff;
   --secondary-highlight-color: #F9A8D4;
-  --background-gradient-start: #fae8ff;
-  --background-gradient-end: #e9d5ff;
+  --secondary-header-text-color: #222233;
+  --background-gradient-start: #fdf4ff;
+  --background-gradient-end: #fefeff;
+  --border-color: #7C3AED;
+  --sidebar-bg: rgba(124, 58, 237, 0.08);
+  --content-bg: #fefeff;
+  --container-bg: #fefeff;
+  /* Fonts */
+  --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Theme 6: Earthy Terracotta (Brown & Red) */
+/* Theme 6: Earthy Terracotta (Terracotta & Rust) - Rustic, warm, traditional
+   Palatino headings for classic elegance, clean sans body */
 .theme-earth {
-  --primary-color: #92400E;
+  /* Colors */
+  --primary-color: #9A3412;
   --on-primary-color: #ffffff;
-  --primary-highlight-color: #78350F;
+  --primary-highlight-color: #7C2D12;
   --secondary-color: #B91C1C;
   --on-secondary-color: #ffffff;
   --secondary-highlight-color: #FCA5A5;
-  --background-gradient-start: #fef2f2;
-  --background-gradient-end: #fed7aa;
+  --secondary-header-text-color: #222233;
+  --background-gradient-start: #fef7f0;
+  --background-gradient-end: #fffdfb;
+  --border-color: #9A3412;
+  --sidebar-bg: rgba(154, 52, 18, 0.08);
+  --content-bg: #fffdfb;
+  --container-bg: #fffdfb;
+  /* Fonts */
+  --font-heading: Palatino, "Palatino Linotype", "Book Antiqua", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* ===========================================
-   TRAVELOG PAGE LAYOUT & STYLING
-   Styles for public-facing travelog pages
-   =========================================== */
+/* =============================================================================
+   SECTION 3: THEMED ELEMENTS
+   Elements that respond to theme variables (colors, fonts, borders)
+   ============================================================================= */
 
-/* Apply gradient background to themed body */
+/* Apply gradient background and body font to themed pages */
 body[class*="theme-"] {
   background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%) fixed;
   background-size: cover;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body);
   line-height: 1.6;
 }
 
@@ -333,8 +432,9 @@ body[class*="theme-"] {
   padding: 2rem 1.5rem;
 }
 
-/* Typography */
+/* Typography - Headings use theme font */
 h1 {
+  font-family: var(--font-heading);
   font-size: 3rem;
   font-weight: 700;
   background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
@@ -346,6 +446,7 @@ h1 {
 }
 
 h2 {
+  font-family: var(--font-heading);
   font-size: 2rem;
   font-weight: 600;
   margin: 2rem 0 1.5rem 0;
@@ -365,6 +466,7 @@ h2:after {
 }
 
 h3 {
+  font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: 600;
   margin: 1.5rem 0 1rem 0;
@@ -821,5 +923,668 @@ h3 {
 
   .image-nav-next {
     right: 0.5rem;
+  }
+}
+
+/* ===========================================
+   TRAVELOG DAY PAGE - NEW LAYOUT
+   Two-column layout with TOC sidebar
+   =========================================== */
+
+/* Journal Header */
+.journal-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%,
+              var(--primary-highlight-color) 100%);
+  color: var(--on-primary-color);
+  padding: 1.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.journal-title {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--on-primary-color);
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: var(--on-primary-color);
+}
+
+.journal-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* Journal Header - description (shown on TOC page) */
+.journal-description {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  max-width: 600px;
+  margin: 0.75rem auto 0;
+}
+
+/* Header Navigation Links (on themed gradient background) */
+.header-nav-link {
+  color: var(--on-primary-color);
+  opacity: 0.9;
+  /* Ensure adequate touch target for mobile (44px minimum) */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.25rem;
+  min-height: 44px;
+}
+
+.header-nav-link:hover {
+  opacity: 1;
+  color: var(--on-primary-color);
+}
+
+/* Reduce icon size in header nav to match small text */
+.header-nav-link .tt-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* ===========================================
+   TRAVELOG TOC PAGE - ENTRY CARDS
+   Uses Bootstrap grid (row/col-*) and card components
+   Only custom CSS here for aspects Bootstrap doesn't cover
+   =========================================== */
+
+/* TOC page container - themed background */
+.toc-page-container {
+  background: var(--container-bg);
+}
+
+/* User list page container - themed background */
+.user-list-container {
+  background: var(--container-bg);
+}
+
+/* User list card titles use secondary header text color */
+.user-list-container .card-title {
+  color: var(--secondary-header-text-color);
+}
+
+/* 4:3 Aspect Ratio Image Container (Bootstrap doesn't have this) */
+.entry-card-image {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 aspect ratio */
+  overflow: hidden;
+  background: var(--sidebar-bg);
+}
+
+.entry-card-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Placeholder for missing images */
+.entry-card-image.placeholder::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  background: var(--primary-color);
+  opacity: 0.15;
+  border-radius: 50%;
+}
+
+.entry-card-image.placeholder svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  color: var(--primary-color);
+  opacity: 0.4;
+}
+
+/* Entry card day label - themed colors */
+.entry-card-day {
+  color: var(--primary-color);
+}
+
+/* Special entry styling (prologue/epilogue) */
+.card.special .entry-card-day {
+  color: var(--secondary-color);
+}
+
+/* TOC card titles use secondary header text color */
+.toc-page-container .card-title {
+  color: var(--secondary-header-text-color);
+}
+
+/* ===========================================
+   TRAVELOG IMAGE GALLERY PAGE
+   Uses same grid/card pattern as TOC page
+   =========================================== */
+
+/* Gallery page container - themed background */
+.gallery-page-container {
+  background: var(--container-bg);
+}
+
+/* 1:1 Aspect Ratio Image Container for gallery */
+.gallery-card-image {
+  position: relative;
+  width: 100%;
+  padding-top: 100%; /* 1:1 aspect ratio */
+  overflow: hidden;
+  background: var(--sidebar-bg);
+}
+
+.gallery-card-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Placeholder for missing images */
+.gallery-card-image.placeholder::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  background: var(--primary-color);
+  opacity: 0.15;
+  border-radius: 50%;
+}
+
+.gallery-card-image.placeholder svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  color: var(--primary-color);
+  opacity: 0.4;
+}
+
+/* Gallery card caption */
+.gallery-card-caption {
+  color: var(--secondary-header-text-color);
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+/* Gallery card date */
+.gallery-card-date {
+  font-size: 0.8rem;
+}
+
+/* ===========================================
+   TRAVELOG IMAGE BROWSE PAGE
+   Single image view with navigation arrows
+   =========================================== */
+
+/* Browse page container - themed background */
+.browse-page-container {
+  background: var(--container-bg);
+}
+
+/* Image wrapper - flexbox layout with arrows flanking image */
+.browse-image-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Main image - responsive with max-height for portrait */
+.browse-main-image {
+  display: block;
+  max-width: 100%;
+  max-height: 55vh;
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  cursor: zoom-in;
+}
+
+/* Image link wrapper */
+.browse-image-link {
+  display: block;
+  line-height: 0;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.browse-image-link:hover {
+  opacity: 1;
+}
+
+.browse-image-link:hover .browse-main-image {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+}
+
+/* Navigation arrows - flanking the image */
+.browse-nav-arrow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  color: var(--primary-color);
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.browse-nav-arrow:hover {
+  background: var(--primary-color);
+  color: var(--on-primary-color);
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Placeholder for missing arrows to maintain layout */
+.browse-nav-placeholder {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+/* Caption styling */
+.browse-caption {
+  font-size: 1.1rem;
+  color: var(--secondary-header-text-color);
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .browse-image-wrapper {
+    gap: 0.5rem;
+  }
+
+  .browse-main-image {
+    max-height: 45vh;
+    border-radius: 4px;
+  }
+
+  .browse-nav-arrow,
+  .browse-nav-placeholder {
+    width: 36px;
+    height: 36px;
+  }
+
+  .browse-caption {
+    font-size: 1rem;
+  }
+}
+
+/* Two-Column Layout Container */
+.journal-container {
+  display: flex;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: var(--container-bg);
+}
+
+/* TOC Sidebar - themed background */
+.toc-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--line-color);
+  padding: 2rem 1.5rem;
+}
+
+.toc-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted-color);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s ease;
+}
+
+.toc-title:hover {
+  color: var(--primary-color);
+  opacity: 1;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-item {
+  margin-bottom: 0.5rem;
+}
+
+.toc-link {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  color: var(--tertiary-color);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  border-radius: 0 4px 4px 0;
+}
+
+.toc-link:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-left-color: var(--secondary-color);
+  padding-left: 1rem;
+  opacity: 1;
+}
+
+.toc-link.active {
+  background: rgba(255, 255, 255, 0.95);
+  border-left-color: var(--primary-color);
+  font-weight: 600;
+}
+
+.toc-date {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary-color);
+}
+
+.toc-day {
+  font-size: 0.8rem;
+  color: var(--muted-color);
+}
+
+/* Main Content Area - themed background */
+.journal-content-main {
+  flex: 1;
+  min-width: 0;
+  padding: 1.5rem 3rem 2rem;
+  max-width: 900px;
+  background: var(--content-bg);
+}
+
+/* Day Section */
+.day-section {
+  margin-bottom: 3rem;
+}
+
+.day-header {
+  border-bottom: 3px solid var(--border-color);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.day-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.25rem;
+  /* Override default h1 gradient */
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: var(--primary-color);
+  text-align: left;
+}
+
+.day-subtitle {
+  font-size: 1.1rem;
+  color: var(--muted-color);
+  margin: 0;
+}
+
+/* Day Content */
+.day-content {
+  font-family: var(--font-body);
+  line-height: 1.8;
+  font-size: 1.05rem;
+}
+
+.day-content::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.day-content h2,
+.day-content h3,
+.day-content h4,
+.day-content h5,
+.day-content h6 {
+  font-family: var(--font-heading);
+  color: var(--secondary-header-text-color);
+}
+
+.day-content p {
+  margin-bottom: 1.5rem;
+}
+
+/* Float-right images in day content */
+.day-content .trip-image-wrapper[data-layout="float-right"] {
+  float: right;
+  margin: 0 0 1.5rem 2rem;
+  max-width: 350px;
+  max-height: 300px;
+}
+
+.day-content .trip-image {
+  width: 100%;
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.day-content .trip-image-wrapper[data-layout="float-right"] .trip-image {
+  width: auto;
+  max-width: 100%;
+  max-height: 300px;
+}
+
+/* Full-width image grid (3 columns, centered) */
+.day-content .full-width-image-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 2rem 0;
+  justify-items: center;
+}
+
+.day-content .full-width-image-group .trip-image-wrapper {
+  width: 100%;
+  max-width: 280px;
+}
+
+.day-content .full-width-image-group .trip-image {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Center 1 or 2 images in grid */
+.day-content .full-width-image-group:has(.trip-image-wrapper:only-child) {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.day-content .full-width-image-group:has(.trip-image-wrapper:nth-child(2):last-child) {
+  grid-template-columns: repeat(2, 1fr);
+  justify-items: center;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Image caption styling */
+.day-content .trip-image-caption {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted-color);
+  font-style: italic;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Clickable image links */
+.trip-image-link {
+  display: block;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.trip-image-link:hover {
+  transform: scale(1.02);
+  opacity: 1;
+}
+
+/* Day Navigation */
+.day-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line-color);
+  gap: 1rem;
+}
+
+.nav-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: var(--on-primary-color);
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  font-weight: 500;
+}
+
+.nav-btn:hover {
+  background: var(--primary-highlight-color);
+  color: var(--on-primary-color);
+  opacity: 1;
+}
+
+.nav-btn.disabled {
+  background: var(--line-color);
+  cursor: default;
+  visibility: hidden;
+}
+
+/* Bottom TOC Link */
+.day-toc-link {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.day-toc-link a {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  color: var(--muted-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.day-toc-link a:hover {
+  color: var(--primary-color);
+  opacity: 1;
+}
+
+/* ===========================================
+   TRAVELOG DAY PAGE - RESPONSIVE
+   =========================================== */
+
+/* Tablet: Hide sidebar (aligned with Bootstrap lg breakpoint) */
+@media (max-width: 991.98px) {
+  .toc-sidebar {
+    display: none;
+  }
+
+  .journal-content-main {
+    padding: 2rem;
+    max-width: 100%;
+  }
+
+  .journal-container {
+    display: block;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .journal-header {
+    padding: 1.25rem 1rem;
+  }
+
+  .journal-title {
+    font-size: 1.75rem;
+  }
+
+  .journal-content-main {
+    padding: 1.5rem 1rem;
+  }
+
+  .day-title {
+    font-size: 1.5rem;
+  }
+
+  .nav-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* Float-right images: full width on mobile */
+  .day-content .trip-image-wrapper[data-layout="float-right"] {
+    float: none;
+    margin: 1rem 0;
+    max-width: 100%;
+    max-height: none;
+  }
+
+  .day-content .trip-image-wrapper[data-layout="float-right"] .trip-image {
+    width: 100%;
+    max-height: none;
+  }
+
+  /* Full-width images: single column on mobile */
+  .day-content .full-width-image-group {
+    grid-template-columns: 1fr;
+  }
+
+  .day-content .full-width-image-group:has(.trip-image-wrapper:nth-child(2):last-child) {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+
+  .day-content .full-width-image-group .trip-image-wrapper {
+    max-width: 100%;
   }
 }

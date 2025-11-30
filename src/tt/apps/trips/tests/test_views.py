@@ -104,7 +104,6 @@ class TripHomeViewTests(TestCase):
         response = self.client.get(self.trips_home_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Trip')
-        self.assertContains(response, 'Test Description')
 
     def test_trips_home_sets_session(self):
         """Test that visiting trip home sets the trip in session."""

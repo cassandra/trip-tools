@@ -37,7 +37,7 @@ class ItineraryHomeViewTests(TestCase):
         response = self.client.get(self.itinerary_home_url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'itineraries/pages/itinerary-home.html')
+        self.assertTemplateUsed(response, 'itineraries/pages/itineraries_home.html')
         self.assertIn('trip_page', response.context)
         self.assertEqual(response.context['trip_page'].trip, self.trip)
         self.assertContains(response, 'Test Trip')

@@ -19,8 +19,10 @@ from tt.apps.journal.models import Journal, JournalEntry
 from tt.apps.journal.enums import JournalVisibility
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
+from tt.apps.journal.models import PROLOGUE_DATE, EPILOGUE_DATE
+
 from ..models import Travelog, TravelogEntry
-from ..services import PublishingService, PublishingError
+from ..services import PublishingService, PublishingError, DayPageBuilder
 
 logging.disable(logging.CRITICAL)
 
@@ -362,3 +364,239 @@ class TestPublishingServiceSetAsCurrent(TransactionTestCase):
         self.travelog2.refresh_from_db()
         self.assertFalse(self.travelog1.is_current)
         self.assertTrue(self.travelog2.is_current)
+
+
+class TestDayPageBuilder(TransactionTestCase):
+    """Test DayPageBuilder service for day page context generation."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Test Trip'
+        )
+        self.journal = Journal.objects.create(
+            trip=self.trip,
+            title='Test Journal',
+            visibility=JournalVisibility.PUBLIC
+        )
+
+    def test_build_with_regular_entries(self):
+        """Test building day page data with regular entries only."""
+        entry1 = JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
+        )
+        entry2 = JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 16), title='Day 2', text='Second'
+        )
+        entry3 = JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 17), title='Day 3', text='Third'
+        )
+        entries = list(self.journal.entries.order_by('date'))
+
+        day_page = DayPageBuilder.build(entries, date(2024, 3, 16))
+
+        # TOC entries
+        self.assertEqual(len(day_page.toc_entries), 3)
+        self.assertEqual(day_page.toc_entries[0].day_number, 1)
+        self.assertEqual(day_page.toc_entries[1].day_number, 2)
+        self.assertEqual(day_page.toc_entries[2].day_number, 3)
+        self.assertFalse(day_page.toc_entries[0].is_active)
+        self.assertTrue(day_page.toc_entries[1].is_active)
+        self.assertFalse(day_page.toc_entries[2].is_active)
+
+        # Current entry
+        self.assertEqual(day_page.current_entry.entry, entry2)
+        self.assertEqual(day_page.current_entry.day_number, 2)
+        self.assertEqual(day_page.current_entry.prev_date, date(2024, 3, 15))
+        self.assertEqual(day_page.current_entry.next_date, date(2024, 3, 17))
+        self.assertTrue(day_page.current_entry.has_previous)
+        self.assertTrue(day_page.current_entry.has_next)
+
+        # Day count and boundaries
+        self.assertEqual(day_page.day_count, 3)
+        self.assertEqual(day_page.first_day_date, date(2024, 3, 15))
+        self.assertEqual(day_page.last_day_date, date(2024, 3, 17))
+
+    def test_build_with_prologue_and_epilogue(self):
+        """Test building day page data with special entries excluded from day numbering."""
+        prologue = JournalEntry.objects.create(
+            journal=self.journal, date=PROLOGUE_DATE, title='Prologue', text='Intro'
+        )
+        entry1 = JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
+        )
+        entry2 = JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 16), title='Day 2', text='Second'
+        )
+        epilogue = JournalEntry.objects.create(
+            journal=self.journal, date=EPILOGUE_DATE, title='Epilogue', text='Summary'
+        )
+        entries = list(self.journal.entries.order_by('date'))
+
+        day_page = DayPageBuilder.build(entries, date(2024, 3, 15))
+
+        # TOC entries - special entries have None day_number
+        self.assertEqual(len(day_page.toc_entries), 4)
+        self.assertIsNone(day_page.toc_entries[0].day_number)  # Prologue
+        self.assertEqual(day_page.toc_entries[1].day_number, 1)
+        self.assertEqual(day_page.toc_entries[2].day_number, 2)
+        self.assertIsNone(day_page.toc_entries[3].day_number)  # Epilogue
+
+        # Day count excludes prologue/epilogue
+        self.assertEqual(day_page.day_count, 2)
+
+        # First/last day are real days, not special entries
+        self.assertEqual(day_page.first_day_date, date(2024, 3, 15))
+        self.assertEqual(day_page.last_day_date, date(2024, 3, 16))
+
+    def test_build_first_entry_has_no_previous(self):
+        """Test that first entry has no previous navigation."""
+        JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
+        )
+        JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 16), title='Day 2', text='Second'
+        )
+        entries = list(self.journal.entries.order_by('date'))
+
+        day_page = DayPageBuilder.build(entries, date(2024, 3, 15))
+
+        self.assertIsNone(day_page.current_entry.prev_date)
+        self.assertFalse(day_page.current_entry.has_previous)
+        self.assertEqual(day_page.current_entry.next_date, date(2024, 3, 16))
+        self.assertTrue(day_page.current_entry.has_next)
+
+    def test_build_last_entry_has_no_next(self):
+        """Test that last entry has no next navigation."""
+        JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
+        )
+        JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 16), title='Day 2', text='Second'
+        )
+        entries = list(self.journal.entries.order_by('date'))
+
+        day_page = DayPageBuilder.build(entries, date(2024, 3, 16))
+
+        self.assertEqual(day_page.current_entry.prev_date, date(2024, 3, 15))
+        self.assertTrue(day_page.current_entry.has_previous)
+        self.assertIsNone(day_page.current_entry.next_date)
+        self.assertFalse(day_page.current_entry.has_next)
+
+    def test_build_viewing_prologue(self):
+        """Test building day page when viewing prologue."""
+        prologue = JournalEntry.objects.create(
+            journal=self.journal, date=PROLOGUE_DATE, title='Prologue', text='Intro'
+        )
+        entry1 = JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
+        )
+        entries = list(self.journal.entries.order_by('date'))
+
+        day_page = DayPageBuilder.build(entries, PROLOGUE_DATE)
+
+        # Prologue has no day number
+        self.assertIsNone(day_page.current_entry.day_number)
+        self.assertEqual(day_page.current_entry.entry, prologue)
+
+        # First entry has no prev
+        self.assertIsNone(day_page.current_entry.prev_date)
+        self.assertEqual(day_page.current_entry.next_date, date(2024, 3, 15))
+
+    def test_build_raises_404_for_missing_date(self):
+        """Test that build raises Http404 for non-existent date."""
+        from django.http import Http404
+
+        JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
+        )
+        entries = list(self.journal.entries.order_by('date'))
+
+        with self.assertRaises(Http404):
+            DayPageBuilder.build(entries, date(2024, 3, 20))  # Date doesn't exist
+
+    def test_build_only_special_entries(self):
+        """Test building day page with only prologue/epilogue."""
+        JournalEntry.objects.create(
+            journal=self.journal, date=PROLOGUE_DATE, title='Prologue', text='Intro'
+        )
+        JournalEntry.objects.create(
+            journal=self.journal, date=EPILOGUE_DATE, title='Epilogue', text='Summary'
+        )
+        entries = list(self.journal.entries.order_by('date'))
+
+        day_page = DayPageBuilder.build(entries, PROLOGUE_DATE)
+
+        # Day count is 0
+        self.assertEqual(day_page.day_count, 0)
+        self.assertIsNone(day_page.first_day_date)
+        self.assertIsNone(day_page.last_day_date)
+
+    def test_toc_entry_display_title(self):
+        """Test TocEntryData display_title property formatting."""
+        JournalEntry.objects.create(
+            journal=self.journal, date=PROLOGUE_DATE, title='Prologue', text='Intro'
+        )
+        JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 15), title='Arrival', text='First'
+        )
+        # Note: JournalEntry auto-generates title from date when empty,
+        # so we test with explicit title to verify our formatting
+        JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 16), title='Exploring', text='Second'
+        )
+        entries = list(self.journal.entries.order_by('date'))
+
+        day_page = DayPageBuilder.build(entries, date(2024, 3, 15))
+
+        # Prologue - no day number, uses title
+        self.assertEqual(day_page.toc_entries[0].display_title, 'Prologue')
+
+        # Day 1 with title
+        self.assertEqual(day_page.toc_entries[1].display_title, 'Day 1: Arrival')
+
+        # Day 2 with title
+        self.assertEqual(day_page.toc_entries[2].display_title, 'Day 2: Exploring')
+
+    def test_toc_entry_display_title_no_explicit_title(self):
+        """Test TocEntryData display_title when entry has auto-generated title.
+
+        JournalEntry.save() auto-generates a title from the date when title is empty,
+        so entries always have some form of title. This tests that display_title
+        correctly formats entries with auto-generated date titles.
+        """
+        from ..schemas import TocEntryData
+
+        # Create entry without explicit title - will get auto-generated date title
+        entry_no_explicit_title = JournalEntry.objects.create(
+            journal=self.journal, date=date(2024, 3, 15), title='', text='Test'
+        )
+        # Verify the auto-generated title contains the date
+        self.assertIn('March', entry_no_explicit_title.title)
+
+        # Test TocEntryData with entry that has auto-generated title
+        toc_entry = TocEntryData(
+            entry=entry_no_explicit_title,
+            day_number=1,
+            is_active=False
+        )
+        # Should format as "Day N: <auto-generated title>"
+        self.assertTrue(toc_entry.display_title.startswith('Day 1:'))
+        self.assertIn('March', toc_entry.display_title)
+
+        # Special entry without explicit title gets page type label as title
+        special_entry = JournalEntry.objects.create(
+            journal=self.journal, date=PROLOGUE_DATE, title='', text='Prologue content'
+        )
+        special_toc_entry = TocEntryData(
+            entry=special_entry,
+            day_number=None,
+            is_active=False
+        )
+        # Prologue's auto-generated title based on date
+        self.assertIsNotNone(special_toc_entry.display_title)

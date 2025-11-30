@@ -6,7 +6,46 @@ from django import template
 from django.urls import reverse
 from urllib.parse import urlencode
 
+from ..helpers import TravelogHelpers
+
 register = template.Library()
+
+
+@register.simple_tag
+def trip_date_span(
+    start_date: Optional[Union[date_type, str]],
+    end_date: Optional[Union[date_type, str]]
+) -> str:
+    """
+    Format a trip date span with smart consolidation.
+
+    Returns empty string if either date is None (e.g., journal has only special entries).
+
+    Args:
+        start_date: The starting date - date object or 'YYYY-MM-DD' string
+        end_date: The ending date - date object or 'YYYY-MM-DD' string
+
+    Examples:
+        {% trip_date_span first_day.date last_day.date %}
+        {% trip_date_span "2024-03-13" "2024-03-20" %}
+        → "March 13-20, 2024" (same month)
+        → "March 28 - April 5, 2024" (different months)
+        → "December 28, 2024 - January 5, 2025" (different years)
+        → "" (if no dated entries)
+    """
+    if start_date is None or end_date is None:
+        return ''
+
+    # Parse string dates if needed
+    if isinstance(start_date, str):
+        start_date = date_type.fromisoformat(start_date)
+    if isinstance(end_date, str):
+        end_date = date_type.fromisoformat(end_date)
+
+    return TravelogHelpers.format_trip_date_span(
+        start_date = start_date,
+        end_date = end_date,
+    )
 
 
 @register.simple_tag

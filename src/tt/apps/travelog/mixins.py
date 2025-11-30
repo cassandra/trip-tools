@@ -14,6 +14,7 @@ from tt.apps.members.models import TripMember
 from .enums import ContentType
 from .exceptions import PasswordRequiredException
 from .context import TravelogPageContext
+from .services import TravelogImageCacheService
 
 
 class TravelogViewMixin:
@@ -24,14 +25,6 @@ class TravelogViewMixin:
         """
         Parse request to determine content type and get authorized journal.
 
-        Parses the 'version' query parameter to determine content type:
-        - version=draft -> DRAFT content
-        - version=view or version=current or no param -> VIEW content (current published)
-        - version={number} -> VERSION content with specific version number
-
-        Also handles 'refresh' query parameter to invalidate image cache.
-
-        Returns TravelogPageContext with journal, content_type, and version_number.
         Raises PasswordRequiredException, Http404, or PermissionDenied if access denied.
         """
         journal = get_object_or_404( Journal, uuid = journal_uuid )
@@ -41,7 +34,9 @@ class TravelogViewMixin:
         if version_param == 'draft':
             content_type = ContentType.DRAFT
             version_number = None
-        elif version_param == 'view' or version_param == 'current' or not version_param:
+        elif (( version_param == 'view' )
+              or ( version_param == 'current' )
+              or ( not version_param )):
             # Default to current published version
             content_type = ContentType.VIEW
             version_number = None
@@ -63,7 +58,6 @@ class TravelogViewMixin:
         # Handle cache refresh request
         refresh_param = request.GET.get('refresh', '').lower()
         if refresh_param == 'true':
-            from .services import TravelogImageCacheService
             TravelogImageCacheService.invalidate_cache(
                 journal_uuid = journal.uuid,
                 content_type = content_type,

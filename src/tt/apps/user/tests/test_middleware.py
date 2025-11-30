@@ -33,6 +33,8 @@ class TestAuthenticationMiddleware(BaseTestCase):
         
         # Verify exempt URL names are defined
         expected_exempt_urls = {
+            'home',
+            'home_index',
             'admin',
             'manifest',
             'notify_email_unsubscribe',

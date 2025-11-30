@@ -1,21 +1,35 @@
 import json
 import logging
 import re
-from typing import List, Optional
+from datetime import date
+from typing import Callable, List, Optional, Tuple
 from uuid import UUID
 
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import User as UserType
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import Http404
 
 from tt.apps.common.redis_client import get_redis_client
 from tt.apps.common.regex_utils import HtmlRegexPatterns
-from tt.apps.journal.models import Journal, JournalContent
+from tt.apps.images.models import TripImage
+from tt.apps.journal.models import Journal, JournalContent, JournalEntryContent
+from tt.apps.trips.models import Trip
 from tt.environment.constants import TtConst
-from .models import Travelog, TravelogEntry
+
 from .context import TravelogPageContext
-from .schemas import TravelogImageMetadata
 from .enums import ContentType
+from .exceptions import PasswordRequiredException
+from .models import Travelog, TravelogEntry
+from .schemas import (
+    DayEntryNavData,
+    DayPageData,
+    TocEntryData,
+    TocPageData,
+    TravelogImageMetadata,
+    TravelogListItemData,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -120,24 +134,20 @@ class PublishingService:
 class ContentResolutionService:
 
     @staticmethod
-    def resolve_content(travelog_page_context: TravelogPageContext) -> JournalContent:
+    def resolve_content( travelog_page_context: TravelogPageContext ) -> JournalContent:
         """
-        Returns:
-            JournalContent instance - either Journal (for DRAFT) or Travelog (for VIEW/VERSION)
-
-        Raises:
-            Http404: If requested version doesn't exist
+        Raises: Http404: If requested version doesn't exist
         """
-        if travelog_page_context.content_type == ContentType.DRAFT:
+        if travelog_page_context.content_type.is_draft:
             return travelog_page_context.journal
 
-        elif travelog_page_context.content_type == ContentType.VIEW:
-            travelog = Travelog.objects.get_current(travelog_page_context.journal)
+        elif travelog_page_context.content_type.is_view:
+            travelog = Travelog.objects.get_current( travelog_page_context.journal )
             if not travelog:
                 raise Http404()
             return travelog
 
-        elif travelog_page_context.content_type == ContentType.VERSION:
+        elif travelog_page_context.content_type.is_version:
             travelog = Travelog.objects.get_version(
                 travelog_page_context.journal,
                 travelog_page_context.version_number
@@ -149,6 +159,143 @@ class ContentResolutionService:
         else:
             # This should never happen with proper enum handling
             raise ValueError(f"Unknown content type: {travelog_page_context.content_type}")
+
+        
+class TravelogPublicListBuilder:
+    """
+    Builds a sorted list of public travelogs for a user.
+
+    Encapsulates all business logic for:
+    - Querying journals with published travelogs
+    - Filtering by access permissions
+    - Computing date ranges (excluding special entries)
+    - Selecting display images (preferring dated entries)
+    - Sorting chronologically
+    """
+
+    @classmethod
+    def build(
+        cls,
+        target_user: AbstractUser,
+        access_checker: Callable[[Journal], None]
+    ) -> List[TravelogListItemData]:
+        """
+        Build a sorted list of accessible travelogs for a user.
+
+        Args:
+            target_user: The user whose travelogs to list
+            access_checker: Callable that checks journal access. Should raise
+                PasswordRequiredException, Http404, or PermissionDenied as needed.
+
+        Returns:
+            List of TravelogListItemData sorted by latest date (newest first)
+        """
+        # Query journals with published travelogs
+        trips = Trip.objects.owned_by(target_user)
+        journals = Journal.objects.filter(
+            trip__in=trips,
+            travelogs__is_current=True
+        ).distinct().select_related('trip').prefetch_related(
+            'entries', 'entries__reference_image'
+        )
+
+        # Filter by access and build list items
+        items = []
+        for journal in journals:
+            requires_password = False
+
+            try:
+                access_checker(journal)
+            except PasswordRequiredException:
+                requires_password = True
+            except (Http404, PermissionDenied):
+                continue
+
+            items.append(cls._build_list_item(journal, requires_password))
+
+        # Sort by latest date (newest first)
+        return sorted(
+            items,
+            key=lambda item: item.latest_entry_date or '',
+            reverse=True
+        )
+
+    @classmethod
+    def _build_list_item(
+        cls,
+        journal: Journal,
+        requires_password: bool
+    ) -> TravelogListItemData:
+        """
+        Build a single TravelogListItemData from a journal.
+        """
+        entries = list(journal.entries.order_by('date'))
+
+        earliest_date, latest_date, day_count = cls._compute_date_range(journal, entries)
+        display_image = cls._select_display_image(journal, entries)
+
+        return TravelogListItemData(
+            journal=journal,
+            requires_password=requires_password,
+            earliest_entry_date=earliest_date,
+            latest_entry_date=latest_date,
+            day_count=day_count,
+            display_image=display_image
+        )
+
+    @classmethod
+    def _compute_date_range(
+        cls,
+        journal: Journal,
+        entries: List
+    ) -> Tuple[Optional[str], Optional[str], int]:
+        """
+        Compute earliest and latest dates and day count from dated entries only.
+
+        Excludes prologue/epilogue entries (which use sentinel dates).
+        Falls back to published_datetime or created_datetime if no dated entries.
+
+        Returns:
+            Tuple of (earliest_date, latest_date, day_count)
+        """
+        dated_entries = [e for e in entries if not e.is_special_entry]
+        day_count = len(dated_entries)
+
+        if dated_entries:
+            earliest_date = dated_entries[0].date.strftime('%Y-%m-%d')
+            latest_date = dated_entries[-1].date.strftime('%Y-%m-%d')
+        else:
+            current_travelog = journal.travelogs.filter(is_current=True).first()
+            if current_travelog:
+                fallback_date = current_travelog.published_datetime.strftime('%Y-%m-%d')
+            else:
+                fallback_date = journal.created_datetime.strftime('%Y-%m-%d')
+            earliest_date = fallback_date
+            latest_date = fallback_date
+
+        return earliest_date, latest_date, day_count
+
+    @classmethod
+    def _select_display_image(
+        cls,
+        journal: Journal,
+        entries: List
+    ) -> Optional[TripImage]:
+        """
+        Select display image, preferring dated entries over special entries.
+        """
+        if journal.reference_image:
+            return journal.reference_image
+
+        for entry in entries:
+            if not entry.is_special_entry and entry.reference_image:
+                return entry.reference_image
+
+        for entry in entries:
+            if entry.is_special_entry and entry.reference_image:
+                return entry.reference_image
+
+        return None
 
 
 class TravelogImageCacheService:
@@ -325,7 +472,7 @@ class TravelogImageCacheService:
             travelog_page_context.content_type,
             travelog_page_context.version_number
         )
-
+        
         # Try to get from cache
         try:
             redis_client = get_redis_client()
@@ -377,7 +524,7 @@ class TravelogImageCacheService:
             # Serialize to JSON using to_dict
             images_data = [ img.to_dict() for img in images ]
             cached_data = json.dumps(images_data)
-
+            
             # Store with appropriate TTL
             if ttl is None:
                 # Infinite TTL - no expiration
@@ -414,3 +561,133 @@ class TravelogImageCacheService:
 
         except Exception as e:
             logger.warning(f"Redis error invalidating cache: {e}")
+
+
+class DayPageBuilder:
+    """
+    Builds display data for travelog day pages.
+
+    Encapsulates all computation needed for rendering a day page:
+    - Day number calculation (excluding prologue/epilogue)
+    - TOC entry generation with active state
+    - Current entry navigation resolution (prev/next)
+    - First/last day boundary detection
+
+    This replaces the anti-pattern of dynamically attaching day_number
+    attributes to model instances in the view.
+    """
+
+    @classmethod
+    def build( cls,
+               entries      : List[JournalEntryContent],
+               target_date  : date                  ) -> DayPageData:
+        """
+        Build complete day page context from entries.
+
+        Args:
+            entries: List of journal/travelog entries ordered by date
+            target_date: The date of the entry being viewed
+
+        Returns:
+            DayPageData containing TOC entries, current entry nav, and metadata
+
+        Raises:
+            Http404: If no entry matches target_date
+        """
+        toc_entries = []
+        current_entry = None
+        prev_date = None
+        next_date = None
+        current_day_number = None
+
+        day_number = 0
+        day_dates = []
+
+        for idx, entry in enumerate( entries ):
+            # Calculate day number (None for special entries)
+            entry_day_number = None
+            if not entry.is_special_entry:
+                day_number += 1
+                entry_day_number = day_number
+                day_dates.append( entry.date )
+
+            # Build TOC entry
+            toc_entries.append( TocEntryData(
+                entry = entry,
+                day_number = entry_day_number,
+                is_active = ( entry.date == target_date )
+            ))
+
+            # Find current entry and neighbors
+            if entry.date == target_date:
+                current_day_number = entry_day_number
+                current_entry = entry
+                if idx > 0:
+                    prev_date = entries[idx - 1].date
+                if idx < len(entries) - 1:
+                    next_date = entries[idx + 1].date
+
+        if current_entry is None:
+            raise Http404(f"No entry found for date {target_date}")
+
+        return DayPageData(
+            toc_entries = toc_entries,
+            current_entry = DayEntryNavData(
+                entry = current_entry,
+                day_number = current_day_number,
+                prev_date = prev_date,
+                next_date = next_date,
+            ),
+            day_count = len(day_dates),
+            first_day_date = day_dates[0] if day_dates else None,
+            last_day_date = day_dates[-1] if day_dates else None,
+        )
+
+
+class TocPageBuilder:
+    """
+    Builds display data for travelog table of contents pages.
+
+    Encapsulates all computation needed for rendering a TOC page:
+    - Day number calculation (excluding prologue/epilogue)
+    - TOC entry generation for grid display
+    - First/last day boundary detection
+    """
+
+    @classmethod
+    def build( cls,
+               entries : List[JournalEntryContent] ) -> TocPageData:
+        """
+        Build complete TOC page context from entries.
+
+        Args:
+            entries: List of journal/travelog entries ordered by date
+
+        Returns:
+            TocPageData containing TOC entries and metadata
+        """
+        toc_entries = []
+        day_number = 0
+        day_dates = []
+
+        for entry in entries:
+            # Calculate day number (None for special entries)
+            entry_day_number = None
+            if not entry.is_special_entry:
+                day_number += 1
+                entry_day_number = day_number
+                day_dates.append( entry.date )
+
+            # Build TOC entry
+            toc_entries.append( TocEntryData(
+                entry = entry,
+                day_number = entry_day_number,
+                is_active = False,
+            ))
+
+        return TocPageData(
+            toc_entries = toc_entries,
+            day_count = len(day_dates),
+            first_day_date = day_dates[0] if day_dates else None,
+            last_day_date = day_dates[-1] if day_dates else None,
+        )

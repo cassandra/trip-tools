@@ -1,45 +1,135 @@
 {% extends "travelog/pages/base.html" %}
 {% load travelog_tags %}
 
-{% block head_title %}{{ content.title }} - {{ entry.display_date_medium }}{% endblock %}
+{% block head_title %}{{ content.title }} - {{ day_page.current_entry.entry.display_date_medium }}{% endblock %}
 
 {% block travelog_content %}
-<div class="container">
-  <nav class="nav-breadcrumb">
-    <a href="{% travelog_url 'travelog_toc' journal.uuid version=request.GET.version %}" class="nav-link">
-      &larr; Back to {{ content.title }}
+<header class="journal-header">
+  <nav class="d-flex justify-content-between align-items-center small">
+    <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
+      &larr; Table of Contents
     </a>
+    <span></span>{# Empty span for flexbox spacing #}
   </nav>
-
-  <h1>{{ entry.display_date_medium }}</h1>
-  {% if entry.title %}
-  <h2>{{ entry.title }}</h2>
-  {% endif %}
-
-  <p class="text-muted">
-    From: {{ content.title }} ({{ travelog_page.content_type.label }}{% if travelog_page.version_number %} - Version {{ travelog_page.version_number }}{% endif %})
-  </p>
-
-  <div class="journal-content">
-    {{ entry.text|safe }}
+  <div class="text-center">
+    <h1 class="journal-title">{{ content.title }}</h1>
+    <p class="journal-subtitle">
+      {% trip_date_span day_page.first_day_date day_page.last_day_date as date_span %}{% if date_span %}{{ date_span }} &bull; {% endif %}{{ day_page.day_count }} Day{% if day_page.day_count != 1 %}s{% endif %}
+    </p>
   </div>
+</header>
 
-  <div class="page-navigation">
-    {% if prev_entry %}
-    <a href="{% travelog_url 'travelog_day' journal.uuid date=prev_entry.date version=request.GET.version %}" class="nav-link">
-      &larr; Previous: {{ prev_entry.display_date_nav }}
-    </a>
-    {% else %}
-    <span></span>
-    {% endif %}
+<!-- Main Container with Sidebar -->
+<div class="journal-container">
+  <!-- TOC Sidebar -->
+  <aside class="toc-sidebar">
+    <div class="toc-title">Table of Contents</div>
+    <ul class="toc-list">
+      {% for toc_entry in day_page.toc_entries %}
+      <li class="toc-item">
+        <a href="{% travelog_url 'travelog_day' journal.uuid date=toc_entry.entry.date version=travelog_page.get_version_param %}"
+           class="toc-link{% if toc_entry.is_active %} active{% endif %}">
 
-    {% if next_entry %}
-    <a href="{% travelog_url 'travelog_day' journal.uuid date=next_entry.date version=request.GET.version %}" class="nav-link">
-      Next: {{ next_entry.display_date_nav }} &rarr;
-    </a>
-    {% else %}
-    <span></span>
-    {% endif %}
-  </div>
+          <div class="toc-date">
+            {% if toc_entry.entry.is_special_entry %}
+            {% if toc_entry.entry.title %}
+            {{ toc_entry.entry.title }}
+            {% else %}
+            {{ toc_entry.entry.page_type.label }}
+            {% endif %}
+
+            {% else %}
+            {% if toc_entry.day_number %}Day {{ toc_entry.day_number }} -{% endif %}
+            {{ toc_entry.entry.display_date_nav }}
+            {% endif %}
+          </div>
+
+          {% if toc_entry.entry.title and not toc_entry.entry.is_special_entry %}
+          <div class="toc-day">
+            {{ toc_entry.entry.title }}
+          </div>
+          {% endif %}
+          
+
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <!-- Content Area -->
+  <main class="journal-content-main">
+    <article class="day-section">
+      <header class="day-header">
+        <h1 class="day-title">{% if day_page.current_entry.day_number %}Day {{ day_page.current_entry.day_number }}: {% endif %}{{ day_page.current_entry.entry.title }}</h1>
+        {% if day_page.current_entry.entry.title %}
+        <p class="day-subtitle">{{ day_page.current_entry.entry.display_date_long }}</p>
+        {% endif %}
+      </header>
+
+      <div class="day-content">
+        {{ day_page.current_entry.entry.text|safe }}
+      </div>
+
+      <!-- Day Navigation -->
+      <nav class="day-navigation">
+        {% if day_page.current_entry.has_previous %}
+        <a href="{% travelog_url 'travelog_day' journal.uuid date=day_page.current_entry.prev_date version=travelog_page.get_version_param %}" class="nav-btn">
+          &larr; Previous
+        </a>
+        {% else %}
+        <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}" class="nav-btn">
+          &larr; Table of Contents
+        </a>
+        {% endif %}
+
+        {% if day_page.current_entry.has_next %}
+        <a href="{% travelog_url 'travelog_day' journal.uuid date=day_page.current_entry.next_date version=travelog_page.get_version_param %}" class="nav-btn">
+          Next &rarr;
+        </a>
+        {% else %}
+        <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}" class="nav-btn">
+          Table of Contents &rarr;
+        </a>
+        {% endif %}
+      </nav>
+
+      <!-- Bottom TOC link (hidden on first/last page where nav buttons link to TOC) -->
+      {% if day_page.current_entry.has_previous and day_page.current_entry.has_next %}
+      <div class="day-toc-link">
+        <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}">
+          Table of Contents
+        </a>
+      </div>
+      {% endif %}
+    </article>
+  </main>
 </div>
+{% endblock %}
+
+{% block body_post_javascript %}
+{{ block.super }}
+
+{% with uuid_placeholder='00000000-0000-0000-0000-000000000000' %}
+<script>
+(function() {
+  var uuidPlaceholder = '{{ uuid_placeholder }}';
+  var browseUrlTemplate = "{% travelog_url 'travelog_image_browse' journal.uuid image_uuid=uuid_placeholder %}";
+  var versionParam = '{{ travelog_page.get_version_param|default:"" }}';
+
+  // Make trip images clickable - navigate to browse page
+  var selector = '.day-content .{{ TtConst.JOURNAL_IMAGE_CLASS }}';
+  $(selector).css('cursor', 'pointer').on('click', function() {
+    var uuid = $(this).data('{{ TtConst.UUID_DATA_ATTR }}');
+    if (uuid) {
+      var url = browseUrlTemplate.replace(uuidPlaceholder, uuid);
+      if (versionParam) {
+        url += '?version=' + versionParam;
+      }
+      window.location.href = url;
+    }
+  });
+})();
+</script>
+{% endwith %}
 {% endblock %}

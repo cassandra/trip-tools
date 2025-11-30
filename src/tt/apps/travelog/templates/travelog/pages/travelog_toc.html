@@ -5,61 +5,80 @@
 {% block head_title %}{{ content.title }} - Table of Contents{% endblock %}
 
 {% block travelog_content %}
-<div class="container">
-  <nav class="nav-breadcrumb">
-    <a href="{% url 'travelog_user_list' user_uuid=journal.trip.owner.uuid %}" class="nav-link">
-      &larr; Back to {{ journal.trip.owner.get_full_name }}'s Travelogs
+<header class="journal-header">
+  <nav class="d-flex justify-content-between align-items-center small">
+    <a href="{% url 'travelog_user_list' user_uuid=journal.trip.owner.uuid %}" class="header-nav-link">
+      &larr; {{ journal.trip.owner.get_full_name }}'s Travelogs
+    </a>
+    <a href="{% travelog_url 'travelog_gallery' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
+      {% icon "camera" size="sm" %} Image Gallery
     </a>
   </nav>
-
-  <h1>{{ content.title }}</h1>
-
-  {% if content.description %}
-  <p class="subtitle">{{ content.description }}</p>
-  {% endif %}
-
-  <p class="text-muted">
-    Viewing: {{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}
-  </p>
-
-  <!-- Gallery Link Near Top -->
-  <div class="gallery-link-top">
-    <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}" class="nav-link">
-      <span class="icon-wrapper">{% icon "camera" size="sm" css_class="tt-icon-left" %}</span>
-      View Image Gallery
-    </a>
+  <div class="text-center">
+    <h1 class="journal-title">{{ content.title }}</h1>
+    <p class="journal-subtitle">
+      {% trip_date_span toc_page.first_day_date toc_page.last_day_date as date_span %}{% if date_span %}{{ date_span }} &bull; {% endif %}{{ toc_page.day_count }} Day{% if toc_page.day_count != 1 %}s{% endif %}
+    </p>
+    {% if content.description %}
+    <p class="journal-description">{{ content.description }}</p>
+    {% endif %}
   </div>
+</header>
 
-  <h2>Journal Entries</h2>
-
-  {% if entries %}
-  <div class="card-grid">
-    {% for entry in entries %}
-    <div>
-      <a href="{% travelog_url 'travelog_day' journal.uuid date=entry.date version=request.GET.version %}" class="clickable-card">
-        <div class="card">
-          {% if entry.reference_image and entry.reference_image.thumbnail_image %}
-          <img src="{{ entry.reference_image.thumbnail_image.url }}" alt="{{ entry.title }}" class="card-image">
-          {% else %}
-          <div class="card-image placeholder-image"></div>
-          {% endif %}
-          <div class="card-content">
-            <h3 class="card-title">
-              {{ entry.display_date_nav }}{% if entry.title %} - {{ entry.title }}{% endif %}
-            </h3>
-            {% if entry.text %}
-            <p class="card-description">
-              {{ entry.text|striptags|truncatewords:15 }}
-            </p>
+<div class="toc-page-container py-4">
+  <div class="container-fluid px-4">
+    {% if toc_page.toc_entries %}
+    <div class="row">
+      {% for toc_entry in toc_page.toc_entries %}
+      <div class="col-12 col-sm-6 col-md-4 col-xl-3 mb-4">
+        <a href="{% travelog_url 'travelog_day' journal.uuid date=toc_entry.entry.date version=travelog_page.get_version_param %}" class="text-decoration-none">
+          <div class="card card-hover h-100{% if toc_entry.entry.is_special_entry %} special{% endif %}">
+            {% if toc_entry.entry.reference_image and toc_entry.entry.reference_image.thumbnail_image %}
+            <div class="entry-card-image">
+              <img src="{{ toc_entry.entry.reference_image.thumbnail_image.url }}" alt="{{ toc_entry.entry.title }}">
+            </div>
+            {% else %}
+            <div class="entry-card-image placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
             {% endif %}
+            <div class="card-body">
+              <div class="entry-card-day small text-uppercase font-weight-bold mb-1">
+                {% if toc_entry.entry.is_special_entry %}
+                  {{ toc_entry.entry.page_type.label }}
+                {% else %}
+                  Day {{ toc_entry.day_number }}
+                {% endif %}
+              </div>
+              {% if toc_entry.entry.is_special_entry %}
+                {% if toc_entry.entry.title %}
+                <h5 class="card-title mb-0">{{ toc_entry.entry.title }}</h5>
+                {% endif %}
+              {% else %}
+              <h5 class="card-title mb-1">
+                {% if toc_entry.entry.title %}{{ toc_entry.entry.title }}{% else %}{{ toc_entry.entry.display_date_nav }}{% endif %}
+              </h5>
+              <p class="text-muted small mb-0">{{ toc_entry.entry.display_date_nav }}</p>
+              {% endif %}
+            </div>
           </div>
-        </div>
-      </a>
+        </a>
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+    {% else %}
+    <div class="text-center p-5 bg-light border rounded">
+      <div class="text-muted mb-3">
+        {% icon "book-open" size="lg" %}
+      </div>
+      <h3 class="h5">No Journal Entries</h3>
+      <p class="text-muted mb-0">This journal doesn't have any entries yet.</p>
+    </div>
+    {% endif %}
   </div>
-  {% else %}
-  <p>No journal entries yet.</p>
-  {% endif %}
 </div>
 {% endblock %}

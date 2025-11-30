@@ -31,3 +31,16 @@ class ContentType(LabeledEnum):
     @classmethod
     def default(cls):
         return ContentType.VIEW
+
+    @property
+    def is_draft(self):
+        return bool( self == ContentType.DRAFT )
+
+    @property
+    def is_view(self):
+        return bool( self == ContentType.VIEW )
+
+    @property
+    def is_version(self):
+        return bool( self == ContentType.VERSION )
+    

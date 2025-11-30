@@ -1,86 +1,108 @@
 {% extends "travelog/pages/base.html" %}
 {% load travelog_tags %}
+{% load icons %}
 
-{% block head_title %}{{ content.title }} - {{ trip_image.caption }}{% endblock %}
+{% block head_title %}{{ content.title }} - {% if trip_image.caption %}{{ trip_image.caption|truncatewords:8 }}{% else %}Image {{ current_index|add:1 }}{% endif %}{% endblock %}
 
 {% block travelog_content %}
-<div class="container">
-  <nav class="nav-breadcrumb">
-    <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}" class="nav-link">
-      &larr; Back to Gallery
+{# Browse header - back to TOC on left, back to Gallery on right #}
+<header class="journal-header">
+  <nav class="d-flex justify-content-between align-items-center small">
+    <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
+      &larr; Table of Contents
     </a>
-    |
-    <a href="{% travelog_url 'travelog_toc' journal.uuid travelog_page.get_version_param %}" class="nav-link">
-      &larr; Back to Table of Contents
+    <a href="{% travelog_url 'travelog_gallery' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
+      {% icon "camera" size="sm" %} Image Gallery
     </a>
   </nav>
+  <div class="text-center">
+    <h1 class="journal-title">{{ content.title }}</h1>
+    <p class="journal-subtitle">
+      Image {{ current_index|add:1 }} of {{ total_images }}
+    </p>
+  </div>
+</header>
 
-  <h1>{{ content.title }}</h1>
-  <p class="subtitle">{{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}</p>
-  <p class="text-muted">Image {{ current_index|add:1 }} of {{ total_images }}</p>
+<div class="browse-page-container py-4">
+  <div class="container-fluid px-4">
+    {% if trip_image %}
+    <div class="browse-image-wrapper">
+      {# Previous arrow or placeholder #}
+      {% if prev_image %}
+      <a href="{% travelog_url 'travelog_image_browse' journal.uuid version=travelog_page.get_version_param image_uuid=prev_image.uuid %}"
+         class="browse-nav-arrow"
+         title="Previous image (Left Arrow)">
+        {% icon "chevron-left" size="lg" %}
+      </a>
+      {% else %}
+      <div class="browse-nav-placeholder"></div>
+      {% endif %}
 
-  {% if trip_image %}
-  <div class="image-browser-view">
-    <!-- Previous/Next navigation overlays -->
-    {% if prev_image %}
-    <a href="{% travelog_url 'travelog_image_browse' journal.uuid travelog_page.get_version_param image_uuid=prev_image.uuid %}" class="image-nav-arrow image-nav-prev" title="Previous image (or press left arrow key)">
-      <span>&larr;</span>
-    </a>
-    {% endif %}
-
-    {% if next_image %}
-    <a href="{% travelog_url 'travelog_image_browse' journal.uuid travelog_page.get_version_param image_uuid=next_image.uuid %}" class="image-nav-arrow image-nav-next" title="Next image (or press right arrow key)">
-      <span>&rarr;</span>
-    </a>
-    {% endif %}
-
-    <div class="image-browser-main">
-      <a href="{{ trip_image.web_image.url }}" target="_blank" title="Open full image in new tab">
-        <div class="browser-image-container">
-          <img src="{{ trip_image.web_image.url }}" alt="Image" class="browser-image">
-        </div>
+      {# Main image - click opens full size #}
+      <a href="{{ trip_image.web_image.url }}" target="_blank" rel="noopener" class="browse-image-link" title="Open full image in new tab">
+        <img src="{{ trip_image.web_image.url }}" alt="{{ trip_image.caption|default:'Image' }}" class="browse-main-image">
       </a>
 
-      <div class="image-metadata">
-        <p><strong>Date:</strong> {{ image_metadata.entry_date }}</p>
-        <p><strong>Layout:</strong> {{ image_metadata.layout }}</p>
-        {% if trip_image.caption %}
-        <p><strong>Caption:</strong> {{ trip_image.caption }}</p>
-        {% endif %}
-        {% if image_metadata.entry_date %}
-        <p>
-          <a href="{% travelog_url 'travelog_day' journal.uuid date=image_metadata.entry_date version=request.GET.version %}" class="nav-link" style="display: inline-block; padding: 0.5rem 1rem; margin-top: 0.5rem;">
-            View on Day Page: {{ image_metadata.entry_date|date:"F j" }}
-          </a>
-        </p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-      {% if prev_image %}
-      if (e.key === 'ArrowLeft') {
-        window.location.href = '{% travelog_url "travelog_image_browse" journal.uuid travelog_page.get_version_param image_uuid=prev_image.uuid %}';
-      }
-      {% endif %}
+      {# Next arrow or placeholder #}
       {% if next_image %}
-      if (e.key === 'ArrowRight') {
-        window.location.href = '{% travelog_url "travelog_image_browse" journal.uuid travelog_page.get_version_param image_uuid=next_image.uuid %}';
-      }
+      <a href="{% travelog_url 'travelog_image_browse' journal.uuid version=travelog_page.get_version_param image_uuid=next_image.uuid %}"
+         class="browse-nav-arrow"
+         title="Next image (Right Arrow)">
+        {% icon "chevron-right" size="lg" %}
+      </a>
+      {% else %}
+      <div class="browse-nav-placeholder"></div>
       {% endif %}
-    });
-  </script>
-  {% else %}
-  <p>Image not found.</p>
+    </div>
 
-  <nav class="nav-breadcrumb">
-    <a href="{% travelog_url 'travelog_gallery' journal.uuid travelog_page.get_version_param %}" class="nav-link">
-      &larr; Back to Gallery
-    </a>
-  </nav>
-  {% endif %}
+    {# Image metadata #}
+    <div class="browse-metadata text-center mt-4">
+      {% if trip_image.caption %}
+      <p class="browse-caption mb-2">{{ trip_image.caption }}</p>
+      {% endif %}
+      <p class="browse-date text-muted small mb-2">
+        {% if trip_image.datetime_utc %}
+        {{ trip_image.datetime_utc|date:"F j, Y" }}
+        {% else %}
+        {{ image_metadata.entry_date }}
+        {% endif %}
+      </p>
+      {% if image_metadata.entry_date %}
+      <a href="{% travelog_url 'travelog_day' journal.uuid date=image_metadata.entry_date version=travelog_page.get_version_param %}"
+         class="btn btn-sm btn-outline-primary">
+        View on Day Page
+      </a>
+      {% endif %}
+    </div>
+
+    {# Keyboard navigation script #}
+    <script>
+      document.addEventListener('keydown', function(e) {
+        {% if prev_image %}
+        if (e.key === 'ArrowLeft') {
+          window.location.href = '{% travelog_url "travelog_image_browse" journal.uuid version=travelog_page.get_version_param image_uuid=prev_image.uuid %}';
+        }
+        {% endif %}
+        {% if next_image %}
+        if (e.key === 'ArrowRight') {
+          window.location.href = '{% travelog_url "travelog_image_browse" journal.uuid version=travelog_page.get_version_param image_uuid=next_image.uuid %}';
+        }
+        {% endif %}
+      });
+    </script>
+
+    {% else %}
+    <div class="text-center p-5 bg-light border rounded">
+      <div class="text-muted mb-3">
+        {% icon "camera" size="lg" %}
+      </div>
+      <h3 class="h5">Image Not Found</h3>
+      <p class="text-muted mb-3">This image could not be loaded.</p>
+      <a href="{% travelog_url 'travelog_gallery' journal.uuid version=travelog_page.get_version_param %}" class="btn btn-primary">
+        Back to Gallery
+      </a>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

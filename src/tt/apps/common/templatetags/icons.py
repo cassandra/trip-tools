@@ -23,6 +23,7 @@ AVAILABLE_ICONS = {
     'audio-enabled',
     'bold',
     'book',
+    'book-open',
     'calendar',
     'camera',
     'x',

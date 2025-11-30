@@ -1,75 +1,130 @@
 {% extends "travelog/pages/base.html" %}
 {% load travelog_tags %}
+{% load icons %}
 
 {% block head_title %}{{ content.title }} - Image Gallery{% endblock %}
 
 {% block travelog_content %}
-<div class="container">
-  <nav class="nav-breadcrumb">
-    <a href="{% travelog_url 'travelog_toc' journal.uuid travelog_page.get_version_param %}" class="nav-link">
-      &larr; Back to {{ content.title }}
+{# Gallery header - back to TOC on left only #}
+<header class="journal-header">
+  <nav class="d-flex justify-content-between align-items-center small">
+    <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
+      &larr; Table of Contents
     </a>
+    <span></span>{# Empty span for flexbox spacing #}
   </nav>
+  <div class="text-center">
+    <h1 class="journal-title">{{ content.title }}</h1>
+    <p class="journal-subtitle">
+      Image Gallery &bull; {{ pagination.item_count }} Photo{% if pagination.item_count != 1 %}s{% endif %}
+    </p>
+  </div>
+</header>
 
-  <h1>{{ content.title }} - Image Gallery</h1>
-  <p class="subtitle">{{ travelog_page.content_type.label }}{% if travelog_page.version_number %} (Version {{ travelog_page.version_number }}){% endif %}</p>
-  <p class="text-muted">Total images: {{ pagination.item_count }}{% if pagination.required %} | Page {{ pagination.page_number }} of {{ pagination.page_count }}{% endif %}</p>
-
-  {% if images %}
-  <div class="image-gallery">
-    {% for img in images %}
-    <div>
-      {% if img.trip_image and img.trip_image.thumbnail_image %}
-      <a href="{% travelog_url 'travelog_image_browse' journal.uuid travelog_page.get_version_param image_uuid=img.metadata.uuid %}" class="clickable-card">
-        <div class="gallery-item">
-          <img src="{{ img.trip_image.thumbnail_image.url }}" alt="Image" class="gallery-image">
-        </div>
-      </a>
-      {% else %}
-      <div class="gallery-item">
-        <div class="gallery-image placeholder-image"></div>
+<div class="gallery-page-container py-4">
+  <div class="container-fluid px-4">
+    {% if images %}
+    <div class="row">
+      {% for img in images %}
+      <div class="col-12 col-sm-6 col-lg-4 mb-4">
+        <a href="{% travelog_url 'travelog_image_browse' journal.uuid version=travelog_page.get_version_param image_uuid=img.metadata.uuid %}" class="text-decoration-none">
+          <div class="card card-hover h-100">
+            {% if img.trip_image and img.trip_image.thumbnail_image %}
+            <div class="gallery-card-image">
+              <img src="{{ img.trip_image.thumbnail_image.url }}" alt="{{ img.trip_image.caption|default:'Image' }}">
+            </div>
+            {% else %}
+            <div class="gallery-card-image placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            {% endif %}
+            <div class="card-body">
+              {% if img.trip_image.caption %}
+              <p class="gallery-card-caption mb-1">{{ img.trip_image.caption|truncatewords:12 }}</p>
+              {% endif %}
+              <p class="gallery-card-date text-muted small mb-0">
+                {% if img.trip_image.datetime_utc %}
+                {{ img.trip_image.datetime_utc|date:"M j, Y" }}
+                {% else %}
+                {{ img.metadata.entry_date }}
+                {% endif %}
+              </p>
+            </div>
+          </div>
+        </a>
       </div>
-      {% endif %}
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
 
-  <!-- Pagination controls -->
-  {% if pagination.required %}
-  <div class="pagination">
-    {% if pagination.has_previous_page %}
-    <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=pagination.previous_page_number %}" class="nav-link">
-      &larr; Previous
-    </a>
+    {# Pagination #}
+    {% if pagination.required %}
+    <nav class="d-flex justify-content-center mt-4">
+      <ul class="pagination pagination-lg">
+        {# Previous button #}
+        <li class="page-item{% if not pagination.has_previous_page %} disabled{% endif %}">
+          {% if pagination.has_previous_page %}
+          <a class="page-link" href="{% travelog_url 'travelog_gallery_page' journal.uuid version=travelog_page.get_version_param page_num=pagination.previous_page_number %}">
+            <span>&laquo;</span>
+          </a>
+          {% else %}
+          <span class="page-link"><span>&laquo;</span></span>
+          {% endif %}
+        </li>
+
+        {# First page + ellipsis #}
+        {% if pagination.has_pages_before %}
+        <li class="page-item">
+          <a class="page-link" href="{% travelog_url 'travelog_gallery_page' journal.uuid version=travelog_page.get_version_param page_num=1 %}">1</a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        {% endif %}
+
+        {# Page numbers #}
+        {% for page_num in pagination.page_number_list %}
+        <li class="page-item{% if page_num == pagination.page_number %} active{% endif %}">
+          {% if page_num == pagination.page_number %}
+          <span class="page-link">{{ page_num }}</span>
+          {% else %}
+          <a class="page-link" href="{% travelog_url 'travelog_gallery_page' journal.uuid version=travelog_page.get_version_param page_num=page_num %}">{{ page_num }}</a>
+          {% endif %}
+        </li>
+        {% endfor %}
+
+        {# Ellipsis + last page #}
+        {% if pagination.has_pages_after %}
+        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        <li class="page-item">
+          <a class="page-link" href="{% travelog_url 'travelog_gallery_page' journal.uuid version=travelog_page.get_version_param page_num=pagination.page_count %}">{{ pagination.page_count }}</a>
+        </li>
+        {% endif %}
+
+        {# Next button #}
+        <li class="page-item{% if not pagination.has_next_page %} disabled{% endif %}">
+          {% if pagination.has_next_page %}
+          <a class="page-link" href="{% travelog_url 'travelog_gallery_page' journal.uuid version=travelog_page.get_version_param page_num=pagination.next_page_number %}">
+            <span>&raquo;</span>
+          </a>
+          {% else %}
+          <span class="page-link"><span>&raquo;</span></span>
+          {% endif %}
+        </li>
+      </ul>
+    </nav>
     {% endif %}
 
-    {% if pagination.has_pages_before %}
-    <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=1 %}" class="nav-link">1</a>
-    <span>...</span>
-    {% endif %}
-
-    {% for page_num in pagination.page_number_list %}
-    {% if page_num == pagination.page_number %}
-    <span class="current">{{ page_num }}</span>
     {% else %}
-    <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=page_num %}" class="nav-link">{{ page_num }}</a>
-    {% endif %}
-    {% endfor %}
-
-    {% if pagination.has_pages_after %}
-    <span>...</span>
-    <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=pagination.page_count %}" class="nav-link">{{ pagination.page_count }}</a>
-    {% endif %}
-
-    {% if pagination.has_next_page %}
-    <a href="{% travelog_url 'travelog_gallery_page' journal.uuid travelog_page.get_version_param page_num=pagination.next_page_number %}" class="nav-link">
-      Next &rarr;
-    </a>
+    <div class="text-center p-5 bg-light border rounded">
+      <div class="text-muted mb-3">
+        {% icon "camera" size="lg" %}
+      </div>
+      <h3 class="h5">No Images</h3>
+      <p class="text-muted mb-0">This travelog doesn't have any images yet.</p>
+    </div>
     {% endif %}
   </div>
-  {% endif %}
-  {% else %}
-  <p>No images in this travelog.</p>
-  {% endif %}
 </div>
 {% endblock %}
