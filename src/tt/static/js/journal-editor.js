@@ -1822,6 +1822,12 @@
     this.markFloatParagraphs();
   };
 
+  // =========================================================================
+  // AutoSave Configuration
+  // =========================================================================
+  var AUTOSAVE_DEBOUNCE_MS = 3000;   // Delay after typing stops before saving
+  var AUTOSAVE_MAX_DELAY_MS = 30000; // Maximum time before forcing a save
+
   /**
    * AutoSaveManager
    *
@@ -1829,7 +1835,7 @@
    *
    * This manager handles:
    * - Change detection (content, title, date, timezone, reference image)
-   * - Debounced auto-save with 2-second delay
+   * - Debounced auto-save (configurable via AUTOSAVE_DEBOUNCE_MS)
    * - Save execution with retry logic
    * - Status display updates
    */
@@ -1883,8 +1889,8 @@
   };
 
   /**
-   * Schedule a save with debouncing (2 second delay, 30 second max)
-   * Call this method whenever content changes
+   * Schedule a save with debouncing.
+   * Call this method whenever content changes.
    */
   AutoSaveManager.prototype.scheduleSave = function() {
     // Update change detection
@@ -1899,15 +1905,15 @@
       clearTimeout(this.saveTimeout);
     }
 
-    // Set maximum timeout on first change (30 seconds)
+    // Set maximum timeout on first change to ensure saves during continuous typing
     if (!this.maxTimeout) {
       this.maxTimeout = setTimeout(function() {
         this.executeSave();
         this.maxTimeout = null;
-      }.bind(this), 30000);
+      }.bind(this), AUTOSAVE_MAX_DELAY_MS);
     }
 
-    // Set new timeout (2 seconds)
+    // Set debounce timeout - saves after user stops typing
     this.saveTimeout = setTimeout(function() {
       this.executeSave();
       // Clear max timeout since we saved via regular timeout
@@ -1915,7 +1921,7 @@
         clearTimeout(this.maxTimeout);
         this.maxTimeout = null;
       }
-    }.bind(this), 2000);
+    }.bind(this), AUTOSAVE_DEBOUNCE_MS);
   };
 
   /**
@@ -2231,6 +2237,7 @@
     this.$dateInput = this.$form.find(TtConst.JOURNAL_DATE_INPUT_ID_SELECTOR);
     this.$timezoneInput = this.$form.find(TtConst.JOURNAL_TIMEZONE_INPUT_SELECTOR);
     this.$includeInPublishInput = this.$form.find('#id_include_in_publish');
+    this.$previewBtn = $(TtConst.JOURNAL_PREVIEW_BTN_SELECTOR);
     this.$statusElement = this.$form.find(TtConst.JOURNAL_SAVE_STATUS_SELECTOR);
     this.$manualSaveBtn = this.$form.find('.journal-manual-save-btn');
 
@@ -2600,6 +2607,7 @@
 
     this.$includeInPublishInput.on('change', function() {
       self.handleContentChange();
+      self.updatePreviewButtonVisibility();
     });
 
     // Prevent ENTER from submitting form - trigger immediate save instead
@@ -2650,6 +2658,18 @@
   JournalEditor.prototype.handleContentChange = function() {
     // Schedule autosave (handles change detection and debouncing)
     this.autoSaveManager.scheduleSave();
+  };
+
+  /**
+   * Update Preview button visibility based on include_in_publish checkbox state.
+   * Preview is only available when the entry is marked for publishing.
+   */
+  JournalEditor.prototype.updatePreviewButtonVisibility = function() {
+    if (this.$includeInPublishInput.is(':checked')) {
+      this.$previewBtn.show();
+    } else {
+      this.$previewBtn.hide();
+    }
   };
 
   /**

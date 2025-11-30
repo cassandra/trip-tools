@@ -7,9 +7,13 @@
 {% block travelog_content %}
 <header class="journal-header">
   <nav class="d-flex justify-content-between align-items-center small">
+    {% if not travelog_page.get_version_param %}
     <a href="{% url 'travelog_user_list' user_uuid=journal.trip.owner.uuid %}" class="header-nav-link">
       &larr; {{ journal.trip.owner.get_full_name }}'s Travelogs
     </a>
+    {% else %}
+    <span></span>{# Empty span for flexbox spacing in preview mode #}
+    {% endif %}
     <a href="{% travelog_url 'travelog_gallery' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
       {% icon "camera" size="sm" %} Image Gallery
     </a>

@@ -62,6 +62,7 @@ class TtConst:
     JOURNAL_EDITOR_CLASS                 = 'journal-contenteditable'
     JOURNAL_ENTRY_FORM_CLASS             = 'journal-entry-form'
     JOURNAL_SAVE_STATUS_CLASS            = 'journal-save-status'
+    JOURNAL_PREVIEW_BTN_CLASS            = 'journal-preview-btn'
     JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS = 'journal-editor-multi-image-card'
     CURRENT_VERSION_DATA_ATTR            = 'current-version'
     IMAGE_UUID_DATA_ATTR                 = 'image-uuid'

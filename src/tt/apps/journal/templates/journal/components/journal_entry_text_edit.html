@@ -69,7 +69,8 @@
     <div>
       <a href="{% travelog_url 'travelog_day' entry.journal.uuid date=entry.date version='draft' refresh=True %}"
          target="_blank"
-         class="btn btn-sm btn-outline-primary"
+         class="btn btn-sm btn-outline-primary {{ TtConst.JOURNAL_PREVIEW_BTN_CLASS }}"
+         {% if not entry.include_in_publish %}style="display: none;"{% endif %}
          title="Preview this entry in the draft travelog">
         {% icon "eye" size="sm" aria_label="Preview" %} Preview
       </a>
