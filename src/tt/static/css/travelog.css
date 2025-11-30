@@ -418,11 +418,18 @@ a.clickable-card:active {
 
 /* Apply gradient background and body font to themed pages */
 body[class*="theme-"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%) fixed;
   background-size: cover;
-  min-height: 100vh;
   font-family: var(--font-body);
   line-height: 1.6;
+}
+
+/* Main content area grows to push footer to bottom */
+.travelog-main {
+  flex: 1;
 }
 
 /* Container */
@@ -1166,20 +1173,17 @@ h3 {
   cursor: zoom-in;
 }
 
-/* Image link wrapper */
-.browse-image-link {
+/* Image link wrapper - no hover effects, cursor: zoom-in on image is sufficient */
+.browse-image-link,
+.browse-image-link:hover,
+.browse-image-link:visited,
+.browse-image-link:focus,
+.browse-image-link:active {
   display: block;
   line-height: 0;
   flex-shrink: 1;
   min-width: 0;
-}
-
-.browse-image-link:hover {
   opacity: 1;
-}
-
-.browse-image-link:hover .browse-main-image {
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
 }
 
 /* Navigation arrows - flanking the image */

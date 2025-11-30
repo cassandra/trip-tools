@@ -26,8 +26,10 @@
   </div>
   {% endif %}
 
-  {# Main page content #}
-  {% block travelog_content %}{% endblock %}
+  {# Main page content - flex: 1 pushes footer to bottom on short pages #}
+  <main class="travelog-main">
+    {% block travelog_content %}{% endblock %}
+  </main>
   {% include "travelog/components/travelog_footer.html" %}
 {% endblock %}
 

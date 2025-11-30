@@ -13,6 +13,7 @@
 
 {% block content %}
 {# User list header - styled like journal headers but standalone #}
+<main class="travelog-main">
 <header class="journal-header">
   <div class="text-center">
     <h1 class="journal-title">{{ target_user.get_full_name }}'s Travelogs</h1>
@@ -76,5 +77,6 @@
     {% endif %}
   </div>
 </div>
+  </main>
 {% include "travelog/components/travelog_footer.html" %}
 {% endblock %}
