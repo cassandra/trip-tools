@@ -32,8 +32,8 @@
 {% block sidebar_nav_items %}
 <li>
   <a href="{% url 'trips_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'trip_overview' %} class="active" aria-current="page"{% endif %}>
-    {% icon "home" size="sm" %}
-    <span>Trip Overview</span>
+    {% icon "globe" size="sm" %}
+    <span>Overview</span>
   </a>
 </li>
 <li>

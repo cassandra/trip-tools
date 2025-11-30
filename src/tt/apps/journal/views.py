@@ -127,13 +127,14 @@ class JournalCreateView( LoginRequiredMixin, TripViewMixin, ModalView ):
             journal.modified_by = request.user
             journal.save()
 
-            return self.refresh_response(request)
+            redirect_url = reverse( 'journal', kwargs = { 'journal_uuid': journal.uuid } )
+            return self.redirect_response( request, redirect_url )
 
         context = {
             'form': form,
             'trip': trip,
         }
-        return self.modal_response(request, context=context, status=400)
+        return self.modal_response( request, context = context, status = 400 )
 
 
 class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):

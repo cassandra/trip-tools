@@ -119,6 +119,7 @@ ICON_ALIASES = {
     'history': 'clock-rotate',
     'zoom': 'magnifying-glass-plus',
     'view': 'grid',
+    'dashboard': 'grid',
     'tasks': 'document-list',
     'collection': 'document',
     'path': 'star',

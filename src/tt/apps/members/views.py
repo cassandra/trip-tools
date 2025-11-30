@@ -235,7 +235,7 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
             )
 
             if is_self_removal:
-                return self.redirect_response( request, reverse( 'home' ) )
+                return self.redirect_response( request, reverse( 'dashboard_home' ) )
 
             return self.refresh_response( request )
 

@@ -27,7 +27,7 @@ class UserSigninView( View ):
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            url = reverse( 'home' )
+            url = reverse( 'dashboard_home' )
             return HttpResponseRedirect( url )
             
         error_message = None
@@ -153,7 +153,7 @@ class SigninMagicCodeView( View ):
         SigninManager().do_login( request = request, verified_email = True )
         magic_code_generator.expire_magic_code( request )
 
-        url = reverse( 'home' )
+        url = reverse( 'dashboard_home' )
         return HttpResponseRedirect( url )
 
     
@@ -186,7 +186,7 @@ class SigninMagicLinkView( View ):
         request.user = existing_user
         SigninManager().do_login( request = request, verified_email = True )
 
-        url = reverse( 'home' )
+        url = reverse( 'dashboard_home' )
         return HttpResponseRedirect( url )
 
 

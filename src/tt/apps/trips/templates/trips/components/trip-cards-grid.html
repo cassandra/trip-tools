@@ -30,10 +30,10 @@
   <div class="text-muted mb-3">
     {% icon "map-pin" size="lg" %}
   </div>
-  <h3 class="h5">No {% if icon_type == 'past' %}Past{% else %}Upcoming{% endif %} Trips</h3>
+  <h3 class="h5">No {% if icon_type == 'past' %}Past{% elif icon_type == 'recent' %}Recent{% else %}Upcoming{% endif %} Trips</h3>
   <p class="text-muted mb-3">{% if icon_type == 'past' %}No past trips to display.{% else %}Start planning your next adventure!{% endif %}</p>
   {% if icon_type != 'past' %}
-  <a href="{% url 'trips_create' %}" class="btn btn-primary btn-lg" data-async="modal">Create A Trip</a>
+  <a href="{% url 'trips_create' %}" class="btn btn-primary btn-lg" data-async="modal">{% icon "plus" size="lg" %}  Create A Trip</a>
   {% endif %}
 </div>
 {% endif %}

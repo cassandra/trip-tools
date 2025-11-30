@@ -4,7 +4,7 @@
 
 {% block modal_dialog_id %}journal-visibility-modal{% endblock %}
 
-{% block title_text %}Change Journal Visibility{% endblock %}
+{% block title_text %}Change Published Visibility{% endblock %}
 
 {% block preamble %}
 <form method="post" action="{% url 'journal_visibility' journal_uuid=journal.uuid %}" data-async="modal">
@@ -12,12 +12,12 @@
 {% endblock %}
 
 {% block body %}
-  {% include "journal/components/_visibility_form_fields.html" with form=form journal=journal %}
+  {% include "journal/components/visibility_form_fields.html" with form=form journal=journal %}
 
   <div class="alert alert-info mt-3">
     <small>
       {% icon "info-circle" size="sm" css_class="tt-icon-left" %}
-      <strong>Note:</strong> Changing visibility affects who can view your published journal versions. Current editors of the journal are not affected.
+      <strong>Note:</strong> Changing visibility affects who can view your published journal (Travelog). Current editors of the journal are not affected.  Travelogs are only visible after publishing the Journal.
     </small>
   </div>
 {% endblock %}

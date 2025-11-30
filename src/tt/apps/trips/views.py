@@ -7,7 +7,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
+from django.views.generic import View
 
+from tt.apps.dashboard.context import DashboardPageContext
+from tt.apps.dashboard.enums import DashboardPage
+from tt.apps.journal.models import Journal
 from tt.apps.images.enums import UploadStatus
 from tt.apps.images.services import ImageUploadService
 from tt.apps.images.views import EntityImagePickerView, EntityImageUploadView
@@ -15,7 +19,7 @@ from tt.apps.members.models import TripMember
 from tt.async_view import ModalView
 
 from .context import TripPageContext
-from .enums import TripPage
+from .enums import TripPage, TripPermissionLevel, TripStatus
 from .forms import TripForm
 from .mixins import TripViewMixin
 from .models import Trip
@@ -23,6 +27,48 @@ from .models import Trip
 logger = logging.getLogger(__name__)
 
 
+class TripsAllView(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs) -> HttpResponse:
+        # Single query: get all memberships with trips prefetched
+        memberships = list(
+            TripMember.objects
+            .filter(user=request.user)
+            .select_related('trip')
+            .order_by('-trip__created_datetime')
+        )
+
+        # In-memory categorization by ownership and status
+        owned_upcoming_trips = []
+        shared_trips = []
+        owned_past_trips = []
+
+        for membership in memberships:
+            trip = membership.trip
+            is_owner = membership.permission_level == TripPermissionLevel.OWNER
+
+            if trip.trip_status in [ TripStatus.UPCOMING, TripStatus.CURRENT ]:
+                if is_owner:
+                    owned_upcoming_trips.append(trip)
+                else:
+                    shared_trips.append(trip)
+            elif trip.trip_status == TripStatus.PAST and is_owner:
+                owned_past_trips.append(trip)
+
+        dashboard_page_context = DashboardPageContext(
+            active_page = DashboardPage.TRIPS,
+        )
+
+        context = {
+            'dashboard_page': dashboard_page_context,
+            'owned_upcoming_trips': owned_upcoming_trips,
+            'shared_trips': shared_trips,
+            'owned_past_trips': owned_past_trips,
+            'total_trips': len(memberships),
+        }
+        return render(request, 'trips/pages/trips_all.html', context)
+
+    
 class TripCreateModalView(ModalView):
 
     def get_template_name(self) -> str:
@@ -65,6 +111,8 @@ class TripHomeView( TripViewMixin, ModalView ):
         request.view_parameters.trip_id = trip.pk
         request.view_parameters.to_session( request )
 
+        journal = Journal.objects.get_primary_for_trip( trip )
+
         trip_page_context = TripPageContext(
             active_page = TripPage.OVERVIEW,
             request_member = request_member,
@@ -72,6 +120,7 @@ class TripHomeView( TripViewMixin, ModalView ):
 
         context = {
             'trip_page': trip_page_context,
+            'journal': journal,
         }
         return render( request, 'trips/pages/trips_home.html', context )
 

@@ -1,0 +1,34 @@
+{% extends "dashboard/pages/dashboard.html" %}
+{% load icons %}
+
+{% block main_content %}
+<div class="m-3">
+  <!-- Your Upcoming Trips Section -->
+  <section class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h3 mb-0">Upcoming Trips</h2>
+      <a href="{% url 'trips_create' %}" class="btn btn-primary" data-async="modal">+ Add New Trip</a>
+    </div>
+
+    {% include "trips/components/trip-cards-grid.html" with trips=owned_upcoming_trips icon_type="upcoming" %}
+  </section>
+
+  <!-- Shared Trips Section -->
+  {% if shared_trips %}
+  <section class="mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h3 mb-0">Shared Trips</h2>
+    </div>
+    {% include "trips/components/trip-cards-grid.html" with trips=shared_trips icon_type="upcoming" %}
+  </section>
+  {% endif %}
+
+  <!-- Your Past Trips Section -->
+  {% if owned_past_trips %}
+  <section class="mt-5">
+    <h2 class="h3 mb-3">Past Trips</h2>
+    {% include "trips/components/trip-cards-grid.html" with trips=owned_past_trips icon_type="past" %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

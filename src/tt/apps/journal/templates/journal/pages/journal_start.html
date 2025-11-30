@@ -1,11 +1,12 @@
 {% extends "journal/pages/journal_base.html" %}
+{% load icons %}
 
 {% block trip_content %}
 <div class="m-3">
   <div class="alert alert-info">
     <h4>No Journal Yet</h4>
     <p>Create a journal to share your trip experiences with others.</p>
-    <a href="{% url 'journal_create' trip_uuid=trip_page.trip.uuid %}" class="btn btn-primary" data-async="modal">Create Journal</a>
+    <a href="{% url 'journal_create' trip_uuid=trip_page.trip.uuid %}" class="btn btn-primary" data-async="modal">{% icon "plus" size="sm" %} Create Journal</a>
   </div>
 </div>
 {% endblock %}

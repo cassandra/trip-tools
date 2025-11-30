@@ -15,8 +15,14 @@
 {% block sidebar_content %}
 <ul class="app-sidebar-nav">
   <li>
-    <a href="{% url 'home' %}"{% if dashboard_page.active_page.value == 'trips' %} class="active" aria-current="page"{% endif %}>
-      {% icon "home" size="sm" %}
+    <a href="{% url 'dashboard_home' %}"{% if dashboard_page.active_page.value == 'dashboard' %} class="active" aria-current="page"{% endif %}>
+      {% icon "dashboard" size="sm" %}
+      <span>Dashboard</span>
+    </a>
+  </li>
+  <li>
+    <a href="{% url 'trips_all' %}"{% if dashboard_page.active_page.value == 'trips' %} class="active" aria-current="page"{% endif %}>
+      {% icon "globe" size="sm" %}
       <span>Trips</span>
     </a>
   </li>
@@ -31,32 +37,27 @@
 
 {% block main_content %}
 <div class="m-3">
-  <!-- Your Upcoming Trips Section -->
-  <section class="mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="h3 mb-0">Your Upcoming Trips</h2>
-      <a href="{% url 'trips_create' %}" class="btn btn-primary" data-async="modal">+ Add New Trip</a>
-    </div>
 
-    {% include "trips/components/trip-cards-grid.html" with trips=owned_upcoming_trips icon_type="upcoming" %}
-  </section>
+  <!-- Recent Trips Section -->
+  <h2 class="h3">Recent Trips</h2>
+  <div class="mb-4 col-lg-8 col-md-10 col-12">
+    {% include "trips/components/trip-cards-grid.html" with trips=recent_trips icon_type="recent" %}
+  </div>
 
-  <!-- Shared Trips Section -->
-  {% if shared_trips %}
-  <section class="mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="h3 mb-0">Shared Trips</h2>
-    </div>
-    {% include "trips/components/trip-cards-grid.html" with trips=shared_trips icon_type="upcoming" %}
-  </section>
-  {% endif %}
-
-  <!-- Your Past Trips Section -->
-  {% if owned_past_trips %}
-  <section class="mt-5">
-    <h2 class="h3 mb-3">Your Past Trips</h2>
-    {% include "trips/components/trip-cards-grid.html" with trips=owned_past_trips icon_type="past" %}
-  </section>
-  {% endif %}
+  <div class="tt-page-explanation">
+    <h2>The Problems</h2>
+    <ul>
+      <li>Trip information is scattered across multiple apps, tabs, and documents.</li>
+      <li>What you need to see depends on where yours trips are in their lifecycle.</li>
+      <li>No single place shows you the most important information for right now.</li>
+      <li>Switching between trips to find out what's important requires time and mental overhead.</li>
+    </ul>
+    
+    <h2>The Solution</h2>
+    <ul>
+      <p>A contextual dashboard that adapts to your trips' current statuses, surfacing what matters most.</p>
+    </ul>
+  </div>
 </div>
+
 {% endblock %}
