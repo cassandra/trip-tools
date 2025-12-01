@@ -967,12 +967,24 @@
       var $closestBlock = $(range.endContainer).closest(HTML_STRUCTURE.TEXT_BLOCK_SELECTOR + ', h1, h2, h3, h4, h5, h6');
       var blockIndex = $closestBlock.length ? $editor.children().index($closestBlock) : 0;
 
+      // Detect if cursor is at start of its containing block
+      // Used to disambiguate paragraph boundaries (end of block N vs start of block N+1)
+      var isAtBlockStart = false;
+      var $startBlock = $(range.startContainer).closest(HTML_STRUCTURE.TEXT_BLOCK_SELECTOR + ', h1, h2, h3, h4, h5, h6');
+      if ($startBlock.length > 0) {
+        var blockRange = document.createRange();
+        blockRange.selectNodeContents($startBlock[0]);
+        blockRange.setEnd(range.startContainer, range.startOffset);
+        isAtBlockStart = (blockRange.toString().length === 0);
+      }
+
       return {
         startTextOffset: startTextOffset,
         endTextOffset: endTextOffset,
         blockIndex: blockIndex,
         isCollapsed: range.collapsed,
-        captionContext: captionContext
+        captionContext: captionContext,
+        isAtBlockStart: isAtBlockStart
       };
     },
 
@@ -1037,6 +1049,36 @@
           }
 
           currentOffset += nodeLength;
+        }
+
+        // Disambiguate paragraph boundaries when cursor was at start of block
+        // End of block N and start of block N+1 have the same global offset
+        if (marker.isAtBlockStart && startNode && startOffset === startNode.textContent.length) {
+          var nextNode = walker.nextNode();
+          if (nextNode) {
+            // Move to start of next text node
+            startNode = nextNode;
+            startOffset = 0;
+            // For collapsed cursor, end should match start
+            if (marker.isCollapsed) {
+              endNode = startNode;
+              endOffset = startOffset;
+            }
+          } else {
+            // No next node exists - cursor was at end of document in empty block
+            // that was removed by normalization. Create new block for cursor.
+            var $newBlock = $('<p class="' + HTML_STRUCTURE.TEXT_BLOCK_CLASS + '"><br></p>');
+            $editor.append($newBlock);
+
+            // Position cursor at start of new block
+            range.selectNodeContents($newBlock[0]);
+            range.collapse(true);
+
+            var selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            return;  // Early return - cursor placement complete
+          }
         }
 
         if (startNode && endNode) {
