@@ -20,10 +20,11 @@ from tt.context import FeaturePageContext
 from tt.enums import FeaturePageType
 
 from .context import TripPageContext
-from .enums import TripPage, TripPermissionLevel, TripStatus
+from .enums import TripPage
 from .forms import TripForm
 from .mixins import TripViewMixin
 from .models import Trip
+from .services import TripDisplayService
 
 logger = logging.getLogger(__name__)
 
@@ -31,40 +32,18 @@ logger = logging.getLogger(__name__)
 class TripsAllView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
-        # Single query: get all memberships with trips prefetched
-        memberships = list(
-            TripMember.objects
-            .filter( user = request.user )
-            .select_related('trip')
-            .order_by('-trip__created_datetime')
-        )
-
-        # In-memory categorization by ownership and status
-        owned_upcoming_trips = []
-        shared_trips = []
-        owned_past_trips = []
-
-        for membership in memberships:
-            trip = membership.trip
-            is_owner = membership.permission_level == TripPermissionLevel.OWNER
-
-            if trip.trip_status in [ TripStatus.UPCOMING, TripStatus.CURRENT ]:
-                if is_owner:
-                    owned_upcoming_trips.append(trip)
-                else:
-                    shared_trips.append(trip)
-            elif trip.trip_status == TripStatus.PAST and is_owner:
-                owned_past_trips.append(trip)
+        # Use service for business logic and categorization
+        trip_data = TripDisplayService.get_categorized_trips_for_user(request.user)
 
         feature_page_context = FeaturePageContext(
             active_page = FeaturePageType.TRIPS,
         )
         context = {
             'feature_page': feature_page_context,
-            'owned_upcoming_trips': owned_upcoming_trips,
-            'shared_trips': shared_trips,
-            'owned_past_trips': owned_past_trips,
-            'total_trips': len(memberships),
+            'current_trips': trip_data.current_trips,
+            'shared_trips': trip_data.shared_trips,
+            'past_trips': trip_data.past_trips,
+            'total_trips': trip_data.total_trips,
         }
         return render(request, 'trips/pages/trips_all.html', context)
 
