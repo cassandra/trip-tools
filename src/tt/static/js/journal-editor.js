@@ -508,12 +508,14 @@
     // Run full HTML normalization
     runFullNormalization(this.$editor[0]);
 
-    // Restore cursor position after normalization
-    CursorPreservation.restore(this.$editor, cursor);
-
     // Refresh layout to update markers and groups
+    // Must happen BEFORE cursor restore because wrapFullWidthImageGroups
+    // unwraps/rewraps image groups which destroys cursor position
     this.editorLayoutManager.wrapFullWidthImageGroups();
     this.editorLayoutManager.markFloatParagraphs();
+
+    // Restore cursor position after normalization AND layout operations
+    CursorPreservation.restore(this.$editor, cursor);
   };
 
   // Note: Cursor position helpers (isCursorAtEnd, isCursorAtStart, setCursorAtStart)
@@ -664,8 +666,8 @@
    * Create image element with proper attributes
    * Delegates to ImageManager
    */
-  JournalEditor.prototype.createImageElement = function(uuid, url, caption, layout) {
-    return this.imageManager.createImageElement(uuid, url, caption, layout);
+  JournalEditor.prototype.createImageElement = function(uuid, url, caption, layout, inspectUrl) {
+    return this.imageManager.createImageElement(uuid, url, caption, layout, inspectUrl);
   };
 
   /**
@@ -681,16 +683,10 @@
       e.stopPropagation();
 
       var $img = $(this);
-      var uuid = $img.data(TtConst.UUID_DATA_ATTR);
-
-      // Get inspect URL from the corresponding picker card
-      var $pickerCard = $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + TtConst.IMAGE_UUID_DATA_ATTR + '="' + uuid + '"]');
-      var inspectUrl = $pickerCard.data(TtConst.INSPECT_URL_DATA_ATTR);
+      var inspectUrl = $img.data(TtConst.INSPECT_URL_DATA_ATTR);
 
       if (inspectUrl) {
         AN.get(inspectUrl);
-      } else {
-        console.warn('No inspect URL found for image:', uuid);
       }
     });
 

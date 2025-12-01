@@ -1413,6 +1413,11 @@ h3 {
   max-height: 300px;
 }
 
+/* Clear floats before text blocks that have their own float-right images */
+.day-content .has-float-image {
+  clear: both;
+}
+
 /* Full-width image grid (3 columns, centered) */
 .day-content .full-width-image-group {
   display: grid;
@@ -1420,6 +1425,7 @@ h3 {
   gap: 1rem;
   margin: 2rem 0;
   justify-items: center;
+  clear: both;
 }
 
 .day-content .full-width-image-group .trip-image-wrapper {
@@ -1444,6 +1450,16 @@ h3 {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Clear floats before headings - headings should start below floated content */
+.day-content h1,
+.day-content h2,
+.day-content h3,
+.day-content h4,
+.day-content h5,
+.day-content h6 {
+  clear: both;
 }
 
 /* Image caption styling */

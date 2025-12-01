@@ -20,6 +20,7 @@ EPILOGUE_DATE = date_class.max  # date(9999, 12, 31)
 
 SPECIAL_DATES = [ PROLOGUE_DATE, EPILOGUE_DATE ]
 
+
 class JournalContent( models.Model ):
     """
     Abstract base for journal-like containers (e.g., Journal and Travelog).

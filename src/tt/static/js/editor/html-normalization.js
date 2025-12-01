@@ -83,6 +83,12 @@
           $root.find(tag).each(function() {
             var $elem = $(this);
 
+            // Protect caption spans from removal - they should persist even when empty
+            // This allows users to click and re-add caption text later
+            if (tag === 'span' && $elem.hasClass(TtConst.TRIP_IMAGE_CAPTION_CLASS)) {
+              return; // Skip removal - captions are protected
+            }
+
             // Get text content without considering child elements
             var textContent = $elem.contents().filter(function() {
               return this.nodeType === Node.TEXT_NODE;
@@ -920,6 +926,31 @@
         return null;
       }
 
+      // Check if cursor is inside an image caption (special handling needed)
+      var $captionElement = $(range.startContainer).closest(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
+      var captionContext = null;
+
+      if ($captionElement.length > 0) {
+        // Find the parent image wrapper to get UUID
+        var $imageWrapper = $captionElement.closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+        var $img = $imageWrapper.find('img');
+        // Note: Images use UUID_DATA_ATTR (data-uuid), not IMAGE_UUID_DATA_ATTR
+        var imageUuid = $img.data(TtConst.UUID_DATA_ATTR);
+
+        if (imageUuid) {
+          // Calculate offset within caption only
+          var captionRange = range.cloneRange();
+          captionRange.selectNodeContents($captionElement[0]);
+          captionRange.setEnd(range.startContainer, range.startOffset);
+          var captionOffset = captionRange.toString().length;
+
+          captionContext = {
+            imageUuid: imageUuid,
+            offsetInCaption: captionOffset
+          };
+        }
+      }
+
       // Calculate START text offset (for selections)
       var preStartRange = range.cloneRange();
       preStartRange.selectNodeContents(editor);
@@ -940,7 +971,8 @@
         startTextOffset: startTextOffset,
         endTextOffset: endTextOffset,
         blockIndex: blockIndex,
-        isCollapsed: range.collapsed
+        isCollapsed: range.collapsed,
+        captionContext: captionContext
       };
     },
 
@@ -957,6 +989,16 @@
       var editor = $editor[0];
 
       try {
+        // Check for caption context first - this handles the edge case where
+        // cursor at start of caption has same text offset as end of preceding text
+        if (marker.captionContext) {
+          var restored = this.restoreCaptionCursor($editor, marker.captionContext);
+          if (restored) {
+            return; // Successfully restored to caption
+          }
+          // Fall through to regular restoration if caption not found
+        }
+
         var range = document.createRange();
 
         // Backward compatibility: handle old markers with only textOffset
@@ -1025,8 +1067,99 @@
         // Better to have working editor without cursor than to crash
         console.warn('Cursor restoration failed:', e);
       }
+    },
+
+    /**
+     * Restore cursor position specifically within an image caption
+     * Uses image UUID as stable identifier to find the correct caption
+     * @param {jQuery} $editor - jQuery-wrapped editor element
+     * @param {Object} captionContext - {imageUuid, offsetInCaption}
+     * @returns {boolean} True if restoration succeeded, false otherwise
+     */
+    restoreCaptionCursor: function($editor, captionContext) {
+      // Find the image by UUID (images use data-uuid attribute)
+      var $image = $editor.find('img[data-' + TtConst.UUID_DATA_ATTR + '="' + captionContext.imageUuid + '"]');
+      if ($image.length === 0) {
+        return false;
+      }
+
+      // Find the caption within that image wrapper
+      var $wrapper = $image.closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+      var $caption = $wrapper.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
+      if ($caption.length === 0) {
+        return false;
+      }
+
+      // Find the text node and position within caption
+      var targetOffset = captionContext.offsetInCaption;
+      var currentOffset = 0;
+      var targetNode = null;
+      var nodeOffset = 0;
+
+      var walker = document.createTreeWalker(
+        $caption[0],
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+      );
+
+      var node;
+      while (node = walker.nextNode()) {
+        var nodeLength = node.textContent.length;
+        if (currentOffset + nodeLength >= targetOffset) {
+          targetNode = node;
+          nodeOffset = targetOffset - currentOffset;
+          break;
+        }
+        currentOffset += nodeLength;
+      }
+
+      if (targetNode) {
+        var range = document.createRange();
+        range.setStart(targetNode, Math.min(nodeOffset, targetNode.textContent.length));
+        range.collapse(true);
+
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        return true;
+      }
+
+      // Caption exists but has no text nodes (empty caption)
+      // Position cursor at start of caption element
+      if ($caption[0].childNodes.length === 0) {
+        // Empty caption - create a text node for cursor positioning
+        var textNode = document.createTextNode('');
+        $caption[0].appendChild(textNode);
+
+        var range = document.createRange();
+        range.setStart(textNode, 0);
+        range.collapse(true);
+
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        return true;
+      }
+
+      return false;
     }
   };
+
+  /**
+   * Ensure all caption elements have at least an empty text node for cursor positioning.
+   * This allows users to click on empty captions and start typing.
+   *
+   * @param {jQuery} $editor - jQuery-wrapped contenteditable element
+   */
+  function ensureCaptionTextNodes($editor) {
+    $editor.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR).each(function() {
+      // If caption has no child nodes at all, add empty text node for cursor positioning
+      if (this.childNodes.length === 0) {
+        this.appendChild(document.createTextNode(''));
+      }
+    });
+  }
 
   /**
    * ============================================================
@@ -1056,6 +1189,10 @@
 
     // Run existing cleanup helpers
     ToolbarHelper.fullCleanup($editor);
+
+    // Ensure captions have text nodes for cursor positioning
+    // Must run after cleanup to ensure empty captions aren't removed
+    ensureCaptionTextNodes($editor);
   }
 
   /**

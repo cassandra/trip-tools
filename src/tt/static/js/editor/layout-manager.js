@@ -83,7 +83,31 @@
    * This allows them to clear floats properly (block-level element needed)
    */
   EditorLayoutManager.prototype.wrapFullWidthImageGroups = function() {
-    // Remove existing wrappers first
+    // Quick check: avoid unnecessary DOM manipulation when structure is already correct
+    var needsRewrap = false;
+
+    // Check 1: Any orphan full-width images at top level?
+    var $orphanFullWidth = this.$editor.children(TtConst.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR);
+    if ($orphanFullWidth.length > 0) {
+      needsRewrap = true;
+    }
+
+    // Check 2: Any consecutive groups that should be merged?
+    if (!needsRewrap) {
+      var $groups = this.$editor.children(HTML_STRUCTURE.FULL_WIDTH_GROUP_SELECTOR);
+      $groups.each(function() {
+        if ($(this).next().is(HTML_STRUCTURE.FULL_WIDTH_GROUP_SELECTOR)) {
+          needsRewrap = true;
+          return false; // break
+        }
+      });
+    }
+
+    if (!needsRewrap) {
+      return; // Structure is already correct
+    }
+
+    // Remove existing wrappers first (need to rebuild groupings)
     this.$editor.find(HTML_STRUCTURE.FULL_WIDTH_GROUP_SELECTOR).each(function() {
       var $group = $(this);
       $group.children(TtConst.JOURNAL_IMAGE_WRAPPER_FULL_SELECTOR).unwrap();

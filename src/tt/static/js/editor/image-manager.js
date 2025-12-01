@@ -118,9 +118,10 @@
    * @param {string} url - Image URL
    * @param {string} caption - Image caption/alt text
    * @param {string} layout - Layout type ('float-right' or 'full-width')
+   * @param {string} inspectUrl - URL for the image inspector modal
    * @returns {jQuery} jQuery-wrapped image wrapper element
    */
-  ImageManager.prototype.createImageElement = function(uuid, url, caption, layout) {
+  ImageManager.prototype.createImageElement = function(uuid, url, caption, layout, inspectUrl) {
     // Create the image element
     var $img = $('<img>', {
       'src': url,
@@ -128,6 +129,7 @@
       'class': TtConst.JOURNAL_IMAGE_CLASS
     });
     $img.attr('data-' + TtConst.UUID_DATA_ATTR, uuid);
+    $img.attr('data-' + TtConst.INSPECT_URL_DATA_ATTR, inspectUrl);
     $img.attr('draggable', true);
 
     // Create wrapper with layout attribute
@@ -136,13 +138,13 @@
     });
     $wrapper.attr('data-' + TtConst.LAYOUT_DATA_ATTR, layout);
 
-    // Create caption span if caption exists and is non-empty
-    var $captionSpan = null;
+    // Always create caption span - even if empty, for consistent editing experience
+    // Empty captions are visible/clickable in editor (via CSS), hidden in travelog
+    var $captionSpan = $('<span>', {
+      'class': TtConst.TRIP_IMAGE_CAPTION_CLASS
+    });
     if (caption && $.trim(caption).length > 0) {
-      $captionSpan = $('<span>', {
-        'class': TtConst.TRIP_IMAGE_CAPTION_CLASS,
-        'text': caption
-      });
+      $captionSpan.text(caption);
     }
 
     // Create delete button (TRANSIENT - removed before save)
@@ -153,11 +155,9 @@
       'text': '×'
     });
 
-    // Assemble: wrapper contains image, optional caption, and delete button
+    // Assemble: wrapper contains image, caption, and delete button
     $wrapper.append($img);
-    if ($captionSpan) {
-      $wrapper.append($captionSpan);
-    }
+    $wrapper.append($captionSpan);
     $wrapper.append($deleteBtn);
 
     // Track this image as used (for picker filtering)
@@ -258,7 +258,8 @@
     return {
       uuid: uuid,
       url: $card.data(TtConst.IMAGE_URL_DATA_ATTR),
-      caption: $card.data(TtConst.CAPTION_DATA_ATTR) || 'Untitled'
+      caption: $card.data(TtConst.CAPTION_DATA_ATTR) || 'Untitled',
+      inspectUrl: $card.data(TtConst.INSPECT_URL_DATA_ATTR)
     };
   };
 

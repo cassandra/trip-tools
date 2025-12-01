@@ -439,6 +439,22 @@
 }
 
 /* ===========================================
+   CAPTION VISUAL AFFORDANCE - EDITOR ONLY
+   Makes captions always visible and clickable,
+   even when empty. In travelog (public view),
+   empty captions collapse naturally.
+   =========================================== */
+
+.journal-contenteditable .trip-image-caption {
+  min-height: 1.2em;
+  min-width: 3em;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+  padding: 2px 4px;
+  box-sizing: border-box;
+}
+
+/* ===========================================
    DROP ZONE INDICATORS - TRANSIENT
    Never saved to database
    =========================================== */

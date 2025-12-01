@@ -384,7 +384,8 @@
         imageData.uuid,
         imageData.url,
         imageData.caption,
-        layout
+        layout,
+        imageData.inspectUrl
       );
 
       // Insert the wrapped image
