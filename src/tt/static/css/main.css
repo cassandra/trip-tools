@@ -70,7 +70,7 @@
   --top-buttons-height: 2.5rem;
   --bottom-buttons-height: 2.5rem;
   --secondary-nav-height: 50px;
-  --secondary-page-header-height: 4rem;
+  --subpage-header-height: 4rem;
   --app-sidebar-width: 250px;
   --app-topbar-height: 60px;
 }
@@ -916,27 +916,6 @@ body {
   min-width: 44px;
 }
 
-/* Secondary Sidebar (Light Variant) */
-.app-sidebar-secondary {
-  color:var(--black);
-  background-color: #f8f9fa;
-  border-right: 1px solid var(--line-color);
-}
-
-.app-sidebar-secondary .app-sidebar-nav a {
-  color: var(--tertiary-color);
-}
-
-.app-sidebar-secondary .app-sidebar-nav a:hover {
-  background-color: #e9ecef;
-  color: var(--tertiary-color);
-}
-
-.app-sidebar-secondary .app-sidebar-nav a.active {
-  background-color: #dee2e6;
-  font-weight: 600;
-}
-
 /* Nested Sidebar Navigation */
 .app-sidebar-nav-nested {
   list-style: none;
@@ -1029,10 +1008,10 @@ body {
   min-height: calc(100vh - var(--app-topbar-height));
 }
 
-.secondary-page-header {
+.subpage-header {
   position: sticky;
   top: var(--app-topbar-height);
-  height: var(--secondary-page-header-height);
+  height: var(--subpage-header-height);
   background-color: #f8f9fa;
   border-bottom: 1px solid var(--line-color);
   z-index: 1010;
@@ -1041,8 +1020,8 @@ body {
   display: flex;
   align-items: center;
 }
-.secondary-page-content {
-  padding-top: 1rem; /* Compensate for -1rem top margin on secondary-page-header */
+.subpage-content {
+  padding-top: 1rem; /* Compensate for -1rem top margin on subpage-header */
 }
 
 /* Mobile Responsive for Secondary Pages */

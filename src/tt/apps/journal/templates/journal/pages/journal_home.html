@@ -1,4 +1,4 @@
-{% extends "journal/pages/journal_base.html" %}
+{% extends "trips/pages/trips_subpage.html" %}
 {% load icons %}
 {% load travelog_tags %}
 {% load pipeline %}
@@ -7,7 +7,7 @@
 {% stylesheet 'journal_editor' %}
 {% endblock %}
 
-{% block trip_content %}
+{% block subpage_content %}
 <div class="m-3">
   {% include "journal/components/journal_page_header.html" %}
   {% include "journal/components/journal_page_warnings.html" %}

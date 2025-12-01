@@ -13,7 +13,11 @@
 {% endblock %}
 
 {% block sidebar_content %}
+{% block sidebar_header %}{% endblock %}
+
+{% block sidebar_body %}
 <ul class="app-sidebar-nav">
+  {% block sidebar_body_items %}
   <li>
     <a href="{% url 'dashboard_home' %}"{% if feature_page.active_page.value == 'dashboard' %} class="active" aria-current="page"{% endif %}>
       {% icon "dashboard" size="sm" %}
@@ -32,22 +36,29 @@
       <span>Images</span>
     </a>
   </li>
+  {% endblock %}
 </ul>
+{% endblock %}
 
+{% block sidebar_footer %}
 <ul class="app-sidebar-nav app-sidebar-nav-bottom">
+  {% block sidebar_footer_items %}
   <li>
-    <a href="{% url 'user_account' %}"{% if feature_page.active_page.value == 'account' %} class="active" aria-current="page"{% endif %}>
+    <a href="{% url 'user_account' %}"
+       {% if feature_page.active_page.value == 'account' %}class="active" aria-current="page"{% endif %}>
       {% icon "user" size="sm" %}
       <span>Account</span>
     </a>
   </li>
-</ul>
-<ul class="app-sidebar-nav">
   <li>
-    <a href="{% url 'config_settings' %}"{% if feature_page.active_page.value == 'settings' %} class="active" aria-current="page"{% endif %}>
+    <a href="{% url 'config_settings' %}"
+       {% if feature_page.active_page.value == 'settings' %}class="active" aria-current="page"{% endif %}>
       {% icon "gear" size="sm" %}
       <span>Settings</span>
     </a>
   </li>
+  {% endblock %}
 </ul>
+{% endblock %}
+
 {% endblock %}

@@ -3,16 +3,7 @@
 {% block main_content_preamble %}
 <nav id="appSidebar"
      class="app-sidebar collapse {% block sidebar_class %}{% endblock %}">
-{% block sidebar_content %}
-
-  <div class="plain text-primary h3 pl-3">
-    {% block sidebar_title %}Trip Tools{% endblock %}
-  </div>
-
-  <ul class="app-sidebar-nav">
-  {% block sidebar_back_nav %}{% endblock %}
-   {% block sidebar_nav_items %}{% endblock %}
-  </ul>
+  {% block sidebar_content %}
   {% endblock %}
 </nav>
 <div class="app-sidebar-overlay" data-toggle="collapse" data-target="#appSidebar"></div>

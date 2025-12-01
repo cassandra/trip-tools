@@ -52,7 +52,7 @@ from tt.apps.travelog.services import PublishingService
 logger = logging.getLogger(__name__)
 
 
-class JournalHomeView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
+class JournalAllView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
 
     def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
@@ -62,7 +62,7 @@ class JournalHomeView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View
         # Fetch journal for trip (MVP: get_primary_for_trip)
         journal = Journal.objects.get_primary_for_trip( trip )
         if journal:
-            redirect_url = reverse( 'journal', kwargs = { 'journal_uuid': journal.uuid })
+            redirect_url = reverse( 'journal_home', kwargs = { 'journal_uuid': journal.uuid })
             return HttpResponseRedirect( redirect_url )
 
         if not request_member.can_edit_trip:
@@ -127,7 +127,8 @@ class JournalCreateView( LoginRequiredMixin, TripViewMixin, ModalView ):
             journal.modified_by = request.user
             journal.save()
 
-            redirect_url = reverse( 'journal', kwargs = { 'journal_uuid': journal.uuid } )
+            redirect_url = reverse( 'journal_home',
+                                    kwargs = { 'journal_uuid': journal.uuid } )
             return self.redirect_response( request, redirect_url )
 
         context = {
@@ -137,7 +138,7 @@ class JournalCreateView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return self.modal_response( request, context = context, status = 400 )
 
 
-class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
+class JournalHomeView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
 
     def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
         journal = get_object_or_404(
@@ -180,7 +181,7 @@ class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
             'publishing_status': publishing_status,
         }
 
-        return render(request, 'journal/pages/journal.html', context)
+        return render(request, 'journal/pages/journal_home.html', context)
 
 
 class JournalEditView( LoginRequiredMixin, TripViewMixin, ModalView ):
@@ -571,7 +572,7 @@ class JournalEntryDeleteModalView( LoginRequiredMixin, TripViewMixin, ModalView 
         with transaction.atomic():
             entry.delete()
 
-        redirect_url = reverse( 'journal', kwargs = { 'journal_uuid': entry.journal.uuid })
+        redirect_url = reverse( 'journal_home', kwargs = { 'journal_uuid': entry.journal.uuid })
         return self.redirect_response( request, redirect_url )
 
 

@@ -1,0 +1,114 @@
+{% extends "pages/feature_subpage.html" %}
+{% load static %}
+{% load icons %}
+{% load travelog_tags %}
+
+{% block main_extra_actions %}
+<div class="dropdown mr-2">
+  <button class="btn btn-outline-light dropdown-toggle" type="button" id="newDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    + New
+  </button>
+  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="newDropdown">
+    <a class="dropdown-item" href="{% travelog_url 'travelog_toc' journal_page.journal.uuid version='draft' %}"  target="_blank">Preview</a>
+    {% if trip_page.request_member.permission_level.is_admin %}
+    <a class="dropdown-item" href="{% url 'journal_publish' journal_uuid=journal_page.journal.uuid %}" data-async="modal">Publish</a>
+    {% endif %}
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="{% url 'trips_create' %}" data-async="modal">New Trip</a>
+    <a class="dropdown-item" href="{% url 'images_home' %}" >Add Images</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block sidebar_title %}Journal{% endblock %}
+
+{% block sidebar_back_nav %}
+<li>
+  <a href="{% url 'journal_home' journal_uuid=entry.journal.uuid %}">
+    {% icon "chevron-left" size="sm" %}
+    <span><em>Back to Journal</em></span>
+  </a>
+</li>
+{% endblock %}
+
+{% block sidebar_body_items %}
+{% if journal_page.journal %}
+
+{% if trip_page.request_member.can_edit_trip and not journal_page.has_prologue %}
+<li>
+  <a href="{% url 'journal_prologue_new' journal_uuid=journal_page.journal.uuid %}" class="text-muted">
+    {% icon "plus" size="sm" %}
+    <span><em>Add Prologue</em></span>
+  </a>
+</li>
+{% endif %}
+
+
+{% for entry in journal_page.journal_entries %}
+<li>
+  <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"
+     {% if entry.uuid == journal_page.journal_entry_uuid %}class="active" aria-current="page"{% endif %}>
+    {{ entry.display_date_short }}
+    {% if not entry.include_in_publish %}
+    <small class="text-danger d-block">*</small>
+    {% endif %}
+  </a>
+</li>
+{% empty %}
+<li><hr><em class="text-primary pl-4">No Journal Entries</em><hr></li>
+{% endfor %}
+
+{% if trip_page.request_member.can_edit_trip %}
+<li>
+  <a href="{% url 'journal_entry_new' journal_uuid=journal_page.journal.uuid %}" class="">
+    {% icon "plus" size="sm" %}
+    <span><em>Add New Day</em></span>
+      </a>
+</li>
+{% endif %}
+
+
+{% if trip_page.request_member.can_edit_trip and not journal_page.has_epilogue %}
+<li>
+  <a href="{% url 'journal_epilogue_new' journal_uuid=journal_page.journal.uuid %}" class="">
+    {% icon "plus" size="sm" %}
+    <span><em>Add Epilogue</em></span>
+  </a>
+</li>
+{% endif %}
+
+{% if not journal_page.all_entries_included_for_publish %}
+<small class="text-danger d-block pl-4 pt-2"><em>* Excluded from publish</em></small>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block subpage_header %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <div class="d-flex align-items-center">
+    {# Journal reference image - fixed square #}
+    <div class="ml-2 mr-2" style="width: 3rem; flex-shrink: 0;">
+      {% if trip_page.request_member.can_edit_trip %}
+      
+      <a href="{% url 'journal_reference_image_picker' journal_uuid=journal.uuid %}" data-async="modal" title="Click to change reference image">
+        {% include "images/components/reference_image_display.html" with image=journal_page.journal.reference_image size="responsive" editable=True %}
+      </a>
+      {% else %}
+      {% include "images/components/reference_image_display.html" with image=journal_page.journal.reference_image size="responsive" editable=False %}
+      {% endif %}
+    </div>
+    <h1 class="h2 mb-0 mx-2">{{ journal_page.journal.title }}</h1>
+    {% if trip_page.request_member.can_edit_trip %}
+    <a href="{% url 'journal_edit' journal_uuid=journal.uuid %}"
+       data-async="modal"
+       class="text-muted mr-2"
+       title="Edit journal title and description">
+      {% icon "edit" size="lg" %}
+    </a>
+    {% endif %}
+  </div>
+  {% block trip_extra_actions %}
+  {% endblock %}
+</div>
+{% endblock %}
