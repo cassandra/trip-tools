@@ -14,7 +14,7 @@ from tt.enums import FeaturePageType
 logger = logging.getLogger(__name__)
 
 
-class DashboardView(LoginRequiredMixin, View):
+class DashboardHomeView(LoginRequiredMixin, View):
     """Dashboard categorizes trips by ownership and status."""
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
