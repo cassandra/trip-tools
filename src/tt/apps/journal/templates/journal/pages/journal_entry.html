@@ -107,14 +107,11 @@
               </label>
             </div>
             <button type="button"
-                    class="btn btn-sm btn-primary mr-2 journal-manual-save-btn"
-                    style="display: none;"
-                    title="Save now">
-              Save
+                    class="btn btn-sm btn-outline-success {{ TtConst.JOURNAL_SAVE_STATUS_CLASS }}"
+                    title="Content saved"
+                    disabled>
+              Saved
             </button>
-            <span class="badge badge-secondary {{ TtConst.JOURNAL_SAVE_STATUS_CLASS }}">
-              Saved 2 seconds ago
-            </span>
           </div>
         </div>
 

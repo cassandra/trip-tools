@@ -1125,24 +1125,30 @@
         return true;
       }
 
-      // Caption exists but has no text nodes (empty caption)
-      // Position cursor at start of caption element
-      if ($caption[0].childNodes.length === 0) {
-        // Empty caption - create a text node for cursor positioning
-        var textNode = document.createTextNode('');
-        $caption[0].appendChild(textNode);
-
-        var range = document.createRange();
-        range.setStart(textNode, 0);
-        range.collapse(true);
-
-        var selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        return true;
+      // Caption exists but TreeWalker didn't find a text node
+      // This can happen with empty captions or edge cases
+      // Fallback: position cursor at start of caption
+      var firstChild = $caption[0].firstChild;
+      if (!firstChild) {
+        // No children at all - create empty text node
+        firstChild = document.createTextNode('');
+        $caption[0].appendChild(firstChild);
       }
 
-      return false;
+      var range = document.createRange();
+      if (firstChild.nodeType === Node.TEXT_NODE) {
+        // Position at start of text node
+        range.setStart(firstChild, 0);
+      } else {
+        // Position before first child element
+        range.setStartBefore(firstChild);
+      }
+      range.collapse(true);
+
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return true;
     }
   };
 

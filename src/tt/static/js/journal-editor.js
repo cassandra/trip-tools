@@ -155,7 +155,6 @@
     this.$includeInPublishInput = this.$form.find('#id_include_in_publish');
     this.$previewBtn = $(TtConst.JOURNAL_PREVIEW_BTN_SELECTOR);
     this.$statusElement = this.$form.find(TtConst.JOURNAL_SAVE_STATUS_SELECTOR);
-    this.$manualSaveBtn = this.$form.find('.journal-manual-save-btn');
 
     this.currentVersion = $editor.data(TtConst.CURRENT_VERSION_DATA_ATTR) || 1;
 
@@ -454,16 +453,17 @@
   };
 
   /**
-   * Setup manual save button click handler
+   * Setup save status button click handler
+   * The status button is clickable when in 'unsaved' or 'error' state
    */
   JournalEditor.prototype.setupManualSaveButton = function() {
     var self = this;
 
-    if (this.$manualSaveBtn.length) {
-      this.$manualSaveBtn.on('click', function() {
+    this.$statusElement.on('click', function() {
+      if (!$(this).prop('disabled')) {
         self.autoSaveManager.saveNow();
-      });
-    }
+      }
+    });
   };
 
   /**
@@ -595,51 +595,51 @@
 
   /**
    * Update save status display
+   * Single button that changes appearance based on state:
+   * - saved: green outline, disabled
+   * - unsaved: warning (yellow), clickable to save
+   * - saving: info (blue), disabled
+   * - error: danger (red), clickable to retry
    */
   JournalEditor.prototype.updateStatus = function(status, message) {
-    var statusText = '';
-    var statusClass = 'badge-secondary';
+    var text = '';
+    var btnClass = 'btn-outline-success';
+    var disabled = true;
+    var title = '';
 
     switch (status) {
       case 'saved':
-        statusText = 'Saved';
-        statusClass = 'badge-success';
-        if (message) {
-          var savedDate = new Date(message);
-          var now = new Date();
-          var diffSeconds = Math.floor((now - savedDate) / 1000);
-
-          if (diffSeconds < 60) {
-            statusText = 'Saved ' + diffSeconds + ' seconds ago';
-          } else {
-            var diffMinutes = Math.floor(diffSeconds / 60);
-            statusText = 'Saved ' + diffMinutes + ' minutes ago';
-          }
-        }
+        text = 'Saved';
+        btnClass = 'btn-outline-success';
+        disabled = true;
+        title = 'Content saved';
         break;
       case 'unsaved':
-        statusText = 'Unsaved changes';
-        statusClass = 'badge-warning';
+        text = 'Save';
+        btnClass = 'btn-warning';
+        disabled = false;
+        title = 'Click to save';
         break;
       case 'saving':
-        statusText = 'Saving...';
-        statusClass = 'badge-info';
+        text = 'Saving...';
+        btnClass = 'btn-info';
+        disabled = true;
+        title = 'Saving in progress';
         break;
       case 'error':
-        statusText = message || 'Error saving';
-        statusClass = 'badge-danger';
+        text = message || 'Retry';
+        btnClass = 'btn-danger';
+        disabled = false;
+        title = 'Click to retry save';
         break;
     }
 
     this.$statusElement
-      .removeClass('badge-secondary badge-success badge-warning badge-info badge-danger')
-      .addClass(statusClass)
-      .text(statusText);
-
-    // Show manual save button only when there are unsaved changes
-    if (this.$manualSaveBtn.length) {
-      this.$manualSaveBtn.toggle(status === 'unsaved');
-    }
+      .removeClass('btn-outline-success btn-warning btn-info btn-danger')
+      .addClass(btnClass)
+      .prop('disabled', disabled)
+      .attr('title', title)
+      .text(text);
   };
 
   /**
