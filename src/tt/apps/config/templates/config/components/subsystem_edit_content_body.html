@@ -27,17 +27,21 @@ This is what gets replaced on form submission
 
 {% block files_section %}{% endblock %}
 
-{% block left_column %} 
-<nav class="nav flex-column hi-vertical-nav mr-3" id="subsystemTabs" role="tablist">
+{% block left_column %}{% endblock %}
+
+{% block properties_section %}
+
+<!-- Horizontal Tabbed Subsystem Interface -->
+<nav class="nav hi-horizontal-nav" id="subsystemTabs" role="tablist">
   {% for multi_edit_form_data in multi_edit_form_data_list %}
-  <a class="nav-link hi-vertical-nav-link {% if selected_subsystem_id == multi_edit_form_data.owner.id|stringformat:'s' %}active{% endif %}" 
-     id="subsystem-{{ multi_edit_form_data.owner.id }}-tab" 
-     data-toggle="tab" 
+  <a class="nav-link hi-horizontal-nav-link {% if selected_subsystem_id == multi_edit_form_data.owner.id|stringformat:'s' %}active{% endif %}"
+     id="subsystem-{{ multi_edit_form_data.owner.id }}-tab"
+     data-toggle="tab"
      data-subsystem-id="{{ multi_edit_form_data.owner.id }}"
      data-config-settings-url="{% url 'config_settings' %}"
-     href="#subsystem-{{ multi_edit_form_data.owner.id }}-panel" 
-     role="tab" 
-     aria-controls="subsystem-{{ multi_edit_form_data.owner.id }}-panel" 
+     href="#subsystem-{{ multi_edit_form_data.owner.id }}-panel"
+     role="tab"
+     aria-controls="subsystem-{{ multi_edit_form_data.owner.id }}-panel"
      aria-selected="{% if selected_subsystem_id == multi_edit_form_data.owner.id|stringformat:'s' %}true{% else %}false{% endif %}"
      onclick="window.Tt.attr.updateFormAction('{% url 'config_settings' subsystem_id=multi_edit_form_data.owner.id %}', '{{ attr_page_context.container_html_id }}', '{{ multi_edit_form_data.owner.name }} Settings')">
     {{ multi_edit_form_data.owner.name }}
@@ -47,11 +51,7 @@ This is what gets replaced on form submission
   </a>
   {% endfor %}
 </nav>
-{% endblock %}
 
-{% block properties_section %}
-
-<!-- Vertical Tabbed Subsystem Interface -->
 <div class="tab-content" id="subsystemTabContent">
 
   {% for multi_edit_form_data in multi_edit_form_data_list %}

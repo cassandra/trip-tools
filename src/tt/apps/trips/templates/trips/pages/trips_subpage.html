@@ -1,4 +1,4 @@
-{% extends "pages/secondary-page-sidebar.html" %}
+{% extends "pages/feature_subpage.html" %}
 {% load static %}
 {% load icons %}
 
@@ -15,6 +15,7 @@
     <div class="dropdown-divider"></div>
     {% endif %}
     <a class="dropdown-item" href="{% url 'trips_create' %}" data-async="modal">New Trip</a>
+    <a class="dropdown-item" href="{% url 'images_home' %}">Add Images</a>
   </div>
 </div>
 {% endblock %}
@@ -23,17 +24,18 @@
 
 {% block sidebar_back_nav %}
 <li>
-  <a href="{% url 'dashboard_home' %}">
+  <a href="{% url 'trips_all' %}">
     {% icon "chevron-left" size="sm" %}
-    <span>Back to Dashboard</span>
+    <span><em>Back to All Trips</em></span>
   </a>
 </li>
 {% endblock %}
-{% block sidebar_nav_items %}
+
+{% block sidebar_body_items %}
 <li>
   <a href="{% url 'trips_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'trip_overview' %} class="active" aria-current="page"{% endif %}>
-    {% icon "home" size="sm" %}
-    <span>Trip Overview</span>
+    {% icon "globe" size="sm" %}
+    <span>Overview</span>
   </a>
 </li>
 <li>
@@ -61,7 +63,7 @@
   </a>
 </li>
 <li>
-  <a href="{% url 'journal_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'journal' %} class="active" aria-current="page"{% endif %}>
+  <a href="{% url 'journal_all' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'journal' %} class="active" aria-current="page"{% endif %}>
     {% icon "collection" size="sm" %}
     <span>Journal</span>
   </a>
@@ -73,47 +75,39 @@
   </a>
 </li>
 <li>
-  <a href="{% url 'members_list' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'members' %} class="active" aria-current="page"{% endif %}>
+  <a href="{% url 'members_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'members' %} class="active" aria-current="page"{% endif %}>
     {% icon "collection" size="sm" %}
     <span>Members</span>
   </a>
 </li>
 {% endblock %}
 
-{% block secondary_content %}
-<div class="secondary-page-header">
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <div class="d-flex align-items-center">
-      {# Trip reference image - fixed square #}
-      <div class="ml-2 mr-2" style="width: 3rem; flex-shrink: 0;">
-        {% if trip_page.request_member.can_edit_trip %}
-        <a href="{% url 'trip_reference_image_picker' trip_uuid=trip_page.trip.uuid %}" data-async="modal" title="Click to change reference image">
-          {% include "images/components/reference_image_display.html" with image=trip_page.trip.reference_image size="responsive" editable=True %}
-        </a>
-        {% else %}
-        {% include "images/components/reference_image_display.html" with image=trip_page.trip.reference_image size="responsive" %}
-        {% endif %}
-      </div>
-
-      <h1 class="h2 mb-0 mx-2">{{ trip_page.trip.title }}</h1>
+{% block subpage_header %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <div class="d-flex align-items-center">
+    {# Trip reference image - fixed square #}
+    <div class="ml-2 mr-2" style="width: 3rem; flex-shrink: 0;">
       {% if trip_page.request_member.can_edit_trip %}
-      <a href="{% url 'trips_edit' trip_uuid=trip_page.trip.uuid %}"
-         data-async="modal"
-         class="text-muted mr-2"
-         title="Edit trip title and description">
-        {% icon "edit" size="lg" %}
+      <a href="{% url 'trip_reference_image_picker' trip_uuid=trip_page.trip.uuid %}" data-async="modal" title="Click to change reference image">
+        {% include "images/components/reference_image_display.html" with image=trip_page.trip.reference_image size="responsive" editable=True %}
       </a>
+      {% else %}
+      {% include "images/components/reference_image_display.html" with image=trip_page.trip.reference_image size="responsive" %}
       {% endif %}
-      <span class="badge badge-info">{{ trip_page.trip.trip_status.label }}</span>
     </div>
-    {% block trip_extra_actions %}
-    {% endblock %}
+    
+    <h1 class="h2 mb-0 mx-2">{{ trip_page.trip.title }}</h1>
+    {% if trip_page.request_member.can_edit_trip %}
+    <a href="{% url 'trips_edit' trip_uuid=trip_page.trip.uuid %}"
+       data-async="modal"
+       class="text-muted mr-2"
+       title="Edit trip title and description">
+      {% icon "edit" size="lg" %}
+    </a>
+    {% endif %}
+    <span class="badge badge-info">{{ trip_page.trip.trip_status.label }}</span>
   </div>
-</div>
-
-<div class="secondary-page-content">
-  {% block trip_content %}
+  {% block trip_extra_actions %}
   {% endblock %}
 </div>
-
 {% endblock %}

@@ -7,8 +7,9 @@ from django.views.generic import View
 from tt.views import page_not_found_response
 
 from tt.apps.attribute.view_mixins import AttributeMultiEditViewMixin
-from tt.apps.user.context import AccountPageContext
-from tt.apps.user.enums import AccountPage
+
+from tt.context import FeaturePageContext
+from tt.enums import FeaturePageType
 
 from .models import SubsystemAttribute
 from .settings_mixins import SubsystemAttributeMixin
@@ -47,10 +48,10 @@ class ConfigSettingsView( LoginRequiredMixin,
             attr_page_context = attr_page_context,
             attr_item_context_list = attr_item_context_list,
         )
-        context['account_page_context'] = AccountPageContext(
-            active_page = AccountPage.SETTINGS,
-            user = request.user,
+        feature_page_context = FeaturePageContext(
+            active_page = FeaturePageType.SETTINGS,
         )
+        context['feature_page'] = feature_page_context
         return render( request, 'config/pages/settings.html', context )
         
     def post( self, request, *args, **kwargs ):

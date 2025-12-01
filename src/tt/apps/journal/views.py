@@ -37,7 +37,7 @@ from .enums import JournalVisibility
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
 from .helpers import PublishingStatusHelper, JournalPublishContextBuilder
 from .mixins import JournalViewMixin
-from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE
+from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE, SPECIAL_DATES
 from .schemas import PublishingStatus
 from .services import JournalRestoreService, JournalPublishingService
 
@@ -52,7 +52,7 @@ from tt.apps.travelog.services import PublishingService
 logger = logging.getLogger(__name__)
 
 
-class JournalHomeView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
+class JournalAllView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View ):
 
     def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
@@ -62,7 +62,7 @@ class JournalHomeView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, View
         # Fetch journal for trip (MVP: get_primary_for_trip)
         journal = Journal.objects.get_primary_for_trip( trip )
         if journal:
-            redirect_url = reverse( 'journal', kwargs = { 'journal_uuid': journal.uuid })
+            redirect_url = reverse( 'journal_home', kwargs = { 'journal_uuid': journal.uuid })
             return HttpResponseRedirect( redirect_url )
 
         if not request_member.can_edit_trip:
@@ -127,16 +127,18 @@ class JournalCreateView( LoginRequiredMixin, TripViewMixin, ModalView ):
             journal.modified_by = request.user
             journal.save()
 
-            return self.refresh_response(request)
+            redirect_url = reverse( 'journal_home',
+                                    kwargs = { 'journal_uuid': journal.uuid } )
+            return self.redirect_response( request, redirect_url )
 
         context = {
             'form': form,
             'trip': trip,
         }
-        return self.modal_response(request, context=context, status=400)
+        return self.modal_response( request, context = context, status = 400 )
 
 
-class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
+class JournalHomeView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
 
     def get(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
         journal = get_object_or_404(
@@ -175,10 +177,11 @@ class JournalView(LoginRequiredMixin, JournalViewMixin, TripViewMixin, View):
             'journal_page': journal_page_context,
             'journal': journal,
             'journal_entries': journal_entries,
+            'journal_entry_count': len(journal_entries),
             'publishing_status': publishing_status,
         }
 
-        return render(request, 'journal/pages/journal.html', context)
+        return render(request, 'journal/pages/journal_home.html', context)
 
 
 class JournalEditView( LoginRequiredMixin, TripViewMixin, ModalView ):
@@ -321,10 +324,13 @@ class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, 
 
     def get_entry_date_and_timezone( self, journal: Journal ) -> Tuple[date_class, str]:
         """Get the date and timezone for the new entry."""
-        latest_entry = journal.entries.order_by('-date').first()
+        # Exclude special entries (prologue/epilogue) which use min/max dates
+        latest_entry = journal.entries.exclude(
+            date__in = SPECIAL_DATES
+        ).order_by('-date').first()
         if latest_entry:
             return (latest_entry.date + timedelta(days=1), latest_entry.timezone)
-        return (date_class.today(), journal.timezone)
+        return ( date_class.today(), journal.timezone )
 
     def get( self, request, journal_uuid: UUID, *args, **kwargs ) -> HttpResponse:
         journal = get_object_or_404(
@@ -348,7 +354,7 @@ class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, 
         self.assert_is_editor(request_member)
 
         # Check if this type of entry already exists (for special entries)
-        existing_entry = self.get_existing_entry(journal)
+        existing_entry = self.get_existing_entry( journal )
         if existing_entry:
             return redirect('journal_entry', entry_uuid=existing_entry.uuid)
 
@@ -569,7 +575,7 @@ class JournalEntryDeleteModalView( LoginRequiredMixin, TripViewMixin, ModalView 
         with transaction.atomic():
             entry.delete()
 
-        redirect_url = reverse( 'journal', kwargs = { 'journal_uuid': entry.journal.uuid })
+        redirect_url = reverse( 'journal_home', kwargs = { 'journal_uuid': entry.journal.uuid })
         return self.redirect_response( request, redirect_url )
 
 

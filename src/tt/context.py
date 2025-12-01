@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
-from .enums import DashboardPage
+from tt.enums import FeaturePageType
 
 
 @dataclass
-class DashboardPageContext:
+class FeaturePageContext:
     """
     Encapsulates all data needed for dashboard page navigation.
 
     Attributes:
         active_page: Which page in the sidebar should be highlighted
     """
-    active_page: DashboardPage
+    active_page: FeaturePageType

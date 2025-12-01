@@ -9,9 +9,8 @@ Context variables:
 <div class="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS }}"
      draggable="true"
      data-{{ TtConst.IMAGE_UUID_DATA_ATTR }}="{{ image.uuid }}"
-     data-{{ TtConst.IMAGE_URL_DATA_ATTR }}="{{ image.web_image.url }}"
-     data-{{ TtConst.THUMBNAIL_URL_DATA_ATTR }}="{{ image.thumbnail_image.url }}"
-     data-{{ TtConst.INSPECT_URL_DATA_ATTR }}="{% url 'images_image_inspect' image_uuid=image.uuid %}?trip_uuid={{ trip.uuid }}"
+     data-{{ TtConst.IMAGE_MEDIA_URL_DATA_ATTR }}="{{ image.web_image.url }}"
+     data-{{ TtConst.THUMBNAIL_MEDIA_URL_DATA_ATTR }}="{{ image.thumbnail_image.url }}"
      data-{{ TtConst.CAPTION_DATA_ATTR }}="{{ image.caption|default:'Untitled' }}"
      title="{{ image.caption|default:'Untitled' }} - {% if image.datetime_utc %}{{ image.datetime_utc|date:'g:i A' }}{% else %}Unknown time{% endif %}">
   <div class="journal-editor-multi-image-thumbnail">

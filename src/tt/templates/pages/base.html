@@ -44,6 +44,7 @@
     <script>
      window.TtClientConfig = {{ tt_client_config.to_json_dict_str|safe }};
      window.TtConst = {{ TtConst.to_json_dict_str|safe }};
+     window.TtUrlPatterns = {{ TtUrlPatterns.to_json_dict_str|safe }};
      window.AN_VERSION = window.TtClientConfig.VERSION;
     </script>
     {% javascript 'js_before_content' %}

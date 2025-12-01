@@ -387,13 +387,13 @@ class TestDayPageBuilder(TransactionTestCase):
 
     def test_build_with_regular_entries(self):
         """Test building day page data with regular entries only."""
-        entry1 = JournalEntry.objects.create(
+        _ = JournalEntry.objects.create(
             journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
         )
         entry2 = JournalEntry.objects.create(
             journal=self.journal, date=date(2024, 3, 16), title='Day 2', text='Second'
         )
-        entry3 = JournalEntry.objects.create(
+        _ = JournalEntry.objects.create(
             journal=self.journal, date=date(2024, 3, 17), title='Day 3', text='Third'
         )
         entries = list(self.journal.entries.order_by('date'))
@@ -424,16 +424,16 @@ class TestDayPageBuilder(TransactionTestCase):
 
     def test_build_with_prologue_and_epilogue(self):
         """Test building day page data with special entries excluded from day numbering."""
-        prologue = JournalEntry.objects.create(
+        _ = JournalEntry.objects.create(
             journal=self.journal, date=PROLOGUE_DATE, title='Prologue', text='Intro'
         )
-        entry1 = JournalEntry.objects.create(
+        _ = JournalEntry.objects.create(
             journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
         )
-        entry2 = JournalEntry.objects.create(
+        _ = JournalEntry.objects.create(
             journal=self.journal, date=date(2024, 3, 16), title='Day 2', text='Second'
         )
-        epilogue = JournalEntry.objects.create(
+        _ = JournalEntry.objects.create(
             journal=self.journal, date=EPILOGUE_DATE, title='Epilogue', text='Summary'
         )
         entries = list(self.journal.entries.order_by('date'))
@@ -493,7 +493,7 @@ class TestDayPageBuilder(TransactionTestCase):
         prologue = JournalEntry.objects.create(
             journal=self.journal, date=PROLOGUE_DATE, title='Prologue', text='Intro'
         )
-        entry1 = JournalEntry.objects.create(
+        _ = JournalEntry.objects.create(
             journal=self.journal, date=date(2024, 3, 15), title='Day 1', text='First'
         )
         entries = list(self.journal.entries.order_by('date'))

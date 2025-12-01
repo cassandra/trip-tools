@@ -74,6 +74,16 @@
   clear: both;
 }
 
+/* Clear floats before headings - headings should start below floated content */
+.journal-contenteditable > h1,
+.journal-contenteditable > h2,
+.journal-contenteditable > h3,
+.journal-contenteditable > h4,
+.journal-contenteditable > h5,
+.journal-contenteditable > h6 {
+  clear: both;
+}
+
 /* ===========================================
    TEXT BLOCK & CONTENT BLOCK STYLES - PERSISTENT
    Per spec: docs/dev/domain/journal-entry-html-spec.md

@@ -299,6 +299,18 @@ PIPELINE = {
         },
         'journal_editor': {
             'source_filenames': (
+                'js/editor/html-normalization.js',
+                'js/editor/selection-utils.js',
+                'js/editor/layout-manager.js',
+                'js/editor/autosave-manager.js',
+                'js/editor/paste-handler.js',
+                'js/editor/toolbar-manager.js',
+                'js/editor/reference-manager.js',
+                'js/editor/keyboard-manager.js',
+                'js/editor/image-manager.js',
+                'js/editor/drag-drop-manager.js',
+                'js/editor/picker-filters-manager.js',
+                'js/editor/image-picker.js',
                 'js/journal-editor.js',
             ),
             'output_filename': 'js/journal_editor.js',

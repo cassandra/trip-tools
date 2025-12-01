@@ -48,7 +48,7 @@ class ImagesHomeViewTestCase(TestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'images/pages/trip_images_home.html')
-        self.assertIn('dashboard_page', response.context)
+        self.assertIn('feature_page', response.context)
         self.assertIn('uploaded_images', response.context)
         self.assertIn('heif_support_available', response.context)
 

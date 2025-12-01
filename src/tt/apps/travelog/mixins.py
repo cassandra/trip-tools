@@ -55,9 +55,8 @@ class TravelogViewMixin:
             content_type = content_type,
         )
 
-        # Handle cache refresh request
-        refresh_param = request.GET.get('refresh', '').lower()
-        if refresh_param == 'true':
+        # Invalidate cache for draft content (always show fresh content when editing)
+        if content_type.is_draft:
             TravelogImageCacheService.invalidate_cache(
                 journal_uuid = journal.uuid,
                 content_type = content_type,

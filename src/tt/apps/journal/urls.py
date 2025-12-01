@@ -5,8 +5,8 @@ from . import views
 urlpatterns = [
     path(
         'trip/<uuid:trip_uuid>',
-        views.JournalHomeView.as_view(),
-        name='journal_home'
+        views.JournalAllView.as_view(),
+        name='journal_all'
     ),
     path(
         'trip/<uuid:trip_uuid>/create',
@@ -15,8 +15,8 @@ urlpatterns = [
     ),
     path(
         '<uuid:journal_uuid>',
-        views.JournalView.as_view(),
-        name='journal'
+        views.JournalHomeView.as_view(),
+        name='journal_home'
     ),
     path(
         '<uuid:journal_uuid>/edit',

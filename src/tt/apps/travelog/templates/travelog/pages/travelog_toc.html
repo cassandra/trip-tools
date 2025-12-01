@@ -6,14 +6,11 @@
 
 {% block travelog_content %}
 <header class="journal-header">
-  <nav class="d-flex justify-content-between align-items-center small">
-    <a href="{% url 'travelog_user_list' user_uuid=journal.trip.owner.uuid %}" class="header-nav-link">
-      &larr; {{ journal.trip.owner.get_full_name }}'s Travelogs
-    </a>
-    <a href="{% travelog_url 'travelog_gallery' journal.uuid version=travelog_page.get_version_param %}" class="header-nav-link">
-      {% icon "camera" size="sm" %} Image Gallery
-    </a>
-  </nav>
+  {% if travelog_page.is_draft %}
+  {% include "travelog/components/travelog_header_nav.html" with show_user_page=False show_image_gallery=True %}
+  {% else %}
+  {% include "travelog/components/travelog_header_nav.html" with show_user_page=True show_image_gallery=True %}
+  {% endif %}
   <div class="text-center">
     <h1 class="journal-title">{{ content.title }}</h1>
     <p class="journal-subtitle">
@@ -72,8 +69,8 @@
     </div>
     {% else %}
     <div class="text-center p-5 bg-light border rounded">
-      <div class="text-muted mb-3">
-        {% icon "book-open" size="lg" %}
+      <div class="col-3 text-muted mb-3 mx-auto">
+        {% icon "circle-slash" size="lg" %}
       </div>
       <h3 class="h5">No Journal Entries</h3>
       <p class="text-muted mb-0">This journal doesn't have any entries yet.</p>

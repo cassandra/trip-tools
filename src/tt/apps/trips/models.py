@@ -55,6 +55,8 @@ class Trip(models.Model):
     def owner(self):
         """Returns the user with OWNER permission. Cached to prevent N+1 queries."""
         if not hasattr(self, '_owner_cache'):
-            owner_member = self.members.filter( permission_level = TripPermissionLevel.OWNER ).first()
+            owner_member = self.members.filter(
+                permission_level = TripPermissionLevel.OWNER
+            ).order_by( 'added_datetime' ).first()
             self._owner_cache = owner_member.user if owner_member else None
         return self._owner_cache

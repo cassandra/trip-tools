@@ -166,6 +166,21 @@ a.clickable-card:active {
     color: var(--on-tertiary-color);
 }
 
+.bg-success, .btn-success {
+    color: var(--on-error-color) !important;
+    background-color: var(--error-color) !important;
+    border-color: var(--error-highlight-color) !important;
+}
+.bg-success a, .btn-success a {
+    color: var(--on-error-color);
+}
+.bg-success a:hover,
+.bg-success a:focus,
+.bg-success a:active {
+    opacity: 0.65;
+    color: var(--on-error-color);
+}
+
 .bg-danger, .btn-error, .btn-danger {
     color: var(--on-error-color) !important;
     background-color: var(--error-color) !important;
@@ -418,11 +433,18 @@ a.clickable-card:active {
 
 /* Apply gradient background and body font to themed pages */
 body[class*="theme-"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   background: linear-gradient(135deg, var(--background-gradient-start) 0%, var(--background-gradient-end) 100%) fixed;
   background-size: cover;
-  min-height: 100vh;
   font-family: var(--font-body);
   line-height: 1.6;
+}
+
+/* Main content area grows to push footer to bottom */
+.travelog-main {
+  flex: 1;
 }
 
 /* Container */
@@ -936,7 +958,7 @@ h3 {
   background: linear-gradient(135deg, var(--primary-color) 0%,
               var(--primary-highlight-color) 100%);
   color: var(--on-primary-color);
-  padding: 1.5rem 2rem;
+  padding: 0.5rem 2rem 1.5rem 2rem;
   text-align: center;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
@@ -1166,20 +1188,17 @@ h3 {
   cursor: zoom-in;
 }
 
-/* Image link wrapper */
-.browse-image-link {
+/* Image link wrapper - no hover effects, cursor: zoom-in on image is sufficient */
+.browse-image-link,
+.browse-image-link:hover,
+.browse-image-link:visited,
+.browse-image-link:focus,
+.browse-image-link:active {
   display: block;
   line-height: 0;
   flex-shrink: 1;
   min-width: 0;
-}
-
-.browse-image-link:hover {
   opacity: 1;
-}
-
-.browse-image-link:hover .browse-main-image {
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
 }
 
 /* Navigation arrows - flanking the image */
@@ -1262,23 +1281,6 @@ h3 {
   background: var(--sidebar-bg);
   border-right: 1px solid var(--line-color);
   padding: 2rem 1.5rem;
-}
-
-.toc-title {
-  display: block;
-  font-weight: 600;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted-color);
-  text-decoration: none;
-  margin-bottom: 1.5rem;
-  transition: color 0.2s ease;
-}
-
-.toc-title:hover {
-  color: var(--primary-color);
-  opacity: 1;
 }
 
 .toc-list {
@@ -1411,6 +1413,11 @@ h3 {
   max-height: 300px;
 }
 
+/* Clear floats before text blocks that have their own float-right images */
+.day-content .has-float-image {
+  clear: both;
+}
+
 /* Full-width image grid (3 columns, centered) */
 .day-content .full-width-image-group {
   display: grid;
@@ -1418,6 +1425,7 @@ h3 {
   gap: 1rem;
   margin: 2rem 0;
   justify-items: center;
+  clear: both;
 }
 
 .day-content .full-width-image-group .trip-image-wrapper {
@@ -1442,6 +1450,16 @@ h3 {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Clear floats before headings - headings should start below floated content */
+.day-content h1,
+.day-content h2,
+.day-content h3,
+.day-content h4,
+.day-content h5,
+.day-content h6 {
+  clear: both;
 }
 
 /* Image caption styling */

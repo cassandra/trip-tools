@@ -47,8 +47,10 @@
     C.JOURNAL_EDITOR_SELECTOR = '.' + C.JOURNAL_EDITOR_CLASS;
     C.JOURNAL_ENTRY_FORM_SELECTOR = '.' + C.JOURNAL_ENTRY_FORM_CLASS;
     C.JOURNAL_SAVE_STATUS_SELECTOR = '.' + C.JOURNAL_SAVE_STATUS_CLASS;
+    C.JOURNAL_PREVIEW_BTN_SELECTOR = '.' + C.JOURNAL_PREVIEW_BTN_CLASS;
     C.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR = '.' + C.JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS;
     C.JOURNAL_IMAGE_WRAPPER_SELECTOR = '.' + C.JOURNAL_IMAGE_WRAPPER_CLASS;
+    C.JOURNAL_IMAGE_CAPTION_SELECTOR = '.' + C.TRIP_IMAGE_CAPTION_CLASS;
     C.JOURNAL_IMAGE_SELECTOR = 'img.' + C.JOURNAL_IMAGE_CLASS;
     C.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_SELECTOR = '.' + C.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_CLASS;
 
@@ -112,6 +114,32 @@
         },
         displayElementInfo: function( label, element ) {
             return _displayElementInfo( label, element );
+        },
+
+        /**
+         * Build image inspect URL from UUID.
+         * Uses TtUrlPatterns.IMAGE_INSPECT pattern.
+         * @param {string} imageUuid - The image UUID
+         * @returns {string} Full inspect URL
+         */
+        buildImageInspectUrl: function(imageUuid) {
+            return TtUrlPatterns.IMAGE_INSPECT.replace(
+                TtUrlPatterns.PLACEHOLDER_UUID,
+                imageUuid
+            );
+        },
+
+        /**
+         * Build journal entry autosave URL from entry UUID.
+         * Uses TtUrlPatterns.JOURNAL_ENTRY_AUTOSAVE pattern.
+         * @param {string} entryUuid - The journal entry UUID
+         * @returns {string} Full autosave URL
+         */
+        buildJournalEntryAutosaveUrl: function(entryUuid) {
+            return TtUrlPatterns.JOURNAL_ENTRY_AUTOSAVE.replace(
+                TtUrlPatterns.PLACEHOLDER_UUID,
+                entryUuid
+            );
         },
 
     };

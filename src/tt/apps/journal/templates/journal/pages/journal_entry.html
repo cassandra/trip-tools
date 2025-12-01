@@ -1,24 +1,9 @@
-{% extends "journal/pages/journal_base.html" %}
+{% extends "journal/pages/journal_subpage.html" %}
 {% load static %}
 {% load icons %}
 {% load pipeline %}
 
-{% block head_css %}
-{% stylesheet 'journal_editor' %}
-{% endblock %}
-
-{% block sidebar_title %}Journal Entry{% endblock %}
-
-{% block sidebar_back_nav %}
-<li>
-  <a href="{% url 'journal' journal_uuid=entry.journal.uuid %}">
-    {% icon "chevron-left" size="sm" %}
-    <span>Back to Journal</span>
-  </a>
-</li>
-{% endblock %}
-
-{% block trip_content %}
+{% block subpage_content %}
 <!-- Main journal editor layout -->
 <div class="journal-editor-layout">
 
@@ -59,8 +44,7 @@
                   <img src="{% if entry.reference_image %}{{ entry.reference_image.thumbnail_image.url }}{% endif %}"
                        alt="{% if entry.reference_image %}{{ entry.reference_image.caption|default:'Reference' }}{% endif %}"
                        class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS }}"
-                       draggable="true"
-                       data-{{ TtConst.INSPECT_URL_DATA_ATTR }}="{% if entry.reference_image %}{% url 'images_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_uuid={{ trip.uuid }}{% endif %}">
+                       draggable="true">
                   <button type="button"
                           class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS }}"
                           title="Clear reference image">&times;</button>
@@ -107,28 +91,26 @@
               {{ journal_entry_form.timezone }}
             </div>
             {% endif %}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="form-check ml-3">
               <input type="checkbox"
                      class="form-check-input"
                      id="id_include_in_publish"
                      name="include_in_publish"
                      {% if entry.include_in_publish %}checked{% endif %}>
-              <label class="form-check-label" for="id_include_in_publish">
-                Include in publish
+              <label class="form-check-label"
+                     for="id_include_in_publish">
+                Include when published
               </label>
             </div>
-          </div>
-
-          <div class="d-flex justify-content-end align-items-center mt-4">
             <button type="button"
-                    class="btn btn-sm btn-primary mr-2 journal-manual-save-btn"
-                    style="display: none;"
-                    title="Save now">
-              Save
+                    class="btn btn-sm btn-outline-success {{ TtConst.JOURNAL_SAVE_STATUS_CLASS }}"
+                    title="Content saved"
+                    disabled>
+              Saved
             </button>
-            <span class="badge badge-secondary {{ TtConst.JOURNAL_SAVE_STATUS_CLASS }}">
-              Saved 2 seconds ago
-            </span>
           </div>
         </div>
 

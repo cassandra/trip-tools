@@ -18,6 +18,8 @@ from . import managers
 PROLOGUE_DATE = date_class.min  # date(1, 1, 1)
 EPILOGUE_DATE = date_class.max  # date(9999, 12, 31)
 
+SPECIAL_DATES = [ PROLOGUE_DATE, EPILOGUE_DATE ]
+
 
 class JournalContent( models.Model ):
     """

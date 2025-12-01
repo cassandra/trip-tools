@@ -2,6 +2,7 @@ from django.conf import settings
 
 from .client import ClientConfig
 from .constants import TtConst
+from .url_patterns import TtUrlPatterns
 
 
 def client_config(request):
@@ -32,5 +33,6 @@ def client_config(request):
 def shared_constants(request):
     return {
         'TtConst': TtConst,
+        'TtUrlPatterns': TtUrlPatterns(),
     }
     

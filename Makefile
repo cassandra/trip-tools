@@ -30,6 +30,15 @@ lint:
 lint-strict:
 	flake8 --config=src/.flake8 src/tt/ 2>/dev/null
 
+test-js:
+	@if command -v xdg-open > /dev/null; then \
+		xdg-open src/tt/static/tests/test-all.html; \
+	elif command -v open > /dev/null; then \
+		open src/tt/static/tests/test-all.html; \
+	else \
+		echo "Cannot detect browser opener. Please open src/tt/static/tests/test-all.html manually."; \
+	fi
+
 check:	lint test
 
 docker-build:	check-docker Dockerfile

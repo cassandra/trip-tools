@@ -5,6 +5,11 @@ from . import views
 
 urlpatterns = [
     path(
+        '',
+        views.TripsAllView.as_view(),
+        name='trips_all'
+    ),
+    path(
         'create',
         views.TripCreateModalView.as_view(),
         name='trips_create'

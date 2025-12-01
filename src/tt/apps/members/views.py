@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 INVALID_INVITATION_MESSAGE = 'This invitation link is invalid or has expired.'
 
 
-class MemberListView( LoginRequiredMixin, TripViewMixin, View ):
+class MembersHomeView( LoginRequiredMixin, TripViewMixin, View ):
 
     def get(self, request, trip_uuid: UUID, *args, **kwargs) -> HttpResponse:
         request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
@@ -55,7 +55,7 @@ class MemberListView( LoginRequiredMixin, TripViewMixin, View ):
             'member_data_list': member_data_list,
         }
 
-        return render( request, 'members/pages/member_list.html', context )
+        return render( request, 'members/pages/members_home.html', context )
 
 
 class MemberInviteModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
@@ -235,7 +235,7 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
             )
 
             if is_self_removal:
-                return self.redirect_response( request, reverse( 'home' ) )
+                return self.redirect_response( request, reverse( 'dashboard_home' ) )
 
             return self.refresh_response( request )
 

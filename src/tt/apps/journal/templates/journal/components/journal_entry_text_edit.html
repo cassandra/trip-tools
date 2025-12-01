@@ -67,9 +67,10 @@
 
     <!-- Preview Button (right side) -->
     <div>
-      <a href="{% travelog_url 'travelog_day' entry.journal.uuid date=entry.date version='draft' refresh=True %}"
+      <a href="{% travelog_url 'travelog_day' entry.journal.uuid date=entry.date version='draft' %}"
          target="_blank"
-         class="btn btn-sm btn-outline-primary"
+         class="btn btn-sm btn-outline-primary {{ TtConst.JOURNAL_PREVIEW_BTN_CLASS }}"
+         {% if not entry.include_in_publish %}style="display: none;"{% endif %}
          title="Preview this entry in the draft travelog">
         {% icon "eye" size="sm" aria_label="Preview" %} Preview
       </a>
@@ -82,7 +83,7 @@
     id="{{ TtConst.JOURNAL_EDITOR_ID }}"
     contenteditable="true"
     data-{{ TtConst.CURRENT_VERSION_DATA_ATTR }}="{{ entry.edit_version }}"
-    data-{{ TtConst.AUTOSAVE_URL_DATA_ATTR }}="{% url 'journal_entry_autosave' entry_uuid=entry.uuid %}"
+    data-{{ TtConst.ENTRY_UUID_DATA_ATTR }}="{{ entry.uuid }}"
     data-placeholder="Start writing your journal entry..."
     role="textbox"
     aria-label="Journal entry content"

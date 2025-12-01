@@ -15,6 +15,23 @@
  * - CSS_DRAG_OVER: 'drag-over'
  */
 
+
+.journal-new-entry-row {
+  color: var(--secondary-color);
+  background: white;
+  border: 3px dashed #dee2e6;
+  border-radius: 12px;
+  padding: 1rem 4rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-bottom: 2rem;
+}
+
+.journal-new-entry-row:hover {
+  border-color: var(--secondary-color);
+  background-color: var(--secondary-bg-light);
+}
+
 /* ===========================================
    EDITOR LAYOUT
    =========================================== */
@@ -83,8 +100,7 @@
 }
 
 .journal-save-status {
-  font-size: 0.875rem;
-  padding: 0.35rem 0.65rem;
+  min-width: 5rem;  /* Consistent button width across states */
 }
 
 /* Reference Image - Editor-specific interactive component
@@ -422,6 +438,22 @@
 }
 
 /* ===========================================
+   CAPTION VISUAL AFFORDANCE - EDITOR ONLY
+   Makes captions always visible and clickable,
+   even when empty. In travelog (public view),
+   empty captions collapse naturally.
+   =========================================== */
+
+.journal-contenteditable .trip-image-caption {
+  min-height: 1.2em;
+  min-width: 3em;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+  padding: 2px 4px;
+  box-sizing: border-box;
+}
+
+/* ===========================================
    DROP ZONE INDICATORS - TRANSIENT
    Never saved to database
    =========================================== */
@@ -533,7 +565,7 @@
   }
 
   .journal-save-status {
-    font-size: 0.75rem;
+    min-width: 4.5rem;
   }
 }
 

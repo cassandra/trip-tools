@@ -17,7 +17,6 @@
   --success-color: #177219;
   --info-color: #177072;
   --on-success-color: #ffffff;
-  --success-bg-light: #e8f5e8;
   --warning-color: #ECA500;
   --on-warning-color: #ffffff;
   --error-color: #721817;
@@ -32,16 +31,19 @@
   --edit-tertiary-bg-color: #f0f0f0;
 
   /* Add missing semantic background variants */
+  --primary-bg-light: #dffeff;
+  --secondary-bg-light: #FAD4C8;
+  --success-bg-light: #e8f5e8;
   --warning-bg-light: #fef7e6;
   --info-bg-light: #e8f4f4;
   --muted-bg-light: #f8f9fa;
 
   /* Edit Mode Variables (for global edit mode styling) */
-  --edit-mode-primary-bg: #FAD4C8;    /* Side panel background */
-  --edit-mode-secondary-bg: #F5E6E1;  /* Main screen background */
-  --edit-mode-tertiary-bg: #F5E6E1;   /* Top/bottom backgrounds */
-  --edit-mode-border-color: #C65D3C;  /* Border color */
-  --edit-mode-dash-color: #A94A32;    /* Dashed line color */
+  --edit-mode-primary-bg: #FAD4C8;
+  --edit-mode-secondary-bg: #F5E6E1;
+  --edit-mode-tertiary-bg: #F5E6E1;
+  --edit-mode-border-color: #C65D3C;
+  --edit-mode-dash-color: #A94A32;
   --edit-hr-color: #a0a0a0;
   
   --status-highlighted-color: red;
@@ -70,7 +72,7 @@
   --top-buttons-height: 2.5rem;
   --bottom-buttons-height: 2.5rem;
   --secondary-nav-height: 50px;
-  --secondary-page-header-height: 4rem;
+  --subpage-header-height: 4rem;
   --app-sidebar-width: 250px;
   --app-topbar-height: 60px;
 }
@@ -480,6 +482,51 @@ a.clickable-card:active {
     }
 }
 
+/* Horizontal Tab Styling */
+.hi-horizontal-nav {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line-color);
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.hi-horizontal-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    margin: 0 0.25rem -1px 0;
+    border-radius: 0.25rem 0.25rem 0 0;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    border: 1px solid transparent;
+    border-bottom: none;
+}
+
+.hi-horizontal-nav-link:hover {
+    background-color: #f8f9fa;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.hi-horizontal-nav-link:focus {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.hi-horizontal-nav-link.active {
+    background-color: var(--primary-color);
+    color: var(--on-primary-color);
+    border-color: var(--primary-color);
+}
+
+.hi-horizontal-nav-link.active:hover {
+    background-color: var(--primary-highlight-color);
+    color: var(--on-primary-color);
+}
+
 
 /* Pagination styling overrides for app theming */
 .pagination-lg .page-link {
@@ -728,11 +775,19 @@ body {
   overflow-y: auto;
   transition: transform 0.3s ease;
   z-index: 1020;
+  display: flex !important;
+  flex-direction: column;
+}
+
+.app-sidebar-nav.app-sidebar-nav-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--primary-highlight-color);
+  padding-top: 0.5rem;
 }
 
 /* Override Bootstrap collapse to use transform */
 .app-sidebar.collapse {
-  display: block;
+  display: flex !important;
   visibility: visible;
 }
 
@@ -807,20 +862,27 @@ body {
     box-shadow: 2px 0 8px rgba(0,0,0,0.15);
   }
 
-  .app-sidebar.show::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0,0,0,0.5);
-    z-index: -1;
+  /* Overlay shown when sidebar is open - uses sibling selector */
+  .app-sidebar.show + .app-sidebar-overlay {
+    display: block;
   }
 
   .app-main {
     padding-left: 0;
   }
+}
+
+/* Sidebar overlay - separate element to avoid stacking context issues */
+.app-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.25);
+  z-index: 1010;  /* Below sidebar (1020), above content */
+  cursor: pointer;
 }
 
 /* ====================
@@ -854,27 +916,6 @@ body {
 .hamburger-menu {
   min-height: 44px;
   min-width: 44px;
-}
-
-/* Secondary Sidebar (Light Variant) */
-.app-sidebar-secondary {
-  color:var(--black);
-  background-color: #f8f9fa;
-  border-right: 1px solid var(--line-color);
-}
-
-.app-sidebar-secondary .app-sidebar-nav a {
-  color: var(--tertiary-color);
-}
-
-.app-sidebar-secondary .app-sidebar-nav a:hover {
-  background-color: #e9ecef;
-  color: var(--tertiary-color);
-}
-
-.app-sidebar-secondary .app-sidebar-nav a.active {
-  background-color: #dee2e6;
-  font-weight: 600;
 }
 
 /* Nested Sidebar Navigation */
@@ -969,10 +1010,10 @@ body {
   min-height: calc(100vh - var(--app-topbar-height));
 }
 
-.secondary-page-header {
+.subpage-header {
   position: sticky;
   top: var(--app-topbar-height);
-  height: var(--secondary-page-header-height);
+  height: var(--subpage-header-height);
   background-color: #f8f9fa;
   border-bottom: 1px solid var(--line-color);
   z-index: 1010;
@@ -981,8 +1022,8 @@ body {
   display: flex;
   align-items: center;
 }
-.secondary-page-content {
-  padding-top: 1rem; /* Compensate for -1rem top margin on secondary-page-header */
+.subpage-content {
+  padding-top: 1rem; /* Compensate for -1rem top margin on subpage-header */
 }
 
 /* Mobile Responsive for Secondary Pages */

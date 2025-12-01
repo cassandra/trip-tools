@@ -13,9 +13,11 @@ from django.views.generic import View
 
 from tt.apps.notify.email_sender import EmailSender
 
+from tt.context import FeaturePageContext
+from tt.enums import FeaturePageType
+
 from . import forms
-from .context import AccountPageContext
-from .enums import AccountPage, SigninErrorType
+from .enums import SigninErrorType
 from .magic_code_generator import MagicCodeStatus, MagicCodeGenerator
 from .signin_manager import SigninManager
 from .schemas import UserAuthenticationData
@@ -27,7 +29,7 @@ class UserSigninView( View ):
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            url = reverse( 'home' )
+            url = reverse( 'dashboard_home' )
             return HttpResponseRedirect( url )
             
         error_message = None
@@ -153,7 +155,7 @@ class SigninMagicCodeView( View ):
         SigninManager().do_login( request = request, verified_email = True )
         magic_code_generator.expire_magic_code( request )
 
-        url = reverse( 'home' )
+        url = reverse( 'dashboard_home' )
         return HttpResponseRedirect( url )
 
     
@@ -186,7 +188,7 @@ class SigninMagicLinkView( View ):
         request.user = existing_user
         SigninManager().do_login( request = request, verified_email = True )
 
-        url = reverse( 'home' )
+        url = reverse( 'dashboard_home' )
         return HttpResponseRedirect( url )
 
 
@@ -201,12 +203,11 @@ class UserSignoutView(View):
 class AccountView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
-        account_page_context = AccountPageContext(
-            active_page = AccountPage.PROFILE,
-            user = request.user,
+        feature_page_context = FeaturePageContext(
+            active_page = FeaturePageType.ACCOUNT,
         )
         context = {
-            'account_page_context': account_page_context,
+            'feature_page': feature_page_context,
             'user': request.user,
         }
         return render(request, 'user/pages/account.html', context)

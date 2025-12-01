@@ -191,7 +191,7 @@ class TravelogPublicListBuilder:
             List of TravelogListItemData sorted by latest date (newest first)
         """
         # Query journals with published travelogs
-        trips = Trip.objects.owned_by(target_user)
+        trips = Trip.objects.owned_by( target_user )
         journals = Journal.objects.filter(
             trip__in=trips,
             travelogs__is_current=True
@@ -436,7 +436,7 @@ class TravelogImageCacheService:
             if not entry.text:
                 continue
 
-            entry_date = entry.date.strftime('%Y-%m-%d')
+            entry_date = entry.date.isoformat()
             entry_images = cls._extract_images_from_html(
                 entry.text,
                 entry_date,

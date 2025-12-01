@@ -1,7 +1,7 @@
 """
-Integration tests for publishing status in JournalView.
+Integration tests for publishing status in JournalHomeView.
 
-Tests that the JournalView correctly provides publishing status context
+Tests that the JournalHomeView correctly provides publishing status context
 to templates for displaying current published version and unpublished changes.
 """
 import logging
@@ -22,8 +22,8 @@ logging.disable(logging.CRITICAL)
 User = get_user_model()
 
 
-class JournalViewPublishingStatusTestCase(TestCase):
-    """Tests for publishing status context in JournalView."""
+class JournalHomeViewPublishingStatusTestCase(TestCase):
+    """Tests for publishing status context in JournalHomeView."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -50,7 +50,7 @@ class JournalViewPublishingStatusTestCase(TestCase):
     def test_unpublished_journal_context(self):
         """Test that unpublished journal provides correct context."""
         self.client.force_login(self.user)
-        url = reverse('journal', kwargs={'journal_uuid': self.journal.uuid})
+        url = reverse('journal_home', kwargs={'journal_uuid': self.journal.uuid})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
@@ -91,7 +91,7 @@ class JournalViewPublishingStatusTestCase(TestCase):
         )
 
         self.client.force_login(self.user)
-        url = reverse('journal', kwargs={'journal_uuid': self.journal.uuid})
+        url = reverse('journal_home', kwargs={'journal_uuid': self.journal.uuid})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
@@ -136,7 +136,7 @@ class JournalViewPublishingStatusTestCase(TestCase):
         entry.save()
 
         self.client.force_login(self.user)
-        url = reverse('journal', kwargs={'journal_uuid': self.journal.uuid})
+        url = reverse('journal_home', kwargs={'journal_uuid': self.journal.uuid})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
@@ -187,7 +187,7 @@ class JournalViewPublishingStatusTestCase(TestCase):
         )
 
         self.client.force_login(self.user)
-        url = reverse('journal', kwargs={'journal_uuid': self.journal.uuid})
+        url = reverse('journal_home', kwargs={'journal_uuid': self.journal.uuid})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)

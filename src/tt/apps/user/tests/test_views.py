@@ -264,10 +264,11 @@ class TestSigninMagicCodeView(SyncViewTestCase):
             'magic_code': '123456'
         })
 
+        # After successful login, user is redirected to dashboard
         self.assertEqual(response.status_code, 302)
-        expected_url = reverse('home')
+        expected_url = reverse('dashboard_home')
         self.assertEqual(response.url, expected_url)
-        
+
         # Should perform login and expire code
         mock_do_login.assert_called_once()
         mock_expire_code.assert_called_once()
@@ -336,10 +337,11 @@ class TestSigninMagicLinkView(SyncViewTestCase):
         })
         response = self.client.get(url)
 
+        # After successful login, user is redirected to dashboard
         self.assertEqual(response.status_code, 302)
-        expected_url = reverse('home')
+        expected_url = reverse('dashboard_home')
         self.assertEqual(response.url, expected_url)
-        
+
         # Should perform login
         mock_do_login.assert_called_once()
 

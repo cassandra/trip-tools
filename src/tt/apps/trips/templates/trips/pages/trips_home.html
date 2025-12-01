@@ -1,11 +1,20 @@
-{% extends "trips/pages/trips_base.html" %}
+{% extends "trips/pages/trips_subpage.html" %}
 {% load static %}
+{% load icons %}
 
-{% block trip_content %}
+{% block subpage_content %}
 <div class="m-3">
   <div>
     <h1 class="h2 mb-1">Trip Overview</h1>
     <p class="text-muted">Your trip at a glance.</p>
+  </div>
+
+  <div class="m-2 p-2">
+    {% if journal %}
+    <a href="{% url 'journal_home' journal_uuid=journal.uuid %}" class="btn btn-secondary">{% icon "edit" size="sm" %} EDIT JOURNAL</a>
+    {% else %}
+    <a href="{% url 'journal_create' trip_uuid=trip_page.trip.uuid %}" class="btn btn-secondary" data-async="modal">{% icon "plus" size="sm" %}  CREATE A JOURNAL</a>
+    {% endif %}
   </div>
 
   <div class="tt-page-explanation">

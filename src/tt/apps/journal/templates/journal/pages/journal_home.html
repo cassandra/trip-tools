@@ -1,0 +1,112 @@
+{% extends "trips/pages/trips_subpage.html" %}
+{% load icons %}
+{% load travelog_tags %}
+{% load pipeline %}
+
+{% block head_css %}
+{% stylesheet 'journal_editor' %}
+{% endblock %}
+
+{% block subpage_content %}
+<div class="m-3">
+  {% include "journal/components/journal_page_header.html" %}
+  {% include "journal/components/journal_page_warnings.html" %}
+
+  {% if journal_entry_count > 0 %}
+  <div class="card mb-3">
+    <div class="card-body">
+      {% include "journal/components/journal_page_actions.html" %}
+      {% include "journal/components/journal_page_status.html" %}
+    </div>
+  </div>
+  {% endif %}
+  
+  <h4>Journal Entries</h4>
+
+  {% if not journal_entries %}
+  <div class="alert alert-info">
+    <p>Your journal has been created! Add entries to share your trip experiences.</p>
+  </div>
+  {% endif %}
+  
+  {% if trip_page.request_member.can_edit_trip and not journal_page.has_prologue %}
+  <a href="{% url 'journal_prologue_new' journal_uuid=journal_page.journal.uuid %}" class="plain">
+    <div class="journal-new-entry-row">
+      {% icon "plus" size="lg" %}
+      ADD PROLOGUE ENTRY
+    </div>
+  </a>
+  {% endif %}
+  
+  {% for entry in journal_entries %}
+
+  {% if trip_page.request_member.can_edit_trip and entry.is_epilogue %}
+  <a href="{% url 'journal_entry_new' journal_uuid=journal.uuid %}" class="plain">
+    <div class="journal-new-entry-row">
+      {% icon "plus" size="lg" %}
+      ADD DATED ENTRY
+    </div>
+  </a>
+  {% endif %}
+  
+  <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"
+     class="card mb-3 text-decoration-none text-dark d-block">
+    <div class="row no-gutters">
+      {# Left side: Reference image or placeholder #}
+      <div class="col-3 col-md-2">
+        {% include "images/components/reference_image_display.html" with image=entry.reference_image size="md" %}
+      </div>
+
+      {# Right side: Entry content #}
+      <div class="col-9 col-md-10">
+        <div class="card-body">
+          <div class="d-flex w-100 justify-content-between align-items-start">
+            <div>
+              <h5 class="mb-1">
+                {{ entry.title|default:entry.display_date_long }}
+              </h5>
+              {% if entry.text %}
+              <small class="text-muted">{{ entry.display_date_long }}</small>
+              {% endif %}
+              {% if not entry.include_in_publish %}
+              <small class="text-danger d-block">Excluded from publish</small>
+              {% endif %}
+              {% if not entry.text %}
+              <p class="mb-0 text-muted"><em>Empty entry</em></p>
+              {% endif %}
+            </div>
+            <div class="text-right ml-2 flex-shrink-0">
+              <small class="text-muted d-block">Modified {{ entry.modified_datetime|date:"M j, Y, g:i A" }}</small>
+              {% if entry.modified_by %}
+              <small class="text-muted d-block">by {{ entry.modified_by.first_name|default:entry.modified_by.email }}</small>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+
+  {% if trip_page.request_member.can_edit_trip and not journal_page.has_epilogue %}
+    <a href="{% url 'journal_entry_new' journal_uuid=journal.uuid %}" class="plain">
+      <div class="journal-new-entry-row">
+        {% icon "plus" size="lg" %}
+        ADD DATED ENTRY
+      </div>
+    </a>
+    <a href="{% url 'journal_epilogue_new' journal_uuid=journal_page.journal.uuid %}"  class="plain">
+    <div class="journal-new-entry-row">
+      {% icon "plus" size="lg" %}
+      ADD EPILOGUE ENTRY
+    </div>
+  </a>
+  {% endif %}
+  
+</div>
+{% endblock %}
+
+{% block footer_post_javascript %}
+{{ block.super }}
+{% javascript 'journal_editor' %}
+{% endblock %}

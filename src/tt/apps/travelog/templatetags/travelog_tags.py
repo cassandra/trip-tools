@@ -54,7 +54,6 @@ def travelog_url(
     journal_uuid : UUID,
     version      : Optional[Union[str, int]] = None,
     date         : Optional[Union[date_type, str]] = None,
-    refresh      : Optional[bool] = None,
     **kwargs
 ) -> str:
     """
@@ -65,7 +64,6 @@ def travelog_url(
         journal_uuid: Journal UUID
         version: Version parameter - 'draft', 'view', or integer version number
         date: Entry date - datetime.date object or 'YYYY-MM-DD' string (for travelog_day)
-        refresh: If True, add refresh=true query parameter to force cache refresh
         **kwargs: Additional URL kwargs (e.g., page_num=2, image_uuid=...)
 
     Returns:
@@ -74,7 +72,6 @@ def travelog_url(
     Examples:
         {% travelog_url 'travelog_toc' journal.uuid %}
         {% travelog_url 'travelog_toc' journal.uuid version='draft' %}
-        {% travelog_url 'travelog_toc' journal.uuid version='draft' refresh=True %}
         {% travelog_url 'travelog_day' journal.uuid date=entry.date version='draft' %}
         {% travelog_url 'travelog_day' journal.uuid date='2024-01-15' version=2 %}
     """
@@ -90,14 +87,8 @@ def travelog_url(
     base_url = reverse( url_name, kwargs = kwargs )
 
     # Build query parameters
-    query_params = {}
     if version:
-        query_params['version'] = version
-    if refresh:
-        query_params['refresh'] = 'true'
-
-    if query_params:
-        query = urlencode(query_params)
+        query = urlencode({'version': version})
         return f"{base_url}?{query}"
 
     return base_url

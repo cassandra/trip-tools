@@ -132,7 +132,7 @@ if BLEACH_AVAILABLE:
             'img', 'a', 'span', 'div',
         ],
         allowed_attributes={
-            'img': ['src', 'alt', 'class', 'data-uuid', 'data-layout', 'draggable'],
+            'img': ['src', 'alt', 'class', 'data-uuid', 'data-layout'],
             'a': ['href'],
             'span': ['class', 'data-layout'],
             'div': ['class', 'style'],

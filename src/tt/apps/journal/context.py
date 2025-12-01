@@ -37,6 +37,14 @@ class JournalPageContext:
                     self.journal_entry_uuid = None
         return
 
+    @property
+    def all_entries_included_for_publish(self):
+        for entry in self.journal_entries:
+            if not entry.include_in_publish:
+                return False
+            continue
+        return True
+    
     @classmethod
     def create( cls,
                 journal          : Optional[Journal],

@@ -1,0 +1,64 @@
+{% extends "pages/main_base_sidebar.html" %}
+{% load icons %}
+
+{% block main_extra_actions %}
+<div class="dropdown">
+  <button class="btn btn-outline-light dropdown-toggle" type="button" id="newDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    {% icon "plus" size="lg" %} New
+  </button>
+  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="newDropdown">
+    <a class="dropdown-item" href="{% url 'trips_create' %}" data-async="modal">New Trip</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block sidebar_content %}
+{% block sidebar_header %}{% endblock %}
+
+{% block sidebar_body %}
+<ul class="app-sidebar-nav mt-2">
+  {% block sidebar_body_items %}
+  <li>
+    <a href="{% url 'dashboard_home' %}"{% if feature_page.active_page.value == 'dashboard' %} class="active" aria-current="page"{% endif %}>
+      {% icon "dashboard" size="sm" %}
+      <span>Dashboard</span>
+    </a>
+  </li>
+  <li>
+    <a href="{% url 'trips_all' %}"{% if feature_page.active_page.value == 'trips' %} class="active" aria-current="page"{% endif %}>
+      {% icon "globe" size="sm" %}
+      <span>Trips</span>
+    </a>
+  </li>
+  <li>
+    <a href="{% url 'images_home' %}"{% if feature_page.active_page.value == 'images' %} class="active" aria-current="page"{% endif %}>
+      {% icon "camera" size="sm" %}
+      <span>Images</span>
+    </a>
+  </li>
+  {% endblock %}
+</ul>
+{% endblock %}
+
+{% block sidebar_footer %}
+<ul class="app-sidebar-nav app-sidebar-nav-bottom">
+  {% block sidebar_footer_items %}
+  <li>
+    <a href="{% url 'user_account' %}"
+       {% if feature_page.active_page.value == 'account' %}class="active" aria-current="page"{% endif %}>
+      {% icon "user" size="sm" %}
+      <span>Account</span>
+    </a>
+  </li>
+  <li>
+    <a href="{% url 'config_settings' %}"
+       {% if feature_page.active_page.value == 'settings' %}class="active" aria-current="page"{% endif %}>
+      {% icon "gear" size="sm" %}
+      <span>Settings</span>
+    </a>
+  </li>
+  {% endblock %}
+</ul>
+{% endblock %}
+
+{% endblock %}

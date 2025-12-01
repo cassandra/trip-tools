@@ -1,0 +1,24 @@
+{% extends "pages/feature_page.html" %}
+
+{% block sidebar_header %}
+<div class="plain h3 pl-3">
+  {% block sidebar_title %}Trip Tools{% endblock %}
+</div>
+
+<ul class="app-sidebar-nav">
+  {% block sidebar_back_nav %}{% endblock %}
+  {% block sidebar_nav_items %}{% endblock %}
+</ul>
+{% endblock %}
+
+{% block main_content %}
+<div class="subpage-header">
+  {% block subpage_header %}
+  {% endblock %}
+</div>
+
+<div class="subpage-content">
+  {% block subpage_content %}
+  {% endblock %}
+</div>
+{% endblock %}

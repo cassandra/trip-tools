@@ -6,8 +6,8 @@ from . import views
 urlpatterns = [
     path(
         'trip/<uuid:trip_uuid>',
-        views.MemberListView.as_view(),
-        name = 'members_list'
+        views.MembersHomeView.as_view(),
+        name = 'members_home'
     ),
     path(
         'trip/<uuid:trip_uuid>/invite',
