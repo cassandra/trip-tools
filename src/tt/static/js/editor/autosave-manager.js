@@ -125,6 +125,18 @@
 
     if (this.hasUnsavedChanges) {
       this.editor.updateStatus('unsaved');
+    } else {
+      // Content reverted to saved state - update status and clear pending saves
+      this.editor.updateStatus(STATUS.SAVED);
+      if (this.saveTimeout) {
+        clearTimeout(this.saveTimeout);
+        this.saveTimeout = null;
+      }
+      if (this.maxTimeout) {
+        clearTimeout(this.maxTimeout);
+        this.maxTimeout = null;
+      }
+      return;  // No need to schedule save
     }
 
     // Clear existing timeout
