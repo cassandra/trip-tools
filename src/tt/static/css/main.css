@@ -815,20 +815,27 @@ body {
     box-shadow: 2px 0 8px rgba(0,0,0,0.15);
   }
 
-  .app-sidebar.show::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0,0,0,0.25);
-    z-index: -1;
+  /* Overlay shown when sidebar is open - uses sibling selector */
+  .app-sidebar.show + .app-sidebar-overlay {
+    display: block;
   }
 
   .app-main {
     padding-left: 0;
   }
+}
+
+/* Sidebar overlay - separate element to avoid stacking context issues */
+.app-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.25);
+  z-index: 1010;  /* Below sidebar (1020), above content */
+  cursor: pointer;
 }
 
 /* ====================

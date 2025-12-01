@@ -1268,23 +1268,6 @@ h3 {
   padding: 2rem 1.5rem;
 }
 
-.toc-title {
-  display: block;
-  font-weight: 600;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted-color);
-  text-decoration: none;
-  margin-bottom: 1.5rem;
-  transition: color 0.2s ease;
-}
-
-.toc-title:hover {
-  color: var(--primary-color);
-  opacity: 1;
-}
-
 .toc-list {
   list-style: none;
   padding: 0;

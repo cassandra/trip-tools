@@ -28,7 +28,6 @@
   <!-- TOC Sidebar -->
   {% if is_multi_page %}
   <aside class="toc-sidebar">
-    <div class="toc-title">Table of Contents</div>
     <ul class="toc-list">
       {% for toc_entry in day_page.toc_entries %}
       <li class="toc-item">
@@ -101,14 +100,6 @@
         {% endif %}
       </nav>
 
-      <!-- Bottom TOC link (hidden on first/last page where nav buttons link to TOC) -->
-      {% if day_page.current_entry.has_previous and day_page.current_entry.has_next %}
-      <div class="day-toc-link">
-        <a href="{% travelog_url 'travelog_toc' journal.uuid version=travelog_page.get_version_param %}">
-          Table of Contents
-        </a>
-      </div>
-      {% endif %}
       {% endif %}
       
     </article>
