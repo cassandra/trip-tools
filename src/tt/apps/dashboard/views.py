@@ -5,42 +5,27 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic import View
 
-from tt.apps.members.models import TripMember
-from tt.apps.trips.enums import TripStatus
-
 from tt.context import FeaturePageContext
 from tt.enums import FeaturePageType
+
+from .services import DashboardDisplayService
 
 logger = logging.getLogger(__name__)
 
 
-class DashboardView(LoginRequiredMixin, View):
-    """Dashboard categorizes trips by ownership and status."""
+class DashboardHomeView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
-        # Single query: get all memberships with trips prefetched
-        memberships = list(
-            TripMember.objects
-            .filter( user = request.user )
-            .select_related('trip')
-            .order_by('-trip__created_datetime')
+        dashboard_trips = DashboardDisplayService.get_dashboard_trips_for_user(
+            user = request.user,
         )
 
-        # In-memory categorization by ownership and status
-        recent_trips = []
-
-        for membership in memberships:
-            trip = membership.trip
-            if trip.trip_status in [ TripStatus.UPCOMING, TripStatus.CURRENT ]:
-                recent_trips.append( trip )
-            continue
-        
         feature_page_context = FeaturePageContext(
             active_page = FeaturePageType.DASHBOARD,
         )
 
         context = {
             'feature_page': feature_page_context,
-            'recent_trips': recent_trips[0:3],
+            'dashboard_trips': dashboard_trips,
         }
         return render(request, 'dashboard/pages/dashboard_home.html', context)

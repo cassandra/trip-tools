@@ -2,22 +2,19 @@
 {% load icons %}
 
 {# Trip cards grid with empty state using Bootstrap components #}
-{# Parameters: trips (queryset or list), icon_type (optional, defaults to 'upcoming') #}
+{# Parameters: trips (queryset or list), icon_type (optional, defaults to 'upcoming'), card_size (optional, 'small' for smaller cards) #}
 
 {% if trips %}
 <div class="row">
   {% for trip in trips %}
-  <div class="col-6 col-sm-6 col-lg-4 col-xl-3 mb-4">
+  <div class="{% if card_size == 'small' %}col-4 col-sm-4 col-lg-3 col-xl-2{% else %}col-6 col-sm-6 col-lg-4 col-xl-3{% endif %} mb-4">
     <a href="{% url 'trips_home' trip_uuid=trip.uuid %}" class="text-decoration-none">
       <div class="card card-hover h-100" data-trip-uuid="{{ trip.uuid }}">
         <div class="card-img-top{% if icon_type == 'past' %} ref-image-display--past{% endif %}">
           {% include "images/components/reference_image_display.html" with image=trip.reference_image size="responsive" placeholder_image="img/tt-icon-196x196.png" %}
         </div>
-        <div class="card-body">
-          <h5 class="card-title">{{ trip.title }}</h5>
-          {% if trip.description %}
-          <p class="card-text text-muted small trip-card-description">{{ trip.description }}</p>
-          {% endif %}
+        <div class="card-body{% if card_size == 'small' %} py-2 px-2{% endif %}">
+          <h5 class="{% if card_size == 'small' %}h6{% else %}card-title{% endif %}">{{ trip.title }}</h5>
         </div>
       </div>
     </a>
