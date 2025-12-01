@@ -9,7 +9,7 @@
 /* Sticky Panel (Entity Info + Action Bar - Always Visible) */
 .attr-sticky-panel {
     position: sticky;
-    top: 0;
+    top: var(--app-topbar-height);
     z-index: 10;
     background-color: var(--white);
     border-bottom: 1px solid var(--line-color);

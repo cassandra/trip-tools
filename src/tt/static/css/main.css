@@ -480,6 +480,51 @@ a.clickable-card:active {
     }
 }
 
+/* Horizontal Tab Styling */
+.hi-horizontal-nav {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line-color);
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.hi-horizontal-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    margin: 0 0.25rem -1px 0;
+    border-radius: 0.25rem 0.25rem 0 0;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    border: 1px solid transparent;
+    border-bottom: none;
+}
+
+.hi-horizontal-nav-link:hover {
+    background-color: #f8f9fa;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.hi-horizontal-nav-link:focus {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.hi-horizontal-nav-link.active {
+    background-color: var(--primary-color);
+    color: var(--on-primary-color);
+    border-color: var(--primary-color);
+}
+
+.hi-horizontal-nav-link.active:hover {
+    background-color: var(--primary-highlight-color);
+    color: var(--on-primary-color);
+}
+
 
 /* Pagination styling overrides for app theming */
 .pagination-lg .page-link {

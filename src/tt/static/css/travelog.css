@@ -166,6 +166,21 @@ a.clickable-card:active {
     color: var(--on-tertiary-color);
 }
 
+.bg-success, .btn-success {
+    color: var(--on-error-color) !important;
+    background-color: var(--error-color) !important;
+    border-color: var(--error-highlight-color) !important;
+}
+.bg-success a, .btn-success a {
+    color: var(--on-error-color);
+}
+.bg-success a:hover,
+.bg-success a:focus,
+.bg-success a:active {
+    opacity: 0.65;
+    color: var(--on-error-color);
+}
+
 .bg-danger, .btn-error, .btn-danger {
     color: var(--on-error-color) !important;
     background-color: var(--error-color) !important;
