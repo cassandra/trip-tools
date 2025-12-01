@@ -164,7 +164,8 @@
     // Initialize managers
     this.editorLayoutManager = new EditorLayoutManager(this.$editor);
 
-    var autosaveUrl = $editor.data(TtConst.AUTOSAVE_URL_DATA_ATTR);
+    var entryUuid = $editor.data(TtConst.ENTRY_UUID_DATA_ATTR);
+    var autosaveUrl = Tt.buildJournalEntryAutosaveUrl(entryUuid);
     var csrfToken = this.getCSRFToken();
     this.autoSaveManager = new AutoSaveManager(this, autosaveUrl, csrfToken);
 

@@ -255,7 +255,7 @@
 
     return {
       uuid: uuid,
-      url: $card.data(TtConst.IMAGE_URL_DATA_ATTR),
+      url: $card.data(TtConst.IMAGE_MEDIA_URL_DATA_ATTR),
       caption: $card.data(TtConst.CAPTION_DATA_ATTR) || 'Untitled'
     };
   };

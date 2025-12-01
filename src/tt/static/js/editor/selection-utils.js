@@ -165,12 +165,14 @@
       var $img = $card.find('img');
       var url = $img.attr('src') || '';
       var caption = $img.attr('alt') || '';
-      var inspectUrl = $card.data(TtConst.INSPECT_URL_DATA_ATTR) || '';
 
       if (!imageUuid) {
         console.error('[ImageDataService] Picker card missing data-image-uuid for UUID:', uuid);
         return null;
       }
+
+      // Build inspect URL from UUID using TtUrlPatterns
+      var inspectUrl = Tt.buildImageInspectUrl(imageUuid);
 
       return {
         uuid: imageUuid,

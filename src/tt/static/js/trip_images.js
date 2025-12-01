@@ -78,7 +78,7 @@
 
         // Get image data from card's data attributes
         var imageUuid = $card.data(TtConst.IMAGE_UUID_DATA_ATTR);
-        var thumbnailUrl = $card.data(TtConst.THUMBNAIL_URL_DATA_ATTR);
+        var thumbnailUrl = $card.data(TtConst.THUMBNAIL_MEDIA_URL_DATA_ATTR);
         var caption = $card.data(TtConst.CAPTION_DATA_ATTR) || 'Untitled';
 
         // Update hidden input (scoped to modal)

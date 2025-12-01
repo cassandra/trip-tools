@@ -170,9 +170,10 @@
    */
   JournalEditorMultiImagePicker.prototype.handleImageDoubleClick = function(card) {
     var $card = $(card);
-    var inspectUrl = $card.data(TtConst.INSPECT_URL_DATA_ATTR);
+    var uuid = $card.data(TtConst.IMAGE_UUID_DATA_ATTR);
 
-    if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
+    if (uuid && typeof AN !== 'undefined' && AN.get) {
+      var inspectUrl = Tt.buildImageInspectUrl(uuid);
       AN.get(inspectUrl);
     }
   };

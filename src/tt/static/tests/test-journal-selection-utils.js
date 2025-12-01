@@ -177,10 +177,9 @@
     var $pickerCard;
 
     hooks.beforeEach(function() {
-      // Create mock picker card
+      // Create mock picker card (no data-inspect-url - it's now built from UUID via Tt.buildImageInspectUrl)
       $pickerCard = $('<div class="journal-editor-multi-image-card" ' +
-        'data-image-uuid="test-uuid-123" ' +
-        'data-inspect-url="/inspect/test-uuid-123">' +
+        'data-image-uuid="test-uuid-123">' +
         '<img src="/images/test.jpg" alt="Test Caption">' +
         '</div>');
       $('#qunit-fixture').append($pickerCard);
@@ -215,7 +214,9 @@
       assert.equal(result.uuid, 'test-uuid-123', 'UUID is correct');
       assert.equal(result.url, '/images/test.jpg', 'URL from img src');
       assert.equal(result.caption, 'Test Caption', 'Caption from img alt');
-      assert.equal(result.inspectUrl, '/inspect/test-uuid-123', 'Inspect URL from data attr');
+      // inspectUrl is now built from UUID via Tt.buildImageInspectUrl
+      var expectedInspectUrl = Tt.buildImageInspectUrl('test-uuid-123');
+      assert.equal(result.inspectUrl, expectedInspectUrl, 'Inspect URL built from UUID');
     });
 
     QUnit.test('getImageDataByUUID handles missing alt text', function(assert) {
@@ -234,20 +235,21 @@
       $cardNoAlt.remove();
     });
 
-    QUnit.test('getImageDataByUUID handles missing inspect URL', function(assert) {
-      // Create card without inspect URL
-      var $cardNoInspect = $('<div class="journal-editor-multi-image-card" ' +
-        'data-image-uuid="no-inspect-uuid">' +
+    QUnit.test('getImageDataByUUID always generates inspectUrl from UUID', function(assert) {
+      // inspectUrl is now built from UUID via Tt.buildImageInspectUrl, not from data attribute
+      var $card = $('<div class="journal-editor-multi-image-card" ' +
+        'data-image-uuid="another-uuid">' +
         '<img src="/images/test.jpg" alt="Caption">' +
         '</div>');
-      $('#qunit-fixture').append($cardNoInspect);
+      $('#qunit-fixture').append($card);
 
-      var result = ImageDataService.getImageDataByUUID('no-inspect-uuid');
+      var result = ImageDataService.getImageDataByUUID('another-uuid');
 
       assert.ok(result, 'Returns data object');
-      assert.equal(result.inspectUrl, '', 'Inspect URL is empty string');
+      var expectedUrl = Tt.buildImageInspectUrl('another-uuid');
+      assert.equal(result.inspectUrl, expectedUrl, 'Inspect URL built from UUID');
 
-      $cardNoInspect.remove();
+      $card.remove();
     });
   });
 

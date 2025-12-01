@@ -44,8 +44,7 @@
                   <img src="{% if entry.reference_image %}{{ entry.reference_image.thumbnail_image.url }}{% endif %}"
                        alt="{% if entry.reference_image %}{{ entry.reference_image.caption|default:'Reference' }}{% endif %}"
                        class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_THUMBNAIL_CLASS }}"
-                       draggable="true"
-                       data-{{ TtConst.INSPECT_URL_DATA_ATTR }}="{% if entry.reference_image %}{% url 'images_image_inspect' image_uuid=entry.reference_image.uuid %}?trip_uuid={{ trip.uuid }}{% endif %}">
+                       draggable="true">
                   <button type="button"
                           class="{{ TtConst.JOURNAL_REFERENCE_IMAGE_CLEAR_CLASS }}"
                           title="Clear reference image">&times;</button>

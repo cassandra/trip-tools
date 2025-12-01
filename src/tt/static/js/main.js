@@ -116,6 +116,32 @@
             return _displayElementInfo( label, element );
         },
 
+        /**
+         * Build image inspect URL from UUID.
+         * Uses TtUrlPatterns.IMAGE_INSPECT pattern.
+         * @param {string} imageUuid - The image UUID
+         * @returns {string} Full inspect URL
+         */
+        buildImageInspectUrl: function(imageUuid) {
+            return TtUrlPatterns.IMAGE_INSPECT.replace(
+                TtUrlPatterns.PLACEHOLDER_UUID,
+                imageUuid
+            );
+        },
+
+        /**
+         * Build journal entry autosave URL from entry UUID.
+         * Uses TtUrlPatterns.JOURNAL_ENTRY_AUTOSAVE pattern.
+         * @param {string} entryUuid - The journal entry UUID
+         * @returns {string} Full autosave URL
+         */
+        buildJournalEntryAutosaveUrl: function(entryUuid) {
+            return TtUrlPatterns.JOURNAL_ENTRY_AUTOSAVE.replace(
+                TtUrlPatterns.PLACEHOLDER_UUID,
+                entryUuid
+            );
+        },
+
     };
 
     window.Tt = Tt;

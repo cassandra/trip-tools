@@ -88,7 +88,8 @@
             UUID_DATA_ATTR: 'uuid',
             TRIP_IMAGE_CAPTION_CLASS: 'trip-image-caption',
             IMAGE_UUID_DATA_ATTR: 'image-uuid',
-            IMAGE_URL_DATA_ATTR: 'image-url',
+            ENTRY_UUID_DATA_ATTR: 'entry-uuid',
+            IMAGE_MEDIA_URL_DATA_ATTR: 'image-url',
             CAPTION_DATA_ATTR: 'caption',
 
             // Image picker - class constants
@@ -124,14 +125,14 @@
             JOURNAL_REFERENCE_IMAGE_PREVIEW_SELECTOR: '.journal-reference-image-preview',
             JOURNAL_REFERENCE_IMAGE_CLEAR_SELECTOR: '.journal-reference-image-clear',
             JOURNAL_REFERENCE_IMAGE_THUMBNAIL_SELECTOR: '.journal-reference-image-thumbnail',
-            REFERENCE_IMAGE_UUID_DATA_ATTR: 'reference-image-uuid',
-            INSPECT_URL_DATA_ATTR: 'inspect-url'
+            REFERENCE_IMAGE_UUID_DATA_ATTR: 'reference-image-uuid'
         };
 
         // Mock TtUrlPatterns - URL patterns generated via reverse() in production
         window.TtUrlPatterns = {
             PLACEHOLDER_UUID: '00000000-0000-0000-0000-000000000000',
-            IMAGE_INSPECT: '/images/inspect/00000000-0000-0000-0000-000000000000'
+            IMAGE_INSPECT: '/images/inspect/00000000-0000-0000-0000-000000000000',
+            JOURNAL_ENTRY_AUTOSAVE: '/journal/entry/00000000-0000-0000-0000-000000000000/save'
         };
     </script>
 

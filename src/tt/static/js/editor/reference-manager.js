@@ -63,8 +63,7 @@
     };
 
     this.DATA_ATTRS = {
-      UUID: TtConst.REFERENCE_IMAGE_UUID_DATA_ATTR,
-      INSPECT_URL: TtConst.INSPECT_URL_DATA_ATTR
+      UUID: TtConst.REFERENCE_IMAGE_UUID_DATA_ATTR
     };
   }
 
@@ -141,8 +140,10 @@
     // Setup double-click to open inspector
     this.$container.on('dblclick', this.SELECTORS.THUMBNAIL, function(e) {
       e.preventDefault();
-      var inspectUrl = $(this).data(self.DATA_ATTRS.INSPECT_URL);
-      if (inspectUrl && typeof AN !== 'undefined' && AN.get) {
+      // Get UUID from container (thumbnail doesn't store it)
+      var uuid = self.$container.data(self.DATA_ATTRS.UUID);
+      if (uuid && typeof AN !== 'undefined' && AN.get) {
+        var inspectUrl = Tt.buildImageInspectUrl(uuid);
         AN.get(inspectUrl);
       }
     });
@@ -171,12 +172,12 @@
 
   /**
    * Set reference image from image data
-   * @param {Object} imageData - {uuid, url, caption, inspectUrl (optional)}
+   * @param {Object} imageData - {uuid, url, caption}
    */
   ReferenceImageManager.prototype.setImage = function(imageData) {
-    // Use lookup function to get complete data if needed
+    // Use lookup function to get complete data if needed (for url/caption)
     var completeData = imageData;
-    if (!imageData.inspectUrl && this.getImageDataByUUID) {
+    if (!imageData.url && this.getImageDataByUUID) {
       completeData = this.getImageDataByUUID(imageData.uuid);
       if (!completeData) {
         console.error('[ReferenceImageManager] Cannot set reference image: lookup failed for UUID', imageData.uuid);
@@ -195,7 +196,6 @@
 
     $img.attr('src', completeData.url);
     $img.attr('alt', completeData.caption || 'Reference');
-    $img.attr('data-' + this.DATA_ATTRS.INSPECT_URL, completeData.inspectUrl);
 
     // Show preview, hide placeholder
     $placeholder.addClass('d-none');
