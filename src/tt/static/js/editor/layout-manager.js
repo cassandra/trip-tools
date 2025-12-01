@@ -181,6 +181,22 @@
   };
 
   /**
+   * Ensure all images have edit-time-only attributes
+   * Called on page load to add attributes to images from saved content
+   * These attributes are stripped before save (in getCleanHTML)
+   */
+  EditorLayoutManager.prototype.ensureEditTimeAttributes = function() {
+    this.$editor.find(TtConst.JOURNAL_IMAGE_SELECTOR).each(function() {
+      var $img = $(this);
+
+      // Add draggable attribute for editor drag-drop
+      if (!$img.attr('draggable')) {
+        $img.attr('draggable', true);
+      }
+    });
+  };
+
+  /**
    * Unified layout refresh method
    * Calls all layout methods in the correct order
    * This ensures consistent layout behavior across all operations
@@ -192,10 +208,13 @@
     // 2. Ensure delete buttons exist (must happen after normalization)
     this.ensureDeleteButtons();
 
-    // 3. Wrap full-width image groups (affects DOM structure)
+    // 3. Ensure edit-time attributes on images (draggable, etc.)
+    this.ensureEditTimeAttributes();
+
+    // 4. Wrap full-width image groups (affects DOM structure)
     this.wrapFullWidthImageGroups();
 
-    // 4. Mark float paragraphs (depends on DOM structure being finalized)
+    // 5. Mark float paragraphs (depends on DOM structure being finalized)
     this.markFloatParagraphs();
   };
 

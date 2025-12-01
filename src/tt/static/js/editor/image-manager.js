@@ -118,10 +118,9 @@
    * @param {string} url - Image URL
    * @param {string} caption - Image caption/alt text
    * @param {string} layout - Layout type ('float-right' or 'full-width')
-   * @param {string} inspectUrl - URL for the image inspector modal
    * @returns {jQuery} jQuery-wrapped image wrapper element
    */
-  ImageManager.prototype.createImageElement = function(uuid, url, caption, layout, inspectUrl) {
+  ImageManager.prototype.createImageElement = function(uuid, url, caption, layout) {
     // Create the image element
     var $img = $('<img>', {
       'src': url,
@@ -129,8 +128,7 @@
       'class': TtConst.JOURNAL_IMAGE_CLASS
     });
     $img.attr('data-' + TtConst.UUID_DATA_ATTR, uuid);
-    $img.attr('data-' + TtConst.INSPECT_URL_DATA_ATTR, inspectUrl);
-    $img.attr('draggable', true);
+    $img.attr('draggable', true);  // Edit-time only, stripped before save
 
     // Create wrapper with layout attribute
     var $wrapper = $('<span>', {
@@ -258,8 +256,7 @@
     return {
       uuid: uuid,
       url: $card.data(TtConst.IMAGE_URL_DATA_ATTR),
-      caption: $card.data(TtConst.CAPTION_DATA_ATTR) || 'Untitled',
-      inspectUrl: $card.data(TtConst.INSPECT_URL_DATA_ATTR)
+      caption: $card.data(TtConst.CAPTION_DATA_ATTR) || 'Untitled'
     };
   };
 

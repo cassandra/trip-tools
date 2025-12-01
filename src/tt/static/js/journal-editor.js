@@ -562,6 +562,9 @@
     // Remove selected state (editor UI only)
     $clone.find('.' + EDITOR_TRANSIENT.CSS_SELECTED).removeClass(EDITOR_TRANSIENT.CSS_SELECTED);
 
+    // Remove edit-time-only attributes from images (draggable is editor-only)
+    $clone.find(TtConst.JOURNAL_IMAGE_SELECTOR).removeAttr('draggable');
+
     return $clone.html();
   };
 
@@ -666,8 +669,8 @@
    * Create image element with proper attributes
    * Delegates to ImageManager
    */
-  JournalEditor.prototype.createImageElement = function(uuid, url, caption, layout, inspectUrl) {
-    return this.imageManager.createImageElement(uuid, url, caption, layout, inspectUrl);
+  JournalEditor.prototype.createImageElement = function(uuid, url, caption, layout) {
+    return this.imageManager.createImageElement(uuid, url, caption, layout);
   };
 
   /**
@@ -683,9 +686,10 @@
       e.stopPropagation();
 
       var $img = $(this);
-      var inspectUrl = $img.data(TtConst.INSPECT_URL_DATA_ATTR);
+      var uuid = $img.data(TtConst.UUID_DATA_ATTR);
 
-      if (inspectUrl) {
+      if (uuid) {
+        var inspectUrl = TtConst.IMAGE_INSPECT_URL_PATTERN.replace('{uuid}', uuid);
         AN.get(inspectUrl);
       }
     });
