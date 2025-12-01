@@ -1,0 +1,30 @@
+{% load icons %}
+
+<div class="card mb-3">
+  <div class="row no-gutters">
+    <div class="col-3 col-md-2" id="journal-reference-image-container">
+      {% include "images/components/reference_image_display.html" with image=journal.reference_image size="md" editable=False %}
+    </div>
+
+    <div class="col-9 col-md-10">
+      <div class="card-body bg-white">
+        <div class="d-flex w-100 align-items-start mb-2">
+          <h3 class="mb-0 mr-2">{{ journal.title }}</h3>
+        </div>
+        {% if journal.description %}
+        <p class="text-muted mb-2">{{ journal.description }}</p>
+        {% endif %}
+        <div class="d-flex align-items-center flex-wrap">
+          <small class="text-muted mr-3">
+            {% icon "globe" size="sm" css_class="tt-icon-left" %}
+            Timezone: {{ journal.timezone }}
+          </small>
+          <small class="text-muted">
+            {% icon "clock" size="sm" css_class="tt-icon-left" %}
+            Created {{ journal.created_datetime|date:"N j, Y" }}
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

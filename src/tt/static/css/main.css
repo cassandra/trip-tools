@@ -17,7 +17,6 @@
   --success-color: #177219;
   --info-color: #177072;
   --on-success-color: #ffffff;
-  --success-bg-light: #e8f5e8;
   --warning-color: #ECA500;
   --on-warning-color: #ffffff;
   --error-color: #721817;
@@ -32,16 +31,19 @@
   --edit-tertiary-bg-color: #f0f0f0;
 
   /* Add missing semantic background variants */
+  --primary-bg-light: #dffeff;
+  --secondary-bg-light: #FAD4C8;
+  --success-bg-light: #e8f5e8;
   --warning-bg-light: #fef7e6;
   --info-bg-light: #e8f4f4;
   --muted-bg-light: #f8f9fa;
 
   /* Edit Mode Variables (for global edit mode styling) */
-  --edit-mode-primary-bg: #FAD4C8;    /* Side panel background */
-  --edit-mode-secondary-bg: #F5E6E1;  /* Main screen background */
-  --edit-mode-tertiary-bg: #F5E6E1;   /* Top/bottom backgrounds */
-  --edit-mode-border-color: #C65D3C;  /* Border color */
-  --edit-mode-dash-color: #A94A32;    /* Dashed line color */
+  --edit-mode-primary-bg: #FAD4C8;
+  --edit-mode-secondary-bg: #F5E6E1;
+  --edit-mode-tertiary-bg: #F5E6E1;
+  --edit-mode-border-color: #C65D3C;
+  --edit-mode-dash-color: #A94A32;
   --edit-hr-color: #a0a0a0;
   
   --status-highlighted-color: red;

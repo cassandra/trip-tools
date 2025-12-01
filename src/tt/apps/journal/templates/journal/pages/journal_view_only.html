@@ -4,6 +4,17 @@
 
 {% block subpage_content %}
 <div class="m-3">
+  {# Viewer notice - always shown when journal exists #}
+  {% if journal %}
+  <div class="alert alert-secondary mt-3">
+    <small>
+      {% icon "lock" size="sm" css_class="tt-icon-left" %}
+      You have <strong>viewer</strong> access to this trip. Only trip editors can create and modify journal entries.
+    </small>
+  </div>
+  {% endif %}
+
+  {% include "journal/components/journal_page_header_view_only.html" %}
 
   {% if not journal %}
   {# No journal exists - info alert, no buttons #}
@@ -63,16 +74,6 @@
         </div>
       </div>
     </div>
-  </div>
-  {% endif %}
-
-  {# Viewer notice - always shown when journal exists #}
-  {% if journal %}
-  <div class="alert alert-secondary mt-3">
-    <small>
-      {% icon "lock" size="sm" css_class="tt-icon-left" %}
-      You have <strong>viewer</strong> access to this trip. Only trip editors can create and modify journal entries.
-    </small>
   </div>
   {% endif %}
 

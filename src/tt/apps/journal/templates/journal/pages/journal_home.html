@@ -21,9 +21,34 @@
   </div>
   {% endif %}
   
-  {% if journal_entries %}
   <h4>Journal Entries</h4>
+
+  {% if not journal_entries %}
+  <div class="alert alert-info">
+    <p>Your journal has been created! Add entries to share your trip experiences.</p>
+  </div>
+  {% endif %}
+  
+  {% if trip_page.request_member.can_edit_trip and not journal_page.has_prologue %}
+  <a href="{% url 'journal_prologue_new' journal_uuid=journal_page.journal.uuid %}" class="plain">
+    <div class="journal-new-entry-row">
+      {% icon "plus" size="lg" %}
+      ADD PROLOGUE ENTRY
+    </div>
+  </a>
+  {% endif %}
+  
   {% for entry in journal_entries %}
+
+  {% if trip_page.request_member.can_edit_trip and entry.is_epilogue %}
+  <a href="{% url 'journal_entry_new' journal_uuid=journal.uuid %}" class="plain">
+    <div class="journal-new-entry-row">
+      {% icon "plus" size="lg" %}
+      ADD DATED ENTRY
+    </div>
+  </a>
+  {% endif %}
+  
   <a href="{% url 'journal_entry' entry_uuid=entry.uuid %}"
      class="card mb-3 text-decoration-none text-dark d-block">
     <div class="row no-gutters">
@@ -62,14 +87,22 @@
     </div>
   </a>
   {% endfor %}
-  {% else %}
-  <div class="alert alert-info">
-    <h4>No journal entries yet</h4>
-    <p>Your journal has been created! Add entries to share your trip experiences.</p>
-    <a href="{% url 'journal_entry_new' journal_uuid=journal.uuid %}" class="btn btn-primary">Create Entry</a>
-  </div>
-  {% endif %}
 
+  {% if trip_page.request_member.can_edit_trip and not journal_page.has_epilogue %}
+    <a href="{% url 'journal_entry_new' journal_uuid=journal.uuid %}" class="plain">
+      <div class="journal-new-entry-row">
+        {% icon "plus" size="lg" %}
+        ADD DATED ENTRY
+      </div>
+    </a>
+    <a href="{% url 'journal_epilogue_new' journal_uuid=journal_page.journal.uuid %}"  class="plain">
+    <div class="journal-new-entry-row">
+      {% icon "plus" size="lg" %}
+      ADD EPILOGUE ENTRY
+    </div>
+  </a>
+  {% endif %}
+  
 </div>
 {% endblock %}
 

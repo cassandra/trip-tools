@@ -34,7 +34,7 @@ class TripsAllView(LoginRequiredMixin, View):
         # Single query: get all memberships with trips prefetched
         memberships = list(
             TripMember.objects
-            .filter(user=request.user)
+            .filter( user = request.user )
             .select_related('trip')
             .order_by('-trip__created_datetime')
         )

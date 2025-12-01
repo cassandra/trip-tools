@@ -16,7 +16,7 @@
 {% block sidebar_header %}{% endblock %}
 
 {% block sidebar_body %}
-<ul class="app-sidebar-nav">
+<ul class="app-sidebar-nav mt-2">
   {% block sidebar_body_items %}
   <li>
     <a href="{% url 'dashboard_home' %}"{% if feature_page.active_page.value == 'dashboard' %} class="active" aria-current="page"{% endif %}>

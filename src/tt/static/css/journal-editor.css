@@ -15,6 +15,23 @@
  * - CSS_DRAG_OVER: 'drag-over'
  */
 
+
+.journal-new-entry-row {
+  color: var(--secondary-color);
+  background: white;
+  border: 3px dashed #dee2e6;
+  border-radius: 12px;
+  padding: 1rem 4rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-bottom: 2rem;
+}
+
+.journal-new-entry-row:hover {
+  border-color: var(--secondary-color);
+  background-color: var(--secondary-bg-light);
+}
+
 /* ===========================================
    EDITOR LAYOUT
    =========================================== */

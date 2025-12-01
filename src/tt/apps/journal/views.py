@@ -37,7 +37,7 @@ from .enums import JournalVisibility
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
 from .helpers import PublishingStatusHelper, JournalPublishContextBuilder
 from .mixins import JournalViewMixin
-from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE
+from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE, SPECIAL_DATES
 from .schemas import PublishingStatus
 from .services import JournalRestoreService, JournalPublishingService
 
@@ -324,10 +324,13 @@ class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, 
 
     def get_entry_date_and_timezone( self, journal: Journal ) -> Tuple[date_class, str]:
         """Get the date and timezone for the new entry."""
-        latest_entry = journal.entries.order_by('-date').first()
+        # Exclude special entries (prologue/epilogue) which use min/max dates
+        latest_entry = journal.entries.exclude(
+            date__in = SPECIAL_DATES
+        ).order_by('-date').first()
         if latest_entry:
             return (latest_entry.date + timedelta(days=1), latest_entry.timezone)
-        return (date_class.today(), journal.timezone)
+        return ( date_class.today(), journal.timezone )
 
     def get( self, request, journal_uuid: UUID, *args, **kwargs ) -> HttpResponse:
         journal = get_object_or_404(
@@ -351,7 +354,7 @@ class JournalEntryNewView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, 
         self.assert_is_editor(request_member)
 
         # Check if this type of entry already exists (for special entries)
-        existing_entry = self.get_existing_entry(journal)
+        existing_entry = self.get_existing_entry( journal )
         if existing_entry:
             return redirect('journal_entry', entry_uuid=existing_entry.uuid)
 
