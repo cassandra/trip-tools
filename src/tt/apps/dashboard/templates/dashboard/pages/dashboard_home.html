@@ -4,9 +4,9 @@
 {% block main_content %}
 <div class="m-3">
 
-  <!-- Recent Trips Section -->
-  <h2 class="h3">Recent Trips</h2>
-  {% include "trips/components/trip-cards-grid.html" with trips=recent_trips icon_type="recent" %}
+  <!-- Dashboard Trips Section -->
+  <h2 class="h3">My Trips</h2>
+  {% include "trips/components/trip-cards-grid.html" with trips=dashboard_trips icon_type="recent" card_size="small" %}
 
   <div class="tt-page-explanation">
     <h2>The Problems</h2>

@@ -17,9 +17,9 @@ Execute focused implementation workflow for issue that has already been picked u
 
 2. **Validate prerequisites** - Ensure issue is ready for implementation:
    ```bash
-   # Verify we're on a feature branch (not staging/master)
+   # Verify we're on a feature branch (not main or release)
    git branch --show-current
-   # Should show: feature/$1-* or bugfix/$1-* etc.
+   # Should show: feature/* or bugfix/* etc.
 
    # Verify clean working directory
    git status
@@ -29,6 +29,7 @@ Execute focused implementation workflow for issue that has already been picked u
    git pull
    ```
    **CRITICAL**: STOP if not on feature branch or if working directory is not clean. **DO NOT** restore files: ask what to do next.
+   **CRITICAL**: DO NOT create a new feature branch. This command should also use the current feature branch.
 
 3. **Read issue context** - Understand requirements completely:
    ```bash
