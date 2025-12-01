@@ -612,8 +612,8 @@
 }
 
 .attr-update-btn.form-dirty:hover {
-    background-color: var(--primary-color-dark, #0056b3) !important;
-    border-color: var(--primary-color-dark, #0056b3) !important;
+    background-color: var(--primary-highlight-color, #0056b3) !important;
+    border-color: var(--primary-highlight-color, #0056b3) !important;
     color: white !important;
 }
 

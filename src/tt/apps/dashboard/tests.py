@@ -31,7 +31,7 @@ class DashboardViewTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.dashboard_home_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'dashboard/pages/dashboard.html')
+        self.assertTemplateUsed(response, 'dashboard/pages/dashboard_home.html')
 
     def test_dashboard_home_shows_upcoming_trips(self):
         """Test that dashboard_home displays upcoming trips."""

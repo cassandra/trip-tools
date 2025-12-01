@@ -9,14 +9,15 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.generic import View
 
-from tt.apps.dashboard.context import DashboardPageContext
-from tt.apps.dashboard.enums import DashboardPage
 from tt.apps.journal.models import Journal
 from tt.apps.images.enums import UploadStatus
 from tt.apps.images.services import ImageUploadService
 from tt.apps.images.views import EntityImagePickerView, EntityImageUploadView
 from tt.apps.members.models import TripMember
+
 from tt.async_view import ModalView
+from tt.context import FeaturePageContext
+from tt.enums import FeaturePageType
 
 from .context import TripPageContext
 from .enums import TripPage, TripPermissionLevel, TripStatus
@@ -55,12 +56,11 @@ class TripsAllView(LoginRequiredMixin, View):
             elif trip.trip_status == TripStatus.PAST and is_owner:
                 owned_past_trips.append(trip)
 
-        dashboard_page_context = DashboardPageContext(
-            active_page = DashboardPage.TRIPS,
+        feature_page_context = FeaturePageContext(
+            active_page = FeaturePageType.TRIPS,
         )
-
         context = {
-            'dashboard_page': dashboard_page_context,
+            'feature_page': feature_page_context,
             'owned_upcoming_trips': owned_upcoming_trips,
             'shared_trips': shared_trips,
             'owned_past_trips': owned_past_trips,

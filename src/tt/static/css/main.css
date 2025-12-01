@@ -728,11 +728,19 @@ body {
   overflow-y: auto;
   transition: transform 0.3s ease;
   z-index: 1020;
+  display: flex !important;
+  flex-direction: column;
+}
+
+.app-sidebar-nav.app-sidebar-nav-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--primary-highlight-color);
+  padding-top: 0.5rem;
 }
 
 /* Override Bootstrap collapse to use transform */
 .app-sidebar.collapse {
-  display: block;
+  display: flex !important;
   visibility: visible;
 }
 
@@ -814,7 +822,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0,0,0,0.25);
     z-index: -1;
   }
 

@@ -1,0 +1,29 @@
+{% extends "pages/feature_page.html" %}
+{% load icons %}
+
+{% block main_content %}
+<div class="m-3">
+
+  <!-- Recent Trips Section -->
+  <h2 class="h3">Recent Trips</h2>
+  <div class="mb-4 col-lg-8 col-md-10 col-12">
+    {% include "trips/components/trip-cards-grid.html" with trips=recent_trips icon_type="recent" %}
+  </div>
+
+  <div class="tt-page-explanation">
+    <h2>The Problems</h2>
+    <ul>
+      <li>Trip information is scattered across multiple apps, tabs, and documents.</li>
+      <li>What you need to see depends on where yours trips are in their lifecycle.</li>
+      <li>No single place shows you the most important information for right now.</li>
+      <li>Switching between trips to find out what's important requires time and mental overhead.</li>
+    </ul>
+    
+    <h2>The Solution</h2>
+    <ul>
+      <p>A contextual dashboard that adapts to your trips' current statuses, surfacing what matters most.</p>
+    </ul>
+  </div>
+</div>
+
+{% endblock %}

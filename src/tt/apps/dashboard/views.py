@@ -6,10 +6,10 @@ from django.shortcuts import render
 from django.views.generic import View
 
 from tt.apps.members.models import TripMember
-from tt.apps.trips.enums import TripPermissionLevel, TripStatus
+from tt.apps.trips.enums import TripStatus
 
-from .context import DashboardPageContext
-from .enums import DashboardPage
+from tt.context import FeaturePageContext
+from tt.enums import FeaturePageType
 
 logger = logging.getLogger(__name__)
 
@@ -35,12 +35,12 @@ class DashboardView(LoginRequiredMixin, View):
                 recent_trips.append( trip )
             continue
         
-        dashboard_page_context = DashboardPageContext(
-            active_page = DashboardPage.DASHBOARD,
+        feature_page_context = FeaturePageContext(
+            active_page = FeaturePageType.DASHBOARD,
         )
 
         context = {
-            'dashboard_page': dashboard_page_context,
+            'feature_page': feature_page_context,
             'recent_trips': recent_trips[0:3],
         }
-        return render(request, 'dashboard/pages/dashboard.html', context)
+        return render(request, 'dashboard/pages/dashboard_home.html', context)

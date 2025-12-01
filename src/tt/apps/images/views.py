@@ -13,14 +13,15 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import View
 
 from tt.apps.common.antinode import http_response
-from tt.apps.dashboard.context import DashboardPageContext
-from tt.apps.dashboard.enums import DashboardPage
 from tt.apps.members.models import TripMember
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
 from tt.apps.trips.models import Trip
+
 from tt.async_view import ModalView
+from tt.context import FeaturePageContext
+from tt.enums import FeaturePageType
 
 from .context import ImagePageContext
 from .enums import ImageAccessRole, UploadStatus
@@ -40,8 +41,8 @@ class ImagesHomeView( LoginRequiredMixin, View ):
     MAX_LATEST_IMAGES = 50
     
     def get(self, request, *args, **kwargs) -> HttpResponse:
-        dashboard_page_context = DashboardPageContext(
-            active_page=DashboardPage.IMAGES,
+        feature_page_context = FeaturePageContext(
+            active_page=FeaturePageType.IMAGES,
         )
 
         # Query recent uploaded images for the current user
@@ -50,7 +51,7 @@ class ImagesHomeView( LoginRequiredMixin, View ):
         ).order_by('-uploaded_datetime')[:self.MAX_LATEST_IMAGES]
 
         context = {
-            'dashboard_page': dashboard_page_context,
+            'feature_page': feature_page_context,
             'uploaded_images': uploaded_images,
             'heif_support_available': HEIF_SUPPORT_AVAILABLE,
         }

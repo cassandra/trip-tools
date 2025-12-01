@@ -81,6 +81,7 @@ AVAILABLE_ICONS = {
     'times-circle',
     'unlock',
     'upload',
+    'user',
     'video',
     'grid',
     'exclamation-triangle',

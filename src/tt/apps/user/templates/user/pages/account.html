@@ -1,9 +1,14 @@
-{% extends "user/pages/account_base.html" %}
+{% extends "pages/feature_page.html" %}
 
-{% block account_content %}
+{% block main_content %}
 <div class="container-fluid px-0">
-  <h1 class="h2 m-4">Account Settings</h1>
-
+  <div class="d-flex justify-content-between m-4">
+    <h1 class="h2">Account Settings</h1>
+    <div>
+       <a class="btn btn-outline-primary" href="{% url 'user_signout' %}">Sign Out</a>
+    </div>
+  </div>
+  
   <div class="row m-3">
     <div class="col-lg-8 col-md-10">
       <div class="card">
