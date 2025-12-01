@@ -275,6 +275,9 @@
 
     // Setup keyboard navigation
     this.setupKeyboardNavigation();
+
+    // Setup edge paragraph insertion (clicking in padding or arrow keys at boundaries)
+    this.setupEdgeParagraphInsertion();
   };
 
   /**
@@ -806,6 +809,79 @@
     });
 
     this.keyboardManager.setup();
+  };
+
+  /**
+   * Setup edge paragraph insertion
+   * Clicking in the editor's top/bottom padding creates a new paragraph
+   * when the first/last element is a non-editable block (e.g., full-width image group)
+   */
+  JournalEditor.prototype.setupEdgeParagraphInsertion = function() {
+    var self = this;
+
+    this.$editor.on('click', function(e) {
+      // Only handle direct clicks on the editor element (padding area)
+      if (e.target !== self.$editor[0]) {
+        return;  // Click was on a child element, not padding
+      }
+
+      var $firstChild = self.$editor.children().first();
+      var $lastChild = self.$editor.children().last();
+
+      // Get click position
+      var clickY = e.clientY;
+
+      // Check if click is in top padding (above first child)
+      if ($firstChild.length) {
+        var firstChildRect = $firstChild[0].getBoundingClientRect();
+        if (clickY < firstChildRect.top) {
+          // Clicked in top padding - insert paragraph at start
+          self.insertParagraphAtEdge('start');
+          return;
+        }
+      }
+
+      // Check if click is in bottom padding (below last child)
+      if ($lastChild.length) {
+        var lastChildRect = $lastChild[0].getBoundingClientRect();
+        if (clickY > lastChildRect.bottom) {
+          // Clicked in bottom padding - insert paragraph at end
+          self.insertParagraphAtEdge('end');
+          return;
+        }
+      }
+    });
+  };
+
+  /**
+   * Insert a new paragraph at the start or end of the editor
+   * @param {string} edge - 'start' or 'end'
+   */
+  JournalEditor.prototype.insertParagraphAtEdge = function(edge) {
+    var $newParagraph = $('<p class="' + HTML_STRUCTURE.TEXT_BLOCK_CLASS + '"><br></p>');
+
+    if (edge === 'start') {
+      this.$editor.prepend($newParagraph);
+    } else {
+      this.$editor.append($newParagraph);
+    }
+
+    // Position cursor in new paragraph
+    var range = document.createRange();
+    range.selectNodeContents($newParagraph[0]);
+    range.collapse(true);
+
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Scroll new paragraph into view if added at end (may be below fold)
+    if (edge === 'end') {
+      $newParagraph[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Trigger content change for autosave
+    this.handleContentChange();
   };
 
   /**

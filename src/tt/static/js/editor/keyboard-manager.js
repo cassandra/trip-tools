@@ -123,6 +123,12 @@
       } else if (e.key === 'Backspace') {
         // Check if we should escape from a block element
         self.handleBackspaceInBlock(e);
+      } else if (e.key === 'ArrowUp') {
+        // Check if we should insert paragraph above when at document boundary
+        self.handleArrowUpAtBoundary(e);
+      } else if (e.key === 'ArrowDown') {
+        // Check if we should insert paragraph below when at document boundary
+        self.handleArrowDownAtBoundary(e);
       }
     });
 
@@ -344,6 +350,133 @@
     }
 
     // If we didn't escape, let native Backspace work
+  };
+
+  // ============================================================
+  // ARROW KEY BOUNDARY HANDLING
+  // ============================================================
+
+  /**
+   * Handle Arrow Up key at document boundary
+   * When cursor is at the very start of the document and the first child
+   * is a non-editable block (full-width image group), insert a paragraph above.
+   *
+   * @param {Event} e - Keydown event
+   */
+  KeyboardNavigationManager.prototype.handleArrowUpAtBoundary = function(e) {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    var range = selection.getRangeAt(0);
+    if (!range.collapsed) return;  // Only for collapsed selection
+
+    var $firstChild = this.$editor.children().first();
+
+    // Only trigger if first child is a full-width image group (non-editable block)
+    if (!$firstChild.hasClass(HTML_STRUCTURE.FULL_WIDTH_GROUP_CLASS)) {
+      return;  // First child is editable, let native behavior handle
+    }
+
+    // Check if cursor is inside the first child (image group)
+    if (!$.contains($firstChild[0], range.startContainer) && $firstChild[0] !== range.startContainer) {
+      return;  // Cursor is not in the first image group
+    }
+
+    // Check if cursor is at the start of content within this image group
+    var testRange = document.createRange();
+    testRange.setStartBefore($firstChild[0]);
+    testRange.setEnd(range.startContainer, range.startOffset);
+
+    if (testRange.toString().trim().length === 0) {
+      // At very start with image group first - insert paragraph above
+      e.preventDefault();
+      this.insertParagraphAtEdge('start');
+    }
+  };
+
+  /**
+   * Handle Arrow Down key at document boundary
+   * When cursor is at the very end of the document and the last child
+   * is a non-editable block (full-width image group), insert a paragraph below.
+   *
+   * @param {Event} e - Keydown event
+   */
+  KeyboardNavigationManager.prototype.handleArrowDownAtBoundary = function(e) {
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    var range = selection.getRangeAt(0);
+    if (!range.collapsed) return;  // Only for collapsed selection
+
+    var $lastChild = this.$editor.children().last();
+
+    // Only trigger if last child is a full-width image group (non-editable block)
+    if (!$lastChild.hasClass(HTML_STRUCTURE.FULL_WIDTH_GROUP_CLASS)) {
+      return;  // Last child is editable, let native behavior handle
+    }
+
+    // Check if cursor is inside the last child (image group)
+    if (!$.contains($lastChild[0], range.endContainer) && $lastChild[0] !== range.endContainer) {
+      return;  // Cursor is not in the last image group
+    }
+
+    // Find the last text node in the image group, excluding button text (delete buttons)
+    // This is needed because delete buttons are appended after captions and contain "×"
+    var lastTextNode = null;
+    var walker = document.createTreeWalker(
+      $lastChild[0],
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: function(node) {
+          // Skip text nodes inside buttons
+          if ($(node).closest('button').length) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // Skip whitespace-only nodes
+          if (node.textContent.trim().length === 0) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+
+    while (walker.nextNode()) {
+      lastTextNode = walker.currentNode;
+    }
+
+    // Check if cursor is at the end of the last text node
+    if (lastTextNode &&
+        range.endContainer === lastTextNode &&
+        range.endOffset === lastTextNode.textContent.length) {
+      e.preventDefault();
+      this.insertParagraphAtEdge('end');
+    }
+  };
+
+  /**
+   * Insert a new paragraph at the start or end of the editor
+   * @param {string} edge - 'start' or 'end'
+   */
+  KeyboardNavigationManager.prototype.insertParagraphAtEdge = function(edge) {
+    var $newParagraph = $('<p class="' + HTML_STRUCTURE.TEXT_BLOCK_CLASS + '"><br></p>');
+
+    if (edge === 'start') {
+      this.$editor.prepend($newParagraph);
+    } else {
+      this.$editor.append($newParagraph);
+    }
+
+    // Position cursor in new paragraph
+    this.setCursorAtStart($newParagraph[0]);
+
+    // Scroll new paragraph into view if added at end (may be below fold)
+    if (edge === 'end') {
+      $newParagraph[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Trigger content change
+    this.onContentChange();
   };
 
   // ============================================================
