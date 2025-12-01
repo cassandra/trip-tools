@@ -689,7 +689,7 @@
       var uuid = $img.data(TtConst.UUID_DATA_ATTR);
 
       if (uuid) {
-        var inspectUrl = TtConst.IMAGE_INSPECT_URL_PATTERN.replace('{uuid}', uuid);
+        var inspectUrl = TtUrlPatterns.IMAGE_INSPECT.replace(TtUrlPatterns.PLACEHOLDER_UUID, uuid);
         AN.get(inspectUrl);
       }
     });

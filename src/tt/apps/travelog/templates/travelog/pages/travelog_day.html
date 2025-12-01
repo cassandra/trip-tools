@@ -110,11 +110,10 @@
 {% block body_post_javascript %}
 {{ block.super }}
 
-{% with uuid_placeholder='00000000-0000-0000-0000-000000000000' %}
 <script>
 (function() {
-  var uuidPlaceholder = '{{ uuid_placeholder }}';
-  var browseUrlTemplate = "{% travelog_url 'travelog_image_browse' journal.uuid image_uuid=uuid_placeholder %}";
+  var placeholderUuid = '{{ TtUrlPatterns.PLACEHOLDER_UUID }}';
+  var browseUrlTemplate = "{% travelog_url 'travelog_image_browse' journal.uuid image_uuid=TtUrlPatterns.PLACEHOLDER_UUID %}";
   var versionParam = '{{ travelog_page.get_version_param|default:"" }}';
 
   // Make trip images clickable - navigate to browse page
@@ -122,7 +121,7 @@
   $(selector).css('cursor', 'pointer').on('click', function() {
     var uuid = $(this).data('{{ TtConst.UUID_DATA_ATTR }}');
     if (uuid) {
-      var url = browseUrlTemplate.replace(uuidPlaceholder, uuid);
+      var url = browseUrlTemplate.replace(placeholderUuid, uuid);
       if (versionParam) {
         url += '?version=' + versionParam;
       }
@@ -131,5 +130,4 @@
   });
 })();
 </script>
-{% endwith %}
 {% endblock %}

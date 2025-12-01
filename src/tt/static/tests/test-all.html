@@ -127,8 +127,14 @@
             REFERENCE_IMAGE_UUID_DATA_ATTR: 'reference-image-uuid',
             INSPECT_URL_DATA_ATTR: 'inspect-url'
         };
+
+        // Mock TtUrlPatterns - URL patterns generated via reverse() in production
+        window.TtUrlPatterns = {
+            PLACEHOLDER_UUID: '00000000-0000-0000-0000-000000000000',
+            IMAGE_INSPECT: '/images/inspect/00000000-0000-0000-0000-000000000000'
+        };
     </script>
-    
+
     <!-- Source modules under test -->
     <!-- main.js must load first as it defines the base Tt namespace -->
     <script src="../js/main.js"></script>

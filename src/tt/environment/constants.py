@@ -76,7 +76,6 @@ class TtConst:
     JOURNAL_CONTENT_BLOCK_CLASS          = 'content-block'
     JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_CLASS = 'journal-editor-multi-image-panel-header'
     INSPECT_URL_DATA_ATTR                = 'inspect-url'
-    IMAGE_INSPECT_URL_PATTERN            = '/images/inspect/{uuid}'
     IMAGE_URL_DATA_ATTR                  = 'image-url'
     CAPTION_DATA_ATTR                    = 'caption'
     THUMBNAIL_URL_DATA_ATTR              = 'thumbnail-url'
