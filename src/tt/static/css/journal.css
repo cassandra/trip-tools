@@ -23,8 +23,8 @@
 .trip-image-wrapper[data-layout="float-right"] {
   float: right;
   margin: 0 0 1rem 1rem;
+  width: auto;  /* Explicitly shrink to content width */
   max-width: 25%; /* col-3: max 1/4 width so two images = 1/2 width */
-  max-height: 300px; /* Prevent portrait images from dominating layout */
 }
 
 /* Full-width wrapper (images between paragraphs) */
@@ -58,11 +58,23 @@
 .trip-image-wrapper[data-layout="float-right"] img.trip-image {
   width: auto; /* Allow portrait images to be narrower when height-constrained */
   max-width: 100%; /* But don't exceed wrapper width */
-  max-height: 300px; /* Match wrapper max-height to prevent overflow */
+  max-height: clamp(150px, 20vw, 250px); /* Match wrapper max-height to prevent overflow */
 }
 
 .trip-image-wrapper[data-layout="full-width"] img.trip-image {
-  max-height: 500px;
+  max-height: 300px;
+}
+
+/* ===========================================
+   RESPONSIVE: FULL-WIDTH IMAGES
+   Mobile: stack vertically, full width
+   =========================================== */
+
+@media (max-width: 768px) {
+  .trip-image-wrapper[data-layout="full-width"] {
+    max-width: 100%;
+    margin: 0.5rem 0;
+  }
 }
 
 /* ===========================================
@@ -80,7 +92,13 @@
 .journal-contenteditable > h3,
 .journal-contenteditable > h4,
 .journal-contenteditable > h5,
-.journal-contenteditable > h6 {
+.journal-contenteditable > h6,
+.day-content > h1,
+.day-content > h2,
+.day-content > h3,
+.day-content > h4,
+.day-content > h5,
+.day-content > h6 {
   clear: both;
 }
 
@@ -114,7 +132,8 @@
    =========================================== */
 
 /* Blockquote indentation and visual styling */
-.journal-contenteditable blockquote {
+.journal-contenteditable blockquote,
+.day-content blockquote {
   margin: 0 0 1rem 0;
   padding-left: 1.5rem;
   border-left: 4px solid #dee2e6;
@@ -122,11 +141,13 @@
   font-style: italic;
 }
 
-.journal-contenteditable blockquote p {
+.journal-contenteditable blockquote p,
+.day-content blockquote p {
   margin-bottom: 0.5rem;
 }
 
-.journal-contenteditable blockquote p:last-child {
+.journal-contenteditable blockquote p:last-child,
+.day-content blockquote p:last-child {
   margin-bottom: 0;
 }
 
@@ -140,21 +161,12 @@
   text-align: left;
 }
 
-/* Clearfix to contain floated images within contenteditable */
-.journal-contenteditable::after {
+/* Clearfix to contain floated images within content areas */
+.journal-contenteditable::after,
+.day-content::after {
   content: "";
   display: block;
   clear: both;
-}
-
-/* Direct child paragraph text blocks - scoped to prevent nested paragraph styling */
-.journal-contenteditable > p.text-block {
-  margin-bottom: 1rem;
-  position: relative;
-}
-
-.journal-contenteditable > p.text-block:last-child {
-  margin-bottom: 0;
 }
 
 /* ===========================================
@@ -167,7 +179,7 @@
   display: block;
   width: 100%;
   margin-top: 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   line-height: 1.4;
   color: #6c757d;
   text-align: center;

@@ -167,18 +167,18 @@ a.clickable-card:active {
 }
 
 .bg-success, .btn-success {
-    color: var(--on-error-color) !important;
-    background-color: var(--error-color) !important;
-    border-color: var(--error-highlight-color) !important;
+    color: var(--on-success-color) !important;
+    background-color: var(--success-color) !important;
+    border-color: var(--success-color) !important;
 }
 .bg-success a, .btn-success a {
-    color: var(--on-error-color);
+    color: var(--on-success-color);
 }
 .bg-success a:hover,
 .bg-success a:focus,
 .bg-success a:active {
     opacity: 0.65;
-    color: var(--on-error-color);
+    color: var(--on-success-color);
 }
 
 .bg-danger, .btn-error, .btn-danger {
@@ -649,76 +649,6 @@ h3 {
   object-fit: cover;
 }
 
-/* Journal Content */
-.journal-content {
-  background: rgba(255,255,255,0.95);
-  border-radius: 20px;
-  padding: 3rem;
-  margin: 2rem 0;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  line-height: 1.8;
-  font-size: 1.1rem;
-}
-
-/* Clearfix to contain floated images within journal content */
-.journal-content::after {
-  content: "";
-  display: block;
-  clear: both;
-}
-
-.journal-content p {
-  margin-bottom: 1.8rem;
-}
-
-.journal-content .trip-image-wrapper[data-layout="float-right"] {
-  float: right;
-  margin: 0 0 1.5rem 2rem;
-  max-width: 350px;
-  max-height: 300px; /* Prevent portrait images from dominating layout */
-}
-
-.journal-content .trip-image {
-  width: 100%;
-  border-radius: 15px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-
-.journal-content .trip-image-wrapper[data-layout="float-right"] .trip-image {
-  width: auto; /* Allow portrait images to be narrower when height-constrained */
-  max-width: 100%; /* But don't exceed wrapper width */
-  max-height: 300px; /* Match wrapper max-height to prevent overflow */
-}
-
-.journal-content .full-width-image-group {
-  margin: 3rem -3rem;
-  padding: 0;
-}
-
-.journal-content .full-width-image-group .trip-image {
-  width: 100%;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.journal-content ul {
-  margin-left: 2rem;
-  margin-bottom: 1.8rem;
-}
-
-.journal-content li {
-  margin-bottom: 0.5rem;
-}
-
-.journal-content blockquote {
-  border-left: 4px solid var(--secondary-color);
-  padding-left: 2rem;
-  margin: 2rem 0;
-  font-style: italic;
-  color: #666;
-}
-
 /* Page Navigation */
 .page-navigation {
   margin: 3rem 0;
@@ -865,14 +795,6 @@ h3 {
   h1 {
     font-size: 2.5rem;
   }
-
-  .journal-content {
-    padding: 2rem;
-  }
-
-  .journal-content .full-width-image-group {
-    margin: 2rem -2rem;
-  }
 }
 
 @media (max-width: 768px) {
@@ -896,21 +818,6 @@ h3 {
 
   h3 {
     font-size: 1.25rem;
-  }
-
-  .journal-content {
-    padding: 1.5rem;
-    font-size: 1rem;
-  }
-
-  .journal-content .trip-image-wrapper[data-layout="float-right"] {
-    float: none;
-    margin: 1rem 0;
-    max-width: 100%;
-  }
-
-  .journal-content .full-width-image-group {
-    margin: 1.5rem -1.5rem;
   }
 
   .page-navigation {
@@ -1374,11 +1281,6 @@ h3 {
   font-size: 1.05rem;
 }
 
-.day-content::after {
-  content: "";
-  display: block;
-  clear: both;
-}
 
 .day-content h2,
 .day-content h3,
@@ -1393,83 +1295,16 @@ h3 {
   margin-bottom: 1.5rem;
 }
 
-/* Float-right images in day content */
-.day-content .trip-image-wrapper[data-layout="float-right"] {
-  float: right;
-  margin: 0 0 1.5rem 2rem;
-  max-width: 350px;
-  max-height: 300px;
-}
-
 .day-content .trip-image {
   width: 100%;
   border-radius: 15px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
 
-.day-content .trip-image-wrapper[data-layout="float-right"] .trip-image {
-  width: auto;
-  max-width: 100%;
-  max-height: 300px;
-}
-
-/* Clear floats before text blocks that have their own float-right images */
-.day-content .has-float-image {
-  clear: both;
-}
-
-/* Full-width image grid (3 columns, centered) */
-.day-content .full-width-image-group {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin: 2rem 0;
-  justify-items: center;
-  clear: both;
-}
-
-.day-content .full-width-image-group .trip-image-wrapper {
-  width: 100%;
-  max-width: 280px;
-}
-
+/* Full-width image group: travelog-specific decorative styling */
 .day-content .full-width-image-group .trip-image {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Center 1 or 2 images in grid */
-.day-content .full-width-image-group:has(.trip-image-wrapper:only-child) {
-  grid-template-columns: 1fr;
-  justify-items: center;
-}
-
-.day-content .full-width-image-group:has(.trip-image-wrapper:nth-child(2):last-child) {
-  grid-template-columns: repeat(2, 1fr);
-  justify-items: center;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Clear floats before headings - headings should start below floated content */
-.day-content h1,
-.day-content h2,
-.day-content h3,
-.day-content h4,
-.day-content h5,
-.day-content h6 {
-  clear: both;
-}
-
-/* Image caption styling */
-.day-content .trip-image-caption {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--muted-color);
-  font-style: italic;
-  margin-top: 0.5rem;
-  text-align: center;
 }
 
 /* Clickable image links */
@@ -1592,17 +1427,4 @@ h3 {
     max-height: none;
   }
 
-  /* Full-width images: single column on mobile */
-  .day-content .full-width-image-group {
-    grid-template-columns: 1fr;
-  }
-
-  .day-content .full-width-image-group:has(.trip-image-wrapper:nth-child(2):last-child) {
-    grid-template-columns: 1fr;
-    max-width: 100%;
-  }
-
-  .day-content .full-width-image-group .trip-image-wrapper {
-    max-width: 100%;
-  }
 }
