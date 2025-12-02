@@ -152,6 +152,44 @@
 }
 
 /* ===========================================
+   PREFORMATTED TEXT STYLING
+   For itineraries, notes, poetry, or formatted text
+   =========================================== */
+
+/* Preformatted text blocks - warm, readable styling for travel content */
+.journal-contenteditable pre,
+.day-content pre {
+  margin: 0 0 1rem 0;
+  padding: 1rem 1.25rem;
+  background-color: #f8f6f3;  /* Warm off-white, like aged paper */
+  border: 1px solid #e8e4df;
+  border-radius: 6px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #495057;
+  overflow-x: auto;
+  white-space: pre-wrap;       /* Wrap long lines */
+  word-wrap: break-word;
+  clear: both;                 /* Start below any floated images */
+}
+
+/* Nested paragraphs in pre blocks */
+.journal-contenteditable pre p,
+.day-content pre p {
+  margin-bottom: 0;
+}
+
+/* Mobile: slightly smaller padding */
+@media (max-width: 768px) {
+  .journal-contenteditable pre,
+  .day-content pre {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* ===========================================
    CONTENTEDITABLE BASE STYLES
    Shared between editor and public views
    =========================================== */
