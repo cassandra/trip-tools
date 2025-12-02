@@ -54,11 +54,7 @@
       <p class="browse-caption mb-2">{{ image_metadata.caption }}</p>
       {% endif %}
       <p class="browse-date text-muted small mb-2">
-        {% if trip_image.datetime_utc %}
-        {{ trip_image.datetime_utc|date:"F j, Y" }}
-        {% else %}
-        {{ image_metadata.entry_date }}
-        {% endif %}
+        {{ image_metadata.display_date }}
       </p>
       {% if image_metadata.entry_date %}
       <a href="{% travelog_url 'travelog_day' journal.uuid date=image_metadata.entry_date version=travelog_page.get_version_param %}"

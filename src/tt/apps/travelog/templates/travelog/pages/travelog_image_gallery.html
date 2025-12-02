@@ -42,11 +42,7 @@
               <p class="gallery-card-caption mb-1">{{ img.metadata.caption|truncatewords:12 }}</p>
               {% endif %}
               <p class="gallery-card-date text-muted small mb-0">
-                {% if img.trip_image.datetime_utc %}
-                {{ img.trip_image.datetime_utc|date:"M j, Y" }}
-                {% else %}
-                {{ img.metadata.entry_date }}
-                {% endif %}
+                {{ img.metadata.display_date }}
               </p>
             </div>
           </div>

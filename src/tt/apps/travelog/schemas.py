@@ -21,6 +21,7 @@ class TravelogImageMetadata:
     layout          : str       # Image layout: 'float-right' or 'full-width'
     document_order  : int       # Order within the entire travelog (chronological)
     caption         : str = ''  # Caption from HTML content (empty if none)
+    display_date    : str = ''  # Formatted date for display (e.g., "Friday, Sept. 8, 2025")
 
     def to_dict(self) -> dict:
         """Serialize to dictionary for JSON caching."""
@@ -30,6 +31,7 @@ class TravelogImageMetadata:
             'layout': self.layout,
             'document_order': self.document_order,
             'caption': self.caption,
+            'display_date': self.display_date,
         }
 
     @classmethod
@@ -41,6 +43,7 @@ class TravelogImageMetadata:
             layout = data['layout'],
             document_order = data['document_order'],
             caption = data.get('caption', ''),  # Backward compatible
+            display_date = data.get('display_date', ''),  # Backward compatible
         )
 
 

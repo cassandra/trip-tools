@@ -65,6 +65,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-15',
+            display_date='Monday, Jan. 15, 2024',
             document_order=1
         )
 
@@ -74,6 +75,7 @@ class TestTravelogImageCacheService(TestCase):
         self.assertEqual(images[0].layout, 'float-right')
         self.assertEqual(images[0].document_order, 1)
         self.assertEqual(images[0].caption, 'Test caption')
+        self.assertEqual(images[0].display_date, 'Monday, Jan. 15, 2024')
 
     def test_extract_images_from_html_full_width(self):
         """Test extracting full-width images from HTML (no caption)."""
@@ -88,6 +90,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-16',
+            display_date='Tuesday, Jan. 16, 2024',
             document_order=5
         )
 
@@ -115,6 +118,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-17',
+            display_date='Wednesday, Jan. 17, 2024',
             document_order=10
         )
 
@@ -135,6 +139,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-18',
+            display_date='Thursday, Jan. 18, 2024',
             document_order=1
         )
 
@@ -146,6 +151,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content='<p>No images here</p>',
             entry_date='2024-01-19',
+            display_date='Friday, Jan. 19, 2024',
             document_order=1
         )
 
@@ -733,6 +739,7 @@ class TestCaptionExtraction(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-15',
+            display_date='Monday, Jan. 15, 2024',
             document_order=1
         )
 
@@ -751,6 +758,7 @@ class TestCaptionExtraction(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-15',
+            display_date='Monday, Jan. 15, 2024',
             document_order=1
         )
 
@@ -777,6 +785,7 @@ class TestCaptionExtraction(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-17',
+            display_date='Wednesday, Jan. 17, 2024',
             document_order=10
         )
 
@@ -787,7 +796,7 @@ class TestCaptionExtraction(TestCase):
 
 
 class TestTravelogImageMetadataSerialization(TestCase):
-    """Tests for TravelogImageMetadata serialization with caption."""
+    """Tests for TravelogImageMetadata serialization with caption and display_date."""
 
     def test_to_dict_includes_caption(self):
         """Test caption is included in to_dict."""
@@ -796,41 +805,46 @@ class TestTravelogImageMetadataSerialization(TestCase):
             entry_date='2024-01-10',
             layout='float-right',
             document_order=1,
-            caption='Test caption'
+            caption='Test caption',
+            display_date='Wednesday, Jan. 10, 2024'
         )
 
         result = metadata.to_dict()
 
         self.assertEqual(result['caption'], 'Test caption')
+        self.assertEqual(result['display_date'], 'Wednesday, Jan. 10, 2024')
 
     def test_from_dict_with_caption(self):
-        """Test deserialization with caption."""
+        """Test deserialization with caption and display_date."""
         data = {
             'uuid': 'test-uuid',
             'entry_date': '2024-01-10',
             'layout': 'float-right',
             'document_order': 1,
-            'caption': 'Test caption'
+            'caption': 'Test caption',
+            'display_date': 'Wednesday, Jan. 10, 2024'
         }
 
         metadata = TravelogImageMetadata.from_dict(data)
 
         self.assertEqual(metadata.caption, 'Test caption')
+        self.assertEqual(metadata.display_date, 'Wednesday, Jan. 10, 2024')
 
     def test_from_dict_backward_compatible(self):
-        """Test deserialization handles missing caption field (old cache data)."""
+        """Test deserialization handles missing caption and display_date fields (old cache data)."""
         old_cache_data = {
             'uuid': 'test-uuid',
             'entry_date': '2024-01-10',
             'layout': 'float-right',
             'document_order': 1
-            # No 'caption' field - simulating old cached data
+            # No 'caption' or 'display_date' fields - simulating old cached data
         }
 
         metadata = TravelogImageMetadata.from_dict(old_cache_data)
 
         self.assertEqual(metadata.uuid, 'test-uuid')
         self.assertEqual(metadata.caption, '')  # Default empty string
+        self.assertEqual(metadata.display_date, '')  # Default empty string
 
 
 class TestTravelogImageCacheKeySecurity(TestCase):
@@ -924,6 +938,7 @@ class TestTravelogImageCacheRegexSecurity(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             malicious_html,
             entry_date="2024-01-01",
+            display_date="Monday, Jan. 1, 2024",
             document_order=1
         )
 

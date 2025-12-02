@@ -382,6 +382,7 @@ class TravelogImageCacheService:
     def _extract_images_from_html( cls,
                                    html_content    : str,
                                    entry_date      : str,
+                                   display_date    : str,
                                    document_order  : int ) -> List[TravelogImageMetadata]:
         """
         Extract image metadata from HTML content.
@@ -389,6 +390,7 @@ class TravelogImageCacheService:
         Args:
             html_content: HTML string containing trip-image elements
             entry_date: Date string (YYYY-MM-DD) for the entry
+            display_date: Formatted date for display (e.g., "Friday, Sept. 8, 2025")
             document_order: Starting order number for images in this entry
 
         Returns:
@@ -431,6 +433,7 @@ class TravelogImageCacheService:
                 layout = layout,
                 document_order = document_order,
                 caption = caption,
+                display_date = display_date,
             ))
             document_order += 1
 
@@ -461,9 +464,11 @@ class TravelogImageCacheService:
                 continue
 
             entry_date = entry.date.isoformat()
+            display_date = entry.display_date_abbrev
             entry_images = cls._extract_images_from_html(
                 entry.text,
                 entry_date,
+                display_date,
                 document_order
             )
 
