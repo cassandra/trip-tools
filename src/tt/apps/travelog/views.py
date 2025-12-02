@@ -156,7 +156,7 @@ class TravelogImageGalleryView(TravelogViewMixin, View):
     Supports cache refresh via ?refresh=true parameter (handled in mixin).
     """
 
-    IMAGES_PER_PAGE = 60
+    IMAGES_PER_PAGE = 48
 
     def get( self,
              request       : HttpRequest,

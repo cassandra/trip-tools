@@ -1,20 +1,18 @@
 from typing import List
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User as UserType
 
 from tt.apps.members.models import TripMember
 from tt.apps.trips.enums import TripStatus
 from tt.apps.trips.models import Trip
 
-User = get_user_model()
-
-MAX_DASHBOARD_TRIPS = 5
-
 
 class DashboardDisplayService:
 
-    @staticmethod
-    def get_dashboard_trips_for_user( user: User ) -> List[Trip]:
+    MAX_DASHBOARD_TRIPS = 5
+
+    @classmethod
+    def get_dashboard_trips_for_user( cls, user: UserType ) -> List[Trip]:
         memberships = (
             TripMember.objects
             .filter( user = user )
@@ -41,48 +39,48 @@ class DashboardDisplayService:
             continue
 
         # Order each category
-        editable_current_trips = DashboardDisplayService._order_by_creation_date(
+        editable_current_trips = cls._order_by_creation_date(
             trips = editable_current_trips,
         )
-        editable_upcoming_trips = DashboardDisplayService._order_by_creation_date(
+        editable_upcoming_trips = cls._order_by_creation_date(
             trips = editable_upcoming_trips,
         )
-        shared_trips = DashboardDisplayService._order_shared_trips(
+        shared_trips = cls._order_shared_trips(
             shared_trip_memberships = shared_trip_memberships,
         )
 
         # Build result with priority, truncating to max
         result = []
         for trip in editable_current_trips:
-            if len( result ) >= MAX_DASHBOARD_TRIPS:
+            if len( result ) >= cls.MAX_DASHBOARD_TRIPS:
                 break
             result.append( trip )
             continue
 
         for trip in editable_upcoming_trips:
-            if len( result ) >= MAX_DASHBOARD_TRIPS:
+            if len( result ) >= cls.MAX_DASHBOARD_TRIPS:
                 break
             result.append( trip )
             continue
 
         for trip in shared_trips:
-            if len( result ) >= MAX_DASHBOARD_TRIPS:
+            if len( result ) >= cls.MAX_DASHBOARD_TRIPS:
                 break
             result.append( trip )
             continue
 
         return result
 
-    @staticmethod
-    def _order_by_creation_date( trips: List[Trip] ) -> List[Trip]:
+    @classmethod
+    def _order_by_creation_date( cls, trips: List[Trip] ) -> List[Trip]:
         return sorted(
             trips,
             key = lambda trip: trip.created_datetime,
             reverse = True,
         )
 
-    @staticmethod
-    def _order_shared_trips( shared_trip_memberships: List[TripMember] ) -> List[Trip]:
+    @classmethod
+    def _order_shared_trips( cls, shared_trip_memberships: List[TripMember] ) -> List[Trip]:
         sorted_memberships = sorted(
             shared_trip_memberships,
             key = lambda membership: membership.added_datetime,
