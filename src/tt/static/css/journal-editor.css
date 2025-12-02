@@ -297,6 +297,13 @@
   font-style: italic;
 }
 
+/* Preformatted text block colors - editor defaults (travelog.css not loaded in editor) */
+.journal-contenteditable pre {
+  background-color: #f8f6f3;
+  border: 1px solid #e8e4df;
+  color: #495057;
+}
+
 /* ===========================================
    IMAGE PANEL - EDITOR ONLY
    =========================================== */

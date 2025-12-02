@@ -52,6 +52,11 @@
   --container-bg: #fefefe;
   --font-heading: var(--font-serif);
   --font-body: var(--font-sans);
+
+  /* Preformatted text block colors */
+  --pre-bg: #f8f6f3;
+  --pre-border: #e8e4df;
+  --pre-text: #495057;
 }
 
 html {
@@ -314,6 +319,10 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: Georgia, Cambria, "Times New Roman", Times, serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - warm off-white */
+  --pre-bg: #f8f6f3;
+  --pre-border: #e8e4df;
+  --pre-text: #495057;
 }
 
 /* Theme 2: Warm Sunset (Amber & Warm Red) - Inviting, traditional
@@ -336,6 +345,10 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: Palatino, "Palatino Linotype", "Book Antiqua", serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - warm amber tint */
+  --pre-bg: #fef9f0;
+  --pre-border: #f0e4d4;
+  --pre-text: #5c4a3a;
 }
 
 /* Theme 3: Ocean Blue (Deep Blue & Cyan) - Cool, modern, refreshing
@@ -358,6 +371,10 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - cool blue-gray tint */
+  --pre-bg: #f4f8fa;
+  --pre-border: #dce8ef;
+  --pre-text: #3d5a6c;
 }
 
 /* Theme 4: Forest Green (Emerald & Lime) - Natural, earthy, organic
@@ -380,6 +397,10 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: Georgia, Cambria, "Times New Roman", Times, serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - soft green tint */
+  --pre-bg: #f5f9f6;
+  --pre-border: #dde9df;
+  --pre-text: #3d5244;
 }
 
 /* Theme 5: Purple Dreams (Violet & Pink) - Creative, bold, modern
@@ -402,6 +423,10 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - subtle lavender tint */
+  --pre-bg: #f9f7fc;
+  --pre-border: #e8e2f0;
+  --pre-text: #4a4358;
 }
 
 /* Theme 6: Earthy Terracotta (Terracotta & Rust) - Rustic, warm, traditional
@@ -424,6 +449,10 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: Palatino, "Palatino Linotype", "Book Antiqua", serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - warm terracotta/sepia tint */
+  --pre-bg: #fdf8f4;
+  --pre-border: #edddd2;
+  --pre-text: #5a453a;
 }
 
 /* =============================================================================
@@ -445,6 +474,13 @@ body[class*="theme-"] {
 /* Main content area grows to push footer to bottom */
 .travelog-main {
   flex: 1;
+}
+
+/* Preformatted text block colors - themed */
+.day-content pre {
+  background-color: var(--pre-bg);
+  border: 1px solid var(--pre-border);
+  color: var(--pre-text);
 }
 
 /* Container */

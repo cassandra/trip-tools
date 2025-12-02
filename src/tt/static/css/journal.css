@@ -156,18 +156,15 @@
    For itineraries, notes, poetry, or formatted text
    =========================================== */
 
-/* Preformatted text blocks - warm, readable styling for travel content */
+/* Preformatted text blocks - layout and typography (colors in travelog.css/journal-editor.css) */
 .journal-contenteditable pre,
 .day-content pre {
   margin: 0 0 1rem 0;
   padding: 1rem 1.25rem;
-  background-color: #f8f6f3;  /* Warm off-white, like aged paper */
-  border: 1px solid #e8e4df;
   border-radius: 6px;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #495057;
   overflow-x: auto;
   white-space: pre-wrap;       /* Wrap long lines */
   word-wrap: break-word;
