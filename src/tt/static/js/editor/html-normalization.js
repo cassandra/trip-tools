@@ -1054,6 +1054,12 @@
         // Disambiguate paragraph boundaries when cursor was at start of block
         // End of block N and start of block N+1 have the same global offset
         if (marker.isAtBlockStart && startNode && startOffset === startNode.textContent.length) {
+          // For non-collapsed selections, the walker may have advanced past startNode
+          // while finding endNode, so reset its position. For collapsed cursors,
+          // the walker is already at startNode (since start === end).
+          if (!marker.isCollapsed) {
+            walker.currentNode = startNode;
+          }
           var nextNode = walker.nextNode();
           if (nextNode) {
             // Move to start of next text node
@@ -1064,7 +1070,7 @@
               endNode = startNode;
               endOffset = startOffset;
             }
-          } else {
+          } else if (marker.isCollapsed) {
             // No next node exists - cursor was at end of document in empty block
             // that was removed by normalization. Create new block for cursor.
             var $newBlock = $('<p class="' + HTML_STRUCTURE.TEXT_BLOCK_CLASS + '"><br></p>');
@@ -1078,6 +1084,29 @@
             selection.removeAllRanges();
             selection.addRange(range);
             return;  // Early return - cursor placement complete
+          }
+          // For non-collapsed selections where there's no next node after startNode:
+          // Fall through to normal selection restoration - we have valid endNode/endOffset
+        }
+
+        // Disambiguate caption boundaries: if cursor would be placed at end of caption
+        // text but original cursor wasn't in a caption, move to next text node.
+        // This handles the case where cursor is at start of main text after a float image.
+        if (!marker.captionContext && startNode && startOffset === startNode.textContent.length) {
+          var $captionWrapper = $(startNode).closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+          if ($captionWrapper.length > 0) {
+            // We're at end of text inside an image wrapper (likely caption)
+            // but original cursor wasn't in caption, so find next text node
+            walker.currentNode = startNode;
+            var nextTextNode = walker.nextNode();
+            if (nextTextNode) {
+              startNode = nextTextNode;
+              startOffset = 0;
+              if (marker.isCollapsed) {
+                endNode = startNode;
+                endOffset = startOffset;
+              }
+            }
           }
         }
 
