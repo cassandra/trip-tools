@@ -59,6 +59,7 @@ class EnvironmentSettings:
     EMAIL_USE_TLS              : bool          = False
     EMAIL_USE_SSL              : bool          = False
     EMAIL_API_KEY              : str           = ''
+    ADMIN_PATH_PREFIX          : str           = ''
     
     @property
     def environment_name(self) -> str:
@@ -117,6 +118,13 @@ class EnvironmentSettings:
             'DJANGO_SUPERUSER_PASSWORD',
             env_settings.DJANGO_SUPERUSER_PASSWORD )
 
+        # For public-facing deployment, do not put admin-only interfaces in
+        # obvious locations. See tt.urls
+        #
+        admin_uuid_str = cls.get_env_variable('TT_ADMIN_UUID')
+        if admin_uuid_str:
+            env_settings.ADMIN_PATH_PREFIX = f'{admin_uuid_str}/'
+        
         ###########
         # Databases
         # Either MySQL OR SQLite must be configured (validated at end)

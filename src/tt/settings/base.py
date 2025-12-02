@@ -398,6 +398,11 @@ EMAIL_USE_SSL = ENV.EMAIL_USE_SSL
 BASE_URL_FOR_EMAIL_LINKS = f'http://{SITE_DOMAIN}'
 
 
+# For public-facing deployment, do not put admin interfaces in obvious location.
+#
+ADMIN_PATH_PREFIX = ENV.ADMIN_PATH_PREFIX
+
+
 # ====================
 # Development-related Settings
 # (override in development.py, not here)
