@@ -6,7 +6,7 @@ Context variables:
 - trip: Trip instance (for permission context)
 {% endcomment %}
 
-<div class="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS }}"
+<div class="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS }} col-6"
      draggable="true"
      data-{{ TtConst.IMAGE_UUID_DATA_ATTR }}="{{ image.uuid }}"
      data-{{ TtConst.IMAGE_MEDIA_URL_DATA_ATTR }}="{{ image.web_image.url }}"
