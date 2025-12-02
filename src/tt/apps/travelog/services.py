@@ -336,8 +336,20 @@ class TravelogImageCacheService:
         re.IGNORECASE
     )
 
+    # Regex pattern for extracting caption from wrapper
+    # Matches: <span class="...trip-image-caption...">CAPTION_TEXT</span>
+    CAPTION_PATTERN = re.compile(
+        r'<span' + HtmlRegexPatterns.ANY_ATTRS
+        + HtmlRegexPatterns.class_containing(TtConst.TRIP_IMAGE_CAPTION_CLASS)
+        + r'[^>]*>'       # End of opening tag
+        + r'([^<]*)'      # Capture caption text (no HTML tags)
+        + r'</span>',
+        re.IGNORECASE
+    )
+
     # Constants for image processing
     IMAGE_WRAPPER_SEARCH_WINDOW = 500  # Characters to search backward for wrapper element
+    CAPTION_SEARCH_WINDOW = 200        # Characters to search forward for caption span
     DEFAULT_IMAGE_LAYOUT = 'float-right'  # Default layout when wrapper not found
 
     @classmethod
@@ -370,6 +382,7 @@ class TravelogImageCacheService:
     def _extract_images_from_html( cls,
                                    html_content    : str,
                                    entry_date      : str,
+                                   display_date    : str,
                                    document_order  : int ) -> List[TravelogImageMetadata]:
         """
         Extract image metadata from HTML content.
@@ -377,6 +390,7 @@ class TravelogImageCacheService:
         Args:
             html_content: HTML string containing trip-image elements
             entry_date: Date string (YYYY-MM-DD) for the entry
+            display_date: Formatted date for display (e.g., "Friday, Sept. 8, 2025")
             document_order: Starting order number for images in this entry
 
         Returns:
@@ -392,21 +406,34 @@ class TravelogImageCacheService:
             uuid_str = match.group(1)
 
             # Look backwards from image position to find the wrapper element
-            # Search up to IMAGE_WRAPPER_SEARCH_WINDOW characters before the image tag
             search_start = max( 0, match.start() - cls.IMAGE_WRAPPER_SEARCH_WINDOW )
-            context_html = html_content[ search_start:match.end() ]
+            backward_context = html_content[ search_start:match.end() ]
 
-            # Try to find the layout from the wrapper
+            # Try to find the layout from the wrapper (appears before image)
             layout = cls.DEFAULT_IMAGE_LAYOUT
-            layout_match = cls.LAYOUT_PATTERN.search( context_html )
+            layout_match = cls.LAYOUT_PATTERN.search( backward_context )
             if layout_match:
                 layout = layout_match.group(1)
+
+            # Look forward from image position to find the caption
+            # (caption span appears after img tag within the wrapper)
+            # Use smaller window to avoid matching next image's caption
+            caption_end = min( len(html_content), match.end() + cls.CAPTION_SEARCH_WINDOW )
+            forward_context = html_content[ match.end():caption_end ]
+
+            # Try to find the caption (appears after image)
+            caption = ''
+            caption_match = cls.CAPTION_PATTERN.search( forward_context )
+            if caption_match:
+                caption = caption_match.group(1).strip()
 
             images.append( TravelogImageMetadata(
                 uuid = uuid_str,
                 entry_date = entry_date,
                 layout = layout,
                 document_order = document_order,
+                caption = caption,
+                display_date = display_date,
             ))
             document_order += 1
 
@@ -437,9 +464,11 @@ class TravelogImageCacheService:
                 continue
 
             entry_date = entry.date.isoformat()
+            display_date = entry.display_date_abbrev
             entry_images = cls._extract_images_from_html(
                 entry.text,
                 entry_date,
+                display_date,
                 document_order
             )
 

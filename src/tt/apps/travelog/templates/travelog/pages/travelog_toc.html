@@ -27,7 +27,7 @@
     {% if toc_page.toc_entries %}
     <div class="row">
       {% for toc_entry in toc_page.toc_entries %}
-      <div class="col-12 col-sm-6 col-md-4 col-xl-3 mb-4">
+      <div class="col-xl-3 col-md-4 col-sm-6 col-12 mb-4">
         <a href="{% travelog_url 'travelog_day' journal.uuid date=toc_entry.entry.date version=travelog_page.get_version_param %}" class="text-decoration-none">
           <div class="card card-hover h-100{% if toc_entry.entry.is_special_entry %} special{% endif %}">
             {% if toc_entry.entry.reference_image and toc_entry.entry.reference_image.thumbnail_image %}

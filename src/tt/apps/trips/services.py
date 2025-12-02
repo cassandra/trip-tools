@@ -1,5 +1,6 @@
 from typing import List
-from django.contrib.auth import get_user_model
+
+from django.contrib.auth.models import User as UserType
 
 from tt.apps.members.models import TripMember
 
@@ -7,13 +8,11 @@ from .enums import TripStatus
 from .models import Trip
 from .schemas import TripCategorizedDisplayData
 
-User = get_user_model()
-
 
 class TripDisplayService:
 
-    @staticmethod
-    def get_categorized_trips_for_user( user: User ) -> TripCategorizedDisplayData:
+    @classmethod
+    def get_categorized_trips_for_user( cls, user: UserType ) -> TripCategorizedDisplayData:
         """
         Get trips categorized and ordered according to display requirements.
 
@@ -55,9 +54,9 @@ class TripDisplayService:
                 else:
                     shared_trip_memberships.append( membership )
 
-        current_trips = TripDisplayService._order_editable_trips( trips = current_trips )
-        past_trips = TripDisplayService._order_editable_trips( trips = past_trips )
-        shared_trips = TripDisplayService._order_shared_trips(
+        current_trips = cls._order_editable_trips( trips = current_trips )
+        past_trips = cls._order_editable_trips( trips = past_trips )
+        shared_trips = cls._order_shared_trips(
             shared_trip_memberships = shared_trip_memberships,
         )
         return TripCategorizedDisplayData(
@@ -66,8 +65,8 @@ class TripDisplayService:
             past_trips = past_trips,
         )
 
-    @staticmethod
-    def _order_editable_trips(trips: List[Trip]) -> List[Trip]:
+    @classmethod
+    def _order_editable_trips( cls, trips: List[Trip]) -> List[Trip]:
         """
         Order editable trips by derived date in reverse chronological order.
 
@@ -107,8 +106,8 @@ class TripDisplayService:
 
         return sorted( trips, key = get_derived_date, reverse = True )
 
-    @staticmethod
-    def _order_shared_trips( shared_trip_memberships: List[TripMember] ) -> List[Trip]:
+    @classmethod
+    def _order_shared_trips( cls, shared_trip_memberships: List[TripMember] ) -> List[Trip]:
 
         sorted_trip_membership = sorted(
             shared_trip_memberships,

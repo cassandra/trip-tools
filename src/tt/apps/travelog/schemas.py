@@ -16,10 +16,12 @@ class TravelogImageMetadata:
 
     Extracted from HTML content and used for gallery/browse navigation.
     """
-    uuid            : str  # TripImage UUID
-    entry_date      : str  # Date of the journal entry (YYYY-MM-DD)
-    layout          : str  # Image layout: 'float-right' or 'full-width'
-    document_order  : int  # Order within the entire travelog (chronological)
+    uuid            : str       # TripImage UUID
+    entry_date      : str       # Date of the journal entry (YYYY-MM-DD)
+    layout          : str       # Image layout: 'float-right' or 'full-width'
+    document_order  : int       # Order within the entire travelog (chronological)
+    caption         : str = ''  # Caption from HTML content (empty if none)
+    display_date    : str = ''  # Formatted date for display (e.g., "Friday, Sept. 8, 2025")
 
     def to_dict(self) -> dict:
         """Serialize to dictionary for JSON caching."""
@@ -28,6 +30,8 @@ class TravelogImageMetadata:
             'entry_date': self.entry_date,
             'layout': self.layout,
             'document_order': self.document_order,
+            'caption': self.caption,
+            'display_date': self.display_date,
         }
 
     @classmethod
@@ -38,6 +42,8 @@ class TravelogImageMetadata:
             entry_date = data['entry_date'],
             layout = data['layout'],
             document_order = data['document_order'],
+            caption = data.get('caption', ''),  # Backward compatible
+            display_date = data.get('display_date', ''),  # Backward compatible
         )
 
 

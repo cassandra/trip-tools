@@ -165,6 +165,16 @@ class JournalEntryContent(models.Model):
             return self.page_type.label
         return self.date.strftime('%A, %B %-d, %Y')
 
+    @property
+    def display_date_abbrev(self) -> str:
+        """
+        Return abbreviated date string with weekday.
+        Returns 'Prologue'/'Epilogue' for special entries, 'Friday, Sept. 8, 2025' otherwise.
+        """
+        if self.is_special_entry:
+            return self.page_type.label
+        return self.date.strftime('%A, %b. %-d, %Y')
+
     def __str__(self):
         return f"{self.title} ({self.date})"
 

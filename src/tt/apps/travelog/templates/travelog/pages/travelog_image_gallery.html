@@ -26,7 +26,7 @@
           <div class="card card-hover h-100">
             {% if img.trip_image and img.trip_image.thumbnail_image %}
             <div class="gallery-card-image">
-              <img src="{{ img.trip_image.thumbnail_image.url }}" alt="{{ img.trip_image.caption|default:'Image' }}">
+              <img src="{{ img.trip_image.thumbnail_image.url }}" alt="{{ img.metadata.caption|default:'Image' }}">
             </div>
             {% else %}
             <div class="gallery-card-image placeholder">
@@ -38,15 +38,11 @@
             </div>
             {% endif %}
             <div class="card-body">
-              {% if img.trip_image.caption %}
-              <p class="gallery-card-caption mb-1">{{ img.trip_image.caption|truncatewords:12 }}</p>
+              {% if img.metadata.caption %}
+              <p class="gallery-card-caption mb-1">{{ img.metadata.caption|truncatewords:12 }}</p>
               {% endif %}
               <p class="gallery-card-date text-muted small mb-0">
-                {% if img.trip_image.datetime_utc %}
-                {{ img.trip_image.datetime_utc|date:"M j, Y" }}
-                {% else %}
-                {{ img.metadata.entry_date }}
-                {% endif %}
+                {{ img.metadata.display_date }}
               </p>
             </div>
           </div>

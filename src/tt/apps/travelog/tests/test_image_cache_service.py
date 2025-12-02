@@ -52,7 +52,7 @@ class TestTravelogImageCacheService(TestCase):
         )
 
     def test_extract_images_from_html_float_right(self):
-        """Test extracting float-right images from HTML."""
+        """Test extracting float-right images from HTML with caption."""
         html = '''
         <p>Some text</p>
         <span class="trip-image-wrapper" data-layout="float-right">
@@ -65,6 +65,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-15',
+            display_date='Monday, Jan. 15, 2024',
             document_order=1
         )
 
@@ -73,9 +74,11 @@ class TestTravelogImageCacheService(TestCase):
         self.assertEqual(images[0].entry_date, '2024-01-15')
         self.assertEqual(images[0].layout, 'float-right')
         self.assertEqual(images[0].document_order, 1)
+        self.assertEqual(images[0].caption, 'Test caption')
+        self.assertEqual(images[0].display_date, 'Monday, Jan. 15, 2024')
 
     def test_extract_images_from_html_full_width(self):
-        """Test extracting full-width images from HTML."""
+        """Test extracting full-width images from HTML (no caption)."""
         html = '''
         <div class="content-block full-width-image-group">
             <span class="trip-image-wrapper" data-layout="full-width">
@@ -87,6 +90,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-16',
+            display_date='Tuesday, Jan. 16, 2024',
             document_order=5
         )
 
@@ -94,6 +98,7 @@ class TestTravelogImageCacheService(TestCase):
         self.assertEqual(images[0].uuid, 'abcdef12-3456-7890-abcd-ef1234567890')
         self.assertEqual(images[0].layout, 'full-width')
         self.assertEqual(images[0].document_order, 5)
+        self.assertEqual(images[0].caption, '')  # No caption span
 
     def test_extract_images_from_html_multiple(self):
         """Test extracting multiple images from HTML."""
@@ -113,6 +118,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-17',
+            display_date='Wednesday, Jan. 17, 2024',
             document_order=10
         )
 
@@ -133,6 +139,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content=html,
             entry_date='2024-01-18',
+            display_date='Thursday, Jan. 18, 2024',
             document_order=1
         )
 
@@ -144,6 +151,7 @@ class TestTravelogImageCacheService(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             html_content='<p>No images here</p>',
             entry_date='2024-01-19',
+            display_date='Friday, Jan. 19, 2024',
             document_order=1
         )
 
@@ -660,6 +668,185 @@ class TestLayoutPatternRegex(TestCase):
         self.assertEqual(match.group(1), 'custom-layout-123')
 
 
+class TestCaptionPatternRegex(TestCase):
+    """
+    Direct tests for CAPTION_PATTERN regex.
+
+    Tests the compiled pattern for extracting captions from HTML.
+    """
+
+    def test_basic_caption_match(self):
+        """Test basic caption span."""
+        html = '<span class="trip-image-caption">Test caption</span>'
+        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'Test caption')
+
+    def test_caption_with_additional_classes(self):
+        """Test caption with additional CSS classes."""
+        html = '<span class="other-class trip-image-caption extra">Caption text</span>'
+        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'Caption text')
+
+    def test_empty_caption(self):
+        """Test empty caption span."""
+        html = '<span class="trip-image-caption"></span>'
+        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), '')
+
+    def test_whitespace_caption(self):
+        """Test caption with only whitespace."""
+        html = '<span class="trip-image-caption">   </span>'
+        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), '   ')
+
+    def test_no_match_wrong_class(self):
+        """Test no match for wrong class."""
+        html = '<span class="other-caption">Text</span>'
+        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
+        self.assertIsNone(match)
+
+    def test_case_insensitive(self):
+        """Test case insensitivity."""
+        html = '<SPAN CLASS="trip-image-caption">Caption</SPAN>'
+        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'Caption')
+
+    def test_caption_with_special_characters(self):
+        """Test caption with special characters (but not HTML tags)."""
+        html = '<span class="trip-image-caption">View from 5,000ft - amazing!</span>'
+        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), 'View from 5,000ft - amazing!')
+
+
+class TestCaptionExtraction(TestCase):
+    """Tests for caption extraction functionality."""
+
+    def test_extract_images_with_empty_caption_span(self):
+        """Test extracting image with empty caption span."""
+        html = '''
+        <span class="trip-image-wrapper" data-layout="float-right">
+            <img class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012" src="/test.jpg">
+            <span class="trip-image-caption"></span>
+        </span>
+        '''
+
+        images = TravelogImageCacheService._extract_images_from_html(
+            html_content=html,
+            entry_date='2024-01-15',
+            display_date='Monday, Jan. 15, 2024',
+            document_order=1
+        )
+
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0].caption, '')
+
+    def test_extract_images_with_whitespace_caption(self):
+        """Test extracting image with whitespace-only caption (should be stripped)."""
+        html = '''
+        <span class="trip-image-wrapper" data-layout="float-right">
+            <img class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012" src="/test.jpg">
+            <span class="trip-image-caption">   </span>
+        </span>
+        '''
+
+        images = TravelogImageCacheService._extract_images_from_html(
+            html_content=html,
+            entry_date='2024-01-15',
+            display_date='Monday, Jan. 15, 2024',
+            document_order=1
+        )
+
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0].caption, '')  # Stripped
+
+    def test_extract_images_multiple_with_mixed_captions(self):
+        """Test extracting multiple images with some having captions."""
+        html = '''
+        <span class="trip-image-wrapper" data-layout="float-right">
+            <img class="trip-image" data-uuid="11111111-1111-1111-1111-111111111111" src="/1.jpg">
+            <span class="trip-image-caption">First image caption</span>
+        </span>
+        <p>Text between images</p>
+        <span class="trip-image-wrapper" data-layout="full-width">
+            <img class="trip-image" data-uuid="22222222-2222-2222-2222-222222222222" src="/2.jpg">
+        </span>
+        <span class="trip-image-wrapper" data-layout="float-right">
+            <img class="trip-image" data-uuid="33333333-3333-3333-3333-333333333333" src="/3.jpg">
+            <span class="trip-image-caption">Third image caption</span>
+        </span>
+        '''
+
+        images = TravelogImageCacheService._extract_images_from_html(
+            html_content=html,
+            entry_date='2024-01-17',
+            display_date='Wednesday, Jan. 17, 2024',
+            document_order=10
+        )
+
+        self.assertEqual(len(images), 3)
+        self.assertEqual(images[0].caption, 'First image caption')
+        self.assertEqual(images[1].caption, '')  # No caption span
+        self.assertEqual(images[2].caption, 'Third image caption')
+
+
+class TestTravelogImageMetadataSerialization(TestCase):
+    """Tests for TravelogImageMetadata serialization with caption and display_date."""
+
+    def test_to_dict_includes_caption(self):
+        """Test caption is included in to_dict."""
+        metadata = TravelogImageMetadata(
+            uuid='test-uuid',
+            entry_date='2024-01-10',
+            layout='float-right',
+            document_order=1,
+            caption='Test caption',
+            display_date='Wednesday, Jan. 10, 2024'
+        )
+
+        result = metadata.to_dict()
+
+        self.assertEqual(result['caption'], 'Test caption')
+        self.assertEqual(result['display_date'], 'Wednesday, Jan. 10, 2024')
+
+    def test_from_dict_with_caption(self):
+        """Test deserialization with caption and display_date."""
+        data = {
+            'uuid': 'test-uuid',
+            'entry_date': '2024-01-10',
+            'layout': 'float-right',
+            'document_order': 1,
+            'caption': 'Test caption',
+            'display_date': 'Wednesday, Jan. 10, 2024'
+        }
+
+        metadata = TravelogImageMetadata.from_dict(data)
+
+        self.assertEqual(metadata.caption, 'Test caption')
+        self.assertEqual(metadata.display_date, 'Wednesday, Jan. 10, 2024')
+
+    def test_from_dict_backward_compatible(self):
+        """Test deserialization handles missing caption and display_date fields (old cache data)."""
+        old_cache_data = {
+            'uuid': 'test-uuid',
+            'entry_date': '2024-01-10',
+            'layout': 'float-right',
+            'document_order': 1
+            # No 'caption' or 'display_date' fields - simulating old cached data
+        }
+
+        metadata = TravelogImageMetadata.from_dict(old_cache_data)
+
+        self.assertEqual(metadata.uuid, 'test-uuid')
+        self.assertEqual(metadata.caption, '')  # Default empty string
+        self.assertEqual(metadata.display_date, '')  # Default empty string
+
+
 class TestTravelogImageCacheKeySecurity(TestCase):
     """Test cache key generation security."""
 
@@ -751,6 +938,7 @@ class TestTravelogImageCacheRegexSecurity(TestCase):
         images = TravelogImageCacheService._extract_images_from_html(
             malicious_html,
             entry_date="2024-01-01",
+            display_date="Monday, Jan. 1, 2024",
             document_order=1
         )
 
