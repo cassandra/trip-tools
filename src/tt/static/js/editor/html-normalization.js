@@ -926,29 +926,63 @@
         return null;
       }
 
-      // Check if cursor is inside an image caption (special handling needed)
-      var $captionElement = $(range.startContainer).closest(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
+      // Check if cursor/selection is inside an image caption (special handling needed)
+      // For selections, only use caption context if BOTH start and end are in the SAME caption.
+      // Cross-boundary selections (caption→text, text→caption, caption→caption) fall through
+      // to global offset restoration for graceful degradation.
+      var $startCaptionElement = $(range.startContainer).closest(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
       var captionContext = null;
 
-      if ($captionElement.length > 0) {
-        // Find the parent image wrapper to get UUID
-        var $imageWrapper = $captionElement.closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
-        var $img = $imageWrapper.find('img');
-        // Note: Images use UUID_DATA_ATTR (data-uuid), not IMAGE_UUID_DATA_ATTR
-        var imageUuid = $img.data(TtConst.UUID_DATA_ATTR);
-
-        if (imageUuid) {
-          // Calculate offset within caption only
-          var captionRange = range.cloneRange();
-          captionRange.selectNodeContents($captionElement[0]);
-          captionRange.setEnd(range.startContainer, range.startOffset);
-          var captionOffset = captionRange.toString().length;
-
-          captionContext = {
-            imageUuid: imageUuid,
-            offsetInCaption: captionOffset
-          };
+      if ($startCaptionElement.length > 0) {
+        // Check if selection end is also in the same caption (for non-collapsed selections)
+        var bothInSameCaption = range.collapsed; // collapsed is always "in same caption"
+        if (!range.collapsed) {
+          var $endCaptionElement = $(range.endContainer).closest(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
+          // Same caption means same DOM element
+          bothInSameCaption = $endCaptionElement.length > 0 &&
+                              $endCaptionElement[0] === $startCaptionElement[0];
         }
+
+        // Only use caption context if selection is entirely within one caption
+        if (bothInSameCaption) {
+          // Find the parent image wrapper to get UUID
+          var $imageWrapper = $startCaptionElement.closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+          var $img = $imageWrapper.find('img');
+          // Note: Images use UUID_DATA_ATTR (data-uuid), not IMAGE_UUID_DATA_ATTR
+          var imageUuid = $img.data(TtConst.UUID_DATA_ATTR);
+
+          if (imageUuid) {
+            // Calculate START offset within caption
+            var startCaptionRange = range.cloneRange();
+            startCaptionRange.selectNodeContents($startCaptionElement[0]);
+            startCaptionRange.setEnd(range.startContainer, range.startOffset);
+            var startOffsetInCaption = startCaptionRange.toString().length;
+
+            // Calculate END offset within caption (for selections)
+            var endOffsetInCaption = startOffsetInCaption; // Same as start if collapsed
+            if (!range.collapsed) {
+              var endCaptionRange = range.cloneRange();
+              endCaptionRange.selectNodeContents($startCaptionElement[0]);
+              endCaptionRange.setEnd(range.endContainer, range.endOffset);
+              endOffsetInCaption = endCaptionRange.toString().length;
+            }
+
+            // Find the top-level block containing this image for disambiguation
+            // This works for both text-blocks (float-right) and content-blocks (full-width)
+            var $imageBlock = $imageWrapper.closest($editor.children());
+            var imageBlockIndex = $editor.children().index($imageBlock);
+
+            captionContext = {
+              imageUuid: imageUuid,
+              offsetInCaption: startOffsetInCaption,
+              endOffsetInCaption: endOffsetInCaption,
+              isCollapsed: range.collapsed,
+              imageBlockIndex: imageBlockIndex
+            };
+          }
+        }
+        // If start is in caption but end is not (or different caption), captionContext stays null
+        // This causes fallback to global offset restoration
       }
 
       // Calculate START text offset (for selections)
@@ -1004,7 +1038,7 @@
         // Check for caption context first - this handles the edge case where
         // cursor at start of caption has same text offset as end of preceding text
         if (marker.captionContext) {
-          var restored = this.restoreCaptionCursor($editor, marker.captionContext);
+          var restored = this.restoreCaptionCursor($editor, marker.captionContext, marker);
           if (restored) {
             return; // Successfully restored to caption
           }
@@ -1141,34 +1175,16 @@
     },
 
     /**
-     * Restore cursor position specifically within an image caption
-     * Uses image UUID as stable identifier to find the correct caption
-     * @param {jQuery} $editor - jQuery-wrapped editor element
-     * @param {Object} captionContext - {imageUuid, offsetInCaption}
-     * @returns {boolean} True if restoration succeeded, false otherwise
+     * Find a text position within a caption element by character offset.
+     * Helper method used by restoreCaptionCursor for both start and end positions.
+     * @param {Element} captionElement - The caption DOM element
+     * @param {number} targetOffset - Character offset from start of caption
+     * @returns {Object|null} {node, offset} or null if not found
      */
-    restoreCaptionCursor: function($editor, captionContext) {
-      // Find the image by UUID (images use data-uuid attribute)
-      var $image = $editor.find('img[data-' + TtConst.UUID_DATA_ATTR + '="' + captionContext.imageUuid + '"]');
-      if ($image.length === 0) {
-        return false;
-      }
-
-      // Find the caption within that image wrapper
-      var $wrapper = $image.closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
-      var $caption = $wrapper.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
-      if ($caption.length === 0) {
-        return false;
-      }
-
-      // Find the text node and position within caption
-      var targetOffset = captionContext.offsetInCaption;
+    findPositionInCaption: function(captionElement, targetOffset) {
       var currentOffset = 0;
-      var targetNode = null;
-      var nodeOffset = 0;
-
       var walker = document.createTreeWalker(
-        $caption[0],
+        captionElement,
         NodeFilter.SHOW_TEXT,
         null,
         false
@@ -1178,16 +1194,82 @@
       while (node = walker.nextNode()) {
         var nodeLength = node.textContent.length;
         if (currentOffset + nodeLength >= targetOffset) {
-          targetNode = node;
-          nodeOffset = targetOffset - currentOffset;
-          break;
+          return {
+            node: node,
+            offset: Math.min(targetOffset - currentOffset, nodeLength)
+          };
         }
         currentOffset += nodeLength;
       }
+      return null; // Not found
+    },
 
-      if (targetNode) {
-        var range = document.createRange();
-        range.setStart(targetNode, Math.min(nodeOffset, targetNode.textContent.length));
+    /**
+     * Restore cursor position or text selection within an image caption.
+     * Uses image UUID as stable identifier to find the correct caption.
+     * Handles both collapsed cursors and non-collapsed selections.
+     * @param {jQuery} $editor - jQuery-wrapped editor element
+     * @param {Object} captionContext - {imageUuid, offsetInCaption, endOffsetInCaption, isCollapsed}
+     * @param {Object} marker - Full marker object (used for blockIndex disambiguation)
+     * @returns {boolean} True if restoration succeeded, false otherwise
+     */
+    restoreCaptionCursor: function($editor, captionContext, marker) {
+      // Find all images with this UUID (same image can appear multiple times)
+      var imageSelector = 'img[data-' + TtConst.UUID_DATA_ATTR + '="' + captionContext.imageUuid + '"]';
+      var $images = $editor.find(imageSelector);
+      if ($images.length === 0) {
+        return false;
+      }
+
+      var $image;
+      if ($images.length === 1) {
+        // Common case: only one image with this UUID
+        $image = $images;
+      } else {
+        // Multiple images with same UUID - try to find one in the saved block
+        // This handles the edge case of the same image appearing multiple times
+        // Use imageBlockIndex from captionContext (more accurate than marker.blockIndex)
+        var $children = $editor.children();
+        var blockIndex = captionContext.imageBlockIndex !== undefined ? captionContext.imageBlockIndex : 0;
+        var $targetBlock = $children.eq(Math.min(blockIndex, $children.length - 1));
+        var $imageInBlock = $targetBlock.find(imageSelector);
+
+        // Use image in target block if found, otherwise fall back to first match
+        $image = $imageInBlock.length > 0 ? $imageInBlock.first() : $images.first();
+      }
+
+      // Find the caption within that image wrapper
+      var $wrapper = $image.closest(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR);
+      var $caption = $wrapper.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
+      if ($caption.length === 0) {
+        return false;
+      }
+
+      var range = document.createRange();
+
+      // Handle non-collapsed selections (text is selected within caption)
+      if (!captionContext.isCollapsed && captionContext.endOffsetInCaption !== undefined) {
+        var startPos = this.findPositionInCaption($caption[0], captionContext.offsetInCaption);
+        var endPos = this.findPositionInCaption($caption[0], captionContext.endOffsetInCaption);
+
+        if (startPos && endPos) {
+          // Successfully found both positions - restore the selection
+          range.setStart(startPos.node, startPos.offset);
+          range.setEnd(endPos.node, endPos.offset);
+          // Don't collapse - this is a selection
+
+          var selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          return true;
+        }
+        // Fall through to cursor restoration if positions not found
+      }
+
+      // Handle collapsed cursor (or fallback from selection)
+      var pos = this.findPositionInCaption($caption[0], captionContext.offsetInCaption);
+      if (pos) {
+        range.setStart(pos.node, pos.offset);
         range.collapse(true);
 
         var selection = window.getSelection();
@@ -1206,7 +1288,6 @@
         $caption[0].appendChild(firstChild);
       }
 
-      var range = document.createRange();
       if (firstChild.nodeType === Node.TEXT_NODE) {
         // Position at start of text node
         range.setStart(firstChild, 0);
