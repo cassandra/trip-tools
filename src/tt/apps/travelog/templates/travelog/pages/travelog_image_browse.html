@@ -2,7 +2,7 @@
 {% load travelog_tags %}
 {% load icons %}
 
-{% block head_title %}{{ content.title }} - {% if trip_image.caption %}{{ trip_image.caption|truncatewords:8 }}{% else %}Image {{ current_index|add:1 }}{% endif %}{% endblock %}
+{% block head_title %}{{ content.title }} - {% if image_metadata.caption %}{{ image_metadata.caption|truncatewords:8 }}{% else %}Image {{ current_index|add:1 }}{% endif %}{% endblock %}
 
 {% block travelog_content %}
 {# Browse header - back to TOC on left, back to Gallery on right #}
@@ -33,7 +33,7 @@
 
       {# Main image - click opens full size #}
       <a href="{{ trip_image.web_image.url }}" target="_blank" rel="noopener" class="browse-image-link" title="Open full image in new tab">
-        <img src="{{ trip_image.web_image.url }}" alt="{{ trip_image.caption|default:'Image' }}" class="browse-main-image">
+        <img src="{{ trip_image.web_image.url }}" alt="{{ image_metadata.caption|default:'Image' }}" class="browse-main-image">
       </a>
 
       {# Next arrow or placeholder #}
@@ -50,8 +50,8 @@
 
     {# Image metadata #}
     <div class="browse-metadata text-center mt-4">
-      {% if trip_image.caption %}
-      <p class="browse-caption mb-2">{{ trip_image.caption }}</p>
+      {% if image_metadata.caption %}
+      <p class="browse-caption mb-2">{{ image_metadata.caption }}</p>
       {% endif %}
       <p class="browse-date text-muted small mb-2">
         {% if trip_image.datetime_utc %}
