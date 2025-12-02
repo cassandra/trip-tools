@@ -116,12 +116,16 @@ class EnvironmentSettings:
         )
         env_settings.DJANGO_SUPERUSER_PASSWORD = cls.get_env_variable(
             'DJANGO_SUPERUSER_PASSWORD',
-            env_settings.DJANGO_SUPERUSER_PASSWORD )
+            env_settings.DJANGO_SUPERUSER_PASSWORD,
+        )
 
         # For public-facing deployment, do not put admin-only interfaces in
         # obvious locations. See tt.urls
         #
-        admin_uuid_str = cls.get_env_variable('TT_ADMIN_UUID')
+        admin_uuid_str = cls.get_env_variable(
+            'TT_ADMIN_UUID',
+            env_settings.ADMIN_PATH_PREFIX,
+        )
         if admin_uuid_str:
             env_settings.ADMIN_PATH_PREFIX = f'{admin_uuid_str}/'
         
