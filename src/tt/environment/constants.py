@@ -103,6 +103,7 @@ class TtConst:
     PICKER_SCOPE_PARAM                   = 'picker_scope'
     
     # Images Upload
+    UPLOAD_SESSION_UUID_FIELD            = 'upload_session_uuid'
     IMAGES_UPLOADED_ITEM_CLASS           = 'uploaded-item-link'
     IMAGES_UPLOAD_ZONE_ID                = 'images-upload-zone'
     IMAGES_FILE_INPUT_ID                 = 'images-file-input'

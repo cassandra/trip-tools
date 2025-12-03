@@ -17,6 +17,7 @@ class TripImageAdmin(admin.ModelAdmin):
         'has_exif',
         'uploaded_by_link',
         'uploaded_datetime',
+        'upload_session_uuid',
         'caption_preview',
         'tags_preview',
     )
@@ -28,7 +29,7 @@ class TripImageAdmin(admin.ModelAdmin):
         'timezone',
     )
     search_fields = ['caption', 'tags', 'uploaded_by__email']
-    readonly_fields = ('uuid', 'uploaded_datetime', 'has_exif', 'timezone_unknown')
+    readonly_fields = ('uuid', 'uploaded_datetime', 'upload_session_uuid', 'has_exif', 'timezone_unknown')
     date_hierarchy = 'datetime_utc'
 
     @admin_link('uploaded_by', 'Uploaded By')

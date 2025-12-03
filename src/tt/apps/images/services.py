@@ -2,6 +2,7 @@ import io
 import logging
 import re
 from datetime import date as date_type, datetime, timezone, timedelta
+from uuid import UUID
 from typing import Optional, Tuple, Any
 
 from django.contrib.auth.models import User
@@ -423,6 +424,7 @@ class ImageUploadService(Singleton):
         metadata: ExifMetadata,
         web_bytes: bytes,
         thumb_bytes: bytes,
+        upload_session_uuid: Optional[UUID] = None,
     ) -> TripImage:
         """
         Create TripImage database record with processed image files.
@@ -433,6 +435,7 @@ class ImageUploadService(Singleton):
             metadata: Extracted EXIF metadata as ExifMetadata value object
             web_bytes: Processed web-sized image bytes
             thumb_bytes: Processed thumbnail image bytes
+            upload_session_uuid: Optional UUID to group bulk uploads
 
         Returns:
             Created TripImage instance
@@ -451,6 +454,7 @@ class ImageUploadService(Singleton):
                 tags=list(metadata.tags),
                 has_exif=metadata.has_exif,
                 timezone=metadata.timezone,
+                upload_session_uuid=upload_session_uuid,
             )
 
             # Save web image file
@@ -490,7 +494,7 @@ class ImageUploadService(Singleton):
             request=request,
         )
 
-    def process_uploaded_image(self, uploaded_file: UploadedFile, user: Any, request: Optional[HttpRequest] = None) -> ImageUploadResult:
+    def process_uploaded_image(self, uploaded_file: UploadedFile, user: Any, request: Optional[HttpRequest] = None, upload_session_uuid: Optional[UUID] = None) -> ImageUploadResult:
         """
         Main orchestration method: validate, extract EXIF, process, and save uploaded image.
 
@@ -498,6 +502,7 @@ class ImageUploadService(Singleton):
             uploaded_file: Django UploadedFile object
             user: User who uploaded the file
             request: Optional HttpRequest object for rendering templates with context processors
+            upload_session_uuid: Optional UUID to group bulk uploads
 
         Returns:
             ImageUploadResult with success or error status
@@ -538,7 +543,7 @@ class ImageUploadService(Singleton):
             web_bytes, thumb_bytes = self.process_and_resize_images(original_image)
 
             # Step 8: Create database record
-            trip_image = self.create_trip_image(user, uploaded_file, metadata, web_bytes, thumb_bytes)
+            trip_image = self.create_trip_image(user, uploaded_file, metadata, web_bytes, thumb_bytes, upload_session_uuid)
 
             # Step 9: Render grid item HTML (only if request provided)
             html = None

@@ -4,9 +4,11 @@ Tests for TripImageHelpers utility methods.
 Tests focus on:
 - Recent images for trip editors (fallback for image picker)
 - Permission-based filtering (OWNER, ADMIN, EDITOR only)
-- Ordering by uploaded_datetime DESC
+- Upload session grouping and chronological ordering within groups
 """
 import logging
+import uuid
+from datetime import datetime, timezone
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -175,3 +177,99 @@ class TripImageHelpersRecentImagesTestCase(TestCase):
         self.assertEqual(len(recent), 1)
         self.assertIn(img1, recent)
         self.assertNotIn(img2, recent)
+
+    def test_bulk_upload_images_grouped_and_sorted_by_datetime_utc(self):
+        """Images from same bulk upload should be grouped and sorted by datetime_utc."""
+        session_uuid = uuid.uuid4()
+
+        # Create 3 images with same upload_session_uuid but different photo times
+        img1 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=session_uuid,
+            datetime_utc=datetime(2024, 6, 15, 10, 0, tzinfo=timezone.utc),
+            caption='Bulk 10am',
+        )
+        img2 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=session_uuid,
+            datetime_utc=datetime(2024, 6, 15, 9, 0, tzinfo=timezone.utc),
+            caption='Bulk 9am',
+        )
+        img3 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=session_uuid,
+            datetime_utc=datetime(2024, 6, 15, 11, 0, tzinfo=timezone.utc),
+            caption='Bulk 11am',
+        )
+
+        recent = TripImageHelpers.get_recent_images_for_trip_editors(self.trip)
+
+        self.assertEqual(len(recent), 3)
+        # Should be ordered by datetime_utc ASC within group
+        self.assertEqual(recent[0].id, img2.id)  # 9:00 AM
+        self.assertEqual(recent[1].id, img1.id)  # 10:00 AM
+        self.assertEqual(recent[2].id, img3.id)  # 11:00 AM
+
+    def test_multiple_bulk_uploads_ordered_by_most_recent_first(self):
+        """Multiple bulk upload groups should be ordered by most recent upload first."""
+        # Older bulk upload session
+        old_session = uuid.uuid4()
+        old_img1 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=old_session,
+            datetime_utc=datetime(2024, 6, 10, 10, 0, tzinfo=timezone.utc),
+            caption='Old bulk 10am',
+        )
+        old_img2 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=old_session,
+            datetime_utc=datetime(2024, 6, 10, 9, 0, tzinfo=timezone.utc),
+            caption='Old bulk 9am',
+        )
+
+        # Newer bulk upload session
+        new_session = uuid.uuid4()
+        new_img1 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=new_session,
+            datetime_utc=datetime(2024, 6, 15, 10, 0, tzinfo=timezone.utc),
+            caption='New bulk 10am',
+        )
+        new_img2 = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=new_session,
+            datetime_utc=datetime(2024, 6, 15, 9, 0, tzinfo=timezone.utc),
+            caption='New bulk 9am',
+        )
+
+        recent = TripImageHelpers.get_recent_images_for_trip_editors(self.trip)
+
+        self.assertEqual(len(recent), 4)
+        # Newer group first, then older group
+        self.assertEqual(recent[0].id, new_img2.id)  # New group, 9:00 AM
+        self.assertEqual(recent[1].id, new_img1.id)  # New group, 10:00 AM
+        self.assertEqual(recent[2].id, old_img2.id)  # Old group, 9:00 AM
+        self.assertEqual(recent[3].id, old_img1.id)  # Old group, 10:00 AM
+
+    def test_images_without_datetime_utc_sorted_last_in_group(self):
+        """Images with NULL datetime_utc should be sorted last within their group."""
+        session_uuid = uuid.uuid4()
+
+        img_with_time = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=session_uuid,
+            datetime_utc=datetime(2024, 6, 15, 10, 0, tzinfo=timezone.utc),
+            caption='With time',
+        )
+        img_no_time = TripImage.objects.create(
+            uploaded_by=self.user1,
+            upload_session_uuid=session_uuid,
+            datetime_utc=None,
+            caption='No time',
+        )
+
+        recent = TripImageHelpers.get_recent_images_for_trip_editors(self.trip)
+
+        self.assertEqual(len(recent), 2)
+        self.assertEqual(recent[0].id, img_with_time.id)
+        self.assertEqual(recent[1].id, img_no_time.id)

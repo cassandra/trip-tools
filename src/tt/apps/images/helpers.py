@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List
 
 from django.contrib.auth.models import User as UserType
@@ -9,6 +10,10 @@ from tt.apps.trips.models import Trip
 
 from .enums import ImageAccessRole
 from .models import TripImage
+
+
+# Maximum files allowed per bulk upload batch (matches frontend limit)
+MAX_UPLOAD_BATCH_SIZE = 50
 
 
 class TripImageHelpers:
@@ -39,32 +44,40 @@ class TripImageHelpers:
         no results. Only includes images from users with EDITOR, ADMIN, or OWNER
         permission levels.
 
+        Ordering strategy:
+        - Images from the same bulk upload (sharing upload_session_uuid) are
+          grouped together and sorted by datetime_utc (photo capture time)
+        - Groups are ordered by most recent uploaded_datetime DESC
+        - This provides intuitive ordering where bulk uploads display in photo
+          capture order rather than arbitrary server processing order
+
         Performance strategy:
         - Filters for editor+ permission levels only (typically 2-5 users)
         - Queries each editor's images separately (efficient single-user queries)
-        - Merges and sorts in Python by uploaded_datetime DESC
         - This approach scales well because IN clause + ORDER BY negates indexes,
           but individual user queries are index-friendly
+        - Over-fetches by MAX_UPLOAD_BATCH_SIZE to ensure complete batches
 
         Args:
             trip: Trip instance
             limit: Maximum number of images to return (default: 50)
 
         Returns:
-            List of TripImage instances ordered by uploaded_datetime DESC
+            List of TripImage instances grouped by upload session
         """
-        # Get editor+ permission levels
         editor_levels = [
             TripPermissionLevel.EDITOR,
             TripPermissionLevel.ADMIN,
             TripPermissionLevel.OWNER,
         ]
 
-        # Get user IDs of trip members with editor+ permissions
         editor_user_ids = TripMember.objects.filter(
             trip=trip,
             permission_level__in=editor_levels
         ).values_list('user_id', flat=True)
+
+        # Over-fetch to ensure complete upload batches at boundary
+        fetch_limit = limit + MAX_UPLOAD_BATCH_SIZE
 
         # Query each editor's recent images separately (efficient)
         all_images = []
@@ -72,10 +85,27 @@ class TripImageHelpers:
             user_images = list(
                 TripImage.objects.filter(uploaded_by_id=user_id)
                 .select_related('uploaded_by')
-                .order_by('-uploaded_datetime')[:limit]
+                .order_by('-uploaded_datetime')[:fetch_limit]
             )
             all_images.extend(user_images)
 
-        # Merge and sort in Python
-        all_images.sort(key=lambda img: img.uploaded_datetime, reverse=True)
-        return all_images[:limit]
+        # Group by upload_session_uuid (use image uuid as fallback for single uploads)
+        groups = defaultdict(list)
+        for img in all_images:
+            key = img.upload_session_uuid or img.uuid
+            groups[key].append(img)
+
+        # Sort groups by most recent uploaded_datetime DESC
+        sorted_groups = sorted(
+            groups.values(),
+            key=lambda g: max(i.uploaded_datetime for i in g),
+            reverse=True,
+        )
+
+        # Within each group, sort by datetime_utc ASC (None values last)
+        result = []
+        for group in sorted_groups:
+            group.sort(key=lambda i: (i.datetime_utc is None, i.datetime_utc))
+            result.extend(group)
+
+        return result[:limit]
