@@ -144,13 +144,15 @@
 
   /**
    * Apply heading format using browser's native formatBlock
-   * @param {number} level - Heading level (2, 3, or 4)
+   * @param {number|string} level - Heading level (2, 3, or 4) or 'p' for paragraph
    */
   JournalEditorToolbar.prototype.applyHeading = function(level) {
     this.editor.focus();
 
     // Use browser's native formatBlock command
-    document.execCommand('formatBlock', false, 'h' + level);
+    // 'p' converts to paragraph, numeric levels convert to headings
+    var tag = level === 'p' ? 'p' : 'h' + level;
+    document.execCommand('formatBlock', false, tag);
 
     // Trigger autosave
     if (this.onContentChange) {
