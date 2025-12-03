@@ -14,7 +14,7 @@
   </div>
 
   <!-- Date and Scope Filter Form -->
-  <form method="get" action="{% url 'journal_editor_multi_images' entry_uuid=entry.uuid %}" data-async="#{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID }}" data-mode="insert" id="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID }}">
+  <form method="get" action="{% url 'journal_editor_multi_images' entry_uuid=entry.uuid %}" data-async="#{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_GALLERY_ID }}" data-mode="insert" id="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID }}" data-{{ TtConst.INITIAL_SCOPE_DATA_ATTR }}="{{ image_picker_data.scope }}">
     <!-- Date Filter with Entry Date and Recent Buttons -->
     <div class="d-flex mb-2">
       <input
@@ -22,16 +22,16 @@
           class="form-control form-control-sm"
           id="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID }}"
           name="date"
-          {% if not image_picker_data.is_recent_mode %}value="{{ entry.date|date:'Y-m-d' }}"{% endif %}
+          {% if not image_picker_data.is_recent_mode and image_picker_data.filter_date %}value="{{ image_picker_data.filter_date|date:'Y-m-d' }}"{% endif %}
       >
       <button
           type="button"
           id="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID }}"
-          class="btn btn-sm {% if image_picker_data.filter_date %}btn-primary{% else %}btn-outline-primary{% endif %} ml-1 flex-shrink-0"
-          title="{% if image_picker_data.filter_date %}Show images from {{ image_picker_data.filter_date|date:'M j, Y' }}{% else %}Select a date first{% endif %}"
-          data-last-used-date="{% if image_picker_data.filter_date %}{{ image_picker_data.filter_date|date:'Y-m-d' }}{% endif %}"
-          {% if not image_picker_data.filter_date %}disabled{% endif %}>
-        {% if image_picker_data.filter_date %}{{ image_picker_data.filter_date|date:"M j" }}{% else %}Date{% endif %}
+          class="btn btn-sm {% if not image_picker_data.is_recent_mode and image_picker_data.last_date %}btn-primary{% else %}btn-outline-primary{% endif %} ml-1 flex-shrink-0"
+          title="{% if image_picker_data.last_date %}Show images from {{ image_picker_data.last_date|date:'M j, Y' }}{% else %}Select a date first{% endif %}"
+          data-{{ TtConst.LAST_USED_DATE_ATTR }}="{% if image_picker_data.last_date %}{{ image_picker_data.last_date|date:'Y-m-d' }}{% endif %}"
+          {% if not image_picker_data.last_date %}disabled{% endif %}>
+        {% if image_picker_data.last_date %}{{ image_picker_data.last_date|date:"M j" }}{% else %}Date{% endif %}
       </button>
       <button
           type="button"
@@ -44,14 +44,14 @@
 
     <!-- Scope Filter Pills (client-side filtering only) -->
     <div class="btn-group btn-group-sm btn-group-toggle w-100" data-toggle="buttons">
-      <label class="btn btn-outline-secondary active">
-        <input type="radio" name="scope" value="unused" checked> Unused
+      <label class="btn btn-outline-secondary {% if image_picker_data.scope.is_unused %}active{% endif %}">
+        <input type="radio" name="scope" value="{{ TtConst.IMAGE_PICKER_SCOPE_UNUSED }}" {% if image_picker_data.scope.is_unused %}checked{% endif %}> Unused
       </label>
-      <label class="btn btn-outline-secondary">
-        <input type="radio" name="scope" value="used"> Used
+      <label class="btn btn-outline-secondary {% if image_picker_data.scope.is_used %}active{% endif %}">
+        <input type="radio" name="scope" value="{{ TtConst.IMAGE_PICKER_SCOPE_USED }}" {% if image_picker_data.scope.is_used %}checked{% endif %}> Used
       </label>
-      <label class="btn btn-outline-secondary">
-        <input type="radio" name="scope" value="all"> All
+      <label class="btn btn-outline-secondary {% if image_picker_data.scope.is_all %}active{% endif %}">
+        <input type="radio" name="scope" value="{{ TtConst.IMAGE_PICKER_SCOPE_ALL }}" {% if image_picker_data.scope.is_all %}checked{% endif %}> All
       </label>
     </div>
   </form>

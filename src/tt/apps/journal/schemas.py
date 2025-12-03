@@ -7,6 +7,7 @@ from django.db.models import QuerySet
 from tt.apps.images.models import TripImage
 from tt.apps.travelog.models import Travelog
 
+from .enums import ImagePickerScope
 from .models import Journal
 
 
@@ -70,3 +71,5 @@ class EditorImagePickerData:
     is_recent_mode          : bool
     filter_date             : Optional[date_class]
     image_display_timezone  : str
+    last_date               : Optional[date_class]  # For "Last Used Date" button
+    scope                   : ImagePickerScope
