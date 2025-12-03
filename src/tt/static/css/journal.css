@@ -132,13 +132,18 @@
    BLOCKQUOTE STYLING
    =========================================== */
 
-/* Blockquote indentation and visual styling */
+/* Simple indentation (no special styling) */
 .journal-contenteditable blockquote,
 .day-content blockquote {
   margin: 0 0 1rem 0;
   padding-left: 1.5rem;
-  border-left: 4px solid #dee2e6;
-  color: #6c757d;
+}
+
+/* Quotation styling (with .quote class) - colors in travelog.css/journal-editor.css */
+.journal-contenteditable blockquote.quote,
+.day-content blockquote.quote {
+  border-left-width: 4px;
+  border-left-style: solid;
   font-style: italic;
 }
 

@@ -57,6 +57,10 @@
   --pre-bg: #f8f6f3;
   --pre-border: #e8e4df;
   --pre-text: #495057;
+
+  /* Quote block colors */
+  --quote-border: #b0c9ca;
+  --quote-text: #5a6c6d;
 }
 
 html {
@@ -323,6 +327,9 @@ a.clickable-card:active {
   --pre-bg: #f8f6f3;
   --pre-border: #e8e4df;
   --pre-text: #495057;
+  /* Quote block - muted teal */
+  --quote-border: #b0c9ca;
+  --quote-text: #5a6c6d;
 }
 
 /* Theme 2: Warm Sunset (Amber & Warm Red) - Inviting, traditional
@@ -349,6 +356,9 @@ a.clickable-card:active {
   --pre-bg: #fef9f0;
   --pre-border: #f0e4d4;
   --pre-text: #5c4a3a;
+  /* Quote block - warm tan */
+  --quote-border: #e0c4a0;
+  --quote-text: #6b5a4a;
 }
 
 /* Theme 3: Ocean Blue (Deep Blue & Cyan) - Cool, modern, refreshing
@@ -375,6 +385,9 @@ a.clickable-card:active {
   --pre-bg: #f4f8fa;
   --pre-border: #dce8ef;
   --pre-text: #3d5a6c;
+  /* Quote block - muted blue */
+  --quote-border: #a3c4d4;
+  --quote-text: #4a6575;
 }
 
 /* Theme 4: Forest Green (Emerald & Lime) - Natural, earthy, organic
@@ -401,6 +414,9 @@ a.clickable-card:active {
   --pre-bg: #f5f9f6;
   --pre-border: #dde9df;
   --pre-text: #3d5244;
+  /* Quote block - muted green */
+  --quote-border: #a8c9b8;
+  --quote-text: #4a5f50;
 }
 
 /* Theme 5: Purple Dreams (Violet & Pink) - Creative, bold, modern
@@ -427,6 +443,9 @@ a.clickable-card:active {
   --pre-bg: #f9f7fc;
   --pre-border: #e8e2f0;
   --pre-text: #4a4358;
+  /* Quote block - muted violet */
+  --quote-border: #c9b8d9;
+  --quote-text: #5a4d68;
 }
 
 /* Theme 6: Earthy Terracotta (Terracotta & Rust) - Rustic, warm, traditional
@@ -453,6 +472,9 @@ a.clickable-card:active {
   --pre-bg: #fdf8f4;
   --pre-border: #edddd2;
   --pre-text: #5a453a;
+  /* Quote block - muted terracotta */
+  --quote-border: #d4b8a8;
+  --quote-text: #5f4d44;
 }
 
 /* =============================================================================
@@ -481,6 +503,12 @@ body[class*="theme-"] {
   background-color: var(--pre-bg);
   border: 1px solid var(--pre-border);
   color: var(--pre-text);
+}
+
+/* Quote block colors - themed */
+.day-content blockquote.quote {
+  border-left-color: var(--quote-border);
+  color: var(--quote-text);
 }
 
 /* Container */

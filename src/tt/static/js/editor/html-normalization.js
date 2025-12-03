@@ -752,6 +752,38 @@
   }
 
   /**
+   * Unwrap nested text-block elements inside block containers
+   *
+   * This handles cases where browser's execCommand('indent') wraps existing
+   * text-block elements (including their wrappers) inside a blockquote,
+   * creating invalid nested structures like:
+   *   <div class="text-block"><blockquote><div class="text-block">...</div></blockquote></div>
+   *
+   * The correct structure should have no nested text-blocks:
+   *   <div class="text-block"><blockquote><p>...</p></blockquote></div>
+   *
+   * @param {jQuery} $editor - jQuery-wrapped contenteditable element
+   */
+  function unwrapNestedTextBlocks($editor) {
+    // Find text-block elements nested inside block elements (blockquote, ul, ol, pre)
+    // These are invalid per spec - text-blocks should only be at the top level
+    var blockContainers = 'blockquote, ul, ol, pre';
+
+    $editor.find(blockContainers).each(function() {
+      var $container = $(this);
+
+      // Find any nested text-block inside this container
+      $container.find('.' + HTML_STRUCTURE.TEXT_BLOCK_CLASS).each(function() {
+        var $nestedTextBlock = $(this);
+
+        // Unwrap: replace the nested text-block with its contents
+        var $contents = $nestedTextBlock.contents();
+        $nestedTextBlock.replaceWith($contents);
+      });
+    });
+  }
+
+  /**
    * Enforce one block element per div.text-block (spec Section 8.2)
    *
    * Rules:
@@ -1451,6 +1483,7 @@
     handleTopLevelBrTags(editor);
     wrapOrphanBlockElements(editor);
     splitHeadingsFromTextBlocks($editor);
+    unwrapNestedTextBlocks($editor);
     enforceOneBlockPerTextBlock($editor);
     moveImagesOutOfBlockElements($editor);
     convertImageOnlyTextBlocks($editor);
@@ -1484,6 +1517,7 @@
   Tt.JournalEditor._handleTopLevelBrTags = handleTopLevelBrTags;
   Tt.JournalEditor._wrapOrphanBlockElements = wrapOrphanBlockElements;
   Tt.JournalEditor._splitHeadingsFromTextBlocks = splitHeadingsFromTextBlocks;
+  Tt.JournalEditor._unwrapNestedTextBlocks = unwrapNestedTextBlocks;
   Tt.JournalEditor._enforceOneBlockPerTextBlock = enforceOneBlockPerTextBlock;
   Tt.JournalEditor._moveImagesOutOfBlockElements = moveImagesOutOfBlockElements;
   Tt.JournalEditor._convertImageOnlyTextBlocks = convertImageOnlyTextBlocks;

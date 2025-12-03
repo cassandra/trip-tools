@@ -304,6 +304,12 @@
   color: #495057;
 }
 
+/* Quotation block colors - editor defaults (travelog.css not loaded in editor) */
+.journal-contenteditable blockquote.quote {
+  border-left-color: #dee2e6;
+  color: #6c757d;
+}
+
 /* ===========================================
    IMAGE PANEL - EDITOR ONLY
    =========================================== */

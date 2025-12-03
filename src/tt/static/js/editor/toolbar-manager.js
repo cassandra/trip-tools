@@ -80,16 +80,16 @@
       self.toggleList('ol');
     });
 
-    // Indent button
+    // Indent button (simple indentation)
     this.$toolbar.find('[data-command="indent"]').on('click', function(e) {
       e.preventDefault();
-      self.adjustIndent(40); // Increase by 40px
+      self.applyIndent();
     });
 
-    // Outdent button
-    this.$toolbar.find('[data-command="outdent"]').on('click', function(e) {
+    // Quote button (quotation styling)
+    this.$toolbar.find('[data-command="quote"]').on('click', function(e) {
       e.preventDefault();
-      self.adjustIndent(-40); // Decrease by 40px
+      self.applyQuote();
     });
 
     // Link button
@@ -251,17 +251,75 @@
   };
 
   /**
-   * Adjust indentation using browser's native indent/outdent commands
-   * @param {number} delta - Pixels to adjust (positive = indent, negative = outdent)
+   * Toggle simple indentation (blockquote without quote styling)
+   *
+   * Behavior:
+   * - Plain text -> Create blockquote
+   * - Indented (blockquote) -> Remove blockquote
+   * - Quoted (blockquote.quote) -> Convert to plain indent (remove .quote class)
    */
-  JournalEditorToolbar.prototype.adjustIndent = function(delta) {
+  JournalEditorToolbar.prototype.applyIndent = function() {
     this.editor.focus();
 
-    // Use browser's native indent/outdent command
-    var command = delta > 0 ? 'indent' : 'outdent';
-    document.execCommand(command, false, null);
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
 
-    // Trigger content change for autosave
+    var $existing = $(selection.getRangeAt(0).commonAncestorContainer).closest('blockquote');
+
+    if ($existing && $existing.length) {
+      if ($existing.hasClass('quote')) {
+        // Quoted -> Indented: remove quote class
+        $existing.removeClass('quote');
+      } else {
+        // Indented -> Plain: remove blockquote entirely
+        document.execCommand('outdent', false, null);
+      }
+    } else {
+      // Plain -> Indented: create blockquote
+      document.execCommand('indent', false, null);
+    }
+
+    if (this.onContentChange) {
+      this.onContentChange();
+    }
+  };
+
+  /**
+   * Toggle quotation styling (blockquote with .quote class)
+   *
+   * Behavior:
+   * - Plain text -> Create blockquote with .quote class
+   * - Indented (blockquote) -> Convert to quote (add .quote class)
+   * - Quoted (blockquote.quote) -> Remove blockquote entirely
+   */
+  JournalEditorToolbar.prototype.applyQuote = function() {
+    this.editor.focus();
+
+    var selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    var $existing = $(selection.getRangeAt(0).commonAncestorContainer).closest('blockquote');
+
+    if ($existing && $existing.length) {
+      if ($existing.hasClass('quote')) {
+        // Quoted -> Plain: remove blockquote entirely
+        document.execCommand('outdent', false, null);
+      } else {
+        // Indented -> Quoted: add quote class
+        $existing.addClass('quote');
+      }
+    } else {
+      // Plain -> Quoted: create blockquote with quote class
+      document.execCommand('indent', false, null);
+
+      // Find the newly created blockquote and add quote class
+      var newSelection = window.getSelection();
+      if (newSelection.rangeCount) {
+        var $blockquote = $(newSelection.getRangeAt(0).commonAncestorContainer).closest('blockquote');
+        $blockquote.addClass('quote');
+      }
+    }
+
     if (this.onContentChange) {
       this.onContentChange();
     }
