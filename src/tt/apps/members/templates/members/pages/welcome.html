@@ -12,7 +12,7 @@
   {% if trip.description %}
   <p class="text-muted">{{ trip.description }}</p>
   {% endif %}
-  <a href="{% url 'trips_home' trip_uuid=trip.uuid %}" class="btn btn-primary btn-lg mt-4">
+  <a href="{% url 'trips_trip_overview' trip_uuid=trip.uuid %}" class="btn btn-primary btn-lg mt-4">
     View Trip
   </a>
 </div>

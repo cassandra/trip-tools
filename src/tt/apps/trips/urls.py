@@ -6,32 +6,32 @@ from . import views
 urlpatterns = [
     path(
         '',
-        views.TripsAllView.as_view(),
-        name='trips_all'
+        views.TripsHomeView.as_view(),
+        name='trips_home'
     ),
     path(
         'create',
         views.TripCreateModalView.as_view(),
-        name='trips_create'
+        name='trips_trip_create'
     ),
     path(
         '<uuid:trip_uuid>',
-        views.TripHomeView.as_view(),
-        name='trips_home'
+        views.TripOverviewView.as_view(),
+        name='trips_trip_overview'
     ),
     path(
         '<uuid:trip_uuid>/edit',
         views.TripEditModalView.as_view(),
-        name='trips_edit'
+        name='trips_trip_edit'
     ),
     path(
         '<uuid:trip_uuid>/reference-image-picker/',
-        views.TripReferenceImagePickerView.as_view(),
-        name='trip_reference_image_picker'
+        views.TripImagePickerView.as_view(),
+        name='trips_trip_image_picker'
     ),
     path(
         '<uuid:trip_uuid>/upload-image/',
         views.TripImageUploadView.as_view(),
-        name='trip_image_upload'
+        name='trips_trip_image_upload'
     ),
 ]

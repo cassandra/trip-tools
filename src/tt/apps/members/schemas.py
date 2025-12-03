@@ -33,4 +33,10 @@ class TripMemberData:
     @property
     def permission_level(self):
         return self.trip_member.permission_level
-   
+
+    
+@dataclass
+class InviteMemberResultData:
+
+    trip_member       : TripMember
+    new_user_created  : bool

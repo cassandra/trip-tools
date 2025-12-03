@@ -6,7 +6,7 @@
 {% block title_text %}Edit Trip{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'trips_edit' trip_uuid=trip.uuid %}" data-async="modal">
+<form method="post" action="{% url 'trips_trip_edit' trip_uuid=trip.uuid %}" data-async="modal">
   {% csrf_token %}
 {% endblock %}
 

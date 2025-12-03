@@ -1,87 +1,51 @@
-{% extends "trips/pages/trips_subpage.html" %}
-{% load static %}
+{% extends "pages/feature_page.html" %}
 {% load icons %}
 
-{% block subpage_content %}
+{% block main_content %}
 <div class="m-3">
-  <div>
-    <h1 class="h2 mb-1">Trip Overview</h1>
-    <p class="text-muted">Your trip at a glance.</p>
-  </div>
+  <!-- Current Trips Section (no heading) -->
+  {% if current_trips %}
+  <section class="">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h3 mb-0">Current Trips</h2>
+      <a href="{% url 'trips_trip_create' %}" class="btn btn-primary" data-async="modal">+ Add New Trip</a>
+    </div>
 
-  <div class="m-2 p-2">
-    {% if journal %}
-    <a href="{% url 'journal_home' journal_uuid=journal.uuid %}" class="btn btn-secondary">{% icon "edit" size="sm" %} EDIT JOURNAL</a>
-    {% else %}
-    <a href="{% url 'journal_create' trip_uuid=trip_page.trip.uuid %}" class="btn btn-secondary" data-async="modal">{% icon "plus" size="sm" %}  CREATE A JOURNAL</a>
-    {% endif %}
-  </div>
+    {% include "trips/components/trip-cards-grid.html" with trips=current_trips icon_type="upcoming" %}
+  </section>
+  {% else %}
+  <!-- No current trips alert -->
+  <section class="">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div></div> <!-- Empty space where heading would be -->
+      <a href="{% url 'trips_trip_create' %}" class="btn btn-primary" data-async="modal">+ Add New Trip</a>
+    </div>
 
-  <div class="tt-page-explanation">
-    <h2>The Problems</h2>
-    <ul>
-      <li>Trip information is scattered across multiple apps, tabs, and documents.</li>
-      <li>What you need to see depends on where you are in the trip lifecycle.</li>
-      <li>No single place shows you the most important information for right now.</li>
-      <li>Switching between planning, booking, traveling, and post-trip modes requires mental overhead.</li>
-    </ul>
-    <h2>The Solution</h2>
-    <p>A contextual dashboard that adapts to your trip's current phase, surfacing what matters most:</p>
-    <ul>
-      <li><strong>Planning phase</strong>
-        <ul>
-          <li>Quick access to locations under consideration.</li>
-          <li>Status of your planning decisions and comparisons.</li>
-          <li>Link to <em>Planning</em> for detailed candidate management.</li>
-        </ul>
-      </li>
-      <li><strong>Booking phase</strong>
-        <ul>
-          <li>Itinerary status at a glance.</li>
-          <li>What's booked vs. what still needs booking.</li>
-          <li>Upcoming booking deadlines and reminders.</li>
-          <li>Link to <em>Bookings</em> for detailed management.</li>
-        </ul>
-      </li>
-      <li><strong>During the trip</strong>
-        <ul>
-          <li>Today's itinerary and upcoming activities.</li>
-          <li>Map of relevant locations.</li>
-          <li>Quick access to add journal notes and reviews.</li>
-          <li>Link to <em>Itinerary</em> for the full schedule.</li>
-        </ul>
-      </li>
-      <li><strong>Post-trip</strong>
-        <ul>
-          <li>Journal writing status and prompts.</li>
-          <li>Image upload and organization.</li>
-          <li>Publishing status for your travelog.</li>
-          <li>Link to <em>Journal</em> for full editing.</li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Existing Tools</h2>
-    <ul>
-      <li><strong>TripIt</strong>
-        <ul>
-          <li>Good at aggregating bookings into an itinerary view.</li>
-          <li>Doesn't adapt to trip phase or support pre-booking planning.</li>
-          <li>No post-trip journaling or sharing features.</li>
-        </ul>
-      </li>
-      <li><strong>Google Trips (discontinued)</strong>
-        <ul>
-          <li>Had potential as a unified trip view.</li>
-          <li>Was discontinued, leaving a gap in the market.</li>
-        </ul>
-      </li>
-      <li><strong>Notion / Spreadsheets</strong>
-        <ul>
-          <li>Flexible but require manual setup and maintenance.</li>
-          <li>No trip-aware context or phase adaptation.</li>
-        </ul>
-      </li>
-    </ul>
-  </div>
+    <div class="alert alert-info py-2 mb-3" role="alert">
+      <div class="d-flex align-items-center">
+        {% icon "info-circle" size="sm" %}
+        <span>No current trips. <a href="{% url 'trips_trip_create' %}" class="alert-link" data-async="modal">Add a trip</a> to get started!</span>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Shared Trips Section -->
+  {% if shared_trips %}
+  <section class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h3 mb-0">Shared Trips</h2>
+    </div>
+    {% include "trips/components/trip-cards-grid.html" with trips=shared_trips icon_type="upcoming" card_size="small" %}
+  </section>
+  {% endif %}
+
+  <!-- Past Trips Section -->
+  {% if past_trips %}
+  <section class="mt-4">
+    <h2 class="h3 mb-3">Past Trips</h2>
+    {% include "trips/components/trip-cards-grid.html" with trips=past_trips icon_type="past" %}
+  </section>
+  {% endif %}
 </div>
 {% endblock %}

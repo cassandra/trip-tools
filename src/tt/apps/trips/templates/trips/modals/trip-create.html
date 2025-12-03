@@ -6,7 +6,7 @@
 {% block title_text %}Create New Trip{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'trips_create' %}" data-async="modal">
+<form method="post" action="{% url 'trips_trip_create' %}" data-async="modal">
   {% csrf_token %}
 {% endblock %}
 

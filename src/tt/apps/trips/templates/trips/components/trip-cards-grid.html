@@ -8,7 +8,7 @@
 <div class="row">
   {% for trip in trips %}
   <div class="{% if card_size == 'small' %}col-4 col-sm-4 col-lg-3 col-xl-2{% else %}col-6 col-sm-6 col-lg-4 col-xl-3{% endif %} mb-4">
-    <a href="{% url 'trips_home' trip_uuid=trip.uuid %}" class="text-decoration-none">
+    <a href="{% url 'trips_trip_overview' trip_uuid=trip.uuid %}" class="text-decoration-none">
       <div class="card card-hover h-100" data-trip-uuid="{{ trip.uuid }}">
         <div class="card-img-top{% if icon_type == 'past' %} ref-image-display--past{% endif %}">
           {% include "images/components/reference_image_display.html" with image=trip.reference_image size="responsive" placeholder_image="img/tt-icon-196x196.png" %}
@@ -30,7 +30,7 @@
   <h3 class="h5">No {% if icon_type == 'past' %}Past{% elif icon_type == 'recent' %}Recent{% else %}Upcoming{% endif %} Trips</h3>
   <p class="text-muted mb-3">{% if icon_type == 'past' %}No past trips to display.{% else %}Start planning your next adventure!{% endif %}</p>
   {% if icon_type != 'past' %}
-  <a href="{% url 'trips_create' %}" class="btn btn-primary btn-lg" data-async="modal">{% icon "plus" size="lg" %}  Create A Trip</a>
+  <a href="{% url 'trips_trip_create' %}" class="btn btn-primary btn-lg" data-async="modal">{% icon "plus" size="lg" %}  Create A Trip</a>
   {% endif %}
 </div>
 {% endif %}
