@@ -53,7 +53,10 @@
     this.editor = editor; // Reference to JournalEditor for usedImageUUIDs
     this.selectedImages = new Set();
     this.lastSelectedIndex = null;
-    this.filterScope = 'unused'; // Default filter: 'unused' | 'used' | 'all'
+
+    // Initialize filter scope from server-provided data attribute (for URL state preservation)
+    var $form = this.$panel.find('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_FILTER_FORM_ID);
+    this.filterScope = $form.data(TtConst.INITIAL_SCOPE_DATA_ATTR) || TtConst.IMAGE_PICKER_SCOPE_UNUSED;
 
     // Initialize badge manager
     var $headerTitle = this.$panel.find(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_PANEL_HEADER_SELECTOR + ' h5');
@@ -87,6 +90,17 @@
     this.$panel.find('input[name="scope"]').on('change', function(e) {
       var newScope = $(this).val();
       self.applyFilter(newScope);
+
+      // Update URL to preserve scope across page refreshes
+      if (Tt.JournalEditor.updatePickerUrlState) {
+        var $dateInput = self.$panel.find('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_DATE_INPUT_ID);
+        var dateValue = $dateInput.val();
+        Tt.JournalEditor.updatePickerUrlState({
+          date: dateValue || null,
+          recent: !dateValue,
+          scope: newScope
+        });
+      }
     });
 
     // NOTE: Initial filter is applied by JournalEditor.init() after usedImageUUIDs is populated
@@ -180,7 +194,7 @@
 
   /**
    * Apply filter to image cards based on usage scope
-   * @param {string} scope - 'unused' | 'used' | 'all'
+   * @param {string} scope - TtConst.IMAGE_PICKER_SCOPE_UNUSED | _USED | _ALL
    */
   JournalEditorMultiImagePicker.prototype.applyFilter = function(scope) {
     this.filterScope = scope;
@@ -192,11 +206,11 @@
       // Check if count > 0 to handle same image appearing multiple times
       var isUsed = (usedImageUUIDs.get(uuid) || 0) > 0;
 
-      if (scope === 'all') {
+      if (scope === TtConst.IMAGE_PICKER_SCOPE_ALL) {
         $card.show();
-      } else if (scope === 'unused') {
+      } else if (scope === TtConst.IMAGE_PICKER_SCOPE_UNUSED) {
         $card.toggle(!isUsed);
-      } else if (scope === 'used') {
+      } else if (scope === TtConst.IMAGE_PICKER_SCOPE_USED) {
         $card.toggle(isUsed);
       }
     });

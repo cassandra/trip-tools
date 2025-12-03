@@ -19,7 +19,7 @@ Core functionality uses singleton pattern with thread-safe initialization:
 - Include `ensure_initialized()` and `ensure_initialized_async()` methods
 
 ### Database Patterns
-- Strategic indexing: Use `db_index=True` and composite indexes
+- Strategic indexing: Use `db_index=True` and composite indexes (only when needed)
 - Entity queries: Always use `select_related()` for foreign keys
 - Enum storage: CharField with `LabeledEnumField`, not Django choices
 
@@ -27,13 +27,14 @@ Core functionality uses singleton pattern with thread-safe initialization:
 
 ### Simple Views
 Keep view classes lightweight - delegate complex logic to helper classes:
-- Business logic -> Helper classes
+- Template data -> Encapsulate complex template data in a data object (schemas.py)
+- Business logic -> Services and Helper classes (services.py or helpers.py)
 - Database queries -> Manager classes
-- Data structure construction -> Dedicated builder classes
+- Data structure construction -> Dedicated builder classes (services.py)
 
 ### View Patterns
 - Use mixins for common functionality (`EntityMixin`, `LocationViewMixin`)
-- Custom base classes for specialized behaviors (`HiModalView`)
+- Use existing custom base classes for specialized behaviors (`HiModalView`)
 - Always use Django URL names, never hardcoded URLs
 
 ## Settings & Configuration

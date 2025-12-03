@@ -82,6 +82,9 @@
       return;
     }
 
+    // Decode common HTML entities that may appear in pasted text
+    text = this._decodeHtmlEntities(text);
+
     // Split on newlines (handle both \n and \r\n)
     var lines = text.split(/\r?\n/);
 
@@ -254,6 +257,20 @@
 
     selection.removeAllRanges();
     selection.addRange(newRange);
+  };
+
+  /**
+   * Decode common HTML entities in text
+   * Handles entities that may appear when copying from web pages or HTML sources
+   * @param {string} text - Text that may contain HTML entities
+   * @returns {string} Text with entities decoded
+   */
+  PasteHandler.prototype._decodeHtmlEntities = function(text) {
+    // Use a temporary element to decode entities properly
+    // This handles all HTML entities including numeric ones
+    var temp = document.createElement('textarea');
+    temp.innerHTML = text;
+    return temp.value;
   };
 
   // =========================================================================

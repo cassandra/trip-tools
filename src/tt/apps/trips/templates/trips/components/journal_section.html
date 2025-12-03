@@ -1,0 +1,60 @@
+{% load icons %}
+
+<div class="h3">Trip Journal</div>
+
+{% if journal_section.journal_exists %}
+
+<div class="d-flex justify-content-left m-3" >
+  <div class="align-items-center mx-2">
+
+    {% if journal_section.publishing_status.has_published_version %}
+    <div class="text-center mt-1">
+      <a href="{{ journal_section.published_url }}" target="_blank" class="btn btn-primary">
+        {% icon "eye" size="lg" %} PUBLISHED
+      </a>
+    </div>
+    {% endif %}
+
+    {% if journal_section.can_edit %}
+    <div class="text-center mt-1">
+      <a href="{% url 'journal_home' journal_uuid=journal_section.journal.uuid %}" class="btn btn-secondary">
+        {% icon "edit" size="lg" %} EDIT
+      </a>
+    </div>
+    {% endif %}
+
+    {% if journal_section.publishing_status.is_unpublished or journal_section.publishing_status.has_unpublished_changes %}
+    <div class="text-center mt-1">
+      <a href="{{ journal_section.draft_url }}" target="_blank" class="btn btn-muted">
+        {% icon "eye" size="lg" %} DRAFT
+      </a>
+    </div>
+        {% endif %}
+
+  </div>
+  <div class="mx-2">
+    <a href="{% url 'journal_home' journal_uuid=journal_section.journal.uuid %}" class="plain">
+      {% include "journal/components/journal_page_header.html" with journal=journal_section.journal can_edit_journal=False %}
+    </a>
+  </div>
+</div>
+
+{% else %} {# No Journal #}
+
+<div class="alert alert-info mt-3">
+  <div class="d-flex align-items-start">
+    <div class="mr-2">{% icon "info-circle" %}</div>
+    <div>
+      <h5 class="alert-heading mb-2">No Journal</h5>
+      <p class="mb-0">A journal has not yet been created for this trip.</p>
+    </div>
+  </div>
+  {% if journal_section.can_edit %}
+  <div class="mt-3">
+    <a href="{% url 'journal_create' trip_uuid=trip.uuid %}" class="btn btn-primary">
+      {% icon "edit" size="lg" %} CREATE JOURNAL
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endif %}

@@ -125,6 +125,11 @@ class TripImage(models.Model):
         related_name = 'uploaded_images',
     )
     uploaded_datetime = models.DateTimeField(auto_now_add=True, db_index=True)
+    upload_session_uuid = models.UUIDField(
+        null=True,
+        blank=True,
+        help_text='Groups images from the same bulk upload batch for chronological ordering',
+    )
 
     # Edit tracking
     modified_datetime = models.DateTimeField(

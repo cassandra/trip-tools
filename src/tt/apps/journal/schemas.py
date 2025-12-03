@@ -1,21 +1,25 @@
 from dataclasses import dataclass
+from datetime import date as date_class
 from typing import Optional
 
+from django.db.models import QuerySet
+
+from tt.apps.images.models import TripImage
 from tt.apps.travelog.models import Travelog
 
+from .enums import ImagePickerScope
 from .models import Journal
 
 
 @dataclass
 class PublishingStatus:
 
-    current_published_version  : Optional[Travelog]
-    has_unpublished_changes    : bool
-    has_published_version      : bool
+    current_published_travelog  : Optional[Travelog]
+    has_unpublished_changes     : bool
 
     @property
-    def is_published_with_changes(self) -> bool:
-        return bool( self.has_published_version and self.has_unpublished_changes )
+    def has_published_version(self) -> bool:
+        return bool( self.current_published_travelog is not None )
 
     @property
     def is_published_without_changes(self) -> bool:
@@ -23,7 +27,7 @@ class PublishingStatus:
 
     @property
     def is_unpublished(self) -> bool:
-        return not self.has_published_version
+        return bool( not self.has_published_version )
 
 
 @dataclass
@@ -39,11 +43,11 @@ class EntrySelectionStats:
 
     @property
     def all_entries_included(self) -> bool:
-        return self.included_entries == self.total_entries
+        return bool( self.included_entries == self.total_entries )
 
     @property
     def none_included(self) -> bool:
-        return self.included_entries == 0
+        return bool( self.included_entries == 0 )
 
     @classmethod
     def for_journal(cls, journal: Journal) -> 'EntrySelectionStats':
@@ -54,3 +58,17 @@ class EntrySelectionStats:
             total_entries=len(entries),
             included_entries=included
         )
+
+
+@dataclass
+class EditorImagePickerData:
+    """
+    Encapsulates context data for the journal editor image picker component.
+    """
+
+    accessible_images       : QuerySet[TripImage]
+    is_recent_mode          : bool
+    filter_date             : Optional[date_class]
+    image_display_timezone  : str
+    last_date               : Optional[date_class]  # For "Last Used Date" button
+    scope                   : ImagePickerScope

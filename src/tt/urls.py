@@ -22,15 +22,14 @@ urlpatterns = [
 
     re_path( r'^manifest.json$', views.ManifestView.as_view(), name='manifest' ),
 
-
-    path('admin/', admin.site.urls),
+    path( f'{settings.ADMIN_PATH_PREFIX}admin/', admin.site.urls),
+    path( f'{settings.ADMIN_PATH_PREFIX}env/', include('tt.environment.urls' )),
 
     re_path( r'^$', views.HomeView.as_view(), name='home' ),
     re_path( r'^index.html$', views.HomeView.as_view(), name='home_index' ),
     re_path( r'^start$', views.StartView.as_view(), name='start' ),
     re_path( r'^health$', views.HealthView.as_view(), name='health' ),
 
-    re_path( r'^env/', include('tt.environment.urls' )),
     re_path( r'^user/', include('tt.apps.user.urls' )),
     re_path( r'^config/', include('tt.apps.config.urls' )),
     re_path( r'^notify/', include('tt.apps.notify.urls' )),

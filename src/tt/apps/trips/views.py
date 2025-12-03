@@ -24,16 +24,16 @@ from .enums import TripPage
 from .forms import TripForm
 from .mixins import TripViewMixin
 from .models import Trip
-from .services import TripDisplayService
+from .services import TripsHomeDisplayService, TripOverviewBuilder
 
 logger = logging.getLogger(__name__)
 
 
-class TripsAllView(LoginRequiredMixin, View):
+class TripsHomeView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         # Use service for business logic and categorization
-        trip_data = TripDisplayService.get_categorized_trips_for_user(request.user)
+        trip_data = TripsHomeDisplayService.get_categorized_trips_for_user(request.user)
 
         feature_page_context = FeaturePageContext(
             active_page = FeaturePageType.TRIPS,
@@ -45,7 +45,7 @@ class TripsAllView(LoginRequiredMixin, View):
             'past_trips': trip_data.past_trips,
             'total_trips': trip_data.total_trips,
         }
-        return render(request, 'trips/pages/trips_all.html', context)
+        return render(request, 'trips/pages/trips_home.html', context)
 
     
 class TripCreateModalView(ModalView):
@@ -68,7 +68,7 @@ class TripCreateModalView(ModalView):
                 owner = request.user,
                 **form.cleaned_data
             )
-            redirect_url = reverse( 'trips_home', kwargs = { 'trip_uuid': trip.uuid } )
+            redirect_url = reverse( 'trips_trip_overview', kwargs = { 'trip_uuid': trip.uuid } )
             return self.redirect_response( request, redirect_url )
 
         context = {
@@ -77,10 +77,7 @@ class TripCreateModalView(ModalView):
         return self.modal_response( request, context = context, status = 400 )
 
 
-class TripHomeView( TripViewMixin, ModalView ):
-
-    def get_template_name(self) -> str:
-        return 'trips/pages/trips_home.html'
+class TripOverviewView( TripViewMixin, View ):
 
     def get(self, request, trip_uuid : UUID, *args, **kwargs):
         request_member = self.get_trip_member( request, trip_uuid = trip_uuid )
@@ -92,16 +89,21 @@ class TripHomeView( TripViewMixin, ModalView ):
 
         journal = Journal.objects.get_primary_for_trip( trip )
 
+        overview_data = TripOverviewBuilder.build(
+            trip = trip,
+            journal = journal,
+            request_member = request_member,
+        )
         trip_page_context = TripPageContext(
             active_page = TripPage.OVERVIEW,
             request_member = request_member,
         )
-
         context = {
             'trip_page': trip_page_context,
-            'journal': journal,
+            'trip': trip,
+            'overview_data': overview_data,
         }
-        return render( request, 'trips/pages/trips_home.html', context )
+        return render( request, 'trips/pages/trip_overview.html', context )
 
 
 class TripEditModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
@@ -140,10 +142,10 @@ class TripEditModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
         return self.modal_response( request, context = context, status = 400 )
 
 
-class TripReferenceImagePickerView( EntityImagePickerView ):
+class TripImagePickerView( EntityImagePickerView ):
 
     def get_template_name(self) -> str:
-        return 'trips/modals/trip_reference_image_picker.html'
+        return 'trips/modals/trip_image_picker.html'
 
     def get_entity_model(self):
         return Trip
@@ -168,10 +170,10 @@ class TripReferenceImagePickerView( EntityImagePickerView ):
         return entity
 
     def get_picker_url(self, entity: Trip) -> str:
-        return reverse('trip_reference_image_picker', kwargs={'trip_uuid': entity.uuid})
+        return reverse('trips_trip_image_picker', kwargs={'trip_uuid': entity.uuid})
 
     def get_upload_url(self, entity: Trip) -> str:
-        return reverse('trip_image_upload', kwargs={'trip_uuid': entity.uuid})
+        return reverse('trips_trip_image_upload', kwargs={'trip_uuid': entity.uuid})
 
 
 class TripImageUploadView(EntityImageUploadView):
@@ -193,7 +195,7 @@ class TripImageUploadView(EntityImageUploadView):
 
     def get_upload_url(self, request, *args, **kwargs) -> str:
         trip_uuid = kwargs.get('trip_uuid')
-        return reverse('trip_image_upload', kwargs={'trip_uuid': trip_uuid})
+        return reverse('trips_trip_image_upload', kwargs={'trip_uuid': trip_uuid})
 
     def post(self, request, *args, **kwargs):
         """

@@ -58,9 +58,8 @@ class TestJournalPublishContextBuilder(TestCase):
         )
 
         publishing_status = PublishingStatus(
-            current_published_version=None,
+            current_published_travelog=None,
             has_unpublished_changes=False,
-            has_published_version=False,
         )
         visibility_form = JournalVisibilityForm(journal=self.journal)
 
@@ -98,9 +97,8 @@ class TestJournalPublishContextBuilder(TestCase):
         )
 
         publishing_status = PublishingStatus(
-            current_published_version=None,
+            current_published_travelog=None,
             has_unpublished_changes=False,
-            has_published_version=False,
         )
         visibility_form = JournalVisibilityForm(journal=self.journal)
 
@@ -144,9 +142,8 @@ class TestJournalPublishContextBuilder(TestCase):
         )
 
         publishing_status = PublishingStatus(
-            current_published_version=None,
+            current_published_travelog=None,
             has_unpublished_changes=False,
-            has_published_version=False,
         )
         visibility_form = JournalVisibilityForm(journal=self.journal)
 
@@ -191,11 +188,10 @@ class PublishingStatusHelperTestCase(TestCase):
         """Test status for journal that has never been published."""
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
-        self.assertIsNone(status.current_published_version)
+        self.assertIsNone(status.current_published_travelog)
         self.assertFalse(status.has_unpublished_changes)
         self.assertFalse(status.has_published_version)
         self.assertTrue(status.is_unpublished)
-        self.assertFalse(status.is_published_with_changes)
         self.assertFalse(status.is_published_without_changes)
 
     def test_published_no_changes(self):
@@ -248,11 +244,10 @@ class PublishingStatusHelperTestCase(TestCase):
 
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
-        self.assertEqual(status.current_published_version, travelog)
+        self.assertEqual(status.current_published_travelog, travelog)
         self.assertFalse(status.has_unpublished_changes)
         self.assertTrue(status.has_published_version)
         self.assertFalse(status.is_unpublished)
-        self.assertFalse(status.is_published_with_changes)
         self.assertTrue(status.is_published_without_changes)
 
     def test_published_with_new_entry(self):
@@ -295,10 +290,9 @@ class PublishingStatusHelperTestCase(TestCase):
 
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
-        self.assertEqual(status.current_published_version, travelog)
+        self.assertEqual(status.current_published_travelog, travelog)
         self.assertTrue(status.has_unpublished_changes)
         self.assertTrue(status.has_published_version)
-        self.assertTrue(status.is_published_with_changes)
         self.assertFalse(status.is_published_without_changes)
 
     def test_published_with_modified_entry_text(self):
@@ -335,7 +329,6 @@ class PublishingStatusHelperTestCase(TestCase):
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
         self.assertTrue(status.has_unpublished_changes)
-        self.assertTrue(status.is_published_with_changes)
 
     def test_published_with_modified_entry_title(self):
         """Test status when entry title has been modified after publishing."""
@@ -371,7 +364,6 @@ class PublishingStatusHelperTestCase(TestCase):
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
         self.assertTrue(status.has_unpublished_changes)
-        self.assertTrue(status.is_published_with_changes)
 
     def test_published_with_modified_entry_timezone(self):
         """Test status when entry timezone has been modified after publishing."""
@@ -407,7 +399,6 @@ class PublishingStatusHelperTestCase(TestCase):
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
         self.assertTrue(status.has_unpublished_changes)
-        self.assertTrue(status.is_published_with_changes)
 
     def test_published_with_deleted_entry(self):
         """Test status when an entry has been deleted after publishing."""
@@ -458,7 +449,6 @@ class PublishingStatusHelperTestCase(TestCase):
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
         self.assertTrue(status.has_unpublished_changes)
-        self.assertTrue(status.is_published_with_changes)
 
     def test_published_with_multiple_changes(self):
         """Test status with multiple types of changes."""
@@ -526,7 +516,6 @@ class PublishingStatusHelperTestCase(TestCase):
 
         # Should detect that changes exist
         self.assertTrue(status.has_unpublished_changes)
-        self.assertTrue(status.is_published_with_changes)
 
     def test_published_with_modified_reference_image(self):
         """Test status when journal reference image has been modified after publishing."""
@@ -566,7 +555,6 @@ class PublishingStatusHelperTestCase(TestCase):
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
         self.assertTrue(status.has_unpublished_changes)
-        self.assertTrue(status.is_published_with_changes)
 
     def test_published_only_non_current_version(self):
         """Test that only is_current=True travelog is used for status."""
@@ -600,7 +588,7 @@ class PublishingStatusHelperTestCase(TestCase):
         status = PublishingStatusHelper.get_publishing_status(self.journal)
 
         # Should treat as unpublished since no current version exists
-        self.assertIsNone(status.current_published_version)
+        self.assertIsNone(status.current_published_travelog)
         self.assertFalse(status.has_published_version)
         self.assertTrue(status.is_unpublished)
 
@@ -611,35 +599,32 @@ class PublishingStatusDataclassTestCase(TestCase):
     def test_unpublished_properties(self):
         """Test properties for unpublished state."""
         status = PublishingStatus(
-            current_published_version=None,
+            current_published_travelog=None,
             has_unpublished_changes=False,
-            has_published_version=False,
         )
 
+        self.assertFalse(status.has_published_version)
         self.assertTrue(status.is_unpublished)
-        self.assertFalse(status.is_published_with_changes)
         self.assertFalse(status.is_published_without_changes)
 
     def test_published_without_changes_properties(self):
         """Test properties for published without changes state."""
         status = PublishingStatus(
-            current_published_version='mock_travelog',  # Mock object
+            current_published_travelog='mock_travelog',  # Mock object
             has_unpublished_changes=False,
-            has_published_version=True,
         )
 
+        self.assertTrue(status.has_published_version)
         self.assertFalse(status.is_unpublished)
-        self.assertFalse(status.is_published_with_changes)
         self.assertTrue(status.is_published_without_changes)
 
     def test_published_with_changes_properties(self):
         """Test properties for published with changes state."""
         status = PublishingStatus(
-            current_published_version='mock_travelog',  # Mock object
+            current_published_travelog='mock_travelog',  # Mock object
             has_unpublished_changes=True,
-            has_published_version=True,
         )
 
+        self.assertTrue(status.has_published_version)
         self.assertFalse(status.is_unpublished)
-        self.assertTrue(status.is_published_with_changes)
         self.assertFalse(status.is_published_without_changes)

@@ -27,13 +27,14 @@ from .context import ImagePageContext
 from .enums import ImageAccessRole, UploadStatus
 from .forms import TripImageEditForm
 from .helpers import TripImageHelpers
+from .mixins import ImagesViewMixin
 from .models import TripImage
 from .services import ImagePickerService, ImageUploadService, HEIF_SUPPORT_AVAILABLE
 
 logger = logging.getLogger(__name__)
 
 
-class ImagesHomeView( LoginRequiredMixin, View ):
+class ImagesHomeView( LoginRequiredMixin, ImagesViewMixin, View ):
     """
     Home view for image management of images used for trips.
     """
@@ -75,6 +76,8 @@ class ImagesHomeView( LoginRequiredMixin, View ):
                 status=400,
             )
 
+        upload_session_uuid = self.get_upload_session_uuid(request)
+
         # Use ImageUploadService for processing
         service = ImageUploadService()
         results = []
@@ -82,7 +85,12 @@ class ImagesHomeView( LoginRequiredMixin, View ):
         error_count = 0
 
         for uploaded_file in uploaded_files:
-            result = service.process_uploaded_image(uploaded_file, request.user, request=request)
+            result = service.process_uploaded_image(
+                uploaded_file,
+                request.user,
+                request=request,
+                upload_session_uuid=upload_session_uuid,
+            )
             results.append(result)
 
             if result.status == UploadStatus.SUCCESS:
@@ -196,7 +204,7 @@ class ImageInspectView( LoginRequiredMixin, TripViewMixin, ModalView ):
         )
 
 
-class EntityImageUploadView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
+class EntityImageUploadView(LoginRequiredMixin, TripViewMixin, ImagesViewMixin, ModalView, ABC):
     """
     Abstract base view for uploading images in modal context.
 
@@ -350,6 +358,8 @@ class EntityImageUploadView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
                 status=400,
             )
 
+        upload_session_uuid = self.get_upload_session_uuid(request)
+
         # Use ImageUploadService for processing
         service = ImageUploadService()
         results = []
@@ -357,7 +367,12 @@ class EntityImageUploadView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
         error_count = 0
 
         for uploaded_file in uploaded_files:
-            result = service.process_uploaded_image(uploaded_file, request.user, request=request)
+            result = service.process_uploaded_image(
+                uploaded_file,
+                request.user,
+                request=request,
+                upload_session_uuid=upload_session_uuid,
+            )
             results.append(result)
 
             if result.status == UploadStatus.SUCCESS:
@@ -486,6 +501,7 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
             'selected_date': selected_date,
             'picker_url': self.get_picker_url(entity),
             'upload_url': self.get_upload_url(entity),
+            'image_display_timezone': selected_timezone,
         }
         return self.modal_response(request, context)
 

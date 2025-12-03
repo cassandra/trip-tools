@@ -134,9 +134,9 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
         )
 
         with patch('tt.apps.members.invitation_manager.EmailSender') as mock_sender:
-            member, user_created = self.manager.invite_member(
-                request=self.mock_request,
-                trip=self.trip,
+            result = self.manager.invite_member(
+                request = self.mock_request,
+                trip = self.trip,
                 email='existing@test.com',
                 permission_level=TripPermissionLevel.EDITOR,
                 invited_by_user=self.user,
@@ -144,8 +144,8 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
             )
 
         # Verify NO new user created (security: can't hijack existing accounts)
-        self.assertFalse(user_created)
-        self.assertEqual(member.user, existing_user)
+        self.assertFalse(result.new_user_created)
+        self.assertEqual(result.trip_member.user, existing_user)
 
         # Verify invitation email sent (not signup email)
         mock_sender.return_value.send.assert_called_once()
@@ -158,7 +158,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
     def test_invite_member_new_user_security_defaults(self):
         """Test new user creation has secure defaults."""
         with patch('tt.apps.members.invitation_manager.EmailSender') as mock_sender:
-            member, user_created = self.manager.invite_member(
+            result = self.manager.invite_member(
                 request=self.mock_request,
                 trip=self.trip,
                 email='newuser@test.com',
@@ -167,10 +167,10 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
             )
 
         # Verify new user created
-        self.assertTrue(user_created)
+        self.assertTrue(result.new_user_created)
 
         # Verify security defaults
-        new_user = member.user
+        new_user = result.trip_member.user
         self.assertEqual(new_user.email, 'newuser@test.com')
         self.assertFalse(new_user.email_verified)  # CRITICAL: Not verified yet
         self.assertTrue(new_user.is_active)  # But active for login
@@ -189,7 +189,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
         """Test email addresses are normalized (security: prevent duplicate accounts)."""
         with patch('tt.apps.members.invitation_manager.EmailSender'):
             # Invite with uppercase and whitespace
-            member, _ = self.manager.invite_member(
+            result = self.manager.invite_member(
                 request=self.mock_request,
                 trip=self.trip,
                 email='  NewUser@TEST.COM  ',  # Mixed case with whitespace
@@ -198,7 +198,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
             )
 
         # Verify email normalized to lowercase, trimmed
-        self.assertEqual(member.user.email, 'newuser@test.com')
+        self.assertEqual(result.trip_member.user.email, 'newuser@test.com')
 
     def test_invite_member_email_error_after_database_commit(self):
         """Test email error doesn't affect database commit (email is outside transaction)."""
@@ -224,7 +224,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
     def test_invite_member_send_email_false_no_email_sent(self):
         """Test send_email=False bypasses email sending (for testing/admin use)."""
         with patch('tt.apps.members.invitation_manager.EmailSender') as mock_sender:
-            member, _ = self.manager.invite_member(
+            result = self.manager.invite_member(
                 request=self.mock_request,
                 trip=self.trip,
                 email='newuser@test.com',
@@ -234,7 +234,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
             )
 
         # Verify member created but NO email sent
-        self.assertIsNotNone(member)
+        self.assertIsNotNone(result.trip_member)
         mock_sender.assert_not_called()
 
     def test_invite_member_permission_update_on_reinvite(self):
@@ -243,7 +243,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
 
         with patch('tt.apps.members.invitation_manager.EmailSender'):
             # First invitation with VIEW permission
-            member1, _ = self.manager.invite_member(
+            result1 = self.manager.invite_member(
                 request=self.mock_request,
                 trip=self.trip,
                 email='invited@test.com',
@@ -252,7 +252,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
             )
 
             # Second invitation with EDIT permission (upgrade)
-            member2, _ = self.manager.invite_member(
+            result2 = self.manager.invite_member(
                 request=self.mock_request,
                 trip=self.trip,
                 email='invited@test.com',
@@ -261,8 +261,8 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
             )
 
         # Verify same member, permission upgraded, no duplicate
-        self.assertEqual(member1.id, member2.id)
-        self.assertEqual(member2.permission_level, TripPermissionLevel.EDITOR)
+        self.assertEqual(result1.trip_member.id, result2.trip_member.id)
+        self.assertEqual(result2.trip_member.permission_level, TripPermissionLevel.EDITOR)
 
         # Verify only one member record exists for this user/trip
         members = TripMember.objects.filter(trip=self.trip, user=invited_user)
@@ -271,7 +271,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
     def test_invite_member_first_name_extraction(self):
         """Test new user first name extracted from email local part."""
         with patch('tt.apps.members.invitation_manager.EmailSender'):
-            member, _ = self.manager.invite_member(
+            result = self.manager.invite_member(
                 request=self.mock_request,
                 trip=self.trip,
                 email='john.doe@example.com',
@@ -280,7 +280,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
             )
 
         # Verify first name extracted from email
-        self.assertEqual(member.user.first_name, 'john.doe')
+        self.assertEqual(result.trip_member.user.first_name, 'john.doe')
 
 
 class TestMemberInvitationEdgeCases(BaseTestCase):
@@ -346,7 +346,7 @@ class TestMemberInvitationEdgeCases(BaseTestCase):
         with patch('tt.apps.members.invitation_manager.EmailSender'):
             for email in email_variations:
                 with self.subTest(email=email):
-                    member, user_created = self.manager.invite_member(
+                    result = self.manager.invite_member(
                         request=mock_request,
                         trip=self.trip,
                         email=email,
@@ -355,8 +355,8 @@ class TestMemberInvitationEdgeCases(BaseTestCase):
                         send_email=False
                     )
 
-                    if user_created:
-                        created_users.append(member.user)
+                    if result.new_user_created:
+                        created_users.append(result.trip_member.user)
 
         # Only one user should have been created (first variation)
         self.assertEqual(len(created_users), 1)

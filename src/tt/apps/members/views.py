@@ -229,7 +229,7 @@ class MemberRemoveModalView( LoginRequiredMixin, TripViewMixin, ModalView ):
 
                 target_member.delete()
 
-            logger.info(
+            logger.debug(
                 f'User {request.user.email} removed {target_member.user.email} '
                 f'from trip {trip.pk} (self_removal={is_self_removal})'
             )
@@ -286,7 +286,7 @@ class MemberAcceptInvitationView( View ):
                     member = TripMember.objects.get( trip = trip, user = user )
                     if member.invitation_accepted_datetime is not None:
                         # Already accepted - redirect to trip
-                        return HttpResponseRedirect( reverse( 'trips_home',
+                        return HttpResponseRedirect( reverse( 'trips_trip_overview',
                                                               kwargs = { 'trip_uuid': trip.uuid } ) )
                 except TripMember.DoesNotExist:
                     pass
@@ -306,18 +306,18 @@ class MemberAcceptInvitationView( View ):
             if not user.email_verified:
                 user.email_verified = True
                 user.save()
-                logger.info( f'Verified email for {user.email} via invitation link' )
+                logger.debug( f'Verified email for {user.email} via invitation link' )
 
             # Mark invitation as accepted (one-time use)
             try:
                 member = TripMember.objects.get( trip = trip, user = user )
                 member.invitation_accepted_datetime = timezone.now()
                 member.save()
-                logger.info( f'User {user.email} accepted invitation to trip {trip.pk}' )
+                logger.debug( f'User {user.email} accepted invitation to trip {trip.pk}' )
             except TripMember.DoesNotExist:
                 logger.warning( f'User {user.email} has no membership for trip {trip.pk}' )
 
-        return HttpResponseRedirect( reverse( 'trips_home', kwargs = { 'trip_uuid': trip.uuid } ) )
+        return HttpResponseRedirect( reverse( 'trips_trip_overview', kwargs = { 'trip_uuid': trip.uuid } ) )
 
 
 class MemberSignupAndAcceptView( View ):
@@ -357,7 +357,7 @@ class MemberSignupAndAcceptView( View ):
                     member = TripMember.objects.get( trip = trip, user = user )
                     if member.invitation_accepted_datetime is not None:
                         # Already accepted - redirect to trip
-                        return HttpResponseRedirect( reverse( 'trips_home',
+                        return HttpResponseRedirect( reverse( 'trips_trip_overview',
                                                               kwargs = { 'trip_uuid': trip.uuid } ) )
                 except TripMember.DoesNotExist:
                     pass
@@ -377,14 +377,14 @@ class MemberSignupAndAcceptView( View ):
             if not user.email_verified:
                 user.email_verified = True
                 user.save()
-                logger.info( f'Verified email for {user.email} via invitation link' )
+                logger.debug( f'Verified email for {user.email} via invitation link' )
 
             # Mark invitation as accepted (one-time use)
             try:
                 member = TripMember.objects.get( trip = trip, user = user )
                 member.invitation_accepted_datetime = timezone.now()
                 member.save()
-                logger.info( f'New user {user.email} signed up and accepted invitation to trip {trip.pk}' )
+                logger.debug( f'New user {user.email} signed up and accepted invitation to trip {trip.pk}' )
             except TripMember.DoesNotExist:
                 logger.warning( f'User {user.email} has no membership for trip {trip.pk}' )
 

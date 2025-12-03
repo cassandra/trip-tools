@@ -131,16 +131,20 @@
     $img.attr('draggable', true);  // Edit-time only, stripped before save
 
     // Create wrapper with layout attribute
+    // contenteditable="false" makes wrapper atomic - cursor can't enter except via caption
     var $wrapper = $('<span>', {
       'class': TtConst.JOURNAL_IMAGE_WRAPPER_CLASS
     });
     $wrapper.attr('data-' + TtConst.LAYOUT_DATA_ATTR, layout);
+    $wrapper.attr('contenteditable', 'false');
 
     // Always create caption span - even if empty, for consistent editing experience
     // Empty captions are visible/clickable in editor (via CSS), hidden in travelog
+    // contenteditable="true" allows editing caption while wrapper is non-editable
     var $captionSpan = $('<span>', {
       'class': TtConst.TRIP_IMAGE_CAPTION_CLASS
     });
+    $captionSpan.attr('contenteditable', 'true');
     if (caption && $.trim(caption).length > 0) {
       $captionSpan.text(caption);
     }

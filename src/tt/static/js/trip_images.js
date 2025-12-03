@@ -166,6 +166,7 @@
         var completedCount = 0;
         var currentUploadIndex = 0;
         var isUploading = false;
+        var uploadSessionUuid = null;
 
         // DOM element cache
         var $uploadZone;
@@ -287,6 +288,9 @@
                 alert('No valid image files selected. Please select JPG, PNG, or HEIC files under 20MB.');
                 return;
             }
+
+            // Generate upload session UUID for this batch
+            uploadSessionUuid = crypto.randomUUID();
 
             // Reset state
             uploadQueue = validFiles.map(function(file, index) {
@@ -416,6 +420,7 @@
         function uploadSingleFile(fileItem, index) {
             var formData = new FormData();
             formData.append('files', fileItem.file);
+            formData.append(TtConst.UPLOAD_SESSION_UUID_FIELD, uploadSessionUuid);
 
             // Mark as uploading
             updateFileStatus(fileItem.id, 'uploading', 'Uploading...', 0);

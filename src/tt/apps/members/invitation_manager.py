@@ -12,6 +12,7 @@ from tt.apps.trips.enums import TripPermissionLevel
 from tt.apps.trips.models import Trip
 
 from .models import TripMember
+from .schemas import InviteMemberResultData
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -44,30 +45,24 @@ class MemberInvitationManager( Singleton ):
                        email             : str,
                        permission_level  : TripPermissionLevel,
                        invited_by_user   : User,
-                       send_email        : bool = True ) -> tuple[TripMember, bool]:
+                       send_email        : bool = True ) -> InviteMemberResultData:
         """
         Invite a member to a trip. Creates user if needed and optionally sends invitation email.
-
-        Args:
-            send_email: If True, sends invitation email. Default is True.
-
-        Returns:
-            tuple: (TripMember, bool) - The member and whether user was created
         """
         email = email.lower().strip()
 
         try:
             user = User.objects.get( email = email )
-            user_created = False
+            new_user_created = False
             logger.debug( f'Inviting existing user {email} to trip {trip.pk}' )
         except User.DoesNotExist:
-            user_created = True
+            new_user_created = True
             logger.debug( f'Will create new user {email} for trip invitation' )
             user = None
 
         with transaction.atomic():
             # Create user inside transaction if needed
-            if user_created:
+            if new_user_created:
                 first_name = email.split('@')[0].strip()
                 user = User.objects.create(
                     email = email,
@@ -76,7 +71,7 @@ class MemberInvitationManager( Singleton ):
                     is_active = True,
                 )
 
-            member, created = TripMember.objects.get_or_create(
+            trip_member, created = TripMember.objects.get_or_create(
                 trip = trip,
                 user = user,
                 defaults = {
@@ -86,12 +81,12 @@ class MemberInvitationManager( Singleton ):
             )
 
             if not created:
-                member.permission_level = permission_level
-                member.added_by = invited_by_user
-                member.save()
+                trip_member.permission_level = permission_level
+                trip_member.added_by = invited_by_user
+                trip_member.save()
 
         if send_email:
-            if user_created:
+            if new_user_created:
                 self._send_signup_invitation_email(
                     request = request,
                     trip = trip,
@@ -106,7 +101,10 @@ class MemberInvitationManager( Singleton ):
                     invited_by_user = invited_by_user,
                 )
             
-        return member, user_created
+        return InviteMemberResultData(
+            trip_member = trip_member,
+            new_user_created = new_user_created,
+        )
 
     def _send_invitation_email( self,
                                 request          : HttpRequest,
@@ -130,9 +128,6 @@ class MemberInvitationManager( Singleton ):
             'trip_description': trip.description,
             'invited_by_name': invited_by_user.get_full_name() or invited_by_user.email,
             'acceptance_url': acceptance_url,
-            'trip_url': request.build_absolute_uri(
-                reverse( 'trips_home', kwargs = { 'trip_uuid': trip.uuid } )
-            ),
         }
 
         email_sender_data = EmailData(
@@ -158,7 +153,7 @@ class MemberInvitationManager( Singleton ):
         """Send signup invitation email to new or unverified user."""
 
         token = self._token_generator.make_token( user )
-        signup_url = request.build_absolute_uri(
+        signin_url = request.build_absolute_uri(
             reverse( 'members_signup_and_accept',
                      kwargs = {
                          'trip_uuid': trip.uuid,
@@ -171,7 +166,7 @@ class MemberInvitationManager( Singleton ):
             'trip_title': trip.title,
             'trip_description': trip.description,
             'invited_by_name': invited_by_user.get_full_name() or invited_by_user.email,
-            'signup_url': signup_url,
+            'signin_url': signin_url,
         }
 
         email_sender_data = EmailData(

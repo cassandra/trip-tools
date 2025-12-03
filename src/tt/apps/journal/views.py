@@ -12,18 +12,22 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic import View
 
-
 from tt.apps.common.antinode import http_response
 from tt.apps.console.console_helper import ConsoleSettingsHelper
 from tt.apps.images.enums import UploadStatus
+from tt.apps.images.helpers import TripImageHelpers
 from tt.apps.images.views import EntityImagePickerView, EntityImageUploadView
-from tt.apps.images.services import ImageUploadService
+from tt.apps.images.services import ImageUploadService, ImagePickerService
 from tt.apps.members.models import TripMember
+from tt.apps.travelog.models import Travelog
+from tt.apps.travelog.services import PublishingService
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage
 from tt.apps.trips.mixins import TripViewMixin
 from tt.apps.trips.models import Trip
 from tt.async_view import ModalView
+
+from tt.environment.constants import TtConst
 
 from .autosave_helpers import (
     JournalAutoSaveHelper,
@@ -33,21 +37,13 @@ from .autosave_helpers import (
     ExceptionResponseBuilder,
 )
 from .context import JournalPageContext
-from .enums import JournalVisibility
+from .enums import ImagePickerScope, JournalVisibility
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
-from .helpers import PublishingStatusHelper, JournalPublishContextBuilder
+from .helpers import PublishingStatusHelper, JournalPublishContextBuilder, JournalEditorHelper
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE, SPECIAL_DATES
-from .schemas import PublishingStatus
+from .schemas import PublishingStatus, EditorImagePickerData
 from .services import JournalRestoreService, JournalPublishingService
-
-from tt.apps.images.helpers import TripImageHelpers
-from tt.apps.images.services import ImagePickerService
-
-from tt.environment.constants import TtConst
-
-from tt.apps.travelog.models import Travelog
-from tt.apps.travelog.services import PublishingService
 
 logger = logging.getLogger(__name__)
 
@@ -411,23 +407,54 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
                 journal = entry.journal,
             )
 
-        # For prologue/epilogue entries, use recent images instead of date-based filtering
-        # (date.min/date.max would cause overflow in date boundary calculations)
-        is_recent_mode = entry.is_special_entry
+        # Read image picker state from URL params (for preserving state across page refreshes)
+        picker_date_str = request.GET.get(TtConst.PICKER_DATE_PARAM)
+        picker_recent = request.GET.get(TtConst.PICKER_RECENT_PARAM) == '1'
+        picker_scope_str = request.GET.get(TtConst.PICKER_SCOPE_PARAM, TtConst.IMAGE_PICKER_SCOPE_UNUSED)
 
+        picker_scope = ImagePickerScope.from_name_safe( picker_scope_str )
+
+        # Parse picker_date from URL (used for both filtering and convenience button)
+        picker_date = None
+        if picker_date_str:
+            try:
+                picker_date = date_class.fromisoformat(picker_date_str)
+            except ValueError:
+                pass  # Invalid format, ignore
+
+        # Determine image picker mode based on URL params, falling back to default behavior
+        # picker_last_date is for the "Last Used Date" convenience button - persists even in recent mode
+        if picker_recent:
+            # URL explicitly requests recent mode
+            is_recent_mode = True
+            filter_date = None
+            # Use picker_date for convenience button, fall back to entry date
+            picker_last_date = picker_date or (entry.date if not entry.is_special_entry else None)
+        elif picker_date:
+            # URL specifies a date to filter by
+            is_recent_mode = False
+            filter_date = picker_date
+            picker_last_date = picker_date
+        else:
+            # No URL params - use default behavior based on entry type
+            # For prologue/epilogue entries, use recent images instead of date-based filtering
+            # (date.min/date.max would cause overflow in date boundary calculations)
+            is_recent_mode = entry.is_special_entry
+            filter_date = entry.date if not is_recent_mode else None
+            picker_last_date = entry.date if not entry.is_special_entry else None
+
+        # Fetch images based on determined mode
         if is_recent_mode:
             accessible_images = TripImageHelpers.get_recent_images_for_trip_editors(
                 trip = entry.journal.trip,
             )
-            filter_date = None
         else:
             accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
                 trip = entry.journal.trip,
                 user = request.user,
-                date = entry.date,
+                date = filter_date,
                 timezone = entry.timezone,
             )
-            filter_date = entry.date
 
         trip_page_context = TripPageContext(
             active_page = TripPage.JOURNAL,
@@ -444,15 +471,24 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
         # Create form for entry metadata fields
         journal_entry_form = JournalEntryForm(instance=entry)
 
+        # Build image picker data with proper timezone for display
+        image_display_timezone = JournalEditorHelper.get_image_display_timezone(entry, request.user)
+        image_picker_data = EditorImagePickerData(
+            accessible_images = accessible_images,
+            is_recent_mode = is_recent_mode,
+            filter_date = filter_date,
+            image_display_timezone = image_display_timezone,
+            last_date = picker_last_date,
+            scope = picker_scope,
+        )
+
         context = {
             'trip_page': trip_page_context,
             'journal_page': journal_page_context,
             'journal': entry.journal,
             'entry': entry,
             'journal_entry_form': journal_entry_form,
-            'accessible_images': accessible_images,
-            'is_recent_mode': is_recent_mode,
-            'filter_date': filter_date,
+            'image_picker_data': image_picker_data,
             'trip': entry.journal.trip,
         }
         return render(request, 'journal/pages/journal_entry.html', context)
@@ -617,15 +653,19 @@ class JournalEditorMultiImagePickerView( LoginRequiredMixin, TripViewMixin, View
             # Use entry timezone, fall back to journal timezone or UTC for special entries
             timezone = entry.timezone or entry.journal.timezone or 'UTC'
             accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
-                trip=trip,
-                user=request.user,
-                date=selected_date,
-                timezone=timezone,
+                trip = trip,
+                user = request.user,
+                date = selected_date,
+                timezone = timezone,
             )
+
+        # Get proper timezone for image display
+        image_display_timezone = JournalEditorHelper.get_image_display_timezone(entry, request.user)
 
         context = {
             'accessible_images': accessible_images,
             'trip': trip,
+            'image_display_timezone': image_display_timezone,
         }
         gallery_html = render_to_string(
             'journal/components/journal_editor_multi_image_gallery_grid.html',

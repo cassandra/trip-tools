@@ -147,7 +147,7 @@ if BLEACH_AVAILABLE:
             'ul': ['style'],
             'ol': ['style'],
             'pre': ['style'],
-            'blockquote': ['style'],
+            'blockquote': ['class', 'style'],
         },
         allowed_protocols=['http', 'https', 'mailto'],
         strip=True,

@@ -22,6 +22,42 @@
   window.Tt.JournalEditor = window.Tt.JournalEditor || {};
 
   /**
+   * Update URL with picker state (without page reload)
+   * Preserves picker state across page refreshes triggered by modals.
+   *
+   * @param {Object} params - State parameters
+   * @param {string} [params.date] - Date in YYYY-MM-DD format (for "Last Used Date" button)
+   * @param {boolean} [params.recent] - True if in recent mode
+   * @param {string} [params.scope] - Scope filter (unused, used, all)
+   */
+  function updatePickerUrlState(params) {
+    var url = new URL(window.location.href);
+
+    // Clear existing picker params
+    url.searchParams.delete(TtConst.PICKER_DATE_PARAM);
+    url.searchParams.delete(TtConst.PICKER_RECENT_PARAM);
+    url.searchParams.delete(TtConst.PICKER_SCOPE_PARAM);
+
+    // Always include date if available (for "Last Used Date" button, even in recent mode)
+    if (params.date) {
+      url.searchParams.set(TtConst.PICKER_DATE_PARAM, params.date);
+    }
+
+    // Set recent mode flag
+    if (params.recent) {
+      url.searchParams.set(TtConst.PICKER_RECENT_PARAM, '1');
+    }
+
+    // Only add scope to URL if not default (unused)
+    if (params.scope && params.scope !== TtConst.IMAGE_PICKER_SCOPE_UNUSED) {
+      url.searchParams.set(TtConst.PICKER_SCOPE_PARAM, params.scope);
+    }
+
+    // Update URL without reload
+    window.history.replaceState({}, '', url.toString());
+  }
+
+  /**
    * Initialize image picker filters
    *
    * Handles Recent button and date picker interaction for the image picker panel.
@@ -44,6 +80,16 @@
     var currentMode = $dateInput.val() ? 'date' : 'recent';
 
     /**
+     * Get current scope from image picker (if available)
+     */
+    function getCurrentScope() {
+      if (editorInstance && editorInstance.imagePicker) {
+        return editorInstance.imagePicker.filterScope || TtConst.IMAGE_PICKER_SCOPE_UNUSED;
+      }
+      return TtConst.IMAGE_PICKER_SCOPE_UNUSED;
+    }
+
+    /**
      * Update visual state of Recent button
      * @param {boolean} isActive - Whether Recent mode is active
      */
@@ -60,7 +106,7 @@
      */
     var $lastUsedDateBtn = $('#' + TtConst.JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID);
     // Initialize from button's data attribute (set by server's filter_date)
-    var lastUsedDate = $lastUsedDateBtn.data('last-used-date') || null;
+    var lastUsedDate = $lastUsedDateBtn.data(TtConst.LAST_USED_DATE_ATTR) || null;
 
     /**
      * Update visual state of Last Used Date button
@@ -90,8 +136,8 @@
       // Enable the button (may have been disabled on initial load for Prologue/Epilogue)
       $lastUsedDateBtn.prop('disabled', false);
 
-      // Update the data attribute
-      $lastUsedDateBtn.data('last-used-date', dateValue);
+      // Update the data attribute (use .attr() to actually update DOM, not just jQuery cache)
+      $lastUsedDateBtn.attr('data-' + TtConst.LAST_USED_DATE_ATTR, dateValue);
 
       // Update the button label (format: "M j" e.g., "Sep 29")
       var date = new Date(dateValue + 'T00:00:00');
@@ -123,6 +169,8 @@
           if (editorInstance && editorInstance.imagePicker) {
             editorInstance.imagePicker.applyFilter(editorInstance.imagePicker.filterScope);
           }
+          // Update URL to preserve state across page refreshes (keep lastUsedDate for convenience button)
+          updatePickerUrlState({ date: lastUsedDate, recent: true, scope: getCurrentScope() });
         },
         error: function() {
           console.error('Failed to load recent images');
@@ -153,6 +201,8 @@
           if (editorInstance && editorInstance.imagePicker) {
             editorInstance.imagePicker.applyFilter(editorInstance.imagePicker.filterScope);
           }
+          // Update URL to preserve state across page refreshes
+          updatePickerUrlState({ date: dateValue, scope: getCurrentScope() });
         },
         error: function() {
           console.error('Failed to load date-filtered images');
@@ -238,6 +288,10 @@
           if ($lastUsedDateBtn.length > 0) {
             $lastUsedDateBtn.removeClass('btn-primary').addClass('btn-outline-primary');
           }
+          // Update URL to reflect recent mode (preserve current scope and last used date)
+          var currentScope = $form.find('input[name="scope"]:checked').val() || TtConst.IMAGE_PICKER_SCOPE_UNUSED;
+          var lastUsedDate = $lastUsedDateBtn.length > 0 ? $lastUsedDateBtn.data(TtConst.LAST_USED_DATE_ATTR) : null;
+          updatePickerUrlState({ date: lastUsedDate, recent: true, scope: currentScope });
         },
         error: function() {
           console.error('Failed to load recent images after upload');
@@ -271,6 +325,7 @@
   Tt.JournalEditor.initImagePickerFilters = initImagePickerFilters;
   Tt.JournalEditor.refreshImagePickerWithRecent = refreshImagePickerWithRecent;
   Tt.JournalEditor.refreshImagePickerIfUploaded = refreshImagePickerIfUploaded;
+  Tt.JournalEditor.updatePickerUrlState = updatePickerUrlState;
 
   // Expose functions globally for use in templates
   window.JournalEditor = window.JournalEditor || {};

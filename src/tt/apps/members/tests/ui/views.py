@@ -30,7 +30,7 @@ class TestUiViewInvitationEmailView( EmailTestViewView ):
         if email_type == 'invitation':
             context['acceptance_url'] = 'https://example.com/members/accept/123/user@example.com/abc123token'
         elif email_type == 'signup_invitation':
-            context['signup_url'] = 'https://example.com/members/signup/123/user@example.com/abc123token'
+            context['signin_url'] = 'https://example.com/members/signup/123/user@example.com/abc123token'
 
         return context
 

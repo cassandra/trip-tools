@@ -102,7 +102,7 @@ Subclasses must define these blocks:
   <div id="reference-image-gallery-container" style="max-height: 400px; overflow-y: auto; padding: 1rem;">
     {% if accessible_images %}
       <div class="reference-image-picker-grid" style="display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 1rem;">
-        {% include "images/components/image_picker_gallery_grid.html" %}
+        {% include "images/components/image_picker_gallery_grid.html" with image_display_timezone=image_display_timezone %}
       </div>
     {% else %}
       <div class="alert alert-info">

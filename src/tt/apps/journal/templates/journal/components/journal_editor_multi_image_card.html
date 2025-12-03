@@ -1,9 +1,13 @@
+{% load icons %}
+{% load tz %}
+{% timezone image_display_timezone|default:USER_TIMEZONE %}
 {% comment %}
 Reusable component for rendering a single image card in the journal image picker.
 
 Context variables:
 - image: TripImage instance
 - trip: Trip instance (for permission context)
+- image_display_timezone: Timezone string for displaying image timestamps (optional, falls back to USER_TIMEZONE)
 {% endcomment %}
 
 <div class="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS }} col-6"
@@ -12,7 +16,7 @@ Context variables:
      data-{{ TtConst.IMAGE_MEDIA_URL_DATA_ATTR }}="{{ image.web_image.url }}"
      data-{{ TtConst.THUMBNAIL_MEDIA_URL_DATA_ATTR }}="{{ image.thumbnail_image.url }}"
      data-{{ TtConst.CAPTION_DATA_ATTR }}="{{ image.caption|default:'Untitled' }}"
-     title="{{ image.caption|default:'Untitled' }} - {% if image.datetime_utc %}{{ image.datetime_utc|date:'g:i A' }}{% else %}Unknown time{% endif %}">
+     title="{{ image.caption|default:'Untitled' }} - {% if image.datetime_utc %}{{ image.datetime_utc|date:'g:i A M j' }}{% else %}Unknown time{% endif %}">
   <div class="journal-editor-multi-image-thumbnail">
     <img src="{{ image.thumbnail_image.url }}" alt="{{ image.caption }}" class="w-100 h-100" style="object-fit: cover;">
   </div>
@@ -25,9 +29,10 @@ Context variables:
       {% endif %}
     </small>
     {% if image.datetime_utc %}
-      <small class="text-muted">{{ image.datetime_utc|date:"g:i A" }}</small>
+      <small class="text-muted">{{ image.datetime_utc|date:"g:i A M j" }}</small>
     {% else %}
       <small class="text-muted">Unknown time</small>
     {% endif %}
   </div>
 </div>
+{% endtimezone %}

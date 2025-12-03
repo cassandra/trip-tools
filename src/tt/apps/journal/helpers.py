@@ -3,11 +3,34 @@ Helper classes for journal publishing workflow and UI.
 
 Centralizes publishing-related context building and entry selection statistics.
 """
+from django.contrib.auth import get_user_model
+
+from tt.apps.console.console_helper import ConsoleSettingsHelper
 from tt.apps.travelog.models import Travelog
 
 from .forms import JournalVisibilityForm
-from .models import Journal
+from .models import Journal, JournalEntry
 from .schemas import EntrySelectionStats, PublishingStatus
+
+User = get_user_model()
+
+
+class JournalEditorHelper:
+    """Helpers for journal editor functionality."""
+
+    @staticmethod
+    def get_image_display_timezone( entry: JournalEntry, user : User ) -> str:
+
+        if entry.is_special_entry:
+            if entry.journal.timezone:
+                return entry.journal.timezone
+        else:
+            if entry.timezone:
+                return entry.timezone
+            elif entry.journal.timezone:
+                return entry.journal.timezone
+            
+        return ConsoleSettingsHelper().get_tz_name(user)
 
 
 class JournalPublishContextBuilder:
@@ -45,17 +68,15 @@ class PublishingStatusHelper:
     def get_publishing_status(cls, journal: Journal) -> PublishingStatus:
 
         current_travelog = Travelog.objects.get_current( journal )
-        has_published_version = current_travelog is not None
 
-        if has_published_version:
+        if current_travelog is not None:
             has_changes = cls._has_unpublished_changes( journal, current_travelog )
         else:
             has_changes = False
 
         return PublishingStatus(
-            current_published_version = current_travelog,
+            current_published_travelog = current_travelog,
             has_unpublished_changes = has_changes,
-            has_published_version = has_published_version,
         )
 
     @classmethod

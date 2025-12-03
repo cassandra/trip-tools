@@ -1,5 +1,7 @@
 import json
 
+from tt.apps.journal.enums import ImagePickerScope
+
 
 class TtConst:
     """
@@ -91,8 +93,17 @@ class TtConst:
     IMAGE_PICKER_UUID_INPUT_CLASS        = 'image-picker-uuid-input'
     IMAGE_PICKER_PREVIEW_CLASS           = 'image-picker-preview'
     IMAGE_PICKER_SET_BTN_CLASS           = 'image-picker-set-btn'
-
+    LAST_USED_DATE_ATTR                  = 'last-used-date'
+    INITIAL_SCOPE_DATA_ATTR              = 'initial-scope'
+    IMAGE_PICKER_SCOPE_UNUSED            = str(ImagePickerScope.UNUSED)
+    IMAGE_PICKER_SCOPE_USED              = str(ImagePickerScope.USED)
+    IMAGE_PICKER_SCOPE_ALL               = str(ImagePickerScope.ALL)
+    PICKER_DATE_PARAM                    = 'picker_date'
+    PICKER_RECENT_PARAM                  = 'picker_recent'
+    PICKER_SCOPE_PARAM                   = 'picker_scope'
+    
     # Images Upload
+    UPLOAD_SESSION_UUID_FIELD            = 'upload_session_uuid'
     IMAGES_UPLOADED_ITEM_CLASS           = 'uploaded-item-link'
     IMAGES_UPLOAD_ZONE_ID                = 'images-upload-zone'
     IMAGES_FILE_INPUT_ID                 = 'images-file-input'

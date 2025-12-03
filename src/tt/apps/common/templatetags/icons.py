@@ -70,6 +70,7 @@ AVAILABLE_ICONS = {
     'triangle-right',
     'plus',
     'question-circle',
+    'quote-left',
     'rocket',
     'rotate',
     'check',

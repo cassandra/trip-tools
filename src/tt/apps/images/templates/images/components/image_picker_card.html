@@ -1,11 +1,13 @@
+{% load tz %}
 {% comment %}
 Reusable component for rendering a single image card in the image picker.
 
 Context variables:
 - image: TripImage instance
 - trip: Trip instance (for permission context)
+- image_display_timezone: Timezone string for displaying image timestamps (optional, falls back to USER_TIMEZONE)
 {% endcomment %}
-
+{% timezone image_display_timezone|default:USER_TIMEZONE %}
 <div class="{{ TtConst.IMAGE_PICKER_CARD_CLASS }}"
      data-{{ TtConst.IMAGE_UUID_DATA_ATTR }}="{{ image.uuid }}"
      data-{{ TtConst.THUMBNAIL_MEDIA_URL_DATA_ATTR }}="{{ image.thumbnail_image.url }}"
@@ -33,3 +35,4 @@ Context variables:
     {% endif %}
   </div>
 </div>
+{% endtimezone %}

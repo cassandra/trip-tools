@@ -18,11 +18,11 @@
               {% icon journal.visibility.icon_name size="sm" css_class="tt-icon-left" %}
               {{ journal.visibility.label }}
             </span>
-            <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+            <strong>Version {{ publishing_status.current_published_travelog.version_number }}</strong>
             <span class="text-muted ml-2">
-              &bull; Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
-              {% if publishing_status.current_published_version.published_by %}
-              by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
+              &bull; Published {{ publishing_status.current_published_travelog.published_datetime|date:"N j, Y" }}
+              {% if publishing_status.current_published_travelog.published_by %}
+              by {% if publishing_status.current_published_travelog.published_by.get_full_name %}{{ publishing_status.current_published_travelog.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_travelog.published_by.email }}{% endif %}
               {% endif %}
             </span>
           </div>
@@ -70,11 +70,11 @@
               {% icon journal.visibility.icon_name size="sm" css_class="tt-icon-left" %}
               {{ journal.visibility.label }}
             </span>
-            <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+            <strong>Version {{ publishing_status.current_published_travelog.version_number }}</strong>
             <span class="text-muted ml-2">
-              &bull; Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
-              {% if publishing_status.current_published_version.published_by %}
-              by {% if publishing_status.current_published_version.published_by.get_full_name %}{{ publishing_status.current_published_version.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_version.published_by.email }}{% endif %}
+              &bull; Published {{ publishing_status.current_published_travelog.published_datetime|date:"N j, Y" }}
+              {% if publishing_status.current_published_travelog.published_by %}
+              by {% if publishing_status.current_published_travelog.published_by.get_full_name %}{{ publishing_status.current_published_travelog.published_by.get_full_name }}{% else %}{{ publishing_status.current_published_travelog.published_by.email }}{% endif %}
               {% endif %}
             </span>
           </div>

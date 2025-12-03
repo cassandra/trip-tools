@@ -14,7 +14,9 @@
   </div>
   {% endif %}
 
-  {% include "journal/components/journal_page_header_view_only.html" %}
+  {% if journal %}
+  {% include "journal/components/journal_page_header.html" with journal=journal can_edit_journal=False %}
+  {% endif %}
 
   {% if not journal %}
   {# No journal exists - info alert, no buttons #}
@@ -52,9 +54,9 @@
       <div>
         <h5 class="alert-heading mb-2">Published Journal Available</h5>
         <p class="mb-2">
-          <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+          <strong>Version {{ publishing_status.current_published_travelog.version_number }}</strong>
           <span class="text-muted">
-            &bull; Published {{ publishing_status.current_published_version.published_datetime|date:"N j, Y" }}
+            &bull; Published {{ publishing_status.current_published_travelog.published_datetime|date:"N j, Y" }}
           </span>
         </p>
         {% if publishing_status.has_unpublished_changes %}

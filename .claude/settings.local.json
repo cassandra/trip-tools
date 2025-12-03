@@ -35,7 +35,8 @@
       "Bash(make lint:js:*)",
       "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci ./src/manage.py test:*)",
       "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python -m pytest:*)",
-      "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python src/manage.py test:*)"
+      "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python src/manage.py test:*)",
+      "Bash(python src/manage.py shell:*)"
     ],
     "deny": [],
     "ask": []

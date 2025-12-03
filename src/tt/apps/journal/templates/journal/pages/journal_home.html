@@ -9,7 +9,7 @@
 
 {% block subpage_content %}
 <div class="m-3">
-  {% include "journal/components/journal_page_header.html" %}
+  {% include "journal/components/journal_page_header.html" with journal=journal can_edit_journal=trip_page.request_member.can_edit_trip %}
   {% include "journal/components/journal_page_warnings.html" %}
 
   {% if journal_entry_count > 0 %}

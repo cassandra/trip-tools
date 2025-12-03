@@ -1,15 +1,74 @@
-from typing import List
+from typing import List, Optional
+from urllib.parse import urlencode
 
 from django.contrib.auth.models import User as UserType
+from django.urls import reverse
 
+from tt.apps.journal.helpers import PublishingStatusHelper
+from tt.apps.journal.models import Journal
 from tt.apps.members.models import TripMember
 
 from .enums import TripStatus
 from .models import Trip
-from .schemas import TripCategorizedDisplayData
+from .schemas import JournalOverviewSection, TripCategorizedDisplayData, TripOverviewData
 
 
-class TripDisplayService:
+class TripOverviewBuilder:
+    """
+    Builds pre-computed display data for the trip overview page.
+
+    Encapsulates all business logic decisions so templates can render
+    without conditional logic.
+    """
+
+    @classmethod
+    def build( cls,
+               trip            : Trip,
+               journal         : Optional[Journal],
+               request_member  : TripMember ) -> TripOverviewData:
+
+        journal_section = cls._build_journal_section(
+            trip=trip,
+            journal=journal,
+            request_member=request_member,
+        )
+        return TripOverviewData(
+            journal_section=journal_section,
+        )
+
+    @classmethod
+    def _build_journal_section( cls,
+                                trip            : Trip,
+                                journal         : Optional[Journal],
+                                request_member  : TripMember ) -> JournalOverviewSection:
+
+        can_edit = request_member.can_edit_trip
+
+        if journal:
+            publishing_status = PublishingStatusHelper.get_publishing_status( journal )
+        else:
+            publishing_status = None
+
+        published_url = None
+        draft_url = None
+
+        if journal:
+            base_url = reverse('travelog_toc', kwargs={'journal_uuid': journal.uuid})
+            published_url = base_url
+            url_params = { 'version': 'draft' }
+            encoded_url_params = urlencode( url_params )
+            draft_url = f"{base_url}?{encoded_url_params}"
+
+        return JournalOverviewSection(
+            journal = journal,
+            can_edit = can_edit,
+            publishing_status = publishing_status,
+            published_url = published_url,
+            draft_url = draft_url,
+        )
+
+
+class TripsHomeDisplayService:
 
     @classmethod
     def get_categorized_trips_for_user( cls, user: UserType ) -> TripCategorizedDisplayData:

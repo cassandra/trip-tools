@@ -11,6 +11,6 @@ Description: {{ trip_description }}
 
 To create your account and access the trip, click the link below:
 
-{{ signup_url }}
+{{ signin_url }}
 
 This invitation link is valid for 3 days and can only be used once.{% endblock %}

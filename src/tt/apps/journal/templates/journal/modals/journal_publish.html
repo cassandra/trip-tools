@@ -17,9 +17,9 @@
         <div>
           {% if publishing_status.has_published_version %}
             <span class="text-muted">Current:</span>
-            <strong>Version {{ publishing_status.current_published_version.version_number }}</strong>
+            <strong>Version {{ publishing_status.current_published_travelog.version_number }}</strong>
             <span class="text-muted ml-2">
-              ({{ publishing_status.current_published_version.published_datetime|date:"M j, Y" }})
+              ({{ publishing_status.current_published_travelog.published_datetime|date:"M j, Y" }})
             </span>
           {% else %}
             <span class="text-muted">Status:</span>
@@ -116,7 +116,7 @@
 <button type="submit" class="btn btn-primary">
   {% icon "upload" size="sm" css_class="tt-icon-left" %}
   {% if publishing_status.has_published_version %}
-    PUBLISH VERSION {{ publishing_status.current_published_version.version_number|add:1 }}
+    PUBLISH VERSION {{ publishing_status.current_published_travelog.version_number|add:1 }}
   {% else %}
     PUBLISH
   {% endif %}

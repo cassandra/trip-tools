@@ -297,6 +297,19 @@
   font-style: italic;
 }
 
+/* Preformatted text block colors - editor defaults (travelog.css not loaded in editor) */
+.journal-contenteditable pre {
+  background-color: #f8f6f3;
+  border: 1px solid #e8e4df;
+  color: #495057;
+}
+
+/* Quotation block colors - editor defaults (travelog.css not loaded in editor) */
+.journal-contenteditable blockquote.quote {
+  border-left-color: #dee2e6;
+  color: #6c757d;
+}
+
 /* ===========================================
    IMAGE PANEL - EDITOR ONLY
    =========================================== */
@@ -367,20 +380,20 @@
    TRANSIENT - Never saved to database
    =========================================== */
 
-/* Cursor and interaction hints */
-.trip-image-wrapper img.trip-image {
+/* Cursor and interaction hints - scoped to editor */
+.journal-contenteditable .trip-image-wrapper img.trip-image {
   cursor: move;
   user-select: none;
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
 /* Image hover state - TRANSIENT */
-.trip-image-wrapper:hover img.trip-image {
+.journal-contenteditable .trip-image-wrapper:hover img.trip-image {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Image being dragged - TRANSIENT */
-.trip-image-wrapper.dragging img.trip-image {
+.journal-contenteditable .trip-image-wrapper.dragging img.trip-image {
   opacity: 0.5;
 }
 

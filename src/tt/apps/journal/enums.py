@@ -80,3 +80,22 @@ class EntryPageType(LabeledEnum):
     PROLOGUE  = ( 'Prologue'  , 'Journal entries that are prologue.' )
     EPILOGUE  = ( 'Epilogue'  , 'Journal entries that are epilogue.' )
     
+    
+class ImagePickerScope(LabeledEnum):
+
+    UNUSED  = ( 'Unused'  , 'Images that appear at least once in the content.' )
+    USED    = ( 'Used'    , 'Images that do not appear in content.' )
+    ALL     = ( 'All'     , 'All images matching search filters.' )
+    
+    @property
+    def is_unused(self):
+        return bool( self == ImagePickerScope.UNUSED )
+    
+    @property
+    def is_used(self):
+        return bool( self == ImagePickerScope.USED )
+    
+    @property
+    def is_all(self):
+        return bool( self == ImagePickerScope.ALL )
+    

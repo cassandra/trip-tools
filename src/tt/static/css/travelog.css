@@ -52,6 +52,15 @@
   --container-bg: #fefefe;
   --font-heading: var(--font-serif);
   --font-body: var(--font-sans);
+
+  /* Preformatted text block colors */
+  --pre-bg: #f8f6f3;
+  --pre-border: #e8e4df;
+  --pre-text: #495057;
+
+  /* Quote block colors */
+  --quote-border: #b0c9ca;
+  --quote-text: #5a6c6d;
 }
 
 html {
@@ -167,18 +176,18 @@ a.clickable-card:active {
 }
 
 .bg-success, .btn-success {
-    color: var(--on-error-color) !important;
-    background-color: var(--error-color) !important;
-    border-color: var(--error-highlight-color) !important;
+    color: var(--on-success-color) !important;
+    background-color: var(--success-color) !important;
+    border-color: var(--success-color) !important;
 }
 .bg-success a, .btn-success a {
-    color: var(--on-error-color);
+    color: var(--on-success-color);
 }
 .bg-success a:hover,
 .bg-success a:focus,
 .bg-success a:active {
     opacity: 0.65;
-    color: var(--on-error-color);
+    color: var(--on-success-color);
 }
 
 .bg-danger, .btn-error, .btn-danger {
@@ -314,6 +323,13 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: Georgia, Cambria, "Times New Roman", Times, serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - warm off-white */
+  --pre-bg: #f8f6f3;
+  --pre-border: #e8e4df;
+  --pre-text: #495057;
+  /* Quote block - muted teal */
+  --quote-border: #b0c9ca;
+  --quote-text: #5a6c6d;
 }
 
 /* Theme 2: Warm Sunset (Amber & Warm Red) - Inviting, traditional
@@ -336,6 +352,13 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: Palatino, "Palatino Linotype", "Book Antiqua", serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - warm amber tint */
+  --pre-bg: #fef9f0;
+  --pre-border: #f0e4d4;
+  --pre-text: #5c4a3a;
+  /* Quote block - warm tan */
+  --quote-border: #e0c4a0;
+  --quote-text: #6b5a4a;
 }
 
 /* Theme 3: Ocean Blue (Deep Blue & Cyan) - Cool, modern, refreshing
@@ -358,6 +381,13 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - cool blue-gray tint */
+  --pre-bg: #f4f8fa;
+  --pre-border: #dce8ef;
+  --pre-text: #3d5a6c;
+  /* Quote block - muted blue */
+  --quote-border: #a3c4d4;
+  --quote-text: #4a6575;
 }
 
 /* Theme 4: Forest Green (Emerald & Lime) - Natural, earthy, organic
@@ -380,6 +410,13 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: Georgia, Cambria, "Times New Roman", Times, serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - soft green tint */
+  --pre-bg: #f5f9f6;
+  --pre-border: #dde9df;
+  --pre-text: #3d5244;
+  /* Quote block - muted green */
+  --quote-border: #a8c9b8;
+  --quote-text: #4a5f50;
 }
 
 /* Theme 5: Purple Dreams (Violet & Pink) - Creative, bold, modern
@@ -402,6 +439,13 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - subtle lavender tint */
+  --pre-bg: #f9f7fc;
+  --pre-border: #e8e2f0;
+  --pre-text: #4a4358;
+  /* Quote block - muted violet */
+  --quote-border: #c9b8d9;
+  --quote-text: #5a4d68;
 }
 
 /* Theme 6: Earthy Terracotta (Terracotta & Rust) - Rustic, warm, traditional
@@ -424,6 +468,13 @@ a.clickable-card:active {
   /* Fonts */
   --font-heading: Palatino, "Palatino Linotype", "Book Antiqua", serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Preformatted text - warm terracotta/sepia tint */
+  --pre-bg: #fdf8f4;
+  --pre-border: #edddd2;
+  --pre-text: #5a453a;
+  /* Quote block - muted terracotta */
+  --quote-border: #d4b8a8;
+  --quote-text: #5f4d44;
 }
 
 /* =============================================================================
@@ -445,6 +496,19 @@ body[class*="theme-"] {
 /* Main content area grows to push footer to bottom */
 .travelog-main {
   flex: 1;
+}
+
+/* Preformatted text block colors - themed */
+.day-content pre {
+  background-color: var(--pre-bg);
+  border: 1px solid var(--pre-border);
+  color: var(--pre-text);
+}
+
+/* Quote block colors - themed */
+.day-content blockquote.quote {
+  border-left-color: var(--quote-border);
+  color: var(--quote-text);
 }
 
 /* Container */
@@ -649,76 +713,6 @@ h3 {
   object-fit: cover;
 }
 
-/* Journal Content */
-.journal-content {
-  background: rgba(255,255,255,0.95);
-  border-radius: 20px;
-  padding: 3rem;
-  margin: 2rem 0;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  line-height: 1.8;
-  font-size: 1.1rem;
-}
-
-/* Clearfix to contain floated images within journal content */
-.journal-content::after {
-  content: "";
-  display: block;
-  clear: both;
-}
-
-.journal-content p {
-  margin-bottom: 1.8rem;
-}
-
-.journal-content .trip-image-wrapper[data-layout="float-right"] {
-  float: right;
-  margin: 0 0 1.5rem 2rem;
-  max-width: 350px;
-  max-height: 300px; /* Prevent portrait images from dominating layout */
-}
-
-.journal-content .trip-image {
-  width: 100%;
-  border-radius: 15px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-
-.journal-content .trip-image-wrapper[data-layout="float-right"] .trip-image {
-  width: auto; /* Allow portrait images to be narrower when height-constrained */
-  max-width: 100%; /* But don't exceed wrapper width */
-  max-height: 300px; /* Match wrapper max-height to prevent overflow */
-}
-
-.journal-content .full-width-image-group {
-  margin: 3rem -3rem;
-  padding: 0;
-}
-
-.journal-content .full-width-image-group .trip-image {
-  width: 100%;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.journal-content ul {
-  margin-left: 2rem;
-  margin-bottom: 1.8rem;
-}
-
-.journal-content li {
-  margin-bottom: 0.5rem;
-}
-
-.journal-content blockquote {
-  border-left: 4px solid var(--secondary-color);
-  padding-left: 2rem;
-  margin: 2rem 0;
-  font-style: italic;
-  color: #666;
-}
-
 /* Page Navigation */
 .page-navigation {
   margin: 3rem 0;
@@ -865,14 +859,6 @@ h3 {
   h1 {
     font-size: 2.5rem;
   }
-
-  .journal-content {
-    padding: 2rem;
-  }
-
-  .journal-content .full-width-image-group {
-    margin: 2rem -2rem;
-  }
 }
 
 @media (max-width: 768px) {
@@ -896,21 +882,6 @@ h3 {
 
   h3 {
     font-size: 1.25rem;
-  }
-
-  .journal-content {
-    padding: 1.5rem;
-    font-size: 1rem;
-  }
-
-  .journal-content .trip-image-wrapper[data-layout="float-right"] {
-    float: none;
-    margin: 1rem 0;
-    max-width: 100%;
-  }
-
-  .journal-content .full-width-image-group {
-    margin: 1.5rem -1.5rem;
   }
 
   .page-navigation {
@@ -1374,11 +1345,6 @@ h3 {
   font-size: 1.05rem;
 }
 
-.day-content::after {
-  content: "";
-  display: block;
-  clear: both;
-}
 
 .day-content h2,
 .day-content h3,
@@ -1393,83 +1359,16 @@ h3 {
   margin-bottom: 1.5rem;
 }
 
-/* Float-right images in day content */
-.day-content .trip-image-wrapper[data-layout="float-right"] {
-  float: right;
-  margin: 0 0 1.5rem 2rem;
-  max-width: 350px;
-  max-height: 300px;
-}
-
 .day-content .trip-image {
   width: 100%;
   border-radius: 15px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
 
-.day-content .trip-image-wrapper[data-layout="float-right"] .trip-image {
-  width: auto;
-  max-width: 100%;
-  max-height: 300px;
-}
-
-/* Clear floats before text blocks that have their own float-right images */
-.day-content .has-float-image {
-  clear: both;
-}
-
-/* Full-width image grid (3 columns, centered) */
-.day-content .full-width-image-group {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin: 2rem 0;
-  justify-items: center;
-  clear: both;
-}
-
-.day-content .full-width-image-group .trip-image-wrapper {
-  width: 100%;
-  max-width: 280px;
-}
-
+/* Full-width image group: travelog-specific decorative styling */
 .day-content .full-width-image-group .trip-image {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Center 1 or 2 images in grid */
-.day-content .full-width-image-group:has(.trip-image-wrapper:only-child) {
-  grid-template-columns: 1fr;
-  justify-items: center;
-}
-
-.day-content .full-width-image-group:has(.trip-image-wrapper:nth-child(2):last-child) {
-  grid-template-columns: repeat(2, 1fr);
-  justify-items: center;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Clear floats before headings - headings should start below floated content */
-.day-content h1,
-.day-content h2,
-.day-content h3,
-.day-content h4,
-.day-content h5,
-.day-content h6 {
-  clear: both;
-}
-
-/* Image caption styling */
-.day-content .trip-image-caption {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--muted-color);
-  font-style: italic;
-  margin-top: 0.5rem;
-  text-align: center;
 }
 
 /* Clickable image links */
@@ -1592,17 +1491,4 @@ h3 {
     max-height: none;
   }
 
-  /* Full-width images: single column on mobile */
-  .day-content .full-width-image-group {
-    grid-template-columns: 1fr;
-  }
-
-  .day-content .full-width-image-group:has(.trip-image-wrapper:nth-child(2):last-child) {
-    grid-template-columns: 1fr;
-    max-width: 100%;
-  }
-
-  .day-content .full-width-image-group .trip-image-wrapper {
-    max-width: 100%;
-  }
 }
