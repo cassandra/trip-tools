@@ -24,7 +24,7 @@ from .enums import TripPage
 from .forms import TripForm
 from .mixins import TripViewMixin
 from .models import Trip
-from .services import TripDisplayService
+from .services import TripsHomeDisplayService, TripOverviewBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class TripsHomeView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         # Use service for business logic and categorization
-        trip_data = TripDisplayService.get_categorized_trips_for_user(request.user)
+        trip_data = TripsHomeDisplayService.get_categorized_trips_for_user(request.user)
 
         feature_page_context = FeaturePageContext(
             active_page = FeaturePageType.TRIPS,
@@ -89,14 +89,19 @@ class TripOverviewView( TripViewMixin, View ):
 
         journal = Journal.objects.get_primary_for_trip( trip )
 
+        overview_data = TripOverviewBuilder.build(
+            trip = trip,
+            journal = journal,
+            request_member = request_member,
+        )
         trip_page_context = TripPageContext(
             active_page = TripPage.OVERVIEW,
             request_member = request_member,
         )
-
         context = {
             'trip_page': trip_page_context,
-            'journal': journal,
+            'trip': trip,
+            'overview_data': overview_data,
         }
         return render( request, 'trips/pages/trip_overview.html', context )
 

@@ -14,9 +14,12 @@ from .models import Journal
 @dataclass
 class PublishingStatus:
 
-    current_published_version  : Optional[Travelog]
-    has_unpublished_changes    : bool
-    has_published_version      : bool
+    current_published_travelog  : Optional[Travelog]
+    has_unpublished_changes     : bool
+
+    @property
+    def has_published_version(self) -> bool:
+        return bool( self.current_published_travelog is not None )
 
     @property
     def is_published_with_changes(self) -> bool:
@@ -28,7 +31,7 @@ class PublishingStatus:
 
     @property
     def is_unpublished(self) -> bool:
-        return not self.has_published_version
+        return bool( not self.has_published_version )
 
 
 @dataclass
@@ -44,11 +47,11 @@ class EntrySelectionStats:
 
     @property
     def all_entries_included(self) -> bool:
-        return self.included_entries == self.total_entries
+        return bool( self.included_entries == self.total_entries )
 
     @property
     def none_included(self) -> bool:
-        return self.included_entries == 0
+        return bool( self.included_entries == 0 )
 
     @classmethod
     def for_journal(cls, journal: Journal) -> 'EntrySelectionStats':

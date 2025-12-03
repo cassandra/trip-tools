@@ -57,7 +57,7 @@ class JournalHomeViewPublishingStatusTestCase(TestCase):
 
         # Check context variables
         publishing_status = response.context['publishing_status']
-        self.assertIsNone(publishing_status.current_published_version)
+        self.assertIsNone(publishing_status.current_published_travelog)
         self.assertFalse(publishing_status.has_unpublished_changes)
         self.assertFalse(publishing_status.has_published_version)
 
@@ -98,7 +98,7 @@ class JournalHomeViewPublishingStatusTestCase(TestCase):
 
         # Check context variables
         publishing_status = response.context['publishing_status']
-        self.assertEqual(publishing_status.current_published_version, travelog)
+        self.assertEqual(publishing_status.current_published_travelog, travelog)
         self.assertFalse(publishing_status.has_unpublished_changes)
         self.assertTrue(publishing_status.has_published_version)
 
@@ -143,7 +143,7 @@ class JournalHomeViewPublishingStatusTestCase(TestCase):
 
         # Check context variables
         publishing_status = response.context['publishing_status']
-        self.assertEqual(publishing_status.current_published_version, travelog)
+        self.assertEqual(publishing_status.current_published_travelog, travelog)
         self.assertTrue(publishing_status.has_unpublished_changes)
         self.assertTrue(publishing_status.has_published_version)
 
@@ -194,6 +194,6 @@ class JournalHomeViewPublishingStatusTestCase(TestCase):
 
         # Check context variables
         publishing_status = response.context['publishing_status']
-        self.assertEqual(publishing_status.current_published_version, travelog)
+        self.assertEqual(publishing_status.current_published_travelog, travelog)
         self.assertTrue(publishing_status.has_unpublished_changes)
         self.assertTrue(publishing_status.has_published_version)

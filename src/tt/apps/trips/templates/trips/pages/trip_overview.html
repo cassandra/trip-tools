@@ -9,14 +9,10 @@
     <p class="text-muted">Your trip at a glance.</p>
   </div>
 
-  <div class="m-2 p-2">
-    {% if journal %}
-    <a href="{% url 'journal_home' journal_uuid=journal.uuid %}" class="btn btn-secondary">{% icon "edit" size="sm" %} EDIT JOURNAL</a>
-    {% else %}
-    <a href="{% url 'journal_create' trip_uuid=trip_page.trip.uuid %}" class="btn btn-secondary" data-async="modal">{% icon "plus" size="sm" %}  CREATE A JOURNAL</a>
-    {% endif %}
-  </div>
-
+  {% if overview_data.journal_section %}
+  {% include "trips/components/journal_section.html" with journal_section=overview_data.journal_section %}
+  {% endif %}
+  
   <div class="tt-page-explanation">
     <h2>The Problems</h2>
     <ul>
@@ -53,10 +49,10 @@
       </li>
       <li><strong>Post-trip</strong>
         <ul>
-          <li>Journal writing status and prompts.</li>
-          <li>Image upload and organization.</li>
-          <li>Publishing status for your travelog.</li>
-          <li>Link to <em>Journal</em> for full editing.</li>
+          <li>Journal writing status and prompts. [DONE]</li>
+          <li>Image upload and organization. [DONE]</li>
+          <li>Publishing status for your travelog. [DONE]</li>
+          <li>Link to <em>Journal</em> for full editing. [DONE]</li>
         </ul>
       </li>
     </ul>

@@ -68,17 +68,15 @@ class PublishingStatusHelper:
     def get_publishing_status(cls, journal: Journal) -> PublishingStatus:
 
         current_travelog = Travelog.objects.get_current( journal )
-        has_published_version = current_travelog is not None
 
-        if has_published_version:
+        if current_travelog is not None:
             has_changes = cls._has_unpublished_changes( journal, current_travelog )
         else:
             has_changes = False
 
         return PublishingStatus(
-            current_published_version = current_travelog,
+            current_published_travelog = current_travelog,
             has_unpublished_changes = has_changes,
-            has_published_version = has_published_version,
         )
 
     @classmethod

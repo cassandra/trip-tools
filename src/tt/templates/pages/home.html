@@ -329,16 +329,7 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="text-center py-4 border-top text-muted small">
-    <p class="mb-0">
-      &copy; {% now "Y" as current_year %}{% if current_year == "2025" %}2025{% else %}2025&ndash;{{ current_year }}{% endif %} POMDP, Inc.
-      &nbsp;&middot;&nbsp;
-      <a href="https://github.com/cassandra/trip-tools" target="_blank" rel="noopener">GitHub</a>
-      &nbsp;&middot;&nbsp;
-      MIT License
-    </p>
-  </div>
+  {% include "components/base_footer.html" %}
 
 </div>
 </div>{# .tt-page-gradient #}

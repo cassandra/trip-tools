@@ -1,27 +1,32 @@
 {% load icons %}
 
 <div class="card mb-3">
-  <div class="row no-gutters">
-    <div class="col-3 col-md-2" id="journal-reference-image-container">
+  <div class="d-flex justify-content-left">
+    <div class="" id="journal-reference-image-container">
+      {% if can_edit_journal %}
       <a href="{% url 'journal_reference_image_picker' journal_uuid=journal.uuid %}" data-async="modal" title="Click to change reference image">
         {% include "images/components/reference_image_display.html" with image=journal.reference_image size="md" editable=True %}
       </a>
+      {% else %}
+      {% include "images/components/reference_image_display.html" with image=journal.reference_image size="md" editable=False %}
+      {% endif %}
     </div>
 
-    <div class="col-9 col-md-10">
+    <div class="">
       <div class="card-body bg-white">
         <div class="d-flex w-100 align-items-start mb-2">
           <h3 class="mb-0 mr-2">{{ journal.title }}</h3>
+          {% if can_edit_journal %}
           <a href="{% url 'journal_edit' journal_uuid=journal.uuid %}"
              data-async="modal"
              class="text-muted"
              style="opacity: 0.6; transition: opacity 0.2s;"
              onmouseover="this.style.opacity='1'"
              onmouseout="this.style.opacity='0.6'"
-             title="Edit journal title and description"
-             {% if not trip_page.request_member.can_edit_trip %}style="display:none;"{% endif %}>
+             title="Edit journal title and description" >
             {% icon "edit" size="sm" %}
           </a>
+          {% endif %}
         </div>
         {% if journal.description %}
         <p class="text-muted mb-2">{{ journal.description }}</p>
