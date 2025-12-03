@@ -234,7 +234,7 @@ class TestMemberInvitationEmailIntegration(TransactionTestCase):
             )
 
         # Verify member created but NO email sent
-        self.assertIsNotNone(member)
+        self.assertIsNotNone(result.trip_member)
         mock_sender.assert_not_called()
 
     def test_invite_member_permission_update_on_reinvite(self):
