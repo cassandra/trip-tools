@@ -23,7 +23,7 @@ urlpatterns = [
     re_path( r'^manifest.json$', views.ManifestView.as_view(), name='manifest' ),
 
     path( f'{settings.ADMIN_PATH_PREFIX}admin/', admin.site.urls),
-    path( f'^{settings.ADMIN_PATH_PREFIX}env/', include('tt.environment.urls' )),
+    path( f'{settings.ADMIN_PATH_PREFIX}env/', include('tt.environment.urls' )),
 
     re_path( r'^$', views.HomeView.as_view(), name='home' ),
     re_path( r'^index.html$', views.HomeView.as_view(), name='home_index' ),

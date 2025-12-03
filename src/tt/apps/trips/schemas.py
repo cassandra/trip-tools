@@ -35,7 +35,7 @@ class TripOverviewData:
 
     journal_section: JournalOverviewSection
 
-
+    
 @dataclass
 class TripCategorizedDisplayData:
 

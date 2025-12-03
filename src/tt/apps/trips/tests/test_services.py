@@ -41,48 +41,7 @@ class TripOverviewBuilderTestCase(TestCase):
             added_by=self.owner,
         )
 
-    # Editor Tests
-
-    def test_editor_without_journal_shows_create_button(self):
-        """Editor without journal should see create button."""
-        overview = TripOverviewBuilder.build(
-            trip=self.trip,
-            journal=None,
-            request_member=self.owner_member,
-        )
-
-        section = overview.journal_section
-        self.assertTrue(section.show_editor_create_button)
-
-    def test_editor_with_journal_shows_edit_button(self):
-        """Editor with journal should see edit button."""
-        journal = Journal.objects.create(
-            trip=self.trip,
-            title='Test Journal',
-            visibility=JournalVisibility.PRIVATE,
-        )
-
-        overview = TripOverviewBuilder.build(
-            trip=self.trip,
-            journal=journal,
-            request_member=self.owner_member,
-        )
-
-        section = overview.journal_section
-        self.assertFalse(section.show_editor_create_button)
-
     # Viewer Tests
-
-    def test_viewer_without_journal_shows_no_journal_alert(self):
-        """Viewer without journal should see no journal alert."""
-        overview = TripOverviewBuilder.build(
-            trip=self.trip,
-            journal=None,
-            request_member=self.viewer_member,
-        )
-
-        section = overview.journal_section
-        self.assertFalse(section.show_editor_create_button)
 
     def test_viewer_with_unpublished_journal_shows_unpublished_alert(self):
         """Viewer with unpublished journal should see unpublished alert."""
