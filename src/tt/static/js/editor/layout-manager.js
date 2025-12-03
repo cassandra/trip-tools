@@ -194,6 +194,20 @@
         $img.attr('draggable', true);
       }
     });
+
+    // Add contenteditable attributes for caption isolation
+    // Wrapper is non-editable (atomic), caption is editable
+    this.$editor.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
+      var $wrapper = $(this);
+      if ($wrapper.attr('contenteditable') !== 'false') {
+        $wrapper.attr('contenteditable', 'false');
+      }
+
+      var $caption = $wrapper.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
+      if ($caption.length && $caption.attr('contenteditable') !== 'true') {
+        $caption.attr('contenteditable', 'true');
+      }
+    });
   };
 
   /**

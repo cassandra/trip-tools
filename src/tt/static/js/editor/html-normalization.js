@@ -1305,6 +1305,77 @@
   };
 
   /**
+   * Ensure every image wrapper has a caption element.
+   * Recreates caption if accidentally deleted (e.g., by backspace).
+   *
+   * @param {jQuery} $editor - jQuery-wrapped contenteditable element
+   */
+  function ensureImageCaptions($editor) {
+    $editor.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
+      var $wrapper = $(this);
+      var $caption = $wrapper.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
+
+      if ($caption.length === 0) {
+        // Create empty caption
+        var $newCaption = $('<span>', { 'class': TtConst.TRIP_IMAGE_CAPTION_CLASS });
+        var $img = $wrapper.find('img');
+        var $deleteBtn = $wrapper.find('.' + TtConst.TRIP_IMAGE_DELETE_BTN_CLASS);
+
+        // Insert between img and delete button
+        if ($deleteBtn.length > 0) {
+          $deleteBtn.before($newCaption);
+        } else if ($img.length > 0) {
+          $img.after($newCaption);
+        } else {
+          // Fallback: append to wrapper
+          $wrapper.append($newCaption);
+        }
+      }
+    });
+  }
+
+  /**
+   * Normalize content inside image wrappers.
+   * Moves orphan text nodes (outside caption) into the caption element.
+   * Per spec, image wrappers should only contain: img, caption span, delete button.
+   *
+   * @param {jQuery} $editor - jQuery-wrapped contenteditable element
+   */
+  function normalizeImageWrapperContent($editor) {
+    $editor.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR).each(function() {
+      var wrapper = this;
+      var $wrapper = $(this);
+      var $caption = $wrapper.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
+
+      // Collect orphan text nodes (directly in wrapper, not in caption or button)
+      var orphanTextNodes = [];
+      for (var i = 0; i < wrapper.childNodes.length; i++) {
+        var node = wrapper.childNodes[i];
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+          orphanTextNodes.push(node);
+        }
+      }
+
+      if (orphanTextNodes.length > 0) {
+        // Ensure caption exists (ensureImageCaptions should have run first)
+        if ($caption.length === 0) {
+          $caption = $('<span>', { 'class': TtConst.TRIP_IMAGE_CAPTION_CLASS });
+          var $img = $wrapper.find('img');
+          $img.after($caption);
+        }
+
+        // Move orphan text into caption
+        for (var j = 0; j < orphanTextNodes.length; j++) {
+          var textNode = orphanTextNodes[j];
+          // Append text content to caption, then remove the orphan node
+          $caption.append(document.createTextNode(textNode.textContent.trim()));
+          textNode.parentNode.removeChild(textNode);
+        }
+      }
+    });
+  }
+
+  /**
    * Ensure all caption elements have at least an empty text node for cursor positioning.
    * This allows users to click on empty captions and start typing.
    *
@@ -1316,6 +1387,45 @@
       if (this.childNodes.length === 0) {
         this.appendChild(document.createTextNode(''));
       }
+    });
+  }
+
+  /**
+   * Move float-right images out of block elements to container.
+   *
+   * Per spec Section 4, float-right images must be at the beginning of
+   * the containing .text-block, NOT inside blockquote, ul, ol, or pre.
+   * This can happen when user applies indent/blockquote to content with images.
+   *
+   * @param {jQuery} $editor - jQuery-wrapped contenteditable element
+   */
+  function moveImagesOutOfBlockElements($editor) {
+    // Block elements that should not contain float-right images
+    var blockElements = 'blockquote, ul, ol, pre';
+
+    // Find float-right images inside block elements
+    $editor.find(blockElements).each(function() {
+      var $blockElement = $(this);
+      var $floatImages = $blockElement.find(TtConst.JOURNAL_IMAGE_WRAPPER_FLOAT_SELECTOR);
+
+      if ($floatImages.length === 0) {
+        return; // No float-right images inside this block element
+      }
+
+      // Find the containing text-block
+      var $textBlock = $blockElement.closest(HTML_STRUCTURE.TEXT_BLOCK_SELECTOR);
+      if ($textBlock.length === 0) {
+        return; // Not inside a text-block, skip
+      }
+
+      // Move each float-right image to the beginning of the text-block
+      $floatImages.each(function() {
+        var $img = $(this);
+        $textBlock.prepend($img);
+      });
+
+      // Ensure the text-block has the has-float-image class
+      $textBlock.addClass(TtConst.JOURNAL_FLOAT_MARKER_CLASS);
     });
   }
 
@@ -1342,14 +1452,19 @@
     wrapOrphanBlockElements(editor);
     splitHeadingsFromTextBlocks($editor);
     enforceOneBlockPerTextBlock($editor);
+    moveImagesOutOfBlockElements($editor);
     convertImageOnlyTextBlocks($editor);
     ensureEditorNotEmpty(editor);
 
     // Run existing cleanup helpers
     ToolbarHelper.fullCleanup($editor);
 
-    // Ensure captions have text nodes for cursor positioning
-    // Must run after cleanup to ensure empty captions aren't removed
+    // Image wrapper normalization:
+    // 1. Ensure every image wrapper has a caption element (recreate if deleted)
+    // 2. Move any orphan text nodes into the caption
+    // 3. Ensure captions have text nodes for cursor positioning
+    ensureImageCaptions($editor);
+    normalizeImageWrapperContent($editor);
     ensureCaptionTextNodes($editor);
   }
 
@@ -1370,6 +1485,7 @@
   Tt.JournalEditor._wrapOrphanBlockElements = wrapOrphanBlockElements;
   Tt.JournalEditor._splitHeadingsFromTextBlocks = splitHeadingsFromTextBlocks;
   Tt.JournalEditor._enforceOneBlockPerTextBlock = enforceOneBlockPerTextBlock;
+  Tt.JournalEditor._moveImagesOutOfBlockElements = moveImagesOutOfBlockElements;
   Tt.JournalEditor._convertImageOnlyTextBlocks = convertImageOnlyTextBlocks;
   Tt.JournalEditor._ensureEditorNotEmpty = ensureEditorNotEmpty;
 

@@ -569,6 +569,10 @@
     // Remove edit-time-only attributes from images (draggable is editor-only)
     $clone.find(TtConst.JOURNAL_IMAGE_SELECTOR).removeAttr('draggable');
 
+    // Remove contenteditable attributes (editor-only for caption isolation)
+    $clone.find(TtConst.JOURNAL_IMAGE_WRAPPER_SELECTOR).removeAttr('contenteditable');
+    $clone.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR).removeAttr('contenteditable');
+
     return $clone.html();
   };
 

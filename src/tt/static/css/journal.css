@@ -25,6 +25,7 @@
   margin: 0 0 1rem 1rem;
   width: auto;  /* Explicitly shrink to content width */
   max-width: 25%; /* col-3: max 1/4 width so two images = 1/2 width */
+  z-index: 1; /* Lift above surrounding content (blockquotes, etc.) that may extend under the float */
 }
 
 /* Full-width wrapper (images between paragraphs) */
