@@ -1,6 +1,10 @@
 from dataclasses import dataclass
+from datetime import date as date_class
 from typing import Optional
 
+from django.db.models import QuerySet
+
+from tt.apps.images.models import TripImage
 from tt.apps.travelog.models import Travelog
 
 from .models import Journal
@@ -54,3 +58,15 @@ class EntrySelectionStats:
             total_entries=len(entries),
             included_entries=included
         )
+
+
+@dataclass
+class EditorImagePickerData:
+    """
+    Encapsulates context data for the journal editor image picker component.
+    """
+
+    accessible_images       : QuerySet[TripImage]
+    is_recent_mode          : bool
+    filter_date             : Optional[date_class]
+    image_display_timezone  : str

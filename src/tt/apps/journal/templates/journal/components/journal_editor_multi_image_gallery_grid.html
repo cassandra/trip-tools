@@ -5,11 +5,12 @@ This is the inner content of the gallery container that gets replaced on async u
 Context variables:
 - accessible_images: QuerySet of TripImage instances
 - trip: Trip instance (for permission context)
+- image_display_timezone: Timezone string for displaying image timestamps (optional)
 {% endcomment %}
 
 {% if accessible_images %}
   {% for image in accessible_images %}
-    {% include "journal/components/journal_editor_multi_image_card.html" with image=image trip=trip %}
+    {% include "journal/components/journal_editor_multi_image_card.html" with image=image trip=trip image_display_timezone=image_display_timezone %}
   {% endfor %}
 {% else %}
   <div class="text-center text-muted py-4">

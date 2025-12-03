@@ -35,10 +35,10 @@ from .autosave_helpers import (
 from .context import JournalPageContext
 from .enums import JournalVisibility
 from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
-from .helpers import PublishingStatusHelper, JournalPublishContextBuilder
+from .helpers import PublishingStatusHelper, JournalPublishContextBuilder, JournalEditorHelper
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE, SPECIAL_DATES
-from .schemas import PublishingStatus
+from .schemas import PublishingStatus, EditorImagePickerData
 from .services import JournalRestoreService, JournalPublishingService
 
 from tt.apps.images.helpers import TripImageHelpers
@@ -444,15 +444,22 @@ class JournalEntryView( LoginRequiredMixin, JournalViewMixin, TripViewMixin, Vie
         # Create form for entry metadata fields
         journal_entry_form = JournalEntryForm(instance=entry)
 
+        # Build image picker data with proper timezone for display
+        image_display_timezone = JournalEditorHelper.get_image_display_timezone(entry, request.user)
+        image_picker_data = EditorImagePickerData(
+            accessible_images=accessible_images,
+            is_recent_mode=is_recent_mode,
+            filter_date=filter_date,
+            image_display_timezone=image_display_timezone,
+        )
+
         context = {
             'trip_page': trip_page_context,
             'journal_page': journal_page_context,
             'journal': entry.journal,
             'entry': entry,
             'journal_entry_form': journal_entry_form,
-            'accessible_images': accessible_images,
-            'is_recent_mode': is_recent_mode,
-            'filter_date': filter_date,
+            'image_picker_data': image_picker_data,
             'trip': entry.journal.trip,
         }
         return render(request, 'journal/pages/journal_entry.html', context)
@@ -617,15 +624,19 @@ class JournalEditorMultiImagePickerView( LoginRequiredMixin, TripViewMixin, View
             # Use entry timezone, fall back to journal timezone or UTC for special entries
             timezone = entry.timezone or entry.journal.timezone or 'UTC'
             accessible_images = ImagePickerService.get_accessible_images_for_image_picker(
-                trip=trip,
-                user=request.user,
-                date=selected_date,
-                timezone=timezone,
+                trip = trip,
+                user = request.user,
+                date = selected_date,
+                timezone = timezone,
             )
+
+        # Get proper timezone for image display
+        image_display_timezone = JournalEditorHelper.get_image_display_timezone(entry, request.user)
 
         context = {
             'accessible_images': accessible_images,
             'trip': trip,
+            'image_display_timezone': image_display_timezone,
         }
         gallery_html = render_to_string(
             'journal/components/journal_editor_multi_image_gallery_grid.html',

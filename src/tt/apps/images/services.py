@@ -97,10 +97,10 @@ class ImagePickerService:
         """
         # Try date-based query first
         images = ImagePickerService.get_accessible_images_for_image_picker(
-            trip=trip,
-            user=user,
-            date=date,
-            timezone=timezone,
+            trip = trip,
+            user = user,
+            date = date,
+            timezone = timezone,
         )
 
         # Use fallback if enabled and no images found

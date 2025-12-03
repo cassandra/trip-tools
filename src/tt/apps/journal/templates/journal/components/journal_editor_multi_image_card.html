@@ -1,9 +1,13 @@
+{% load icons %}
+{% load tz %}
+{% timezone image_display_timezone|default:USER_TIMEZONE %}
 {% comment %}
 Reusable component for rendering a single image card in the journal image picker.
 
 Context variables:
 - image: TripImage instance
 - trip: Trip instance (for permission context)
+- image_display_timezone: Timezone string for displaying image timestamps (optional, falls back to USER_TIMEZONE)
 {% endcomment %}
 
 <div class="{{ TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_CLASS }} col-6"
@@ -31,3 +35,4 @@ Context variables:
     {% endif %}
   </div>
 </div>
+{% endtimezone %}

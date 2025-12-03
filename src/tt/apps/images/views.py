@@ -486,6 +486,7 @@ class EntityImagePickerView(LoginRequiredMixin, TripViewMixin, ModalView, ABC):
             'selected_date': selected_date,
             'picker_url': self.get_picker_url(entity),
             'upload_url': self.get_upload_url(entity),
+            'image_display_timezone': selected_timezone,
         }
         return self.modal_response(request, context)
 
