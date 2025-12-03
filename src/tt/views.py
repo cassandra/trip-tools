@@ -1,6 +1,7 @@
 import json
 from typing import Dict
 
+from django.conf import settings
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -161,7 +162,8 @@ class HealthView( View ):
     def get(self, request, *args, **kwargs):
         status_dict = do_healthcheck()
         response_status = 200 if status_dict['is_healthy'] else 500
-        return JsonResponse( {'status': status_dict }, status=response_status)
+        status_dict['version'] = settings.ENV.VERSION
+        return JsonResponse( {'status': status_dict }, status = response_status)
 
 
 class HomeView( View ):
