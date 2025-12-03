@@ -22,10 +22,6 @@ class PublishingStatus:
         return bool( self.current_published_travelog is not None )
 
     @property
-    def is_published_with_changes(self) -> bool:
-        return bool( self.has_published_version and self.has_unpublished_changes )
-
-    @property
     def is_published_without_changes(self) -> bool:
         return bool( self.has_published_version and not self.has_unpublished_changes )
 
