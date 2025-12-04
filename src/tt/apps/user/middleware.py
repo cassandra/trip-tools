@@ -9,6 +9,7 @@ class AuthenticationMiddleware(object):
 
     EXEMPT_VIEW_URL_NAMES = {
         'health',
+        'env_home',
         'home',
         'home_index',
         'admin',
