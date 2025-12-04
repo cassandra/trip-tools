@@ -29,7 +29,7 @@
   // =========================================================================
   // AutoSave Configuration
   // =========================================================================
-  var AUTOSAVE_DEBOUNCE_MS = 3000;   // Delay after typing stops before saving
+  var AUTOSAVE_DEBOUNCE_MS = TtConst.EDITOR_AUTOSAVE_INTERVAL_SECS * 1000;   // Delay after typing stops before saving
   var AUTOSAVE_MAX_DELAY_MS = 30000; // Maximum time before forcing a save
 
   /**

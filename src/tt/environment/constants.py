@@ -19,6 +19,7 @@ class TtConst:
        - convention is to name with "_DATA_ATTR" suffix
        - For raw HTML/CSS selectors, prepend "data-" explicitly
     """
+    EDITOR_AUTOSAVE_INTERVAL_SECS        = 3
     ATTRIBUTE_ID_DATA_ATTR               = 'attribute-id'
     HIDDEN_FIELD_DATA_ATTR               = 'hidden-field'
     OVERFLOW_DATA_ATTR                   = 'overflow'
@@ -125,6 +126,6 @@ class TtConst:
         constants = {
             key: value
             for key, value in vars(cls).items()
-            if key.isupper() and isinstance(value, str)
+            if key.isupper() and ( isinstance(value, str) or isinstance(value, int))
         }
         return json.dumps(constants, indent=4)

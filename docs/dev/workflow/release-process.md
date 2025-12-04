@@ -437,11 +437,11 @@ fi
 ```bash
 # After deployment, verify site is up (may need to wait a little):
 curl -I https://triptools.net
-# Should return 200 OK
+# Should return 200 OK (will may code 502 initially when it is starting)
 
 # Check health endpoint:
 curl https://triptools.net/health
-# Should return JSON with status information including current version
+# Should return JSON with status information including current version to check
 
 # Check Docker container status on droplet:
 ssh root@triptools.net "docker ps"

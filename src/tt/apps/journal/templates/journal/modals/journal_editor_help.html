@@ -17,15 +17,22 @@ Editing Help
   </div>
 
   <!-- Keyboard Shortcuts Section -->
-  <div class="card mb-3">
+  <div class="card">
     <div class="card-header bg-light">
-      <strong>{% icon "keyboard" %} Keyboard Shortcuts</strong>
+      <strong>{% icon "pencil" %} Text Formatting</strong>
     </div>
     <div class="card-body">
 
       <!-- Text Formatting -->
       <div class="mb-3">
-        <h6 class="text-primary mb-2">Text Formatting</h6>
+        <h6 class="text-primary">Toolbar Buttons</h6>
+        <ul>
+          <li><strong>Basic:</strong> Bold, Italic, Headings (H2-H4)<br></li>
+          <li><strong>Lists:</strong> Bulleted, Numbered, Indent/Outdent, Quotes<br></li>
+          <li><strong>Insert:</strong> Links, Code blocks</li>
+        </ul>
+        
+        <h6 class="text-primary mt-2">Keyboard Shortcuts</h6>
         <table class="table table-sm mb-0">
           <tbody>
             <tr>
@@ -36,38 +43,38 @@ Editing Help
               <td class="text-nowrap"><kbd>Ctrl+I</kbd> / <kbd>⌘+I</kbd></td>
               <td>Make text italic</td>
             </tr>
-            <tr>
-              <td class="text-nowrap">Toolbar buttons</td>
-              <td>
-                <strong>Basic:</strong> Bold, Italic, Headings (H2-H4)<br>
-                <strong>Lists:</strong> Bulleted, Numbered, Indent/Outdent<br>
-                <strong>Insert:</strong> Links, Code blocks
-              </td>
-            </tr>
-            <tr>
-              <td class="text-nowrap">Active indicators</td>
-              <td>Toolbar buttons highlight when cursor is in formatted text</td>
-            </tr>
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+  
+  <div class="card mt-2">
+    <div class="card-header bg-light">
+      <strong>{% icon "camera" %} Images</strong>
+    </div>
+    <div class="card-body">
 
       <!-- Picker Operations -->
       <div class="mb-3">
-        <h6 class="text-primary mb-2">Image Picker (when images selected)</h6>
+        <h6 class="text-primary mb-2">Image Picker</h6>
         <table class="table table-sm mb-0">
           <tbody>
             <tr>
-              <td class="text-nowrap"><kbd>Escape</kbd></td>
-              <td>Clear selections</td>
+              <td class="text-nowrap"><kbd>DRAG</kbd> / <kbd>DROP</kbd></td>
+              <td>Add by dragging over paragraphs, between paragraphs or to set page's reference image.</td>
             </tr>
             <tr>
-              <td class="text-nowrap"><kbd>Delete</kbd> / <kbd>Backspace</kbd></td>
-              <td>Clear selections</td>
+              <td class="text-nowrap"><kbd>CLICK</kbd></td>
+              <td>Select Image</td>
             </tr>
             <tr>
-              <td class="text-nowrap"><kbd>Ctrl+R</kbd> / <kbd>⌘+R</kbd></td>
-              <td>Set as reference image</td>
+              <td class="text-nowrap"><kbd>SHIFT-CLICK</kbd></td>
+              <td>Add to selection</td>
+            </tr>
+            <tr>
+              <td class="text-nowrap"><kbd>DOUBLE-CLICK</kbd></td>
+              <td>Show image details in image inspector</td>
             </tr>
           </tbody>
         </table>
@@ -75,33 +82,16 @@ Editing Help
 
       <!-- Editor Operations -->
       <div class="mb-3">
-        <h6 class="text-primary mb-2">Editor Images (when images selected)</h6>
+        <h6 class="text-primary mb-2">Editor Images</h6>
         <table class="table table-sm mb-0">
           <tbody>
-            <tr>
-              <td class="text-nowrap"><kbd>Escape</kbd></td>
-              <td>Clear selections</td>
+             <tr>
+              <td class="text-nowrap"><kbd>DRAG</kbd> / <kbd>DROP</kbd></td>
+              <td>Move by dragging over paragraphs, between paragraphs or to set page's reference image.</td>
             </tr>
             <tr>
-              <td class="text-nowrap"><kbd>Delete</kbd> / <kbd>Backspace</kbd></td>
-              <td>Remove from editor</td>
-            </tr>
-            <tr>
-              <td class="text-nowrap"><kbd>Ctrl+R</kbd> / <kbd>⌘+R</kbd></td>
-              <td>Set as reference image</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Global Shortcuts -->
-      <div class="mb-0">
-        <h6 class="text-primary mb-2">Global</h6>
-        <table class="table table-sm mb-0">
-          <tbody>
-            <tr>
-              <td class="text-nowrap"><kbd>Ctrl+/</kbd> / <kbd>⌘+/</kbd></td>
-              <td>Show this help dialog</td>
+              <td class="text-nowrap"><kbd>CLICK</kbd></td>
+              <td>Show image details in image inspector</td>
             </tr>
           </tbody>
         </table>
@@ -117,7 +107,7 @@ Editing Help
     </div>
     <div class="card-body">
       <ul class="mb-0">
-        <li><strong>Auto-save:</strong> Changes save automatically after 2 seconds of inactivity</li>
+        <li><strong>Auto-save:</strong> Changes save automatically after {{ TtConst.EDITOR_AUTOSAVE_INTERVAL_SECS }} seconds of inactivity</li>
         <li><strong>Image placement:</strong> Drag images into paragraphs (float-right) or between paragraphs (full-width)</li>
         <li><strong>Multi-select:</strong> Click images with <kbd>Ctrl</kbd>/<kbd>⌘</kbd> to select multiple, or <kbd>Shift</kbd> for range selection</li>
         <li><strong>Reordering:</strong> Drag images within the editor to reposition them</li>
