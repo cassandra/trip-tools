@@ -10,6 +10,7 @@ from tt.apps.images.models import TripImage
 from tt.apps.journal.models import Journal
 from tt.apps.journal.enums import JournalVisibility
 
+from .enums import TravelogPageType
 from .exceptions import PasswordRequiredException
 from .forms import TravelogPasswordForm
 from .helpers import TravelogHelpers
@@ -74,7 +75,11 @@ class TravelogTableOfContentsView(TravelogViewMixin, View):
              journal_uuid  : UUID,
              *args, **kwargs             ) -> HttpResponse:
         try:
-            travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
+            travelog_page_context = self.get_travelog_page_context(
+                request = request,
+                journal_uuid = journal_uuid,
+                page_type = TravelogPageType.TOC,
+            )
         except PasswordRequiredException:
             return self.password_redirect_response( request = request, journal_uuid = journal_uuid )
 
@@ -120,6 +125,7 @@ class TravelogDayView(TravelogViewMixin, View):
             travelog_page_context = self.get_travelog_page_context(
                 request = request,
                 journal_uuid = journal_uuid,
+                page_type = TravelogPageType.DAY,
             )
         except PasswordRequiredException:
             return self.password_redirect_response(
@@ -164,7 +170,11 @@ class TravelogImageGalleryView(TravelogViewMixin, View):
              page_num      : int         = 1,
              *args, **kwargs                 ) -> HttpResponse:
         try:
-            travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
+            travelog_page_context = self.get_travelog_page_context(
+                request = request,
+                journal_uuid = journal_uuid,
+                page_type = TravelogPageType.IMAGE_GALLERY,
+            )
         except PasswordRequiredException:
             return self.password_redirect_response( request = request, journal_uuid = journal_uuid )
 
@@ -172,7 +182,7 @@ class TravelogImageGalleryView(TravelogViewMixin, View):
             travelog_page_context = travelog_page_context,
         )
         is_multi_page = bool( content.get_entries().count() > 1 )
-
+        
         # Get cached images (cache already invalidated in mixin if refresh=true)
         all_images = TravelogImageCacheService.get_images(
             travelog_page_context = travelog_page_context
@@ -231,7 +241,11 @@ class TravelogImageBrowseView(TravelogViewMixin, View):
              image_uuid    : UUID,
              *args, **kwargs             ) -> HttpResponse:
         try:
-            travelog_page_context = self.get_travelog_page_context(request, journal_uuid)
+            travelog_page_context = self.get_travelog_page_context(
+                request = request,
+                journal_uuid = journal_uuid,
+                page_type = TravelogPageType.IMAGE_BROWSE,
+            )
         except PasswordRequiredException:
             return self.password_redirect_response( request = request, journal_uuid = journal_uuid )
 

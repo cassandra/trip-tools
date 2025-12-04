@@ -1,0 +1,21 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid tt-page-gradient">
+  <div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7 col-sm-9 col-12">
+
+    <div class="col-6 mx-auto my-4">
+      <img class="img-fluid" src="{% static 'img/tt-logo-467x200.png' %}" alt="Trip Tools Logo" />
+    </div>
+
+    
+    {% block prompt_content %}
+    {% endblock %}
+
+  <div class="mt-4">
+    {% include "components/base_footer.html" %}
+  </div>
+</div>
+{% endblock %}

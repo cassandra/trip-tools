@@ -43,4 +43,13 @@ class ContentType(LabeledEnum):
     @property
     def is_version(self):
         return bool( self == ContentType.VERSION )
+
+    
+class TravelogPageType(LabeledEnum):
+
+    TOC            = ( 'TOC', '' )
+    DAY            = ( 'Day', '' )
+    IMAGE_GALLERY  = ( 'Image Gallery', '' )
+    IMAGE_BROWSE   = ( 'Image Browse', '' )
+    USER_LIST      = ( 'User List', '' )
     

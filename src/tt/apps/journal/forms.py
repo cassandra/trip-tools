@@ -112,7 +112,7 @@ class JournalVisibilityForm(forms.Form):
     password = forms.CharField(
         required = False,
         widget = forms.PasswordInput(attrs={
-            'class': 'form-control',
+            'class': f'form-control {TtConst.ATTR_SECRET_INPUT_CLASS}',
             'placeholder': 'Enter new password',
         }),
         label = 'New Password',

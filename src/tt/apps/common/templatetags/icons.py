@@ -92,7 +92,7 @@ AVAILABLE_ICONS = {
 }
 
 # Define available sizes
-ICON_SIZES = {'sm', 'md', 'lg', 'xl'}
+ICON_SIZES = {'sm', 'md', 'lg', 'xl', 'xxl', 'xxxl', 'fluid'}
 
 # Define available semantic colors (matching CSS variables)
 ICON_COLORS = {
@@ -209,7 +209,7 @@ def icon(name, size='md', color=None, aria_label=None, title=None, css_class='')
     if title:
         accessibility_attrs.append(f'title="{title}"')
     
-    accessibility_str = ' '.join(accessibility_attrs)
+    accessibility_str = mark_safe(' '.join(accessibility_attrs))
     
     try:
         # Load the specific icon template (using canonical name)

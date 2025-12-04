@@ -30,6 +30,19 @@
     width: 1.5rem;
     height: 1.5rem;
 }
+.tt-icon-xxl {
+    width: 2rem;
+    height: 2rem;
+}
+.tt-icon-xxxl {
+    width: 3rem;
+    height: 3rem;
+}
+
+.tt-icon-fluid {
+    max-width: 100%;
+    height: auto;
+}
 
 /* Semantic icon colors using existing CSS variables */
 .tt-icon-primary {

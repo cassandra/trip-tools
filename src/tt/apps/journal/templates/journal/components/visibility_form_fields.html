@@ -69,10 +69,10 @@
     {{ form.password }}
     <button type="button"
             class="btn btn-sm btn-outline-secondary attr-secret-toggle"
-            onclick="Tt.attr.toggleSecretField(this)"
+            onclick="Tt.togglePasswordVisibility(this)"
             title="Show password">
-      <span class="{{ TtConst.ATTR_ICON_SHOW_CLASS }}">{% icon "eye" size="sm" %}</span>
-      <span class="{{ TtConst.ATTR_ICON_HIDE_CLASS }}" style="display: none;">{% icon "eye-off" size="sm" %}</span>
+      <span class="password-icon-show">{% icon "eye" size="sm" %}</span>
+      <span class="password-icon-hide" style="display: none;">{% icon "eye-off" size="sm" %}</span>
     </button>
   </div>
 

@@ -3,7 +3,7 @@ from typing import Optional
 
 from tt.apps.journal.models import Journal
 
-from .enums import ContentType
+from .enums import TravelogPageType, ContentType
 
 
 @dataclass
@@ -21,7 +21,8 @@ class TravelogPageContext:
     """
     journal        : Journal
     content_type   : ContentType
-    version_number : Optional[int] = None  # Only for VERSION content type
+    page_type      : TravelogPageType
+    version_number : Optional[int]   = None  # Only for VERSION content type
     
     def is_draft(self) -> bool:
         return bool( self.content_type.is_draft )
@@ -47,3 +48,4 @@ class TravelogPageContext:
             return str(self.version_number) if self.version_number else None
         else:  # VIEW
             return None
+        

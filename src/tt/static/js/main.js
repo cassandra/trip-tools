@@ -142,6 +142,15 @@
             );
         },
 
+        /**
+         * Toggle password field visibility between password and text.
+         * For use with password entry forms (not attribute secrets).
+         * @param {HTMLElement} button - The toggle button element
+         */
+        togglePasswordVisibility: function(button) {
+            return _togglePasswordVisibility(button);
+        },
+
     };
 
     window.Tt = Tt;
@@ -296,6 +305,37 @@
     ${offsetStr},
     ${rectStr}`) ;
 
+    }
+
+    /**
+     * Toggle password field visibility.
+     * Finds the input sibling and toggles between password/text type.
+     * Updates button title and icon visibility, then restores focus.
+     */
+    function _togglePasswordVisibility(button) {
+        const $button = $(button);
+        const $wrapper = $button.parent();
+        const $input = $wrapper.find('input[type="password"], input[type="text"]').first();
+        const $showIcon = $button.find('.password-icon-show');
+        const $hideIcon = $button.find('.password-icon-hide');
+        const isPassword = $input.attr('type') === 'password';
+
+        if (isPassword) {
+            // Currently hidden - show as text
+            $input.attr('type', 'text');
+            $button.attr('title', 'Hide password');
+            $showIcon.hide();
+            $hideIcon.show();
+        } else {
+            // Currently showing - hide as password
+            $input.attr('type', 'password');
+            $button.attr('title', 'Show password');
+            $showIcon.show();
+            $hideIcon.hide();
+        }
+
+        // Restore focus to the input field
+        $input.focus();
     }
 
 })();
