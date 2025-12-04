@@ -2,7 +2,6 @@ import json
 from typing import Dict
 
 from django.conf import settings
-from django.core.exceptions import BadRequest
 from django.http import (
     Http404,
     HttpRequest,

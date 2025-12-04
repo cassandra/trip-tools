@@ -287,11 +287,14 @@ class TripImageInspectViewTestCase(TestCase):
 
     def test_get_view_mode_by_default(self):
         """GET without mode parameter should show edit mode for owner."""
-        response = self.client.get(self.url)
+        response = self.client.get(
+            self.url,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
 
         self.assertEqual(200, response.status_code)
         # Owner has edit permission, so should see edit template with form
-        self.assertTemplateUsed(response, 'images/modals/trip_image_inspect_view.html')
+        self.assertTemplateUsed(response, 'images/modals/trip_image_inspect_edit.html')
         self.assertIsNotNone(response.context.get('trip_image_form'))
 
     def test_get_view_mode_for_non_owner(self):
