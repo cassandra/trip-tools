@@ -77,6 +77,7 @@ class PublishingStatusHelper:
         return PublishingStatus(
             current_published_travelog = current_travelog,
             has_unpublished_changes = has_changes,
+            
         )
 
     @classmethod
@@ -102,14 +103,14 @@ class PublishingStatusHelper:
         # Only consider entries that are marked for publishing
         published_datetime = travelog.published_datetime
         if journal.entries.filter(
-            include_in_publish=True,
-            modified_datetime__gt=published_datetime
+            include_in_publish = True,
+            modified_datetime__gt = published_datetime
         ).exists():
             return True
 
         # Check if entry count changed (entries added or deleted)
         # Only count entries marked for publishing
-        journal_entry_count = journal.entries.filter(include_in_publish=True).count()
+        journal_entry_count = journal.entries.filter( include_in_publish = True ).count()
         travelog_entry_count = travelog.entries.count()
         if journal_entry_count != travelog_entry_count:
             return True

@@ -65,7 +65,7 @@
      {% if entry.uuid == journal_page.journal_entry_uuid %}class="active" aria-current="page"{% endif %}>
     {{ entry.display_date_short }}
     {% if not entry.include_in_publish %}
-    <small class="text-danger d-block">*</small>
+    {% icon "circle-slash" size="sm" %}
     {% endif %}
   </a>
 </li>
@@ -89,7 +89,7 @@
 {% endif %}
 
 {% if not journal_page.all_entries_included_for_publish %}
-<small class="text-danger d-block pl-4 pt-2"><em>* Excluded from publish</em></small>
+<small class="d-block pl-4 pt-2"><em>{% icon "circle-slash" size="sm" %} Excluded from publish</em></small>
 {% endif %}
 
 {% endif %}

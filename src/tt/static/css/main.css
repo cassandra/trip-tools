@@ -47,7 +47,7 @@
   --edit-hr-color: #a0a0a0;
   
   --status-highlighted-color: red;
-  --status-hover-color: blue;
+  --status-hover-color: rgba(0, 123, 255, 0.1);
 
   --status-off-color: #aaaaaa;
   --status-on-color: yellow;

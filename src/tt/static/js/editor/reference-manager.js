@@ -172,12 +172,12 @@
 
   /**
    * Set reference image from image data
-   * @param {Object} imageData - {uuid, url, caption}
+   * @param {Object} imageData - {uuid, thumbnailUrl, caption}
    */
   ReferenceImageManager.prototype.setImage = function(imageData) {
-    // Use lookup function to get complete data if needed (for url/caption)
+    // Use lookup function to get complete data if needed (for thumbnailUrl/caption)
     var completeData = imageData;
-    if (!imageData.url && this.getImageDataByUUID) {
+    if (!imageData.thumbnailUrl && this.getImageDataByUUID) {
       completeData = this.getImageDataByUUID(imageData.uuid);
       if (!completeData) {
         console.error('[ReferenceImageManager] Cannot set reference image: lookup failed for UUID', imageData.uuid);
@@ -194,7 +194,7 @@
     var $placeholder = this.$container.find(this.SELECTORS.PLACEHOLDER);
     var $img = $preview.find(this.SELECTORS.THUMBNAIL);
 
-    $img.attr('src', completeData.url);
+    $img.attr('src', completeData.thumbnailUrl);
     $img.attr('alt', completeData.caption || 'Reference');
 
     // Show preview, hide placeholder
