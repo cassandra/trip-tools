@@ -43,8 +43,10 @@ urlpatterns = [
     re_path( r'^journal/', include('tt.apps.journal.urls' )),
     re_path( r'^travelog/', include('tt.apps.travelog.urls' )),
     re_path( r'^reviews/', include('tt.apps.reviews.urls' )),
-    re_path( r'^', include('tt.apps.members.urls' )),
+    re_path( r'^members/', include('tt.apps.members.urls' )),
 
+    path( 'future/<str:feature_name>', views.FutureFeatureModalView.as_view(), name='future_feature' ),
+    
     # Custom error pages
     re_path( r'^400.html$', views.bad_request_response, name='bad_request' ),
     re_path( r'^403.html$', views.not_authorized_response, name='not_authorized' ),

@@ -1114,7 +1114,7 @@ body {
 }
 
 .tt-page-explanation::before {
-    content: "Future Feature";
+    content: "Future Features";
     display: inline-block;
     background-color: var(--primary-color);
     color: var(--on-primary-color);

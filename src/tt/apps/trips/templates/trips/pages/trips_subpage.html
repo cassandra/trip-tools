@@ -9,9 +9,9 @@
   </button>
   <div class="dropdown-menu dropdown-menu-right" aria-labelledby="newDropdown">
     {% if trip_page.request_member.can_edit_trip %}
-    <a class="dropdown-item" href="#">New Location</a>
-    <a class="dropdown-item" href="#">New Booking</a>
-    <a class="dropdown-item" href="#">New Review</a>
+    <a class="dropdown-item" href="{% url 'future_feature' feature_name='locations' %}" data-async="modal">New Location</a>
+    <a class="dropdown-item" href="{% url 'future_feature' feature_name='bookings' %}" data-async="modal">New Booking</a>
+    <a class="dropdown-item" href="{% url 'future_feature' feature_name='reviews' %}" data-async="modal">New Review</a>
     <div class="dropdown-divider"></div>
     {% endif %}
     <a class="dropdown-item" href="{% url 'trips_trip_create' %}" data-async="modal">New Trip</a>

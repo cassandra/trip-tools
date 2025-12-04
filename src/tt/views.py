@@ -2,7 +2,9 @@ import json
 from typing import Dict
 
 from django.conf import settings
+from django.core.exceptions import BadRequest
 from django.http import (
+    Http404,
     HttpRequest,
     HttpResponse,
     HttpResponseRedirect,
@@ -10,6 +12,8 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import render
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.urls import reverse
 from django.views.generic import View
 
@@ -18,6 +22,8 @@ from tt.apps.common.healthcheck import do_healthcheck
 from tt.apps.common.utils import is_ajax
 from tt.apps.trips.forms import TripForm
 from tt.apps.trips.models import Trip
+
+from tt.async_view import ModalView
 
 
 def error_response( request             : HttpRequest,
@@ -219,3 +225,29 @@ class ManifestView( View ):
         Configured for landscape orientation (tablet primary use case).
         """
         return render(request, 'manifest.json', {}, content_type="application/json")
+
+    
+class FutureFeatureModalView( ModalView ):
+
+    def get_template_name( self ) -> str:
+        return 'modals/future_feature.html'
+    
+    def get(self, request, *args, **kwargs):
+
+        feature_name = kwargs.get('feature_name')
+        if not feature_name:
+            raise Http404()
+        
+        feature_template_name = f'components/future/{feature_name}.html'
+        try:
+            get_template( feature_template_name )
+        except TemplateDoesNotExist:
+            raise Http404()
+
+        feature_label = feature_name
+
+        context = {
+            'feature_label': feature_label,
+            'feature_template_name': feature_template_name,
+        }
+        return self.modal_response( request, context = context )
