@@ -41,6 +41,7 @@ fi
 # Copy deployment files to droplet
 echo "Copying deployment files to droplet..."
 scp .private/env/docker-compose.production.env "${DEPLOY_HOST}:${DEPLOY_PATH}/triptools.env"
+scp .private/env/production.sh "${DEPLOY_HOST}:${DEPLOY_PATH}/triptools.sh"
 scp deploy/docker-compose.production.yml "${DEPLOY_HOST}:${DEPLOY_PATH}/docker-compose.yml"
 
 # Copy Docker image to droplet

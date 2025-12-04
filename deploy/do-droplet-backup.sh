@@ -2,7 +2,7 @@
 
 set -e
 
-. /root/env.prod.sh
+. /opt/triptools/triptools.sh
 
 # Config
 S3_BUCKET='pomdp'
