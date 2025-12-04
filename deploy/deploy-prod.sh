@@ -68,7 +68,7 @@ echo ""
 
 # Prompt to clean up local temp file
 IMAGE_SIZE=$(du -h "$IMAGE_FILE" | cut -f1)
-read -p "Remove local image file ${IMAGE_FILE} (${IMAGE_SIZE})? [y/N] " -n 1 -r
+read -p "Remove local image file ${IMAGE_FILE} (${IMAGE_SIZE})? [y/N] " -n 1 -r || true
 echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     rm "$IMAGE_FILE"

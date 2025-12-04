@@ -8,6 +8,7 @@ from tt.apps.common.utils import is_ajax
 class AuthenticationMiddleware(object):
 
     EXEMPT_VIEW_URL_NAMES = {
+        'health',
         'home',
         'home_index',
         'admin',

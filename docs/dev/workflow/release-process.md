@@ -350,7 +350,7 @@ docker images | grep tt
 docker images tt:$(cat TT_VERSION)
 # Should show the image exists
 
-# Save image to tar.gz
+# Save image to tar.gz (this will take 1 to 2 minutes given the size)
 make docker-push
 
 # Verify tar.gz created
