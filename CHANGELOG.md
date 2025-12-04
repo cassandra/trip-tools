@@ -4,6 +4,7 @@
 
 _High-level view of the applications change history.  See releases and commits for more fine-grained history._
 
+- v0.2.2 : Enhanced UI with improved icons, future feature dialogs, content image thumbnail command, journal entry drag-drop fixes, and healthcheck improvements
 - v0.2.1 : Bug fixes and improvements including better image handling, enhanced editor features, improved styling, and admin interface security enhancements
 - v0.2.0 : Major UI improvements with new home page, enhanced journal editing features, selective page publishing, improved navigation and styling
 - v0.1.2 : Added prologue/epilogue pages, improved journal editing with better image handling and recent upload filtering
