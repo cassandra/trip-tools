@@ -34,7 +34,7 @@
 {% block sidebar_body_items %}
 <li>
   <a href="{% url 'trips_trip_overview' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'trip_overview' %} class="active" aria-current="page"{% endif %}>
-    {% icon "globe" size="sm" %}
+    {% icon "list-ul" size="sm" %}
     <span>Overview</span>
   </a>
 </li>
@@ -58,7 +58,7 @@
 </li>
 <li>
   <a href="{% url 'bookings_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'bookings' %} class="active" aria-current="page"{% endif %}>
-    {% icon "layers" size="sm" %}
+    {% icon "dollar-sign" size="sm" %}
     <span>Bookings</span>
   </a>
 </li>
@@ -76,7 +76,7 @@
 </li>
 <li>
   <a href="{% url 'members_home' trip_uuid=trip_page.trip.uuid %}"{% if trip_page.active_page.value == 'members' %} class="active" aria-current="page"{% endif %}>
-    {% icon "collection" size="sm" %}
+    {% icon "group" size="sm" %}
     <span>Members</span>
   </a>
 </li>
