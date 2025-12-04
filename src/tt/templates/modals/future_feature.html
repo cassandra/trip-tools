@@ -1,0 +1,15 @@
+{% extends "modals/action_ok.html" %}
+{% load static %}
+{% load icons %}
+
+{% block modal_dialog_class %}tt-modal-dialog-800{% endblock %}
+{% block header_class %}bg-tertiary{% endblock %}
+
+{% block title_text %}
+{{ feature_label|title }} : Future Features
+{% endblock %}
+
+{% block body %}
+<div class="h1 text-primary">{{ feature_label|title }}</div>
+{% include feature_template_name %}
+{% endblock %}

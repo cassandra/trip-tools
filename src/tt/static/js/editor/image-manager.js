@@ -248,7 +248,7 @@
   /**
    * Get image data object from UUID by looking up picker card
    * @param {string} uuid - Image UUID
-   * @returns {Object|null} {uuid, url, caption} or null if not found
+   * @returns {Object|null} {uuid, thumbnailUrl, fullUrl, caption} or null if not found
    */
   ImageManager.prototype.getImageDataFromUUID = function(uuid) {
     var $card = $(TtConst.JOURNAL_EDITOR_MULTI_IMAGE_CARD_SELECTOR + '[data-' + TtConst.IMAGE_UUID_DATA_ATTR + '="' + uuid + '"]');
@@ -259,7 +259,8 @@
 
     return {
       uuid: uuid,
-      url: $card.data(TtConst.IMAGE_MEDIA_URL_DATA_ATTR),
+      thumbnailUrl: $card.data(TtConst.THUMBNAIL_MEDIA_URL_DATA_ATTR),
+      fullUrl: $card.data(TtConst.IMAGE_MEDIA_URL_DATA_ATTR),
       caption: $card.data(TtConst.CAPTION_DATA_ATTR) || 'Untitled'
     };
   };

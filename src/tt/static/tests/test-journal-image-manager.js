@@ -134,11 +134,14 @@
       assert.equal($caption.text(), 'My Caption', 'Caption has correct text');
     });
 
-    QUnit.test('createImageElement omits caption span when caption empty', function(assert) {
+    QUnit.test('createImageElement creates caption span even when caption empty', function(assert) {
+      // Caption span is always created for consistent editing experience
+      // Empty captions are visible/clickable in editor (via CSS), hidden in travelog
       var $wrapper = manager.createImageElement('uuid', '/test.jpg', '', 'full-width');
 
       var $caption = $wrapper.find('.trip-image-caption');
-      assert.equal($caption.length, 0, 'No caption span for empty caption');
+      assert.equal($caption.length, 1, 'Caption span exists even when empty');
+      assert.equal($caption.text(), '', 'Caption text is empty');
     });
 
     QUnit.test('createImageElement adds delete button', function(assert) {
@@ -275,10 +278,11 @@
       $editor = $('<div class="journal-editor" contenteditable="true"></div>');
       $('#qunit-fixture').append($editor);
 
-      // Create a mock picker card
+      // Create a mock picker card with both thumbnail and full URLs
       $pickerCard = $('<div class="journal-editor-multi-image-card" ' +
         'data-image-uuid="lookup-uuid" ' +
-        'data-image-url="/looked-up.jpg" ' +
+        'data-image-url="/looked-up-full.jpg" ' +
+        'data-thumbnail-url="/looked-up-thumb.jpg" ' +
         'data-caption="Looked Up Caption"></div>');
       $('#qunit-fixture').append($pickerCard);
 
@@ -297,7 +301,8 @@
 
       assert.ok(data, 'Returns data object');
       assert.equal(data.uuid, 'lookup-uuid', 'Has correct UUID');
-      assert.equal(data.url, '/looked-up.jpg', 'Has correct URL');
+      assert.equal(data.thumbnailUrl, '/looked-up-thumb.jpg', 'Has correct thumbnail URL');
+      assert.equal(data.fullUrl, '/looked-up-full.jpg', 'Has correct full URL');
       assert.equal(data.caption, 'Looked Up Caption', 'Has correct caption');
     });
 
@@ -311,7 +316,8 @@
       // Create card without caption
       var $cardNoCaption = $('<div class="journal-editor-multi-image-card" ' +
         'data-image-uuid="no-caption-uuid" ' +
-        'data-image-url="/no-caption.jpg"></div>');
+        'data-image-url="/no-caption-full.jpg" ' +
+        'data-thumbnail-url="/no-caption-thumb.jpg"></div>');
       $('#qunit-fixture').append($cardNoCaption);
 
       var data = manager.getImageDataFromUUID('no-caption-uuid');

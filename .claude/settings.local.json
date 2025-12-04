@@ -36,7 +36,8 @@
       "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci ./src/manage.py test:*)",
       "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python -m pytest:*)",
       "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python src/manage.py test:*)",
-      "Bash(python src/manage.py shell:*)"
+      "Bash(python src/manage.py shell:*)",
+      "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python src/manage.py migrate_entry_content:*)"
     ],
     "deny": [],
     "ask": []

@@ -441,11 +441,7 @@ curl -I https://triptools.net
 
 # Check health endpoint:
 curl https://triptools.net/health
-# Should return JSON with status information
-
-# Check environment configuration:
-curl https://triptools.net/env/
-# Should return environment details (version, settings, etc.)
+# Should return JSON with status information including current version
 
 # Check Docker container status on droplet:
 ssh root@triptools.net "docker ps"

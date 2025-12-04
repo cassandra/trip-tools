@@ -379,10 +379,10 @@
     for (var i = 0; i < imagesToInsert.length; i++) {
       var imageData = imagesToInsert[i];
 
-      // Create wrapped image element
+      // Create wrapped image element (use thumbnail for in-page display)
       var $wrappedImage = this.imageManager.createImageElement(
         imageData.uuid,
-        imageData.url,
+        imageData.thumbnailUrl,
         imageData.caption,
         layout
       );
@@ -780,7 +780,7 @@
   /**
    * Get image data for currently dragged image(s)
    * Returns single image data or null (for reference area use - multi-select not allowed)
-   * @returns {Object|null} {uuid, url, caption} or null if multi-select or no drag
+   * @returns {Object|null} {uuid, thumbnailUrl, caption} or null if multi-select or no drag
    */
   DragDropManager.prototype.getDraggedImageData = function() {
     if (!this.draggedElement || !this.dragSource) {
@@ -796,11 +796,17 @@
         return null;
       }
 
+      // Get image data directly from editor elements (not picker lookup)
+      // Image may not be in picker if uploaded long ago or filtered out
       var $wrapper = wrappersToMove[0];
       var $img = $wrapper.find(TtConst.JOURNAL_IMAGE_SELECTOR);
-      var uuid = $img.data(TtConst.UUID_DATA_ATTR);
+      var $caption = $wrapper.find(TtConst.JOURNAL_IMAGE_CAPTION_SELECTOR);
 
-      return this.imageManager.getImageDataFromUUID(uuid);
+      return {
+        uuid: $img.data(TtConst.UUID_DATA_ATTR),
+        thumbnailUrl: $img.attr('src'),
+        caption: $caption.length ? $caption.text() : ($img.attr('alt') || '')
+      };
     }
 
     return null;

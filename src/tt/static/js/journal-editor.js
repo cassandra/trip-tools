@@ -720,7 +720,7 @@
    * Get image data object from UUID by looking up picker card
    * Delegates to ImageManager
    * @param {string} uuid - Image UUID
-   * @returns {Object|null} {uuid, url, caption} or null if not found
+   * @returns {Object|null} {uuid, thumbnailUrl, fullUrl, caption} or null if not found
    */
   JournalEditor.prototype.getImageDataFromUUID = function(uuid) {
     return this.imageManager.getImageDataFromUUID(uuid);

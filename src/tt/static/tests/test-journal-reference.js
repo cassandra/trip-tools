@@ -137,12 +137,11 @@
         DRAG_SOURCE: { PICKER: 'picker', EDITOR: 'editor', REFERENCE: 'reference' }
       });
 
-      // Complete data with inspectUrl - should skip lookup
+      // Complete data with thumbnailUrl - should skip lookup
       manager.setImage({
         uuid: 'full-uuid',
-        url: '/full.jpg',
-        caption: 'Full',
-        inspectUrl: '/inspect/full'
+        thumbnailUrl: '/full-thumb.jpg',
+        caption: 'Full'
       });
 
       assert.notOk(lookupCalled, 'Lookup not called for complete data');

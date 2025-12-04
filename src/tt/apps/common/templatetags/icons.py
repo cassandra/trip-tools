@@ -39,6 +39,7 @@ AVAILABLE_ICONS = {
     'cloud',
     'code',
     'document',
+    'dollar-sign',
     'trash',
     'circle-slash',
     'download',
@@ -86,6 +87,7 @@ AVAILABLE_ICONS = {
     'video',
     'grid',
     'exclamation-triangle',
+    'group',
     'magnifying-glass-plus',
 }
 

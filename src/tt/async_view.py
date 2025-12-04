@@ -70,6 +70,7 @@ class ModalView( View ):
         return self.modal_response( request )
     
     def modal_response( self, request, context = None, template_name = None, status = 200 ):
+        
         if context is None:
             context = dict()
         if template_name is None:
@@ -83,7 +84,7 @@ class ModalView( View ):
             )
             return modal_response
 
-        context['initial_modal_template_name'] = self.get_template_name()
+        context['initial_modal_template_name'] = template_name
         template_name = self.DEFAULT_PAGE_TEMPLATE_NAME
         return render( request,
                        template_name,

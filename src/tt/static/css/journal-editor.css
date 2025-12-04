@@ -131,10 +131,15 @@
 }
 
 .journal-reference-image-placeholder.drop-zone-active {
-  background-color: rgba(0, 123, 255, 0.1) !important;
-  outline: 2px dashed var(--primary-color, #007bff);
-  outline-offset: 4px;
+  background-color: var(--status-hover-color) !important;
+  border: 2px dashed var(--primary-color) !important;
 }
+.journal-reference-image-preview.drop-zone-active {
+  padding: 4px;
+  border: 2px dashed var(--primary-color, #007bff);
+  box-sizing: border-box;
+}
+
 
 .journal-reference-drop-hint {
   font-size: 0.875rem;
@@ -147,11 +152,6 @@
   height: 100%;
   position: relative;
   cursor: pointer;
-}
-
-.journal-reference-image-preview.drop-zone-active {
-  outline: 3px dashed var(--primary-color, #007bff);
-  outline-offset: 4px;
 }
 
 .journal-reference-image-thumbnail {

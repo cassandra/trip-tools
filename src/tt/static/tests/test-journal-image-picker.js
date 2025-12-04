@@ -51,7 +51,7 @@
       assert.ok(picker.editor, 'Editor is stored');
       assert.ok(picker.selectedImages instanceof Set, 'selectedImages is a Set');
       assert.equal(picker.selectedImages.size, 0, 'No images selected initially');
-      assert.equal(picker.filterScope, 'unused', 'Default filter is unused');
+      assert.equal(picker.filterScope, TtConst.IMAGE_PICKER_SCOPE_UNUSED, 'Default filter is unused');
     });
 
     QUnit.test('constructor initializes badge manager', function(assert) {
@@ -192,7 +192,7 @@
     });
 
     QUnit.test('applyFilter "all" shows all images', function(assert) {
-      picker.applyFilter('all');
+      picker.applyFilter(TtConst.IMAGE_PICKER_SCOPE_ALL);
 
       $cards.each(function() {
         assert.ok($(this).is(':visible'), 'Card is visible');
@@ -200,7 +200,7 @@
     });
 
     QUnit.test('applyFilter "unused" hides used images', function(assert) {
-      picker.applyFilter('unused');
+      picker.applyFilter(TtConst.IMAGE_PICKER_SCOPE_UNUSED);
 
       assert.notOk($cards.eq(0).is(':visible'), 'used-1 hidden');
       assert.notOk($cards.eq(1).is(':visible'), 'used-2 hidden');
@@ -209,7 +209,7 @@
     });
 
     QUnit.test('applyFilter "used" hides unused images', function(assert) {
-      picker.applyFilter('used');
+      picker.applyFilter(TtConst.IMAGE_PICKER_SCOPE_USED);
 
       assert.ok($cards.eq(0).is(':visible'), 'used-1 visible');
       assert.ok($cards.eq(1).is(':visible'), 'used-2 visible');
@@ -218,13 +218,13 @@
     });
 
     QUnit.test('applyFilter updates filterScope', function(assert) {
-      assert.equal(picker.filterScope, 'unused', 'Initial filter');
+      assert.equal(picker.filterScope, TtConst.IMAGE_PICKER_SCOPE_UNUSED, 'Initial filter');
 
-      picker.applyFilter('all');
-      assert.equal(picker.filterScope, 'all', 'Filter updated to all');
+      picker.applyFilter(TtConst.IMAGE_PICKER_SCOPE_ALL);
+      assert.equal(picker.filterScope, TtConst.IMAGE_PICKER_SCOPE_ALL, 'Filter updated to all');
 
-      picker.applyFilter('used');
-      assert.equal(picker.filterScope, 'used', 'Filter updated to used');
+      picker.applyFilter(TtConst.IMAGE_PICKER_SCOPE_USED);
+      assert.equal(picker.filterScope, TtConst.IMAGE_PICKER_SCOPE_USED, 'Filter updated to used');
     });
   });
 
