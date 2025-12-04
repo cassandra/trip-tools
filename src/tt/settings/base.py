@@ -264,6 +264,7 @@ PIPELINE = {
         'travelog_css_head': {
             'source_filenames': (
                 'bootstrap/css/bootstrap.css',
+                'css/icons.css',
                 'css/travelog.css',
                 'css/journal.css',
             ),

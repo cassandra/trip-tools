@@ -7,8 +7,10 @@
 <header class="journal-header">
   {% if is_multi_page %}
   {% include "travelog/components/travelog_header_nav.html" with show_toc=True show_image_gallery=True %}
-  {% else %}
+  {% elif travelog_page.is_draft %}
   {% include "travelog/components/travelog_header_nav.html" with show_toc=False show_image_gallery=True %}
+  {% else %}
+  {% include "travelog/components/travelog_header_nav.html" with show_user_page=True show_image_gallery=True %}
   {% endif %}
   <div class="text-center">
     <h1 class="journal-title">{{ content.title }}</h1>

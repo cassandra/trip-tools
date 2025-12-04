@@ -11,7 +11,7 @@ from tt.apps.journal.models import Journal
 from tt.apps.journal.enums import JournalVisibility
 from tt.apps.members.models import TripMember
 
-from .enums import ContentType
+from .enums import ContentType, TravelogPageType
 from .exceptions import PasswordRequiredException
 from .context import TravelogPageContext
 from .services import TravelogImageCacheService
@@ -21,7 +21,8 @@ class TravelogViewMixin:
 
     def get_travelog_page_context( self,
                                    request       : HttpRequest,
-                                   journal_uuid  : UUID ) -> TravelogPageContext:
+                                   journal_uuid  : UUID,
+                                   page_type     : TravelogPageType ) -> TravelogPageContext:
         """
         Parse request to determine content type and get authorized journal.
 
@@ -66,6 +67,7 @@ class TravelogViewMixin:
         return TravelogPageContext(
             journal = journal,
             content_type = content_type,
+            page_type = page_type,
             version_number = version_number
         )
 

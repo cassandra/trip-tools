@@ -1,5 +1,7 @@
 from django import forms
 
+from tt.environment.constants import TtConst
+
 
 class TravelogPasswordForm(forms.Form):
     """
@@ -8,7 +10,7 @@ class TravelogPasswordForm(forms.Form):
 
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
+            'class': f'form-control {TtConst.ATTR_SECRET_INPUT_CLASS}',
             'placeholder': 'Enter password',
             'autofocus': True,
         }),

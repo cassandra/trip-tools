@@ -120,8 +120,8 @@ class IconAccessibilityTests(TestCase):
         result = icon('plus', aria_label='Add item')
 
         # Attributes are HTML-encoded in output
-        self.assertIn('aria-label=&quot;Add item&quot;', result)
-        self.assertIn('role=&quot;img&quot;', result)
+        self.assertIn('aria-label="Add item"', result)
+        self.assertIn('role="img"', result)
         self.assertNotIn('aria-hidden', result)
 
     def test_icon_without_aria_label_is_decorative(self):
@@ -129,16 +129,16 @@ class IconAccessibilityTests(TestCase):
         result = icon('plus')
 
         # Attributes are HTML-encoded in output
-        self.assertIn('aria-hidden=&quot;true&quot;', result)
+        self.assertIn('aria-hidden="true"', result)
         self.assertNotIn('aria-label', result)
-        self.assertNotIn('role=&quot;img&quot;', result)
+        self.assertNotIn('role="img"', result)
 
     def test_icon_with_title_attribute(self):
         """Icon with title gets title attribute - tooltip support."""
         result = icon('plus', title='Add new item')
 
         # Attributes are HTML-encoded in output
-        self.assertIn('title=&quot;Add new item&quot;', result)
+        self.assertIn('title="Add new item"', result)
 
     def test_icon_without_title_has_no_title_attr(self):
         """Icon without title has no title attribute - clean output."""
@@ -151,9 +151,9 @@ class IconAccessibilityTests(TestCase):
         result = icon('plus', aria_label='Add item', title='Click to add new item')
 
         # Attributes are HTML-encoded in output
-        self.assertIn('aria-label=&quot;Add item&quot;', result)
-        self.assertIn('title=&quot;Click to add new item&quot;', result)
-        self.assertIn('role=&quot;img&quot;', result)
+        self.assertIn('aria-label="Add item"', result)
+        self.assertIn('title="Click to add new item"', result)
+        self.assertIn('role="img"', result)
 
 
 class IconCssClassTests(TestCase):

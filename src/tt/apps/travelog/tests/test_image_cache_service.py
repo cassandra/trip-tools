@@ -15,7 +15,7 @@ from tt.apps.journal.models import Journal, JournalEntry
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 from tt.apps.journal.enums import JournalVisibility
 
-from ..enums import ContentType
+from ..enums import ContentType, TravelogPageType
 from ..services import TravelogImageCacheService, PublishingService
 from ..context import TravelogPageContext
 from ..schemas import TravelogImageMetadata
@@ -333,6 +333,7 @@ class TestTravelogImageCacheService(TestCase):
         context = TravelogPageContext(
             journal=self.journal,
             content_type=ContentType.DRAFT,
+            page_type=TravelogPageType.TOC,
             version_number=None
         )
 
@@ -365,6 +366,7 @@ class TestTravelogImageCacheService(TestCase):
         context = TravelogPageContext(
             journal=self.journal,
             content_type=ContentType.DRAFT,
+            page_type=TravelogPageType.TOC,
             version_number=None
         )
 
@@ -392,6 +394,7 @@ class TestTravelogImageCacheService(TestCase):
         context = TravelogPageContext(
             journal=self.journal,
             content_type=ContentType.DRAFT,
+            page_type=TravelogPageType.TOC,
             version_number=None
         )
 
@@ -996,7 +999,8 @@ class TestTravelogImageCacheRedisSecurity(TestCase):
 
         context = TravelogPageContext(
             journal=self.journal,
-            content_type=ContentType.DRAFT
+            content_type=ContentType.DRAFT,
+            page_type=TravelogPageType.TOC,
         )
 
         # Mock Redis to raise exception

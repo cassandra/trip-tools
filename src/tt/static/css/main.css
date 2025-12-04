@@ -1101,6 +1101,11 @@ body {
     padding: 0.35em 0.65em;
 }
 
+.tt-page-gradient {
+  background: linear-gradient(135deg, #f0f7f7 0%, #fef5f3 100%);
+  min-height: 100vh;
+}
+
 /* Page Explanation - Styling for vision/coming-soon feature descriptions */
 .tt-page-explanation {
     background: linear-gradient(135deg, var(--info-bg-light) 0%, #f0f7f7 100%);
