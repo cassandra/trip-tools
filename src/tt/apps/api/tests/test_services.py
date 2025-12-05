@@ -10,7 +10,7 @@ Focuses on high-value testing of:
 import hashlib
 import logging
 import secrets
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase

@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.views.generic import View
 
 from tt.async_view import ModalView
-import tt.apps.common.datetimeproxyas datetimeproxy
+import tt.apps.common.datetimeproxy as datetimeproxy
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage, TripPermissionLevel
 from tt.apps.trips.helpers import TripHelpers
@@ -254,7 +254,6 @@ class MemberAcceptInvitationView( View ):
     """Accept invitation link for existing verified users."""
 
     def get(self, request, trip_uuid: UUID, email: str, token: str, *args, **kwargs) -> HttpResponse:
-        from django.utils import timezone
 
         trip = get_object_or_404( Trip, uuid = trip_uuid )
 
@@ -325,7 +324,6 @@ class MemberSignupAndAcceptView( View ):
     """Signup and accept invitation link for new/unverified users."""
 
     def get(self, request, trip_uuid: UUID, email: str, token: str, *args, **kwargs) -> HttpResponse:
-        from django.utils import timezone
 
         trip = get_object_or_404( Trip, uuid = trip_uuid )
 
