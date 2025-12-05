@@ -218,6 +218,9 @@
       include_in_publish: snapshot.includeInPublish
     };
 
+    // Suppress the loading interstitial for background autosave
+    $.ajaxSuppressLoader = true;
+
     $.ajax({
       url: this.autosaveUrl,
       type: 'POST',
@@ -295,6 +298,7 @@
         }
       }.bind(this),
       complete: function() {
+        $.ajaxSuppressLoader = false;
         this.isSaving = false;
       }.bind(this)
     });
