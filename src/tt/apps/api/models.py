@@ -2,7 +2,8 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
+
+from tt.apps.common import datetimeproxy
 
 
 class APIToken(models.Model):
@@ -55,7 +56,7 @@ class APIToken(models.Model):
 
     def record_usage(self) -> None:
         """Update the last_used_at timestamp, throttled to avoid excessive writes."""
-        now = timezone.now()
+        now = datetimeproxy.now()
         if ( self.last_used_at is None
              or (( now - self.last_used_at ) > self.USAGE_UPDATE_INTERVAL )):
             self.last_used_at = now

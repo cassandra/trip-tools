@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from .models import APIToken
 
+
 @dataclass
 class APITokenGenerationData:
     """
