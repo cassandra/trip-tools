@@ -193,12 +193,20 @@ class SigninMagicLinkView( View ):
         return HttpResponseRedirect( url )
 
 
-class UserSignoutView(View):
+class UserSignoutView(LoginRequiredMixin, ModalView):
+    """Signout with confirmation modal on GET, actual signout on POST."""
+
+    def get_template_name(self) -> str:
+        return 'user/modals/signout.html'
 
     def get(self, request, *args, **kwargs):
+        return self.modal_response(request, context={})
+
+    def post(self, request, *args, **kwargs):
         from django.contrib.auth import logout
         logout(request)
-        return HttpResponseRedirect( reverse('user_signin') )
+        redirect_url = reverse('user_signin')
+        return self.redirect_response(request, redirect_url)
 
 
 class AccountHomeView(LoginRequiredMixin, View):

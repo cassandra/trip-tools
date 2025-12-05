@@ -2,7 +2,6 @@ from datetime import datetime
 from enum import Enum
 import re
 
-from django.conf import settings
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
@@ -39,9 +38,9 @@ class MagicCodeGenerator:
     MAGIC_CODE = 'magic_code'
     MAGIC_CODE_TIMESTAMP = 'magic_code_timestamp'
 
-    MAGIC_CODE_TIMEOUT_SECS = settings.PASSWORD_RESET_TIMEOUT
+    MAGIC_CODE_TIMEOUT_SECS = 15 * 60  # 15 minutes
     MAGIC_CODE_CHARS = 'abcdefhkpqrstwxy'
-    MAGIC_CODE_LENGTH = 6
+    MAGIC_CODE_LENGTH = 8
     
     BASE_DATETIME = timezone.make_aware( datetime(2001, 1, 1) )
     

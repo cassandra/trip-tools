@@ -7,6 +7,7 @@ from django.urls import reverse
 from tt.apps.common.singleton import Singleton
 from tt.apps.notify.email_sender import EmailData, EmailSender
 
+from .magic_code_generator import MagicCodeGenerator
 from .schemas import UserAuthenticationData
 
 logger = logging.getLogger(__name__)
@@ -32,9 +33,18 @@ class SigninManager( Singleton ):
                                 'email': user_auth_data.email_address } )
         )
 
+        # Format magic code for display: uppercase with hyphen separator (e.g., "ABCD-EFGH")
+        # The hyphen is stripped during validation, so it's purely visual
+        magic_code = user_auth_data.magic_code
+        midpoint = MagicCodeGenerator.MAGIC_CODE_LENGTH // 2
+        magic_code_display = f'{magic_code[:midpoint]}-{magic_code[midpoint:]}'.upper()
+        magic_code_lifetime_minutes = MagicCodeGenerator.MAGIC_CODE_TIMEOUT_SECS // 60
+
         email_template_context = {
             'page_url': page_url,
-            'magic_code': user_auth_data.magic_code,
+            'magic_code': magic_code,
+            'magic_code_display': magic_code_display,
+            'magic_code_lifetime_minutes': magic_code_lifetime_minutes,
         }
         email_sender_data = EmailData(
             request = request,

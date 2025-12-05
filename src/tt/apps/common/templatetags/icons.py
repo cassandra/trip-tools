@@ -40,6 +40,7 @@ AVAILABLE_ICONS = {
     'code',
     'copy',
     'document',
+    'door-exit',
     'dollar-sign',
     'trash',
     'circle-slash',
@@ -130,6 +131,9 @@ ICON_ALIASES = {
     'collection': 'document',
     'path': 'star',
     'play': 'triangle-right',
+    'exit': 'door-exit',
+    'signout': 'door-exit',
+    'logout': 'door-exit',
 }
 
 
