@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash, Read, Write, TodoWrite, Grep, Glob
+allowed-tools: Bash, Read, Write, TodoWrite, Grep, Glob, AskUserQuestion
 description: Design planning and HTML mockup creation for GitHub issues
 model: claude-sonnet-4-20250514
 argument-hint: [issue-number]
@@ -9,7 +9,9 @@ Design planning and HTML mockup creation for GitHub issue #$1:
 
 ## Design Phase Process
 
-Execute design-focused work session for planning and mockup creation:
+This command creates an HTML mockup and STOPS for review. Documentation is created only after explicit mockup approval.
+
+### Phase 1: Research and Mockup (this session)
 
 1. **Use TodoWrite to plan design phases** - Track design workflow steps
    - Read `docs/CLAUDE.md` for AI-specific guidance and development philosophy
@@ -50,14 +52,18 @@ Execute design-focused work session for planning and mockup creation:
    - Make mockup interactive to demonstrate user flows
    - Ensure mockup works across different screen sizes
 
-7. **Iterate on mockup design** - Refine before moving to documentation:
-   - **MUST** Stop for review and iterate until finalize mockup before proceeding to interaction docs
-   - Test mockup functionality and user experience
-   - Validate against design requirements
-   - Ensure consistency with existing design patterns
-   - Get feedback and iterate as needed
+7. **STOP AND PRESENT MOCKUP FOR REVIEW**:
+   - Tell the user: "HTML mockup created at `data/design/issue-$1/mockup.html`"
+   - Summarize key design choices made in the mockup
+   - Ask user to review the mockup in their browser
+   - **DO NOT proceed to documentation until user explicitly approves**
+   - Wait for user feedback - they may request changes or approve
 
-8. **Create interaction documentation** - **ONLY AFTER** mockup is finalized:
+### Phase 2: Documentation (only after mockup approval)
+
+Only proceed with these steps when user explicitly confirms mockup is finalized:
+
+8. **Create interaction documentation** - After mockup approval:
    - Document in `data/design/issue-$1/interaction-patterns.md`
    - Specify user interaction flows and behaviors
    - Define component states and transitions
@@ -98,8 +104,8 @@ Execute design-focused work session for planning and mockup creation:
 - Ensure consistency with existing design system
 
 **Design Target:** GitHub issue #$1
-**Output:** HTML mockup + interaction documentation + design summary
+**Output:** HTML mockup (Phase 1) → interaction documentation + design summary (Phase 2)
 
-**Note:** This is a planning and design task that does not include implementation. The deliverables will guide the separate implementation phase.
+**IMPORTANT:** This command stops after creating the mockup. Documentation is only created after explicit user approval of the mockup design.
 
-Begin design planning and mockup creation now.
+Begin Phase 1: Research and mockup creation now.

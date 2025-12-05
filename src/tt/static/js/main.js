@@ -151,6 +151,15 @@
             return _togglePasswordVisibility(button);
         },
 
+        /**
+         * Copy text to clipboard and update button to show success feedback.
+         * @param {HTMLElement} button - The button element that was clicked
+         * @param {string} text - The text to copy to clipboard
+         */
+        copyToClipboard: function(button, text) {
+            return _copyToClipboard(button, text);
+        },
+
     };
 
     window.Tt = Tt;
@@ -336,6 +345,33 @@
 
         // Restore focus to the input field
         $input.focus();
+    }
+
+    /**
+     * Copy text to clipboard and update button to show success feedback.
+     * Uses the modern Clipboard API with fallback behavior.
+     */
+    function _copyToClipboard(button, text) {
+        const $button = $(button);
+        const $copyIcon = $button.find('.copy-icon');
+        const $checkIcon = $button.find('.copy-check-icon');
+        const originalTitle = $button.attr('title');
+
+        navigator.clipboard.writeText(text).then(function() {
+            // Success - show check icon briefly
+            $copyIcon.hide();
+            $checkIcon.show();
+            $button.attr('title', 'Copied!');
+
+            // Revert after 2 seconds
+            setTimeout(function() {
+                $checkIcon.hide();
+                $copyIcon.show();
+                $button.attr('title', originalTitle);
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Failed to copy to clipboard:', err);
+        });
     }
 
 })();

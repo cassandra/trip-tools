@@ -22,6 +22,18 @@ urlpatterns = [
              name='user_signout'),
 
     re_path( r'^account$',
-             views.AccountView.as_view(),
-             name='user_account'),
+             views.AccountHomeView.as_view(),
+             name='user_account_home'),
+
+    re_path( r'^api-keys$',
+             views.APIKeyManagementView.as_view(),
+             name='user_api_keys'),
+
+    re_path( r'^api-keys/create$',
+             views.APIKeyCreateModalView.as_view(),
+             name='user_api_key_create'),
+
+    re_path( r'^api-keys/(?P<api_key_id>\d+)/delete$',
+             views.APIKeyDeleteModalView.as_view(),
+             name='user_api_key_delete'),
 ]

@@ -17,3 +17,18 @@ class SigninMagicCodeForm(forms.Form):
                                             'placeholder': 'access code',
                                             'width': str(2 * MagicCodeGenerator.MAGIC_CODE_LENGTH) } ),
         required = True )
+
+
+class APIKeyCreateForm(forms.Form):
+
+    name = forms.CharField(
+        label = 'Name',
+        max_length = 100,
+        widget = forms.TextInput( attrs = {
+            'autofocus': 'autofocus',
+            'placeholder': 'e.g., Mobile App, Chrome Extension',
+            'class': 'form-control',
+        }),
+        required = True,
+        help_text = 'Choose a descriptive name to help you identify this key later.',
+    )

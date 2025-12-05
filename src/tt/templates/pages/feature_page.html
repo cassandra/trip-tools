@@ -44,7 +44,7 @@
 <ul class="app-sidebar-nav app-sidebar-nav-bottom">
   {% block sidebar_footer_items %}
   <li>
-    <a href="{% url 'user_account' %}"
+    <a href="{% url 'user_account_home' %}"
        {% if feature_page.active_page.value == 'account' %}class="active" aria-current="page"{% endif %}>
       {% icon "user" size="sm" %}
       <span>Account</span>

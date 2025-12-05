@@ -1,15 +1,18 @@
-{% extends "pages/feature_page.html" %}
+{% extends "user/pages/account_subpage.html" %}
 
-{% block main_content %}
-<div class="container-fluid px-0">
-  <div class="d-flex justify-content-between m-4">
-    <h1 class="h2">Account Settings</h1>
-    <div>
-       <a class="btn btn-outline-primary" href="{% url 'user_signout' %}">Sign Out</a>
-    </div>
+{% block subpage_header %}
+<div class="d-flex justify-content-between w-100 m-4">
+  <h1 class="h2">Profile</h1>
+  <div>
+    <a class="btn btn-secondary" href="{% url 'user_signout' %}">Sign Out</a>
   </div>
+</div>
+{% endblock %}
+
+{% block subpage_content %}
+<div class="container-fluid">
   
-  <div class="row m-3">
+  <div class="row m-4">
     <div class="col-lg-8 col-md-10">
       <div class="card">
         <div class="card-header">

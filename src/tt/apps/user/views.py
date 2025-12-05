@@ -7,17 +7,18 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import BadRequest, ValidationError
 from django.core.validators import validate_email
 from django.http import HttpRequest, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import View
 
+from tt.apps.api.models import APIToken
+from tt.apps.api.services import APITokenService
 from tt.apps.notify.email_sender import EmailSender
-
-from tt.context import FeaturePageContext
-from tt.enums import FeaturePageType
+from tt.async_view import ModalView
 
 from . import forms
-from .enums import SigninErrorType
+from .context import AccountPageContext
+from .enums import AccountPageType, SigninErrorType
 from .magic_code_generator import MagicCodeStatus, MagicCodeGenerator
 from .signin_manager import SigninManager
 from .schemas import UserAuthenticationData
@@ -200,15 +201,93 @@ class UserSignoutView(View):
         return HttpResponseRedirect( reverse('user_signin') )
 
 
-class AccountView(LoginRequiredMixin, View):
+class AccountHomeView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
-        feature_page_context = FeaturePageContext(
-            active_page = FeaturePageType.ACCOUNT,
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.PROFILE,
         )
         context = {
-            'feature_page': feature_page_context,
+            'account_page': account_page_context,
             'user': request.user,
         }
-        return render(request, 'user/pages/account.html', context)
+        return render(request, 'user/pages/account_home.html', context)
+
+
+class APIKeyManagementView(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.API_KEYS,
+        )
+        api_keys = APIToken.objects.filter(user=request.user).order_by('-created_at')
+
+        # Check if we have a newly created key to display
+        new_api_key_str = request.session.pop('new_api_key_str', None)
+
+        context = {
+            'account_page': account_page_context,
+            'user': request.user,
+            'api_keys': api_keys,
+            'new_api_key_str': new_api_key_str,
+        }
+        return render(request, 'user/pages/api_keys.html', context)
+
+
+class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
+
+    def get_template_name(self) -> str:
+        return 'user/modals/api_key_create.html'
+
+    def get(self, request, *args, **kwargs):
+        form = forms.APIKeyCreateForm()
+        context = {
+            'form': form,
+        }
+        return self.modal_response(request, context=context)
+
+    def post(self, request, *args, **kwargs):
+        form = forms.APIKeyCreateForm(request.POST)
+
+        if form.is_valid():
+            api_token_data = APITokenService.create_token(
+                user = request.user,
+                api_token_name = form.cleaned_data['name'],
+            )
+            # Store the token string in session for one-time display
+            request.session['new_api_key_str'] = api_token_data.api_token_str
+            redirect_url = reverse('user_api_keys')
+            return self.redirect_response(request, redirect_url)
+
+        context = {
+            'form': form,
+        }
+        return self.modal_response(request, context=context, status=400)
+
+
+class APIKeyDeleteModalView(LoginRequiredMixin, ModalView):
+
+    def get_template_name(self) -> str:
+        return 'user/modals/api_key_delete.html'
+
+    def get(self, request, api_key_id: int, *args, **kwargs):
+        api_key = get_object_or_404(
+            APIToken,
+            id = api_key_id,
+            user = request.user,
+        )
+        context = {
+            'api_key': api_key,
+        }
+        return self.modal_response(request, context=context)
+
+    def post(self, request, api_key_id: int, *args, **kwargs):
+        api_key = get_object_or_404(
+            APIToken,
+            id = api_key_id,
+            user = request.user,
+        )
+        api_key.delete()
+        redirect_url = reverse('user_api_keys')
+        return self.redirect_response(request, redirect_url)
 

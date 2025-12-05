@@ -1,0 +1,122 @@
+{% extends "user/pages/account_subpage.html" %}
+{% load icons %}
+{% load humanize %}
+
+{% block subpage_header %}
+<h1 class="h2 m-4">API Keys</h1>
+{% endblock %}
+
+{% block subpage_content %}
+<div class="container-fluid">
+
+  {% if new_api_key_str %}
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="alert alert-success border border-success">
+        <h5 class="alert-heading">
+          {% icon "check-circle" size="sm" %} API Key Created Successfully
+        </h5>
+        <p class="mb-2">
+          <strong>Important:</strong> This is the only time you will see the full key. Copy it now and store it securely.
+        </p>
+        <div class="d-flex align-items-center">
+          <code class="flex-grow-1 p-2 bg-light rounded mr-2" style="word-break: break-all;">{{ new_api_key_str }}</code>
+          <button type="button"
+                  class="btn btn-outline-secondary"
+                  title="Copy to clipboard"
+                  onclick="Tt.copyToClipboard(this, '{{ new_api_key_str }}')">
+            <span class="copy-icon">{% icon "copy" size="sm" %}</span>
+            <span class="copy-check-icon" style="display: none;">{% icon "check" size="sm" %}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Your API Keys</h5>
+          {% if api_keys %}
+          <a class="btn btn-primary btn-sm" href="{% url 'user_api_key_create' %}" data-async="modal">
+            {% icon "plus" size="sm" %} Create New Key
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          {% if api_keys %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Prefix</th>
+                  <th>Created</th>
+                  <th>Last Used</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for api_key in api_keys %}
+                <tr>
+                  <td><strong>{{ api_key.name }}</strong></td>
+                  <td><code>tt_{{ api_key.lookup_key }}</code></td>
+                  <td>{{ api_key.created_at|date:"M d, Y" }}</td>
+                  <td>
+                    {% if api_key.last_used_at %}
+                      {{ api_key.last_used_at|naturaltime }}
+                      <span class="badge badge-success ml-1">Active</span>
+                    {% else %}
+                      Never
+                      <span class="badge badge-secondary ml-1">Unused</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'user_api_key_delete' api_key_id=api_key.id %}"
+                       class="btn btn-outline-danger btn-sm"
+                       data-async="modal">
+                      {% icon "trash" size="sm" %} Delete
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            {% icon "key" size="xxxl" css_class="text-muted mb-3" %}
+            <h5 class="text-muted">No API keys yet</h5>
+            <p class="text-muted mb-4">Create your first API key to start integrating with the Trip Tools API.</p>
+            <a href="{% url 'user_api_key_create' %}" class="btn btn-primary" data-async="modal">
+              {% icon "plus" size="sm" %} Create Your First Key
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Security Best Practices</h5>
+        </div>
+        <div class="card-body">
+          <ul class="small mb-0">
+            <li>API keys are only shown once at creation</li>
+            <li>Store keys securely and never share them</li>
+            <li>Delete unused keys to minimize security risks</li>
+            <li>Use descriptive names to identify key purposes</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
