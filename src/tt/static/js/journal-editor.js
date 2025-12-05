@@ -618,13 +618,13 @@
     switch (status) {
       case 'saved':
         text = 'Saved';
-        btnClass = 'btn-outline-success';
+        btnClass = 'btn-outline-primary';
         disabled = true;
         title = 'Content saved';
         break;
       case 'unsaved':
-        text = 'Save';
-        btnClass = 'btn-warning';
+        text = 'Unsaved';
+        btnClass = 'btn-secondary';
         disabled = false;
         title = 'Click to save';
         break;
@@ -643,7 +643,7 @@
     }
 
     this.$statusElement
-      .removeClass('btn-outline-success btn-warning btn-info btn-danger')
+      .removeClass('btn-outline-primary btn-info btn-danger btn-primary btn-secondary')
       .addClass(btnClass)
       .prop('disabled', disabled)
       .attr('title', title)
