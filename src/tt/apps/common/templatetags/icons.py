@@ -38,7 +38,9 @@ AVAILABLE_ICONS = {
     'close',
     'cloud',
     'code',
+    'copy',
     'document',
+    'door-exit',
     'dollar-sign',
     'trash',
     'circle-slash',
@@ -55,6 +57,7 @@ AVAILABLE_ICONS = {
     'indent',
     'info-circle',
     'italic',
+    'key',
     'keyboard',
     'layers',
     'lightbulb',
@@ -128,6 +131,9 @@ ICON_ALIASES = {
     'collection': 'document',
     'path': 'star',
     'play': 'triangle-right',
+    'exit': 'door-exit',
+    'signout': 'door-exit',
+    'logout': 'door-exit',
 }
 
 

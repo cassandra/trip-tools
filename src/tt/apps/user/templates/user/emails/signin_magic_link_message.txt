@@ -4,6 +4,7 @@
 
 Your access code is:
 
-    {{ magic_code }}
+    {{ magic_code_display }}
 
-Note that this code will expire after {{ magic_code_lifetime_minutes }} minutes. The code is not case sensitive.{% endblock %}
+This code will expire in {{ magic_code_lifetime_minutes }} minutes and is not case sensitive.
+{% endblock %}

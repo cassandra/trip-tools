@@ -7,17 +7,18 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import BadRequest, ValidationError
 from django.core.validators import validate_email
 from django.http import HttpRequest, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import View
 
+from tt.apps.api.models import APIToken
+from tt.apps.api.services import APITokenService
 from tt.apps.notify.email_sender import EmailSender
-
-from tt.context import FeaturePageContext
-from tt.enums import FeaturePageType
+from tt.async_view import ModalView
 
 from . import forms
-from .enums import SigninErrorType
+from .context import AccountPageContext
+from .enums import AccountPageType, SigninErrorType
 from .magic_code_generator import MagicCodeStatus, MagicCodeGenerator
 from .signin_manager import SigninManager
 from .schemas import UserAuthenticationData
@@ -192,23 +193,134 @@ class SigninMagicLinkView( View ):
         return HttpResponseRedirect( url )
 
 
-class UserSignoutView(View):
+class UserSignoutView(LoginRequiredMixin, ModalView):
+    """Signout with confirmation modal on GET, actual signout on POST."""
+
+    def get_template_name(self) -> str:
+        return 'user/modals/signout.html'
 
     def get(self, request, *args, **kwargs):
+        return self.modal_response(request, context={})
+
+    def post(self, request, *args, **kwargs):
         from django.contrib.auth import logout
         logout(request)
-        return HttpResponseRedirect( reverse('user_signin') )
+        redirect_url = reverse('user_signin')
+        return self.redirect_response(request, redirect_url)
 
 
-class AccountView(LoginRequiredMixin, View):
+class AccountHomeView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
-        feature_page_context = FeaturePageContext(
-            active_page = FeaturePageType.ACCOUNT,
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.PROFILE,
+        )
+        form = forms.ProfileEditForm(initial={
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+        })
+        profile_updated = request.GET.get('updated') == '1'
+        context = {
+            'account_page': account_page_context,
+            'user': request.user,
+            'form': form,
+            'profile_updated': profile_updated,
+        }
+        return render(request, 'user/pages/account_home.html', context)
+
+    def post(self, request, *args, **kwargs):
+        form = forms.ProfileEditForm(request.POST)
+
+        if form.is_valid():
+            request.user.first_name = form.cleaned_data['first_name']
+            request.user.last_name = form.cleaned_data['last_name']
+            request.user.save()
+            return HttpResponseRedirect(reverse('user_account_home') + '?updated=1')
+
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.PROFILE,
         )
         context = {
-            'feature_page': feature_page_context,
+            'account_page': account_page_context,
             'user': request.user,
+            'form': form,
         }
-        return render(request, 'user/pages/account.html', context)
+        return render(request, 'user/pages/account_home.html', context)
+
+
+class APIKeyManagementView(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.API_KEYS,
+        )
+        api_keys = APIToken.objects.filter( user = request.user ).order_by('-created_at')
+        context = {
+            'account_page': account_page_context,
+            'user': request.user,
+            'api_keys': api_keys,
+        }
+        return render(request, 'user/pages/api_keys.html', context)
+
+
+class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
+
+    def get_template_name(self) -> str:
+        return 'user/modals/api_key_create.html'
+
+    def get(self, request, *args, **kwargs):
+        form = forms.APIKeyCreateForm()
+        context = {
+            'form': form,
+        }
+        return self.modal_response(request, context=context)
+
+    def post(self, request, *args, **kwargs):
+        form = forms.APIKeyCreateForm(request.POST)
+
+        if form.is_valid():
+            api_token_data = APITokenService.create_token(
+                user = request.user,
+                api_token_name = form.cleaned_data['name'],
+            )
+            context = {
+                'new_api_key_str': api_token_data.api_token_str,
+            }
+            return self.modal_response(
+                request,
+                context = context,
+                template_name = 'user/modals/api_key_created.html',
+            )
+
+        context = {
+            'form': form,
+        }
+        return self.modal_response(request, context=context, status=400)
+
+
+class APIKeyDeleteModalView(LoginRequiredMixin, ModalView):
+
+    def get_template_name(self) -> str:
+        return 'user/modals/api_key_delete.html'
+
+    def get(self, request, api_key_id: int, *args, **kwargs):
+        api_key = get_object_or_404(
+            APIToken,
+            id = api_key_id,
+            user = request.user,
+        )
+        context = {
+            'api_key': api_key,
+        }
+        return self.modal_response(request, context=context)
+
+    def post(self, request, api_key_id: int, *args, **kwargs):
+        api_key = get_object_or_404(
+            APIToken,
+            id = api_key_id,
+            user = request.user,
+        )
+        api_key.delete()
+        redirect_url = reverse('user_api_keys')
+        return self.redirect_response( request, redirect_url )
 

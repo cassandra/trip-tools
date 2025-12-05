@@ -1,7 +1,8 @@
 {% load static %}
 <div id="{% block modal_dialog_id %}{% endblock %}"
      class="modal-dialog tt-modal {% block modal_dialog_class %}{% endblock %}"
-     style="{% block modal_dialog_style %}{% endblock %}">
+     style="{% block modal_dialog_style %}{% endblock %}"
+     {% block modal_dialog_attrs %}{% endblock %}>
   <div class="modal-content">
     <div class="modal-title">
       <div class="row {% block header_class %}bg-primary{% endblock %} m-0 py-2">
