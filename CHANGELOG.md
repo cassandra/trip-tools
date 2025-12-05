@@ -4,6 +4,7 @@
 
 _High-level view of the applications change history.  See releases and commits for more fine-grained history._
 
+- v0.2.4 : Enhanced image inspector with full-sized image viewing, improved journal editing drag-and-drop, and added API framework foundation
 - v0.2.3 : Fixed password toggle styling and functionality, improved prompt page layouts, and added production backup system
 - v0.2.2 : Enhanced UI with improved icons, future feature dialogs, content image thumbnail command, journal entry drag-drop fixes, and healthcheck improvements
 - v0.2.1 : Bug fixes and improvements including better image handling, enhanced editor features, improved styling, and admin interface security enhancements
