@@ -7,6 +7,16 @@ from .enums import JournalVisibility
 from .models import Journal, JournalEntry
 
 
+def _truncate_timezone_label(tz, max_length=24):
+    """Truncate timezone display label with ellipsis if too long."""
+    if len(tz) <= max_length:
+        return tz
+    return tz[:max_length - 1] + '\u2026'
+
+
+TIMEZONE_CHOICES = [(tz, _truncate_timezone_label(tz)) for tz in TIMEZONE_NAME_LIST]
+
+
 class JournalForm(forms.ModelForm):
 
     timezone = forms.ChoiceField(
@@ -51,7 +61,7 @@ class JournalForm(forms.ModelForm):
 class JournalEntryForm(forms.ModelForm):
 
     timezone = forms.ChoiceField(
-        choices = [(tz, tz) for tz in TIMEZONE_NAME_LIST],
+        choices = TIMEZONE_CHOICES,
         widget = forms.Select(attrs={
             'class': 'form-control',
             'id': TtConst.JOURNAL_TIMEZONE_INPUT_ID,
