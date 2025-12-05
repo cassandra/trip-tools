@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 from rest_framework import authentication
 from rest_framework import exceptions
 
+from .messages import APIMessages as M
 from .services import APITokenService
 
 
@@ -65,10 +66,10 @@ class APITokenDRFAuthAdapter(authentication.BaseAuthentication):
         user = APITokenService.authenticate(api_token_str)
 
         if user is None:
-            raise exceptions.AuthenticationFailed('Invalid token.')
+            raise exceptions.AuthenticationFailed(M.INVALID_TOKEN)
 
         if not user.is_active:
-            raise exceptions.AuthenticationFailed('User inactive or deleted.')
+            raise exceptions.AuthenticationFailed(M.USER_INACTIVE)
 
         return (user, None)
 

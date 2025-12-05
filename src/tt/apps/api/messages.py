@@ -25,3 +25,14 @@ class APIMessages:
     @staticmethod
     def already_exists(resource: str, field: str) -> str:
         return f'{resource} with this {field} already exists'
+
+    # -------------------------------------------------------------------------
+    # Authentication messages
+    # -------------------------------------------------------------------------
+    INVALID_TOKEN = 'Invalid token.'
+    USER_INACTIVE = 'User inactive or deleted.'
+
+    # -------------------------------------------------------------------------
+    # Generic error messages
+    # -------------------------------------------------------------------------
+    BAD_REQUEST = 'Bad request'

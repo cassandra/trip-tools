@@ -35,8 +35,8 @@ class APITokenService:
         Format: "tt_{lookup_key}_{secret_key}"
         The lookup_key and secret_key are generated independently for security.
         """
-        lookup_key = secrets.token_urlsafe(6)[:8]  # 8 URL-safe chars for lookup
-        secret_key = secrets.token_urlsafe(30)      # 40 URL-safe chars for auth
+        lookup_key = secrets.token_urlsafe(6)[:8]
+        secret_key = secrets.token_urlsafe(30)
         api_token_str = f"{cls.APP_PREFIX}{lookup_key}_{secret_key}"
         return APITokenGenerationData(
             lookup_key = lookup_key,

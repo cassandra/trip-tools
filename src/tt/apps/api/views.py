@@ -8,7 +8,7 @@ from .constants import APIFields as F
 from .messages import APIMessages as M
 from .models import APIToken
 from .services import APITokenService
-from .utils import get_str
+from .utils import clean_str, get_str
 
 
 class TokenListView(APIView):
@@ -74,7 +74,7 @@ class TokenDetailView(APIView):
     def delete(self, request: Request, lookup_key: str) -> Response:
         """Removes the token (user can only delete their own tokens)."""
         try:
-            api_token = APIToken.objects.get( lookup_key = lookup_key, user = request.user )
+            api_token = APIToken.objects.get( lookup_key = clean_str(lookup_key), user = request.user )
         except APIToken.DoesNotExist:
             return Response(
                 { F.ERROR: M.not_found('Token') },

@@ -8,6 +8,15 @@ from typing import Optional
 from uuid import UUID
 
 
+def clean_str(value: str) -> str:
+    """
+    Strip whitespace from a string value.
+
+    Use for URL path parameters and other string inputs that need sanitizing.
+    """
+    return value.strip() if value else ''
+
+
 def get_str(request_data, key: str, default: str = '') -> str:
     """
     Get a string value from request data, stripped of leading/trailing whitespace.

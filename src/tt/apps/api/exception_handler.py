@@ -6,6 +6,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
+from .constants import APIFields as F
+from .messages import APIMessages as M
+
 
 def exception_handler(exc: Exception, context: dict) -> Optional[Response]:
     """
@@ -23,7 +26,7 @@ def exception_handler(exc: Exception, context: dict) -> Optional[Response]:
     # Handle Django's BadRequest
     if isinstance(exc, BadRequest):
         return Response(
-            {'error': str(exc) or 'Bad request'},
+            { F.ERROR: str(exc) or M.BAD_REQUEST },
             status=status.HTTP_400_BAD_REQUEST
         )
 
