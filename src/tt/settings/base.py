@@ -97,6 +97,8 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'anymail',
     'constance',
+    'rest_framework',
+    'corsheaders',
     'custom',
     'tt.environment',
     'tt.apps.common',
@@ -105,6 +107,7 @@ INSTALLED_APPS = [
     'tt.apps.config',
     'tt.apps.console',
     'tt.apps.notify',
+    'tt.apps.api',
 
     'tt.apps.geo',
     'tt.apps.routes',
@@ -127,6 +130,7 @@ MIDDLEWARE = [
     'csp.middleware.CSPMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -423,3 +427,28 @@ SUPPRESS_MONITORS = False
 
 # For testing UI error display of the various attribute editing form errors.
 DEBUG_INJECT_ATTRIBUTE_FORM_ERRORS = False
+
+
+# ====================
+# CORS Settings for Browser Extension Support
+
+CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^chrome-extension://.*$",
+    r"^moz-extension://.*$",
+]
+
+
+# ====================
+# Django REST Framework Settings
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'tt.apps.api.authentication.APITokenDRFAuthAdapter',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'EXCEPTION_HANDLER': 'tt.apps.api.exception_handler.exception_handler',
+}

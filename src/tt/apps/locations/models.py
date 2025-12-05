@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 
@@ -84,6 +86,11 @@ class Location( GeoPointModelMixin, models.Model ):
     """
     objects = managers.LocationManager()
 
+    uuid = models.UUIDField(
+        default = uuid.uuid4,
+        editable = False,
+        unique = True,
+    )
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,
