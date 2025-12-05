@@ -215,9 +215,35 @@ class AccountHomeView(LoginRequiredMixin, View):
         account_page_context = AccountPageContext(
             active_page = AccountPageType.PROFILE,
         )
+        form = forms.ProfileEditForm(initial={
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+        })
+        profile_updated = request.GET.get('updated') == '1'
         context = {
             'account_page': account_page_context,
             'user': request.user,
+            'form': form,
+            'profile_updated': profile_updated,
+        }
+        return render(request, 'user/pages/account_home.html', context)
+
+    def post(self, request, *args, **kwargs):
+        form = forms.ProfileEditForm(request.POST)
+
+        if form.is_valid():
+            request.user.first_name = form.cleaned_data['first_name']
+            request.user.last_name = form.cleaned_data['last_name']
+            request.user.save()
+            return HttpResponseRedirect(reverse('user_account_home') + '?updated=1')
+
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.PROFILE,
+        )
+        context = {
+            'account_page': account_page_context,
+            'user': request.user,
+            'form': form,
         }
         return render(request, 'user/pages/account_home.html', context)
 
@@ -228,16 +254,11 @@ class APIKeyManagementView(LoginRequiredMixin, View):
         account_page_context = AccountPageContext(
             active_page = AccountPageType.API_KEYS,
         )
-        api_keys = APIToken.objects.filter(user=request.user).order_by('-created_at')
-
-        # Check if we have a newly created key to display
-        new_api_key_str = request.session.pop('new_api_key_str', None)
-
+        api_keys = APIToken.objects.filter( user = request.user ).order_by('-created_at')
         context = {
             'account_page': account_page_context,
             'user': request.user,
             'api_keys': api_keys,
-            'new_api_key_str': new_api_key_str,
         }
         return render(request, 'user/pages/api_keys.html', context)
 
@@ -262,10 +283,14 @@ class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
                 user = request.user,
                 api_token_name = form.cleaned_data['name'],
             )
-            # Store the token string in session for one-time display
-            request.session['new_api_key_str'] = api_token_data.api_token_str
-            redirect_url = reverse('user_api_keys')
-            return self.redirect_response(request, redirect_url)
+            context = {
+                'new_api_key_str': api_token_data.api_token_str,
+            }
+            return self.modal_response(
+                request,
+                context = context,
+                template_name = 'user/modals/api_key_created.html',
+            )
 
         context = {
             'form': form,
@@ -297,5 +322,5 @@ class APIKeyDeleteModalView(LoginRequiredMixin, ModalView):
         )
         api_key.delete()
         redirect_url = reverse('user_api_keys')
-        return self.redirect_response(request, redirect_url)
+        return self.redirect_response( request, redirect_url )
 

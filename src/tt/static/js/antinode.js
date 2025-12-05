@@ -886,7 +886,17 @@ function showModal( modalObj ) {
     if ( modalHideStartMs ) {
         deferredModalShowObj = modalObj;
     } else {
-        $(modalObj).modal("show");
+        // Check if modal content requests protection (no dismiss on backdrop click or Escape)
+        var protectedEl = $(modalObj).find('[data-modal-protected]').first();
+        var isProtected = protectedEl.length > 0 && protectedEl.data('modal-protected');
+        if (isProtected) {
+            $(modalObj).modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        } else {
+            $(modalObj).modal("show");
+        }
     }
 };
 

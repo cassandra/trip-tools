@@ -32,3 +32,26 @@ class APIKeyCreateForm(forms.Form):
         required = True,
         help_text = 'Choose a descriptive name to help you identify this key later.',
     )
+
+
+class ProfileEditForm(forms.Form):
+
+    first_name = forms.CharField(
+        label = 'First Name',
+        max_length = 150,
+        widget = forms.TextInput( attrs = {
+            'class': 'form-control',
+            'placeholder': 'First name',
+        }),
+        required = True,
+    )
+
+    last_name = forms.CharField(
+        label = 'Last Name',
+        max_length = 150,
+        widget = forms.TextInput( attrs = {
+            'class': 'form-control',
+            'placeholder': 'Last name',
+        }),
+        required = False,
+    )

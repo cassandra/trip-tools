@@ -9,31 +9,6 @@
 {% block subpage_content %}
 <div class="container-fluid">
 
-  {% if new_api_key_str %}
-  <div class="row m-4">
-    <div class="col-xl-10 col-12">
-      <div class="alert alert-success border border-success">
-        <h5 class="alert-heading">
-          {% icon "check-circle" size="sm" %} API Key Created Successfully
-        </h5>
-        <p class="mb-2">
-          <strong>Important:</strong> This is the only time you will see the full key. Copy it now and store it securely.
-        </p>
-        <div class="d-flex align-items-center">
-          <code class="flex-grow-1 p-2 bg-light rounded mr-2" style="word-break: break-all;">{{ new_api_key_str }}</code>
-          <button type="button"
-                  class="btn btn-outline-secondary"
-                  title="Copy to clipboard"
-                  onclick="Tt.copyToClipboard(this, '{{ new_api_key_str }}')">
-            <span class="copy-icon">{% icon "copy" size="sm" %}</span>
-            <span class="copy-check-icon" style="display: none;">{% icon "check" size="sm" %}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
   <div class="row m-4">
     <div class="col-xl-10 col-12">
       <div class="card">

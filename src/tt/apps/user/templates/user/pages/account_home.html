@@ -1,46 +1,70 @@
 {% extends "user/pages/account_subpage.html" %}
+{% load icons %}
 
 {% block subpage_header %}
-<div class="d-flex justify-content-between w-100 m-4">
-  <h1 class="h2">Profile</h1>
-  <div>
-    <a class="btn btn-secondary" href="{% url 'user_signout' %}" data-async="modal">Sign Out</a>
+<div class="d-flex justify-content-between align-items-center w-100">
+  <h1 class="h2 m-4">Profile</h1>
+  <div class="mr-4">
+    <a class="btn btn-secondary" href="{% url 'user_signout' %}" data-async="modal">
+      {% icon "exit" size="sm" %} Sign Out
+    </a>
   </div>
 </div>
 {% endblock %}
 
 {% block subpage_content %}
 <div class="container-fluid">
-  
+
+  {% if profile_updated %}
   <div class="row m-4">
-    <div class="col-lg-8 col-md-10">
+    <div class="col-xl-10 col-12">
+      <div class="alert alert-success border border-success">
+        {% icon "check-circle" size="sm" %} Profile updated successfully.
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
       <div class="card">
         <div class="card-header">
-          <h5 class="mb-0">Your Account</h5>
+          <h5 class="mb-0">Your Profile</h5>
         </div>
         <div class="card-body">
-          <dl class="row">
-            <dt class="col-sm-3">Email:</dt>
-            <dd class="col-sm-9">{{ user.email }}</dd>
-            
-            {% if user.first_name %}
-            <dt class="col-sm-3">First Name:</dt>
-            <dd class="col-sm-9">{{ user.first_name }}</dd>
-            {% endif %}
-            
-            {% if user.last_name %}
-            <dt class="col-sm-3">Last Name:</dt>
-            <dd class="col-sm-9">{{ user.last_name }}</dd>
-            {% endif %}
-            
-            <dt class="col-sm-3">Account Created:</dt>
-            <dd class="col-sm-9">{{ user.date_joined|date:"F d, Y" }}</dd>
-          </dl>
+          <form method="post" action="{% url 'user_account_home' %}">
+            {% csrf_token %}
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">Email</label>
+              <div class="col-sm-9 col-form-label">{{ user.email }}</div>
+            </div>
+            <div class="form-group row">
+              <label for="id_first_name" class="col-sm-3 col-form-label">First Name</label>
+              <div class="col-sm-9">
+                {{ form.first_name }}
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="id_last_name" class="col-sm-3 col-form-label">Last Name</label>
+              <div class="col-sm-9">
+                {{ form.last_name }}
+              </div>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">Member Since</label>
+              <div class="col-sm-9 col-form-label">{{ user.date_joined|date:'F d, Y' }}</div>
+            </div>
+            <div class="form-group row">
+              <div class="col-sm-9 offset-sm-3">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
-  
+
   {% include "components/future/accounts.html" %}
 </div>
 {% endblock %}
