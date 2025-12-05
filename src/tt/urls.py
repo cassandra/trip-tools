@@ -25,6 +25,8 @@ urlpatterns = [
     path( f'{settings.ADMIN_PATH_PREFIX}admin/', admin.site.urls),
     path( f'{settings.ADMIN_PATH_PREFIX}env/', include('tt.environment.urls' )),
 
+    path('api/', include('tt.apps.api.urls')),
+
     re_path( r'^$', views.HomeView.as_view(), name='home' ),
     re_path( r'^index.html$', views.HomeView.as_view(), name='home_index' ),
     re_path( r'^start$', views.StartView.as_view(), name='start' ),

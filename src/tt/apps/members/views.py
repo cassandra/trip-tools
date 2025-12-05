@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.views.generic import View
 
 from tt.async_view import ModalView
+import tt.apps.common.datetimeproxy as datetimeproxy
 from tt.apps.trips.context import TripPageContext
 from tt.apps.trips.enums import TripPage, TripPermissionLevel
 from tt.apps.trips.helpers import TripHelpers
@@ -253,7 +254,6 @@ class MemberAcceptInvitationView( View ):
     """Accept invitation link for existing verified users."""
 
     def get(self, request, trip_uuid: UUID, email: str, token: str, *args, **kwargs) -> HttpResponse:
-        from django.utils import timezone
 
         trip = get_object_or_404( Trip, uuid = trip_uuid )
 
@@ -311,7 +311,7 @@ class MemberAcceptInvitationView( View ):
             # Mark invitation as accepted (one-time use)
             try:
                 member = TripMember.objects.get( trip = trip, user = user )
-                member.invitation_accepted_datetime = timezone.now()
+                member.invitation_accepted_datetime = datetimeproxy.now()
                 member.save()
                 logger.debug( f'User {user.email} accepted invitation to trip {trip.pk}' )
             except TripMember.DoesNotExist:
@@ -324,7 +324,6 @@ class MemberSignupAndAcceptView( View ):
     """Signup and accept invitation link for new/unverified users."""
 
     def get(self, request, trip_uuid: UUID, email: str, token: str, *args, **kwargs) -> HttpResponse:
-        from django.utils import timezone
 
         trip = get_object_or_404( Trip, uuid = trip_uuid )
 
@@ -382,7 +381,7 @@ class MemberSignupAndAcceptView( View ):
             # Mark invitation as accepted (one-time use)
             try:
                 member = TripMember.objects.get( trip = trip, user = user )
-                member.invitation_accepted_datetime = timezone.now()
+                member.invitation_accepted_datetime = datetimeproxy.now()
                 member.save()
                 logger.debug( f'New user {user.email} signed up and accepted invitation to trip {trip.pk}' )
             except TripMember.DoesNotExist:
