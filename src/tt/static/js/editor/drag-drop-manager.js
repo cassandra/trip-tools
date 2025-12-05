@@ -632,28 +632,66 @@
 
   /**
    * Find the closest block element for reorder operation
+   * Uses midpoint-based logic to determine before/after insertion
    * @private
    */
   DragDropManager.prototype._findClosestBlockForReorder = function(e) {
     var mouseY = e.clientY;
     var $children = this.$editor.children(HTML_STRUCTURE.TEXT_BLOCK_SELECTOR + ', div.' + TtConst.JOURNAL_CONTENT_BLOCK_CLASS + ', h1, h2, h3, h4, h5, h6');
-    var closestElement = null;
-    var minDistance = Infinity;
+
+    if ($children.length === 0) {
+      return {
+        $insertTarget: this.$editor,
+        insertMode: 'append-editor'
+      };
+    }
+
+    // Find the block whose vertical range contains the mouse, or the closest one
+    var targetElement = null;
+    var insertAfter = false;
 
     $children.each(function() {
       var rect = this.getBoundingClientRect();
-      var distance = Math.abs(rect.top - mouseY);
 
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestElement = this;
+      // Check if mouse is within this block's vertical range
+      if (mouseY >= rect.top && mouseY <= rect.bottom) {
+        targetElement = this;
+        // Use midpoint to decide before/after
+        var midpoint = rect.top + (rect.height / 2);
+        insertAfter = mouseY > midpoint;
+        return false; // break
       }
     });
 
-    if (closestElement) {
+    // If not within any block, find the closest block edge
+    if (!targetElement) {
+      var minDistance = Infinity;
+
+      $children.each(function(index) {
+        var rect = this.getBoundingClientRect();
+
+        // Distance to top edge
+        var distToTop = Math.abs(rect.top - mouseY);
+        // Distance to bottom edge
+        var distToBottom = Math.abs(rect.bottom - mouseY);
+
+        if (distToTop < minDistance) {
+          minDistance = distToTop;
+          targetElement = this;
+          insertAfter = false; // Mouse is closer to top, insert before
+        }
+        if (distToBottom < minDistance) {
+          minDistance = distToBottom;
+          targetElement = this;
+          insertAfter = true; // Mouse is closer to bottom, insert after
+        }
+      });
+    }
+
+    if (targetElement) {
       return {
-        $insertTarget: $(closestElement),
-        insertMode: 'before-element'
+        $insertTarget: $(targetElement),
+        insertMode: insertAfter ? 'after-element' : 'before-element'
       };
     } else {
       return {
@@ -671,7 +709,9 @@
     var wrappersData = [];
     for (var i = 0; i < wrappersToMove.length; i++) {
       var $wrapper = wrappersToMove[i];
-      var oldLayout = $wrapper.data(TtConst.LAYOUT_DATA_ATTR);
+      // Use .attr() instead of .data() to read current DOM attribute value
+      // jQuery .data() caches values and may not reflect changes made via .attr()
+      var oldLayout = $wrapper.attr('data-' + TtConst.LAYOUT_DATA_ATTR);
       wrappersData.push({
         element: $wrapper.get(0),
         $wrapper: $wrapper,
@@ -691,7 +731,7 @@
       // First move - use original target logic
       if (insertMode === 'prepend-paragraph') {
         $insertTarget.prepend($wrapper);
-      } else if (insertMode === 'after-wrapper') {
+      } else if (insertMode === 'after-wrapper' || insertMode === 'after-element') {
         $insertTarget.after($wrapper);
       } else if (insertMode === 'before-element') {
         $insertTarget.before($wrapper);
