@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "Trip Tools",
+    "description": "Browser companion for Trip Tools trip planning.",
+    "version": "0.1.0",
+    "permissions": [
+        "storage",
+        "tabs",
+        "activeTab"
+    ],
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_icon": {
+            "16": "images/icon-16.png",
+            "48": "images/icon-48.png",
+            "128": "images/icon-128.png"
+        }
+    },
+    "icons": {
+        "16": "images/icon-16.png",
+        "48": "images/icon-48.png",
+        "128": "images/icon-128.png"
+    },
+    "background": {
+        "service_worker": "background/service-worker.js"
+    },
+    "options_page": "options/options.html"
+}

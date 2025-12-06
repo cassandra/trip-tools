@@ -1,0 +1,315 @@
+/*
+ * Trip Tools Chrome Extension - Popup Styles
+ */
+
+body {
+    width: 320px;
+    min-height: 400px;
+    margin: 0;
+    padding: 0;
+    font-family: var(--tt-font-family);
+    font-size: 14px;
+    color: var(--tt-black);
+    background-color: var(--tt-white);
+}
+
+.tt-popup-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--tt-primary-color);
+    color: var(--tt-on-primary-color);
+}
+
+.tt-popup-header.tt-dev-mode {
+    background-color: var(--tt-secondary-color);
+}
+
+.tt-popup-header img {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
+.tt-popup-header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.tt-popup-header .tt-version {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-left: 8px;
+    flex-grow: 1;
+}
+
+.tt-settings-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    margin-left: auto;
+    cursor: pointer;
+    color: var(--tt-on-primary-color);
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.tt-settings-btn:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tt-settings-btn:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+.tt-status-bar {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: var(--tt-primary-bg-light);
+    font-size: 12px;
+}
+
+.tt-status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.tt-status-indicator.tt-connected {
+    background-color: var(--tt-success-color);
+}
+
+.tt-status-indicator.tt-disconnected {
+    background-color: var(--tt-error-color);
+}
+
+.tt-popup-content {
+    padding: 12px;
+}
+
+.tt-maps-list {
+    max-height: 120px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+}
+
+.tt-maps-list-empty {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    padding: 8px 0;
+    font-size: 13px;
+}
+
+.tt-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.tt-toggle-label {
+    font-size: 13px;
+}
+
+.tt-toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 20px;
+}
+
+.tt-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tt-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--tt-muted-color);
+    transition: 0.3s;
+    border-radius: 20px;
+}
+
+.tt-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--tt-white);
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .tt-toggle-slider {
+    background-color: var(--tt-primary-color);
+}
+
+input:checked + .tt-toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.tt-debug-panel {
+    background-color: #f5f5f5;
+    border-top: 1px solid var(--tt-line-color);
+    font-size: 11px;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+}
+
+.tt-debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    user-select: none;
+}
+
+.tt-debug-header:hover {
+    background-color: #ddd;
+}
+
+.tt-debug-content {
+    padding: 8px 12px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.tt-debug-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.tt-debug-entry:last-child {
+    border-bottom: none;
+}
+
+.tt-debug-timestamp {
+    color: var(--tt-muted-color);
+    margin-right: 8px;
+}
+
+.tt-debug-level-error {
+    color: var(--tt-error-color);
+}
+
+.tt-debug-level-info {
+    color: var(--tt-primary-color);
+}
+
+.tt-debug-level-warn {
+    color: var(--tt-warning-color);
+}
+
+/* Quick Settings Slide-in Panel */
+.tt-quick-settings {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--tt-white);
+    transform: translateX(100%);
+    transition: transform 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.tt-quick-settings.tt-visible {
+    transform: translateX(0);
+}
+
+.tt-quick-settings.tt-hidden {
+    display: flex;
+    transform: translateX(100%);
+}
+
+.tt-quick-settings-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--tt-primary-color);
+    color: var(--tt-on-primary-color);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tt-dev-mode .tt-quick-settings-header,
+.tt-quick-settings-header.tt-dev-mode {
+    background-color: var(--tt-secondary-color);
+}
+
+.tt-back-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    margin-right: 12px;
+    cursor: pointer;
+    color: var(--tt-on-primary-color);
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.tt-back-btn:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tt-back-btn:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+.tt-quick-settings-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.tt-quick-settings-placeholder {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    text-align: center;
+    margin: 24px 0;
+}
+
+.tt-quick-settings-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--tt-line-color);
+    text-align: center;
+}
+
+.tt-all-options-link {
+    color: var(--tt-primary-color);
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.tt-all-options-link:hover {
+    text-decoration: underline;
+}
+
+/* Container needs relative positioning for absolute slide-in */
+#tt-popup-container {
+    position: relative;
+    overflow: hidden;
+}

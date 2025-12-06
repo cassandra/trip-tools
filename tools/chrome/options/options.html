@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trip Tools Options</title>
+    <link rel="stylesheet" href="../styles/shared.css">
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+    <div class="tt-options-container">
+        <!-- Header -->
+        <div class="tt-options-header">
+            <img src="../images/icon-48.png" alt="Trip Tools">
+            <h1>Trip Tools Options</h1>
+        </div>
+
+        <!-- Main Settings -->
+        <div class="tt-options-content">
+            <!-- Developer Mode Toggle -->
+            <div class="tt-section">
+                <div class="tt-toggle-row">
+                    <span class="tt-toggle-label">Developer Mode</span>
+                    <label class="tt-toggle-switch">
+                        <input type="checkbox" id="tt-options-developer-mode-toggle">
+                        <span class="tt-toggle-slider"></span>
+                    </label>
+                </div>
+                <p class="tt-options-hint">Enable developer tools and settings.</p>
+            </div>
+
+            <!-- Developer Settings Section (hidden by default) -->
+            <div class="tt-section tt-hidden" id="tt-options-developer-section">
+                <div class="tt-section-header">Developer Settings</div>
+
+                <!-- Server URL -->
+                <div class="tt-options-field">
+                    <label for="tt-options-server-url">Server URL</label>
+                    <input type="text" id="tt-options-server-url" class="tt-text-input">
+                    <p class="tt-options-hint">API server for Trip Tools backend.</p>
+                </div>
+
+                <!-- Debug Panel Toggle -->
+                <div class="tt-toggle-row">
+                    <span class="tt-toggle-label">Debug Panel</span>
+                    <label class="tt-toggle-switch">
+                        <input type="checkbox" id="tt-options-debug-panel-toggle">
+                        <span class="tt-toggle-slider"></span>
+                    </label>
+                </div>
+                <p class="tt-options-hint">Show debug panel in popup.</p>
+            </div>
+
+            <!-- Save Status -->
+            <div class="tt-options-status" id="tt-options-save-status"></div>
+        </div>
+    </div>
+
+    <script src="../shared/constants.js"></script>
+    <script src="../shared/storage.js"></script>
+    <script src="options.js"></script>
+</body>
+</html>

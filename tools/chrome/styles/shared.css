@@ -1,0 +1,105 @@
+/*
+ * Trip Tools Chrome Extension - Shared Styles
+ * Matches main application branding from src/tt/static/css/main.css
+ */
+
+:root {
+    --tt-white: #fdfdfd;
+    --tt-black: #020204;
+    --tt-primary-color: #177072;
+    --tt-on-primary-color: #ffffff;
+    --tt-primary-highlight-color: #115354;
+    --tt-secondary-color: #F45F36;
+    --tt-on-secondary-color: #ffffff;
+    --tt-secondary-highlight-color: #F8AD98;
+    --tt-success-color: #177219;
+    --tt-warning-color: #ECA500;
+    --tt-error-color: #721817;
+    --tt-muted-color: #7e7e81;
+    --tt-line-color: #cccccc;
+    --tt-primary-bg-light: #dffeff;
+    --tt-secondary-bg-light: #FAD4C8;
+    --tt-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                      'Helvetica Neue', Arial, sans-serif;
+}
+
+.tt-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--tt-font-family);
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    outline: none;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.tt-btn:focus {
+    outline: 2px solid var(--tt-primary-color);
+    outline-offset: 2px;
+}
+
+.tt-btn-primary {
+    background-color: var(--tt-primary-color);
+    color: var(--tt-on-primary-color);
+}
+
+.tt-btn-primary:hover {
+    background-color: var(--tt-primary-highlight-color);
+}
+
+.tt-btn-secondary {
+    background-color: var(--tt-secondary-color);
+    color: var(--tt-on-secondary-color);
+}
+
+.tt-btn-secondary:hover {
+    background-color: var(--tt-secondary-highlight-color);
+}
+
+.tt-btn-stub {
+    background-color: var(--tt-muted-color);
+    color: var(--tt-on-primary-color);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.tt-btn-stub:hover {
+    opacity: 0.7;
+}
+
+.tt-section {
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--tt-line-color);
+}
+
+.tt-section:last-child {
+    border-bottom: none;
+}
+
+.tt-section-header {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--tt-muted-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.tt-connected {
+    color: var(--tt-success-color);
+}
+
+.tt-disconnected {
+    color: var(--tt-error-color);
+}
+
+.tt-hidden {
+    display: none;
+}
