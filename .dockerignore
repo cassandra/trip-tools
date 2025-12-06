@@ -19,6 +19,7 @@ __pycache__
 /docs/
 /design/
 /src/venv/
+/tools/
 /.flake8
 
 /*.gz
