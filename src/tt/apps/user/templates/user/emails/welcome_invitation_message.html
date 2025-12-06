@@ -1,0 +1,18 @@
+{% extends "notify/emails/base_email_message.html" %}
+{% load common_tags %}
+{% block title %}Welcome to Trip Tools!{% endblock %}
+{% block content %}
+<p>Hi {{ user_first_name }},</p>
+<p>
+  {% if invited_by_name %}<strong>{{ invited_by_name }}</strong> has invited you to join Trip Tools - a platform for planning and documenting your travels.{% else %}You've been invited to join Trip Tools - a platform for planning and documenting your travels.{% endif %}
+</p>
+<p>
+  <a href="{{ signin_url }}" style="display: inline-block; padding: 10px 20px; background-color: #177072; color: white; text-decoration: none; border-radius: 5px;">
+    Sign In to Trip Tools
+  </a>
+</p>
+<p style="color: #666; font-size: 14px;">
+  If you have any questions, just reply to this email.
+</p>
+<p>Welcome aboard!</p>
+{% endblock %}

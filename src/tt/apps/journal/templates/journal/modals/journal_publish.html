@@ -54,10 +54,17 @@
         {% icon "book" size="sm" css_class="tt-icon-left text-muted" %}
         Pages to Publish
       </label>
-      <span class="text-muted">{{ total_entries }} pages</span>
+      <span class="text-muted">{{ included_entries }} pages</span>
     </div>
 
-    {% if not all_entries_included %}
+    {% if included_entries == 0 %}
+    <div class="alert alert-danger py-2 mb-2">
+      <small>
+        {% icon "alert-triangle" size="lg" css_class="tt-icon-left" %}
+        All pages are excluded from publishing.
+      </small>
+    </div>
+    {% elif not all_entries_included %}
       {# Warning when not all pages selected #}
       <div class="alert alert-warning py-2 mb-2">
         <small>

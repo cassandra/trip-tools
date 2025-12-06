@@ -992,16 +992,16 @@ function lastButtonClickHandler(event) {
     $(theForm).data('lastSubmitButtonValue', this.value);
 };
 
-function showLoadingIniterstitial() {
+function showLoadingInterstitial() {
     $('#antinode-loader').show();
 };
 
-function hideLoadingIniterstitial() {
+function hideLoadingInterstitial() {
     $('#antinode-loader').hide();
 };
 
 function synchronousSubmitHandler() {
-    $('#antinode-loader').show();
+    showLoadingInterstitial();
     $( this ).find( 'button[type="submit"]' ).prop('disabled', true);
 }
     
@@ -1061,11 +1061,11 @@ $.ajaxSuppressLoader = false;
 $(document)
         .ajaxStart(function () {
             if ( ! $.ajaxSuppressLoader ) {
-                $('#antinode-loader').show();
+                showLoadingInterstitial();
             }
         })
         .ajaxStop(function () {
-            $('#antinode-loader').hide();
+            hideLoadingInterstitial();
         });
     
 })();

@@ -37,7 +37,9 @@
       "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python -m pytest:*)",
       "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python src/manage.py test:*)",
       "Bash(python src/manage.py shell:*)",
-      "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python src/manage.py migrate_entry_content:*)"
+      "Bash(DJANGO_SETTINGS_MODULE=tt.settings.ci python src/manage.py migrate_entry_content:*)",
+      "WebFetch(domain:support.google.com)",
+      "WebFetch(domain:roamingtheamericas.com)"
     ],
     "deny": [],
     "ask": []

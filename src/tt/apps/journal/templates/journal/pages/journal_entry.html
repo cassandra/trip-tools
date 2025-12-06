@@ -19,7 +19,7 @@
       <!-- Compact Header: Two columns -->
       <div class="row mb-3 journal-form-header">
         <!-- Left column: Reference Image (hidden on small screens) -->
-        <div class="col-md-3 d-none d-md-block">
+        <div class="d-none d-md-block" style="width: 150px; height: 150px;">
           <div class="form-group">
             {% if trip_page.request_member.can_edit_trip %}
             {# Clickable wrapper for opening reference image picker modal #}
@@ -57,7 +57,7 @@
         </div>
 
         <!-- Right column: Title, Date, Timezone -->
-        <div class="col-12 col-md-9">
+        <div class="flex-grow-1">
           <div>
             <!-- Title (full width in left column) -->
             <div class="form-group form-inline mb-2">
@@ -93,7 +93,7 @@
             {% endif %}
           </div>
 
-          <div class="d-flex justify-content-between align-items-center mt-4">
+          <div class="d-flex justify-content-between align-items-center m-3">
             <div class="form-check ml-3">
               <input type="checkbox"
                      class="form-check-input"

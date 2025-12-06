@@ -775,10 +775,32 @@
       // Find any nested text-block inside this container
       $container.find('.' + HTML_STRUCTURE.TEXT_BLOCK_CLASS).each(function() {
         var $nestedTextBlock = $(this);
+        var tagName = $nestedTextBlock.prop('tagName').toLowerCase();
 
-        // Unwrap: replace the nested text-block with its contents
-        var $contents = $nestedTextBlock.contents();
-        $nestedTextBlock.replaceWith($contents);
+        if (tagName === 'p') {
+          // For paragraphs, just remove the text-block class (keep the <p> tag)
+          // This preserves multiple paragraphs inside blockquotes
+          $nestedTextBlock.removeClass(HTML_STRUCTURE.TEXT_BLOCK_CLASS);
+        } else if (tagName === 'div') {
+          // For divs, convert contents to paragraphs
+          var $contents = $nestedTextBlock.contents();
+          var $newContents = $();
+          $contents.each(function() {
+            if (this.nodeType === Node.TEXT_NODE) {
+              var text = this.textContent.trim();
+              if (text) {
+                $newContents = $newContents.add($('<p>').text(text));
+              }
+            } else if (this.nodeType === Node.ELEMENT_NODE) {
+              $newContents = $newContents.add($(this));
+            }
+          });
+          $nestedTextBlock.replaceWith($newContents);
+        } else {
+          // Other elements: unwrap contents (original behavior)
+          var $contents = $nestedTextBlock.contents();
+          $nestedTextBlock.replaceWith($contents);
+        }
       });
     });
   }
