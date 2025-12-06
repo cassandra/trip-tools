@@ -69,6 +69,11 @@ This project has extensive custom commands for workflow automation. Use them pro
 - **All files must end with newline** (prevents W391 linting failures)
 - **All imports at file top** (never inside functions/methods)
 - **Use `/bin/rm` not `rm`** (avoid interactive prompts)
+- **GitHub issue reading:** Use `gh issue view <num> --json title,body,labels,milestone,state` (the default command fails due to deprecated Projects Classic API)
+- **Read before edit:** Always read a file before editing it (tool requirement)
+- **Django manage.py:** Use `./src/manage.py` (from project root)
+- **Test commands:** Use `make test-sqlite` for fast local iteration; `make test` for full MySQL tests before PR
+- **Icon system:** Icons are HTML templates at `src/tt/templates/icons/*.html`; use `/icon` command when adding UI elements
 
 ### Quality Gates (Enforced by Commands)
 - **`make lint`** must show no output before any PR
