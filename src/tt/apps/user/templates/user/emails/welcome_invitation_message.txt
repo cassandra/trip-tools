@@ -10,7 +10,5 @@ Sign in here to get started:
 
     {{ signin_url }}
 
-If you have any questions, just reply to this email.
-
 Welcome aboard!
 {% endblock %}
