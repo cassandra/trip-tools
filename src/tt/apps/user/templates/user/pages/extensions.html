@@ -1,7 +1,8 @@
 {% extends "user/pages/account_subpage.html" %}
+{% load icons %}
 
 {% block subpage_header %}
-<h1 class="h2 m-4">Browser Extensions</h1>
+<h1 class="h2 m-4 text-primary">{% icon "plug" size="lg" %} Browser Extensions</h1>
 {% endblock %}
 
 {% block subpage_content %}
@@ -9,6 +10,7 @@
   
   <div class="row m-4">
     <div class="col-xl-10 col-12">
+      {% include "user/components/extension_solicit.html" %}
       {% include "user/components/chrome_extension_status.html" %}
     </div>
   </div>
@@ -18,7 +20,7 @@
     <div class="col-xl-10 col-12">
       <div class="card">
         <div class="card-header">
-          <h5 class="mb-0">Connected Extensions</h5>
+          <h5 class="mb-0">All Connected Extensions</h5>
         </div>
         <div class="card-body">
           {% include "user/components/api_key_table.html" with api_keys=extension_tokens icon_name="plug" delete_action="disconnect" %}

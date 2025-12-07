@@ -2,7 +2,7 @@
 
 <div class="card">
   <div class="card-header">
-    <h5 class="mb-0">Browser Extension</h5>
+    <h5 class="mb-0">This Browser</h5>
   </div>
   <div class="card-body">
 
@@ -10,14 +10,9 @@
     <div class="{{ TtConst.EXT_SHOW_NOT_INSTALLED_CLASS }}">
       <div class="row">
         <div class="col-md-8">
-          <p>The Trip Tools Chrome extension lets you save locations from travel sites directly to your trip maps.</p>
-          <p class="text-muted small">Works with Google My Maps, Booking.com, TripAdvisor, and more.</p>
           <div id="tt-ext-status-message" class="alert alert-info mt-3">
             {% icon "download" size="sm" %} <span id="tt-ext-status-text">Extension not detected.</span>
           </div>
-          <a href="#" class="btn btn-outline-primary disabled" id="tt-ext-install-btn">
-            Coming Soon to Chrome Web Store
-          </a>
         </div>
         <div class="col-md-4 text-center">
           {% icon "plug" size="xxxl" css_class="text-muted" %}
@@ -59,22 +54,6 @@
 <script>
 (function() {
   var extensionResponded = false;
-
-  // Detect if browser is Chrome-based
-  var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-  var isEdge = /Edg/.test(navigator.userAgent);
-  var isChromium = isChrome || isEdge;
-
-  if (!isChromium) {
-    var statusText = document.getElementById('tt-ext-status-text');
-    var installBtn = document.getElementById('tt-ext-install-btn');
-    if (statusText) {
-      statusText.textContent = 'The extension is currently only available for Chrome and Chromium-based browsers.';
-    }
-    if (installBtn) {
-      installBtn.style.display = 'none';
-    }
-  }
 
   window.addEventListener('message', function(event) {
     if (event.origin !== window.location.origin) return;
