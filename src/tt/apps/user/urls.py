@@ -51,9 +51,4 @@ urlpatterns = [
         views.ExtensionsHomeView.as_view(),
         name='user_extensions'
     ),
-    path(
-        'extensions/authorize/',
-        views.ExtensionAuthorizeView.as_view(),
-        name='user_extension_authorize'
-    ),
 ]

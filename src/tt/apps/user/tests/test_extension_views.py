@@ -54,37 +54,23 @@ class TestExtensionsHomeView(SyncViewTestCase):
         self.assertIn('account_page', response.context)
 
 
-class TestExtensionAuthorizeView(SyncViewTestCase):
-    """Tests for ExtensionAuthorizeView - creates tokens for extension auth."""
+class TestExtensionsHomeViewPost(SyncViewTestCase):
+    """Tests for ExtensionsHomeView POST - creates tokens for extension auth."""
 
-    def test_get_requires_login(self):
+    def test_post_requires_login(self):
         """Test that unauthenticated users are redirected to signin."""
-        url = reverse('user_extension_authorize')
-        response = self.client.get(url)
+        url = reverse('user_extensions')
+        response = self.client.post(url)
 
         self.assertEqual(response.status_code, 302)
         self.assertIn('/user/signin', response.url)
-
-    def test_get_shows_confirmation_page(self):
-        """Test that GET shows confirmation page without creating token."""
-        self.client.force_login(self.user)
-        initial_count = APIToken.objects.filter(user=self.user).count()
-
-        url = reverse('user_extension_authorize')
-        response = self.client.get(url)
-
-        self.assertSuccessResponse(response)
-        self.assertTemplateRendered(response, 'user/pages/extension_authorize_confirm.html')
-        # No token should be created on GET
-        final_count = APIToken.objects.filter(user=self.user).count()
-        self.assertEqual(final_count, initial_count)
 
     def test_post_creates_token(self):
         """Test that POST creates an API token."""
         self.client.force_login(self.user)
         initial_count = APIToken.objects.filter(user=self.user).count()
 
-        url = reverse('user_extension_authorize')
+        url = reverse('user_extensions')
         response = self.client.post(url)
 
         self.assertSuccessResponse(response)
@@ -95,7 +81,7 @@ class TestExtensionAuthorizeView(SyncViewTestCase):
         """Test that POST returns JSON with fragment HTML for antinode.js."""
         self.client.force_login(self.user)
 
-        url = reverse('user_extension_authorize')
+        url = reverse('user_extensions')
         response = self.client.post(url)
 
         self.assertEqual(response['Content-Type'], 'application/json')
@@ -107,7 +93,7 @@ class TestExtensionAuthorizeView(SyncViewTestCase):
         """Test that POST response HTML includes the token string."""
         self.client.force_login(self.user)
 
-        url = reverse('user_extension_authorize')
+        url = reverse('user_extensions')
         response = self.client.post(url)
 
         data = response.json()
@@ -119,7 +105,7 @@ class TestExtensionAuthorizeView(SyncViewTestCase):
         """Test that POST response HTML includes the token name."""
         self.client.force_login(self.user)
 
-        url = reverse('user_extension_authorize')
+        url = reverse('user_extensions')
         response = self.client.post(url)
 
         data = response.json()
@@ -131,7 +117,7 @@ class TestExtensionAuthorizeView(SyncViewTestCase):
         """Test that platform from POST data is used in token name."""
         self.client.force_login(self.user)
 
-        url = reverse('user_extension_authorize')
+        url = reverse('user_extensions')
         response = self.client.post(url, {'platform': 'Windows'})
 
         self.assertSuccessResponse(response)
@@ -142,7 +128,7 @@ class TestExtensionAuthorizeView(SyncViewTestCase):
     def test_multiple_posts_create_unique_tokens(self):
         """Test that multiple POSTs create tokens with unique names."""
         self.client.force_login(self.user)
-        url = reverse('user_extension_authorize')
+        url = reverse('user_extensions')
 
         # Create first token
         self.client.post(url)

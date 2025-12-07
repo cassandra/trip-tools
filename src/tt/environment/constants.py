@@ -134,7 +134,12 @@ class TtConst:
     EXT_POSTMESSAGE_ACK_TYPE             = 'tt_extension_ack'
     # DOM element ID for token handoff
     EXT_TOKEN_DATA_ELEMENT_ID            = 'extension-token-data'
-
+    # Form async DOM changes when authroizing.
+    EXT_AUTH_RESULT_ID                   = 'tt-ext-auth-result'
+    EXT_AUTH_PENDING_ID                   = 'tt-ext-auth-pending'
+    EXT_AUTH_SUCCESS_ID                   = 'tt-ext-auth-success'
+    EXT_AUTH_FAILURE_ID                   = 'tt-ext-auth-failure'
+    
     @classmethod
     def to_json_dict_str(cls):
         """Convert constants to JSON string for JavaScript injection."""

@@ -327,7 +327,12 @@ class APIKeyDeleteModalView(LoginRequiredMixin, ModalView):
 
 
 class ExtensionsHomeView(LoginRequiredMixin, View):
-    """Extensions management page - shows extension tokens and authorization options."""
+    """
+    Extensions management page - shows extension tokens and authorization options.
+
+    GET: Displays the extensions page with current status.
+    POST: Creates a new extension token (via antinode.js async form).
+    """
 
     def get(self, request, *args, **kwargs):
         account_page_context = AccountPageContext(
@@ -341,35 +346,8 @@ class ExtensionsHomeView(LoginRequiredMixin, View):
         }
         return render( request, 'user/pages/extensions.html', context )
 
-
-class ExtensionAuthorizeView(LoginRequiredMixin, View):
-    """
-    Creates extension token and displays it for postMessage capture.
-
-    Flow:
-    1. User lands on this page (either from extension or web app)
-    2. If not logged in, LoginRequiredMixin redirects to signin
-    3. Extension content script (if installed) will hide.show page sections
-    3. If extension is not authorized, GET shows confirmation page with "Authorize" button
-    4. POST creates token with name format: "Chrome Extension - {Platform} - {Month Year}"
-    5. Handle collision by appending (2), (3), etc.
-    6. Render page that sends postMessage with token
-    7. Post-async call handling (via antinode.js callback) sends token to extension.
-    """
-
-    def get(self, request, *args, **kwargs):
-        platform = request.GET.get( 'platform', '' )
-        context = {
-            'user': request.user,
-            'platform': platform,
-        }
-        return render( request, 'user/pages/extension_authorize_confirm.html', context )
-
     def post(self, request, *args, **kwargs):
-        from django.http import JsonResponse
-        from django.template.loader import render_to_string
-
-        # Get platform from form data (passed through from GET)
+        # Get platform from form data (optional, for token naming)
         platform = request.POST.get( 'platform', None ) or None
 
         # Create the extension token
@@ -377,21 +355,8 @@ class ExtensionAuthorizeView(LoginRequiredMixin, View):
             user = request.user,
             platform = platform,
         )
-
-        # Render the result fragment
-        fragment_html = render_to_string(
-            'user/components/extension_authorize_result.html',
-            {
-                'token_str': token_data.api_token_str,
-                'token_name': token_data.api_token.name,
-            },
-            request = request,
-        )
-
-        # Return antinode.js compatible JSON response
-        return JsonResponse({
-            'insert': {
-                'auth-form-area': fragment_html,
-            }
-        })
-
+        context = {
+            'token_str': token_data.api_token_str,
+            'token_name': token_data.api_token.name,
+        }
+        return render( request, 'user/components/extension_authorize_result.html', context )

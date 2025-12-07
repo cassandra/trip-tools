@@ -15,7 +15,7 @@ TT.CONFIG = {
     DEFAULT_SERVER_URL_PROD: 'https://triptools.net',
     ICON_PROD_48: '../images/icon-48.png',
     ICON_DEV_48: '../images/icon-on-secondary-48.png',
-    EXTENSION_AUTHORIZE_PATH: '/user/extensions/authorize/',
+    EXTENSION_AUTHORIZE_PATH: '/user/extensions/',
     API_ME_ENDPOINT: '/api/v1/me/',
     API_TOKENS_ENDPOINT: '/api/v1/tokens/',
     AUTH_VALIDATION_DEBOUNCE_MS: 2000,

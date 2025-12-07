@@ -1,0 +1,124 @@
+{% load icons %}
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Chrome Extension</h5>
+  </div>
+  <div class="card-body">
+
+    <!-- State: Not Installed (default before extension runs) -->
+    <div class="{{ TtConst.EXT_SHOW_NOT_INSTALLED_CLASS }}">
+      <div class="row">
+        <div class="col-md-8">
+          <p>The Trip Tools Chrome extension lets you save locations from travel sites directly to your trip maps.</p>
+          <p class="text-muted small">Works with Google My Maps, Booking.com, TripAdvisor, and more.</p>
+          <div id="tt-ext-status-message" class="alert alert-info mt-3">
+            {% icon "download" size="sm" %} <span id="tt-ext-status-text">Extension not detected.</span>
+          </div>
+          <a href="#" class="btn btn-outline-primary disabled" id="tt-ext-install-btn">
+            Coming Soon to Chrome Web Store
+          </a>
+        </div>
+        <div class="col-md-4 text-center">
+          {% icon "plug" size="xxxl" css_class="text-muted" %}
+        </div>
+      </div>
+    </div>
+
+    <!-- State: Installed but Not Authorized -->
+    <div id="{{ TtConst.EXT_AUTH_RESULT_ID }}" class="{{ TtConst.EXT_SHOW_NOT_AUTHORIZED_CLASS }}">
+      <div class="row">
+        <div class="col-md-8">
+          <p class="mb-3">Extension detected. Signed in as <strong>{{ user.email }}</strong></p>
+          <p class="small text-muted mb-3">
+            Click "Authorize" to connect the extension to your Trip Tools account.
+          </p>
+          <div>
+            <form method="post" data-async="#{{ TtConst.EXT_AUTH_RESULT_ID }}" debounce>
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary">
+                {% icon "plug" size="sm" %} Authorize Extension
+              </button>
+            </form>
+          </div>
+        </div>
+        <div class="col-md-4 text-center">
+          {% icon "plug" size="xxxl" css_class="text-primary" %}
+        </div>
+      </div>
+    </div>
+
+    <!-- State: Installed and Authorized -->
+    <div class="{{ TtConst.EXT_SHOW_AUTHORIZED_CLASS }}">
+      {% include "user/components/extension_authorized.html" %}
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  var extensionResponded = false;
+
+  // Detect if browser is Chrome-based
+  var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+  var isEdge = /Edg/.test(navigator.userAgent);
+  var isChromium = isChrome || isEdge;
+
+  if (!isChromium) {
+    var statusText = document.getElementById('tt-ext-status-text');
+    var installBtn = document.getElementById('tt-ext-install-btn');
+    if (statusText) {
+      statusText.textContent = 'The extension is only available for Chrome and Chromium-based browsers.';
+    }
+    if (installBtn) {
+      installBtn.style.display = 'none';
+    }
+  }
+
+  window.addEventListener('message', function(event) {
+    if (event.origin !== window.location.origin) return;
+    if (!event.data || event.data.type !== '{{ TtConst.EXT_POSTMESSAGE_ACK_TYPE }}') return;
+
+    extensionResponded = true;
+    var pendingEl = document.getElementById('{{ TtConst.EXT_AUTH_PENDING_ID }}');
+    if ( pendingEl ) {
+      pendingEl.classList.add('d-none');
+    }
+    if (event.data.payload.success) {
+      var successEl = document.getElementById('{{ TtConst.EXT_AUTH_SUCCESS_ID }}');
+      if ( successEl ) {
+        successEl.classList.remove('d-none');
+      }
+    } else {
+      var failureEl = document.getElementById('{{ TtConst.EXT_AUTH_FAILURE_ID }}');
+      if ( failureEl ) {
+        var failureMsg = ( event.data.payload.error || 'Authorization failed' );
+        failureEl.classList.remove('d-none');
+      }
+    }
+  });
+
+   window.handlePostAsyncUpdate = function() {
+    var tokenEl = document.getElementById('{{ TtConst.EXT_TOKEN_DATA_ELEMENT_ID }}');
+    if (tokenEl) {
+      var token = tokenEl.dataset.token;
+      if (token) {
+        window.postMessage({
+          type: '{{ TtConst.EXT_POSTMESSAGE_DATA_TYPE }}',
+          payload: { action: 'authorize', token: token }
+        }, window.location.origin);
+
+        setTimeout(function() {
+          if (!extensionResponded) {
+            var fallbackEl = document.getElementById('{{ TtConst.EXT_AUTH_FAILURE_ID }}');
+            if (fallbackEl) {
+              fallbackEl.classList.remove('d-none');
+            }
+          }
+        }, 2000);
+      }
+    }
+  };
+})();
+</script>
