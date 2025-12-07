@@ -17,19 +17,20 @@ class TokenListView(APIView):
     """
     permission_classes = [ IsAuthenticated ]
 
-    def get(self, request: Request) -> Response:
+    def get( self, request: Request ) -> Response:
         """Returns list of user's tokens (without secret keys)."""
         api_tokens = APIToken.objects.filter( user = request.user )
         data = [
             {
                 F.NAME: api_token.name,
                 F.LOOKUP_KEY: api_token.lookup_key,
+                F.TOKEN_TYPE: str( api_token.token_type ),
                 F.CREATED_AT: api_token.created_at.isoformat(),
                 F.LAST_USED_AT: api_token.last_used_at.isoformat() if api_token.last_used_at else None,
             }
             for api_token in api_tokens
         ]
-        return Response(data)
+        return Response( data )
 
     def post(self, request: Request) -> Response:
         """Creates a new token and returns the api_token_str (once only)."""

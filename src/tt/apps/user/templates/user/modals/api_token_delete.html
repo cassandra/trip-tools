@@ -1,10 +1,9 @@
 {% extends "modals/action_2_with_cancel.html" %}
 
-{% block modal_dialog_id %}api-key-delete-modal{% endblock %}
 {% block title_text %}Delete API Key{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'user_api_key_delete' api_key_id=api_key.id %}" data-async="modal">
+<form method="post" action="{% url 'user_api_token_delete' api_token_id=api_token.id %}" data-async="modal">
   {% csrf_token %}
 {% endblock %}
 
@@ -16,8 +15,8 @@
   Are you sure you want to delete the API key:
 </p>
 <p>
-  <strong>{{ api_key.name }}</strong>
-  <code class="ml-2">tt_{{ api_key.lookup_key }}</code>
+  <strong>{{ api_token.name }}</strong>
+  <code class="ml-2">tt_{{ api_token.lookup_key }}</code>
 </p>
 <p class="text-muted">
   Applications using this key will no longer be able to access your account.

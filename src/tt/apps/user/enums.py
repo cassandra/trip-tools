@@ -16,6 +16,6 @@ class SigninErrorType( LabeledEnum ):
 class AccountPageType(str, Enum):
     """Enum for account-related pages."""
 
-    PROFILE    = 'profile'
-    API_KEYS   = 'api_keys'
-    EXTENSIONS = 'extensions'
+    PROFILE     = 'profile'
+    API_TOKENS  = 'api_tokens'
+    EXTENSIONS  = 'extensions'

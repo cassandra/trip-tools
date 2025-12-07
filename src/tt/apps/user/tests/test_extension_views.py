@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from tt.apps.api.enums import TokenType
 from tt.apps.api.models import APIToken
 from tt.apps.user.extension_service import ExtensionTokenService
 from tt.testing.view_test_base import SyncViewTestCase
@@ -34,15 +35,15 @@ class TestExtensionsHomeView(SyncViewTestCase):
         self.assertHtmlResponse(response)
         self.assertTemplateRendered(response, 'user/pages/extensions.html')
 
-    def test_context_contains_extension_tokens(self):
+    def test_context_contains_api_token_list(self):
         """Test that context includes extension tokens list."""
         self.client.force_login(self.user)
 
         url = reverse('user_extensions')
         response = self.client.get(url)
 
-        self.assertIn('extension_tokens', response.context)
-        self.assertIsInstance(response.context['extension_tokens'], list)
+        self.assertIn('api_token_list', response.context)
+        self.assertIsInstance(response.context['api_token_list'], list)
 
     def test_context_contains_account_page(self):
         """Test that context includes account page info for sidebar."""
@@ -182,20 +183,26 @@ class TestExtensionTokenService(SyncViewTestCase):
         self.assertEqual(len(tokens), 0)
 
     def test_get_extension_tokens_returns_only_extension_tokens(self):
-        """Test that only tokens with extension prefix are returned."""
+        """Test that only tokens with token_type=EXTENSION are returned."""
         from tt.apps.api.services import APITokenService
 
         # Create a regular token (not extension)
-        APITokenService.create_token(self.user, 'My Custom Token')
+        APITokenService.create_token( self.user, 'My Custom Token' )
 
         # Create an extension token
-        ExtensionTokenService.create_extension_token(self.user)
+        ExtensionTokenService.create_extension_token( self.user )
 
-        tokens = ExtensionTokenService.get_extension_tokens(self.user)
+        tokens = ExtensionTokenService.get_extension_tokens( self.user )
 
         # Should only return the extension token
-        self.assertEqual(len(tokens), 1)
-        self.assertTrue(tokens[0].name.startswith(ExtensionTokenService.TOKEN_NAME_PREFIX))
+        self.assertEqual( len( tokens ), 1 )
+        self.assertEqual( tokens[0].token_type, TokenType.EXTENSION )
+
+    def test_create_extension_token_sets_token_type(self):
+        """Test that created extension token has token_type=EXTENSION."""
+        token_data = ExtensionTokenService.create_extension_token( self.user )
+
+        self.assertEqual( token_data.api_token.token_type, TokenType.EXTENSION )
 
     def test_get_extension_tokens_ordering(self):
         """Test that extension tokens are returned in reverse chronological order."""

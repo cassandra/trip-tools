@@ -19,7 +19,7 @@ def rate_limit( key_prefix: str, limit: int, period_secs: int ):
     - cache.incr() atomically increments without resetting TTL
 
     Args:
-        key_prefix: Prefix for cache key (e.g., 'api_key_ops')
+        key_prefix: Prefix for cache key (e.g., 'api_token_ops')
         limit: Maximum requests allowed in the period_secs
         period_secs: Time period_secs in seconds
 

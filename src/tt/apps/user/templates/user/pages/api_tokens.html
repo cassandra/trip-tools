@@ -13,21 +13,21 @@
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Your API Keys</h5>
-          {% if api_keys %}
-          <a class="btn btn-primary btn-sm" href="{% url 'user_api_key_create' %}" data-async="modal">
+          {% if api_token_list %}
+          <a class="btn btn-primary btn-sm" href="{% url 'user_api_token_create' %}" data-async="modal">
             {% icon "plus" size="sm" %} Create New Key
           </a>
           {% endif %}
         </div>
         <div class="card-body">
-          {% if api_keys %}
-          {% include "user/components/api_key_table.html" with api_keys=api_keys %}
+          {% if api_token_list %}
+          {% include "user/components/api_token_table_standard.html" with api_token_list=api_token_list %}
           {% else %}
           <div class="text-center py-5">
             {% icon "key" size="xxxl" css_class="text-muted mb-3" %}
             <h5 class="text-muted">No API keys yet</h5>
             <p class="text-muted mb-4">Create your first API key to start integrating with the Trip Tools API.</p>
-            <a href="{% url 'user_api_key_create' %}" class="btn btn-primary" data-async="modal">
+            <a href="{% url 'user_api_token_create' %}" class="btn btn-primary" data-async="modal">
               {% icon "plus" size="sm" %} Create Your First Key
             </a>
           </div>

@@ -15,6 +15,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from tt.apps.api.enums import TokenType
 from tt.apps.api.models import APIToken
 from tt.apps.api.services import APITokenService
 
@@ -310,3 +311,46 @@ class APITokenServiceTestCase(TestCase):
         self.assertIsInstance( APITokenService.MAX_TOKENS_PER_USER, int )
         self.assertGreater( APITokenService.MAX_TOKENS_PER_USER, 0 )
         self.assertLessEqual( APITokenService.MAX_TOKENS_PER_USER, 1000 )
+
+    # -------------------------------------------------------------------------
+    # Token Type Tests
+    # -------------------------------------------------------------------------
+
+    def test_create_token_defaults_to_standard_type(self):
+        """Test create_token defaults to STANDARD token type."""
+        result = APITokenService.create_token( self.user, 'Test Token' )
+
+        self.assertEqual( result.api_token.token_type, TokenType.STANDARD )
+
+    def test_create_token_with_explicit_standard_type(self):
+        """Test create_token with explicit STANDARD type."""
+        result = APITokenService.create_token(
+            self.user,
+            'Test Token',
+            token_type = TokenType.STANDARD,
+        )
+
+        self.assertEqual( result.api_token.token_type, TokenType.STANDARD )
+
+    def test_create_token_with_extension_type(self):
+        """Test create_token with EXTENSION type."""
+        result = APITokenService.create_token(
+            self.user,
+            'Extension Token',
+            token_type = TokenType.EXTENSION,
+        )
+
+        self.assertEqual( result.api_token.token_type, TokenType.EXTENSION )
+
+    def test_token_type_persists_in_database(self):
+        """Test that token_type is correctly stored and retrieved from database."""
+        result = APITokenService.create_token(
+            self.user,
+            'Extension Token',
+            token_type = TokenType.EXTENSION,
+        )
+
+        # Refresh from database
+        db_token = APIToken.objects.get( pk = result.api_token.pk )
+
+        self.assertEqual( db_token.token_type, TokenType.EXTENSION )

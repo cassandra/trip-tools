@@ -15,7 +15,7 @@
     </div>
   </div>
 
-  {% if extension_tokens %}
+  {% if api_token_list %}
   <div class="row m-4">
     <div class="col-xl-10 col-12">
       <div class="card">
@@ -23,7 +23,7 @@
           <h5 class="mb-0">All Connected Extensions</h5>
         </div>
         <div class="card-body">
-          {% include "user/components/api_key_table.html" with api_keys=extension_tokens icon_name="plug" delete_action="disconnect" %}
+          {% include "user/components/api_token_table_extension.html" with api_token_list=api_token_list icon_name="plug" delete_action="disconnect" %}
         </div>
       </div>
     </div>

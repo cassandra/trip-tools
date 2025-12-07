@@ -2,7 +2,6 @@
 {% load icons %}
 
 {% block modal_dialog_class %}tt-modal-dialog-700{% endblock %}
-{% block modal_dialog_id %}api-key-created-modal{% endblock %}
 {% block modal_dialog_attrs %}data-modal-protected="true"{% endblock %}
 
 {% block title_text %}API Key Created{% endblock %}
@@ -16,11 +15,11 @@
     <strong>Important:</strong> This is the only time you will see the full key. Copy it now and store it securely.
   </p>
   <div class="d-flex align-items-center">
-    <code class="flex-grow-1 p-2 bg-light rounded mr-2" style="word-break: break-all;">{{ new_api_key_str }}</code>
+    <code class="flex-grow-1 p-2 bg-light rounded mr-2" style="word-break: break-all;">{{ new_api_token_str }}</code>
     <button type="button"
             class="btn btn-outline-secondary"
             title="Copy to clipboard"
-            onclick="Tt.copyToClipboard(this, '{{ new_api_key_str }}')">
+            onclick="Tt.copyToClipboard(this, '{{ new_api_token_str }}')">
       <span class="copy-icon">{% icon "copy" size="sm" %}</span>
       <span class="copy-check-icon" style="display: none;">{% icon "check" size="sm" %}</span>
     </button>
@@ -29,5 +28,5 @@
 {% endblock %}
 
 {% block action_center %}
-<a href="{% url 'user_api_keys' %}" class="btn btn-primary">Done</a>
+<a href="{% url 'user_api_tokens' %}" class="btn btn-primary">Done</a>
 {% endblock %}

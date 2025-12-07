@@ -4,9 +4,12 @@ from django.conf import settings
 from django.db import models
 
 from tt.apps.common import datetimeproxy
+from tt.apps.common.model_fields import LabeledEnumField
+
+from .enums import TokenType
 
 
-class APIToken(models.Model):
+class APIToken( models.Model ):
     """
     API tokens for authenticating API requests.
 
@@ -45,6 +48,10 @@ class APIToken(models.Model):
         null = True,
         blank = True,
         help_text = 'Last time this token was used for authentication',
+    )
+    token_type = LabeledEnumField(
+        TokenType,
+        'Token Type',
     )
 
     class Meta:

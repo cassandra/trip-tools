@@ -32,6 +32,7 @@ class APIFields:
     # -------------------------------------------------------------------------
     LOOKUP_KEY = 'lookup_key'
     TOKEN = 'token'
+    TOKEN_TYPE = 'token_type'
     LAST_USED_AT = 'last_used_at'
 
     # -------------------------------------------------------------------------

@@ -6,6 +6,7 @@ Handles auto-generation of descriptive token names and collision handling.
 from datetime import datetime
 from typing import Optional
 
+from tt.apps.api.enums import TokenType
 from tt.apps.api.models import APIToken
 from tt.apps.api.services import APITokenData, APITokenService
 
@@ -35,6 +36,7 @@ class ExtensionTokenService:
         return APITokenService.create_token(
             user = user,
             api_token_name = token_name,
+            token_type = TokenType.EXTENSION,
         )
 
     @classmethod
@@ -111,11 +113,11 @@ class ExtensionTokenService:
         """
         Get all extension tokens for a user.
 
-        Returns tokens whose names start with the extension prefix.
+        Returns tokens with token_type = EXTENSION.
         """
         return list(
             APIToken.objects.filter(
                 user = user,
-                name__startswith = cls.TOKEN_NAME_PREFIX,
+                token_type = TokenType.EXTENSION,
             ).order_by( '-created_at' )
         )

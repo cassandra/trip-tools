@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import View
 
+from tt.apps.api.enums import TokenType
 from tt.apps.api.models import APIToken
 from tt.apps.api.services import APITokenService
 from tt.apps.common.rate_limit import rate_limit
@@ -250,38 +251,41 @@ class AccountHomeView(LoginRequiredMixin, View):
         return render(request, 'user/pages/account_home.html', context)
 
 
-class APIKeyManagementView(LoginRequiredMixin, View):
+class APITokenManagementView( LoginRequiredMixin, View ):
 
-    def get(self, request, *args, **kwargs):
+    def get( self, request, *args, **kwargs ):
         account_page_context = AccountPageContext(
-            active_page = AccountPageType.API_KEYS,
+            active_page = AccountPageType.API_TOKENS,
         )
-        api_keys = APIToken.objects.filter( user = request.user ).order_by('-created_at')
+        api_token_list = APIToken.objects.filter(
+            user = request.user,
+            token_type = TokenType.STANDARD,
+        ).order_by( '-created_at' )
         context = {
             'account_page': account_page_context,
             'user': request.user,
-            'api_keys': api_keys,
+            'api_token_list': api_token_list,
         }
-        return render(request, 'user/pages/api_keys.html', context)
+        return render(request, 'user/pages/api_tokens.html', context)
 
 
-class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
+class APITokenCreateModalView(LoginRequiredMixin, ModalView):
 
     def get_template_name(self) -> str:
-        return 'user/modals/api_key_create.html'
+        return 'user/modals/api_token_create.html'
 
     def get(self, request, *args, **kwargs):
-        form = forms.APIKeyCreateForm()
+        form = forms.APITokenCreateForm()
         context = {
             'form': form,
         }
         return self.modal_response( request, context = context )
 
-    @rate_limit( 'api_key_ops', limit = 100, period_secs = 3600 )
+    @rate_limit( 'api_token_ops', limit = 100, period_secs = 3600 )
     def post(self, request, *args, **kwargs):
         from tt.apps.api.messages import APIMessages
 
-        form = forms.APIKeyCreateForm( request.POST )
+        form = forms.APITokenCreateForm( request.POST )
 
         # Check token limit before processing form
         if not APITokenService.can_create_token( request.user ):
@@ -297,12 +301,12 @@ class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
                 api_token_name = form.cleaned_data['name'],
             )
             context = {
-                'new_api_key_str': api_token_data.api_token_str,
+                'new_api_token_str': api_token_data.api_token_str,
             }
             return self.modal_response(
                 request,
                 context = context,
-                template_name = 'user/modals/api_key_created.html',
+                template_name = 'user/modals/api_token_created.html',
             )
 
         context = {
@@ -311,30 +315,30 @@ class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
         return self.modal_response(request, context=context, status=400)
 
 
-class APIKeyDeleteModalView( LoginRequiredMixin, ModalView ):
+class APITokenDeleteModalView( LoginRequiredMixin, ModalView ):
 
     def get_template_name(self) -> str:
-        return 'user/modals/api_key_delete.html'
+        return 'user/modals/api_token_delete.html'
 
-    def get(self, request, api_key_id: int, *args, **kwargs):
-        api_key = get_object_or_404(
+    def get(self, request, api_token_id: int, *args, **kwargs):
+        api_token = get_object_or_404(
             APIToken,
-            id = api_key_id,
+            id = api_token_id,
             user = request.user,
         )
         context = {
-            'api_key': api_key,
+            'api_token': api_token,
         }
         return self.modal_response(request, context=context)
 
-    @rate_limit( 'api_key_ops', limit = 100, period_secs = 3600 )
-    def post(self, request, api_key_id: int, *args, **kwargs):
-        api_key = get_object_or_404(
+    @rate_limit( 'api_token_ops', limit = 100, period_secs = 3600 )
+    def post(self, request, api_token_id: int, *args, **kwargs):
+        api_token = get_object_or_404(
             APIToken,
-            id = api_key_id,
+            id = api_token_id,
             user = request.user,
         )
-        api_key.delete()
+        api_token.delete()
         return self.refresh_response( request )
 
 
@@ -350,11 +354,11 @@ class ExtensionsHomeView( LoginRequiredMixin, View ):
         account_page_context = AccountPageContext(
             active_page = AccountPageType.EXTENSIONS,
         )
-        extension_tokens = ExtensionTokenService.get_extension_tokens( request.user )
+        api_token_list = ExtensionTokenService.get_extension_tokens( request.user )
         context = {
             'account_page': account_page_context,
             'user': request.user,
-            'extension_tokens': extension_tokens,
+            'api_token_list': api_token_list,
         }
         return render( request, 'user/pages/extensions.html', context )
 

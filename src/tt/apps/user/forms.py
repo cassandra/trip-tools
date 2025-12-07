@@ -19,7 +19,7 @@ class SigninMagicCodeForm(forms.Form):
         required = True )
 
 
-class APIKeyCreateForm(forms.Form):
+class APITokenCreateForm(forms.Form):
 
     name = forms.CharField(
         label = 'Name',

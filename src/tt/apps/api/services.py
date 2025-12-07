@@ -4,6 +4,7 @@ from typing import Optional
 
 from django.contrib.auth import get_user_model
 
+from .enums import TokenType
 from .models import APIToken
 from .schemas import APITokenData, APITokenGenerationData
 
@@ -66,7 +67,10 @@ class APITokenService:
         return hashlib.sha256(api_token_str.encode()).hexdigest()
 
     @classmethod
-    def create_token(cls, user: User, api_token_name: str) -> APITokenData:
+    def create_token( cls,
+                      user           : User,
+                      api_token_name : str,
+                      token_type     : TokenType = TokenType.STANDARD ) -> APITokenData:
         """
         Create a new API token for a user.
         The api_token_str is only available at creation - it cannot be retrieved later.
@@ -79,6 +83,7 @@ class APITokenService:
             name = api_token_name,
             lookup_key = token_generation_data.lookup_key,
             api_token_hash = api_token_hash,
+            token_type = token_type,
         )
         return APITokenData(
             api_token = api_token,

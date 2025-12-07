@@ -1,12 +1,10 @@
 {% extends "modals/action_2_with_cancel.html" %}
 {% load icons %}
 
-{% block modal_dialog_id %}api-key-create-modal{% endblock %}
-
 {% block title_text %}Create New API Key{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'user_api_key_create' %}" data-async="modal">
+<form method="post" action="{% url 'user_api_token_create' %}" data-async="modal">
   {% csrf_token %}
 {% endblock %}
 
