@@ -65,6 +65,19 @@ function loadSettings() {
                 toggle.checked = enabled;
             }
         });
+
+    displayVersion();
+}
+
+function displayVersion() {
+    var versionSpan = document.getElementById( TT.DOM.ID_OPTIONS_VERSION );
+    if ( versionSpan ) {
+        var versionText = 'v' + TT.CONFIG.EXTENSION_VERSION;
+        if ( TT.CONFIG.IS_DEVELOPMENT ) {
+            versionText += ' (DEV)';
+        }
+        versionSpan.textContent = versionText;
+    }
 }
 
 function setupEventListeners() {

@@ -57,6 +57,11 @@ body {
     margin-bottom: 6px;
 }
 
+.tt-options-value {
+    display: block;
+    color: var(--tt-muted-color);
+}
+
 .tt-text-input {
     width: 100%;
     padding: 10px 12px;

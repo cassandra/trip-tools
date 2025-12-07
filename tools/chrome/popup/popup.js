@@ -30,26 +30,35 @@ function listenForAuthStateChanges() {
 }
 
 function displayVersion() {
-    var versionSpan = document.getElementById( TT.DOM.ID_VERSION );
-    if ( versionSpan ) {
-        var versionText = 'v' + TT.CONFIG.EXTENSION_VERSION;
-        if ( TT.CONFIG.IS_DEVELOPMENT ) {
-            versionText += ' (DEV)';
-        }
-        versionSpan.textContent = versionText;
-    }
+    var defaultDeveloperMode = TT.CONFIG.IS_DEVELOPMENT;
 
-    if ( TT.CONFIG.IS_DEVELOPMENT ) {
-        var header = document.querySelector( '.' + TT.DOM.CLASS_POPUP_HEADER );
-        if ( header ) {
-            header.classList.add( TT.DOM.CLASS_DEV_MODE );
-        }
+    TTStorage.get( TT.STORAGE.KEY_DEVELOPER_MODE, defaultDeveloperMode )
+        .then( function( developerModeEnabled ) {
+            var versionSpan = document.getElementById( TT.DOM.ID_VERSION );
+            if ( versionSpan ) {
+                if ( developerModeEnabled ) {
+                    var versionText = 'v' + TT.CONFIG.EXTENSION_VERSION;
+                    if ( TT.CONFIG.IS_DEVELOPMENT ) {
+                        versionText += ' (DEV)';
+                    }
+                    versionSpan.textContent = versionText;
+                } else {
+                    versionSpan.textContent = '';
+                }
+            }
 
-        var headerIcon = document.getElementById( TT.DOM.ID_HEADER_ICON );
-        if ( headerIcon ) {
-            headerIcon.src = TT.CONFIG.ICON_DEV_48;
-        }
-    }
+            if ( TT.CONFIG.IS_DEVELOPMENT ) {
+                var header = document.querySelector( '.' + TT.DOM.CLASS_POPUP_HEADER );
+                if ( header ) {
+                    header.classList.add( TT.DOM.CLASS_DEV_MODE );
+                }
+
+                var headerIcon = document.getElementById( TT.DOM.ID_HEADER_ICON );
+                if ( headerIcon ) {
+                    headerIcon.src = TT.CONFIG.ICON_DEV_48;
+                }
+            }
+        });
 }
 
 function checkBackgroundConnection() {

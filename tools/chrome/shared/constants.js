@@ -105,6 +105,7 @@ TT.DOM = {
     ID_OPTIONS_MANUAL_TOKEN_INPUT: 'tt-options-manual-token-input',
     ID_OPTIONS_VALIDATE_TOKEN_BTN: 'tt-options-validate-token-btn',
     ID_OPTIONS_TOKEN_VALIDATION_STATUS: 'tt-options-token-validation-status',
+    ID_OPTIONS_VERSION: 'tt-options-version',
     CLASS_POPUP_HEADER: 'tt-popup-header',
     CLASS_TOKEN_VALIDATION_STATUS: 'tt-token-validation-status'
 };
