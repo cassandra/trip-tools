@@ -1,0 +1,43 @@
+{% load icons %}
+{% load humanize %}
+<div class="table-responsive">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Prefix</th>
+        <th>Created</th>
+        <th>Last Used</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for api_key in api_keys %}
+      <tr>
+        <td>
+          {% if icon_name %}{% icon icon_name size="sm" css_class="text-muted mr-2" %}{% endif %}
+          <strong>{{ api_key.name }}</strong>
+        </td>
+        <td><code>tt_{{ api_key.lookup_key }}</code></td>
+        <td>{{ api_key.created_at|date:"M d, Y" }}</td>
+        <td>
+          {% if api_key.last_used_at %}
+            {{ api_key.last_used_at|naturaltime }}
+            <span class="badge badge-success ml-1">Active</span>
+          {% else %}
+            Never
+            <span class="badge badge-secondary ml-1">Unused</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'user_api_key_delete' api_key_id=api_key.id %}"
+             class="btn btn-outline-danger btn-sm"
+             data-async="modal">
+            {% icon "trash" size="sm" %} {% if delete_action %}{{ delete_action|capfirst }}{% else %}Delete{% endif %}
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

@@ -299,7 +299,7 @@ class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
         return self.modal_response(request, context=context, status=400)
 
 
-class APIKeyDeleteModalView(LoginRequiredMixin, ModalView):
+class APIKeyDeleteModalView( LoginRequiredMixin, ModalView ):
 
     def get_template_name(self) -> str:
         return 'user/modals/api_key_delete.html'
@@ -322,8 +322,7 @@ class APIKeyDeleteModalView(LoginRequiredMixin, ModalView):
             user = request.user,
         )
         api_key.delete()
-        redirect_url = reverse('user_api_keys')
-        return self.redirect_response( request, redirect_url )
+        return self.refresh_response( request )
 
 
 class ExtensionsHomeView(LoginRequiredMixin, View):

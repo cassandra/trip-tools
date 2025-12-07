@@ -1,6 +1,4 @@
 {% extends "user/pages/account_subpage.html" %}
-{% load icons %}
-{% load humanize %}
 
 {% block subpage_header %}
 <h1 class="h2 m-4">Browser Extensions</h1>
@@ -23,40 +21,7 @@
           <h5 class="mb-0">Connected Extensions</h5>
         </div>
         <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Connected</th>
-                  <th>Last Used</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for token in extension_tokens %}
-                <tr>
-                  <td>
-                    {% icon "plug" size="sm" css_class="text-muted mr-2" %}
-                    <strong>{{ token.name }}</strong>
-                  </td>
-                  <td>{{ token.created_at|date:"M d, Y" }}</td>
-                  <td>
-                    {% if token.last_used_at %}
-                      {{ token.last_used_at|naturaltime }}
-                      <span class="badge badge-success ml-1">Active</span>
-                    {% else %}
-                      Never
-                      <span class="badge badge-secondary ml-1">Unused</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          <p class="text-muted small mb-0">
-            To disconnect an extension, go to <a href="{% url 'user_api_keys' %}">API Keys</a> and delete its token.
-          </p>
+          {% include "user/components/api_key_table.html" with api_keys=extension_tokens icon_name="plug" delete_action="disconnect" %}
         </div>
       </div>
     </div>

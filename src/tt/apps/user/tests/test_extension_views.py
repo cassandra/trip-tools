@@ -77,17 +77,15 @@ class TestExtensionsHomeViewPost(SyncViewTestCase):
         final_count = APIToken.objects.filter(user=self.user).count()
         self.assertEqual(final_count, initial_count + 1)
 
-    def test_post_returns_json_response(self):
-        """Test that POST returns JSON with fragment HTML for antinode.js."""
+    def test_post_returns_html_response(self):
+        """Test that POST returns HTML fragment for antinode.js insertion."""
         self.client.force_login(self.user)
 
         url = reverse('user_extensions')
         response = self.client.post(url)
 
-        self.assertEqual(response['Content-Type'], 'application/json')
-        data = response.json()
-        self.assertIn('insert', data)
-        self.assertIn('auth-form-area', data['insert'])
+        self.assertHtmlResponse(response)
+        self.assertTemplateRendered(response, 'user/components/extension_authorize_result.html')
 
     def test_post_response_contains_token_str(self):
         """Test that POST response HTML includes the token string."""
@@ -96,8 +94,7 @@ class TestExtensionsHomeViewPost(SyncViewTestCase):
         url = reverse('user_extensions')
         response = self.client.post(url)
 
-        data = response.json()
-        html = data['insert']['auth-form-area']
+        html = response.content.decode('utf-8')
         # Token should be in the data-token attribute
         self.assertIn('data-token="tt_', html)
 
@@ -108,8 +105,7 @@ class TestExtensionsHomeViewPost(SyncViewTestCase):
         url = reverse('user_extensions')
         response = self.client.post(url)
 
-        data = response.json()
-        html = data['insert']['auth-form-area']
+        html = response.content.decode('utf-8')
         # Token name should include the prefix
         self.assertIn(ExtensionTokenService.TOKEN_NAME_PREFIX, html)
 
@@ -121,8 +117,7 @@ class TestExtensionsHomeViewPost(SyncViewTestCase):
         response = self.client.post(url, {'platform': 'Windows'})
 
         self.assertSuccessResponse(response)
-        data = response.json()
-        html = data['insert']['auth-form-area']
+        html = response.content.decode('utf-8')
         self.assertIn('Windows', html)
 
     def test_multiple_posts_create_unique_tokens(self):
@@ -135,8 +130,7 @@ class TestExtensionsHomeViewPost(SyncViewTestCase):
 
         # Create second token
         response2 = self.client.post(url)
-        data = response2.json()
-        html = data['insert']['auth-form-area']
+        html = response2.content.decode('utf-8')
 
         # Second token name should have "(2)" suffix
         self.assertIn('(2)', html)
