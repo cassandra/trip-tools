@@ -233,8 +233,18 @@ function renderDebugLog( log ) {
 
         var timestamp = new Date( entry.timestamp ).toLocaleTimeString();
         var levelClass = 'tt-debug-level-' + entry.level;
-        entryDiv.innerHTML = '<span class="tt-debug-timestamp">' + timestamp + '</span>' +
-                            '<span class="' + levelClass + '">' + entry.message + '</span>';
+
+        // Use textContent to prevent XSS from debug log entries
+        var timestampSpan = document.createElement( 'span' );
+        timestampSpan.className = 'tt-debug-timestamp';
+        timestampSpan.textContent = timestamp;
+
+        var messageSpan = document.createElement( 'span' );
+        messageSpan.className = levelClass;
+        messageSpan.textContent = entry.message;
+
+        entryDiv.appendChild( timestampSpan );
+        entryDiv.appendChild( messageSpan );
 
         logContainer.appendChild( entryDiv );
     });
@@ -368,15 +378,23 @@ function updateDebugAuthInfo( email ) {
         return;
     }
 
+    // Clear existing content
+    authInfo.innerHTML = '';
+
+    var entryDiv = document.createElement( 'div' );
+    entryDiv.className = 'tt-debug-entry';
+
+    var messageSpan = document.createElement( 'span' );
+
     if ( email ) {
-        authInfo.innerHTML =
-            '<div class="tt-debug-entry">' +
-            '<span class="tt-debug-level-info">' + TT.STRINGS.DEBUG_USER_EMAIL + ': ' + email + '</span>' +
-            '</div>';
+        messageSpan.className = 'tt-debug-level-info';
+        // Use textContent to prevent XSS from email values
+        messageSpan.textContent = TT.STRINGS.DEBUG_USER_EMAIL + ': ' + email;
     } else {
-        authInfo.innerHTML =
-            '<div class="tt-debug-entry">' +
-            '<span class="tt-debug-level-warning">' + TT.STRINGS.AUTH_STATUS_NOT_AUTHORIZED + '</span>' +
-            '</div>';
+        messageSpan.className = 'tt-debug-level-warning';
+        messageSpan.textContent = TT.STRINGS.AUTH_STATUS_NOT_AUTHORIZED;
     }
+
+    entryDiv.appendChild( messageSpan );
+    authInfo.appendChild( entryDiv );
 }

@@ -33,6 +33,12 @@ class APIMessages:
     USER_INACTIVE = 'User inactive or deleted.'
 
     # -------------------------------------------------------------------------
+    # Rate limiting and quota messages
+    # -------------------------------------------------------------------------
+    TOKEN_LIMIT_REACHED = 'Maximum number of API keys reached. Please delete unused keys first.'
+    RATE_LIMIT_EXCEEDED = 'Rate limit exceeded. Please try again later.'
+
+    # -------------------------------------------------------------------------
     # Generic error messages
     # -------------------------------------------------------------------------
     BAD_REQUEST = 'Bad request'

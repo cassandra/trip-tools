@@ -26,6 +26,15 @@ class APITokenService:
     """
 
     APP_PREFIX = 'tt_'
+    MAX_TOKENS_PER_USER = 100
+
+    @classmethod
+    def user_token_count(cls, user: User) -> int:
+        return APIToken.objects.filter(user=user).count()
+
+    @classmethod
+    def can_create_token(cls, user: User) -> bool:
+        return cls.user_token_count(user) < cls.MAX_TOKENS_PER_USER
 
     @classmethod
     def _generate_api_token_str(cls) -> APITokenGenerationData:

@@ -72,16 +72,17 @@ class TokenDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request: Request, lookup_key: str) -> Response:
-        """Removes the token (user can only delete their own tokens)."""
-        try:
-            api_token = APIToken.objects.get( lookup_key = clean_str(lookup_key), user = request.user )
-        except APIToken.DoesNotExist:
-            return Response(
-                { F.ERROR: M.not_found('Token') },
-                status = status.HTTP_404_NOT_FOUND
-            )
+        """
+        Removes the token if it exists.
 
-        api_token.delete()
+        Always returns 204 regardless of whether the token existed to prevent
+        enumeration attacks (attacker cannot determine valid lookup keys by
+        observing different response codes).
+        """
+        APIToken.objects.filter(
+            lookup_key = clean_str( lookup_key ),
+            user = request.user,
+        ).delete()
         return Response( status = status.HTTP_204_NO_CONTENT )
 
 

@@ -265,3 +265,48 @@ class APITokenServiceTestCase(TestCase):
         self.assertEqual(authenticated_user1, self.user)
         self.assertEqual(authenticated_user2, user2)
         self.assertNotEqual(authenticated_user1, authenticated_user2)
+
+    # -------------------------------------------------------------------------
+    # Token Limit Tests
+    # -------------------------------------------------------------------------
+
+    def test_user_token_count_returns_zero_for_new_user(self):
+        """Test user_token_count returns 0 for user with no tokens."""
+        count = APITokenService.user_token_count( self.user )
+        self.assertEqual( count, 0 )
+
+    def test_user_token_count_returns_correct_count(self):
+        """Test user_token_count returns accurate count after creating tokens."""
+        APITokenService.create_token( self.user, 'Token 1' )
+        APITokenService.create_token( self.user, 'Token 2' )
+        APITokenService.create_token( self.user, 'Token 3' )
+
+        count = APITokenService.user_token_count( self.user )
+        self.assertEqual( count, 3 )
+
+    def test_can_create_token_returns_true_under_limit(self):
+        """Test can_create_token returns True when user is under token limit."""
+        # User has no tokens, should be able to create
+        self.assertTrue( APITokenService.can_create_token( self.user ) )
+
+        # Create a few tokens, still under limit
+        for i in range( 5 ):
+            APITokenService.create_token( self.user, f'Token {i}' )
+
+        self.assertTrue( APITokenService.can_create_token( self.user ) )
+
+    def test_can_create_token_returns_false_at_limit(self):
+        """Test can_create_token returns False when user is at token limit."""
+        # Create tokens up to the limit
+        for i in range( APITokenService.MAX_TOKENS_PER_USER ):
+            APITokenService.create_token( self.user, f'Token {i}' )
+
+        # Should not be able to create more
+        self.assertFalse( APITokenService.can_create_token( self.user ) )
+
+    def test_can_create_token_respects_max_tokens_per_user_constant(self):
+        """Test MAX_TOKENS_PER_USER constant is reasonable and respected."""
+        # Verify the constant exists and is sensible
+        self.assertIsInstance( APITokenService.MAX_TOKENS_PER_USER, int )
+        self.assertGreater( APITokenService.MAX_TOKENS_PER_USER, 0 )
+        self.assertLessEqual( APITokenService.MAX_TOKENS_PER_USER, 1000 )

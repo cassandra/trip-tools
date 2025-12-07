@@ -13,6 +13,7 @@ from django.views.generic import View
 
 from tt.apps.api.models import APIToken
 from tt.apps.api.services import APITokenService
+from tt.apps.common.rate_limit import rate_limit
 from tt.apps.notify.email_sender import EmailSender
 from tt.async_view import ModalView
 
@@ -274,10 +275,21 @@ class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
         context = {
             'form': form,
         }
-        return self.modal_response(request, context=context)
+        return self.modal_response( request, context = context )
 
+    @rate_limit( 'api_key_ops', limit = 100, period_secs = 3600 )
     def post(self, request, *args, **kwargs):
-        form = forms.APIKeyCreateForm(request.POST)
+        from tt.apps.api.messages import APIMessages
+
+        form = forms.APIKeyCreateForm( request.POST )
+
+        # Check token limit before processing form
+        if not APITokenService.can_create_token( request.user ):
+            form.add_error( None, APIMessages.TOKEN_LIMIT_REACHED )
+            context = {
+                'form': form,
+            }
+            return self.modal_response( request, context = context, status = 400 )
 
         if form.is_valid():
             api_token_data = APITokenService.create_token(
@@ -315,6 +327,7 @@ class APIKeyDeleteModalView( LoginRequiredMixin, ModalView ):
         }
         return self.modal_response(request, context=context)
 
+    @rate_limit( 'api_key_ops', limit = 100, period_secs = 3600 )
     def post(self, request, api_key_id: int, *args, **kwargs):
         api_key = get_object_or_404(
             APIToken,
@@ -325,7 +338,7 @@ class APIKeyDeleteModalView( LoginRequiredMixin, ModalView ):
         return self.refresh_response( request )
 
 
-class ExtensionsHomeView(LoginRequiredMixin, View):
+class ExtensionsHomeView( LoginRequiredMixin, View ):
     """
     Extensions management page - shows extension tokens and authorization options.
 

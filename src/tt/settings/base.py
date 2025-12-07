@@ -450,5 +450,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'tt.apps.api.throttling.APIUserRateThrottle',
+        'tt.apps.api.throttling.APIAnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'api_user': '1000/hour',
+        'api_anon': '100/hour',
+    },
     'EXCEPTION_HANDLER': 'tt.apps.api.exception_handler.exception_handler',
 }
