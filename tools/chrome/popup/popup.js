@@ -13,6 +13,20 @@ function initializePopup() {
     loadSettings();
     setupEventListeners();
     loadDebugLog();
+    checkAuthStatus();
+    listenForAuthStateChanges();
+}
+
+function listenForAuthStateChanges() {
+    chrome.runtime.onMessage.addListener( function( message ) {
+        if ( message.type === TT.MESSAGE.TYPE_AUTH_STATE_CHANGED ) {
+            if ( message.data.authorized ) {
+                showAuthorizedState( message.data.email, message.data.serverStatus );
+            } else {
+                showNotAuthorizedState();
+            }
+        }
+    });
 }
 
 function displayVersion() {
@@ -26,7 +40,7 @@ function displayVersion() {
     }
 
     if ( TT.CONFIG.IS_DEVELOPMENT ) {
-        var header = document.querySelector( '.tt-popup-header' );
+        var header = document.querySelector( '.' + TT.DOM.CLASS_POPUP_HEADER );
         if ( header ) {
             header.classList.add( TT.DOM.CLASS_DEV_MODE );
         }
@@ -45,10 +59,8 @@ function checkBackgroundConnection() {
     TTMessaging.ping()
         .then( function( response ) {
             if ( response && response.success ) {
-                indicator.classList.remove( TT.DOM.CLASS_DISCONNECTED );
-                indicator.classList.add( TT.DOM.CLASS_CONNECTED );
-                var uptimeSec = Math.floor( response.data.uptime / 1000 );
-                statusText.textContent = 'Connected (uptime: ' + uptimeSec + 's)';
+                // Store uptime for later use when we know auth status
+                window.ttBackgroundUptime = response.data.uptime;
                 addLocalDebugEntry( 'info', 'Background connection established' );
             } else {
                 setDisconnectedStatus( indicator, statusText );
@@ -102,6 +114,7 @@ function loadDebugPanelVisibility() {
 
 function setupEventListeners() {
     setupQuickSettingsListeners();
+    setupAuthEventListeners();
 
     var decorateToggle = document.getElementById( TT.DOM.ID_DECORATE_TOGGLE );
     if ( decorateToggle ) {
@@ -238,4 +251,123 @@ function addLocalDebugEntry( level, message ) {
         .then( function( log ) {
             renderDebugLog( log );
         });
+}
+
+function checkAuthStatus() {
+    TTMessaging.send( TT.MESSAGE.TYPE_AUTH_STATUS_REQUEST, {} )
+        .then( function( response ) {
+            if ( response && response.success && response.data.authorized ) {
+                showAuthorizedState( response.data.email, response.data.serverStatus );
+            } else {
+                showNotAuthorizedState();
+            }
+        })
+        .catch( function( error ) {
+            showNotAuthorizedState();
+            addLocalDebugEntry( 'error', 'Auth check failed: ' + error.message );
+        });
+}
+
+function showAuthorizedState( email, serverStatus ) {
+    var authSection = document.getElementById( TT.DOM.ID_AUTH_SECTION );
+    if ( authSection ) {
+        authSection.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
+
+    // Update status bar based on server status
+    var indicator = document.getElementById( TT.DOM.ID_STATUS_INDICATOR );
+    var statusText = document.getElementById( TT.DOM.ID_STATUS_TEXT );
+    if ( indicator && statusText ) {
+        // Remove all state classes
+        indicator.classList.remove(
+            TT.DOM.CLASS_CONNECTED,
+            TT.DOM.CLASS_DISCONNECTED,
+            TT.DOM.CLASS_OFFLINE,
+            TT.DOM.CLASS_SERVER_ERROR
+        );
+
+        switch ( serverStatus ) {
+            case TT.AUTH.STATUS_OFFLINE:
+                indicator.classList.add( TT.DOM.CLASS_OFFLINE );
+                statusText.textContent = TT.STRINGS.STATUS_OFFLINE;
+                break;
+            case TT.AUTH.STATUS_SERVER_ERROR:
+                indicator.classList.add( TT.DOM.CLASS_SERVER_ERROR );
+                statusText.textContent = TT.STRINGS.STATUS_SERVER_ERROR;
+                break;
+            case TT.AUTH.STATUS_TIMEOUT:
+                indicator.classList.add( TT.DOM.CLASS_SERVER_ERROR );
+                statusText.textContent = TT.STRINGS.STATUS_TIMEOUT;
+                break;
+            default:
+                indicator.classList.add( TT.DOM.CLASS_CONNECTED );
+                var uptimeSec = Math.floor( ( window.ttBackgroundUptime || 0 ) / 1000 );
+                statusText.textContent = TT.STRINGS.STATUS_ONLINE + ' (uptime: ' + uptimeSec + 's)';
+        }
+    }
+
+    updateDebugAuthInfo( email );
+}
+
+function showNotAuthorizedState() {
+    var authSection = document.getElementById( TT.DOM.ID_AUTH_SECTION );
+    if ( authSection ) {
+        authSection.classList.remove( TT.DOM.CLASS_HIDDEN );
+
+        var authStatus = document.getElementById( TT.DOM.ID_AUTH_STATUS );
+        if ( authStatus ) {
+            authStatus.textContent = TT.STRINGS.AUTH_PROMPT_CONNECT;
+        }
+    }
+
+    // Update status bar to show not connected
+    var indicator = document.getElementById( TT.DOM.ID_STATUS_INDICATOR );
+    var statusText = document.getElementById( TT.DOM.ID_STATUS_TEXT );
+    if ( indicator && statusText ) {
+        indicator.classList.remove( TT.DOM.CLASS_CONNECTED );
+        indicator.classList.add( TT.DOM.CLASS_DISCONNECTED );
+        statusText.textContent = 'Not connected';
+    }
+
+    updateDebugAuthInfo( null );
+}
+
+function setupAuthEventListeners() {
+    var authorizeBtn = document.getElementById( TT.DOM.ID_AUTHORIZE_BTN );
+    if ( authorizeBtn ) {
+        authorizeBtn.addEventListener( 'click', function() {
+            openAuthorizePage();
+        });
+    }
+}
+
+function openAuthorizePage() {
+    var defaultUrl = TT.CONFIG.IS_DEVELOPMENT
+        ? TT.CONFIG.DEFAULT_SERVER_URL_DEV
+        : TT.CONFIG.DEFAULT_SERVER_URL_PROD;
+
+    TTStorage.get( TT.STORAGE.KEY_SERVER_URL, defaultUrl )
+        .then( function( serverUrl ) {
+            var authUrl = serverUrl + TT.CONFIG.EXTENSION_AUTHORIZE_PATH;
+            chrome.tabs.create( { url: authUrl } );
+        });
+}
+
+function updateDebugAuthInfo( email ) {
+    var authInfo = document.getElementById( TT.DOM.ID_DEBUG_AUTH_INFO );
+    if ( !authInfo ) {
+        return;
+    }
+
+    if ( email ) {
+        authInfo.innerHTML =
+            '<div class="tt-debug-entry">' +
+            '<span class="tt-debug-level-info">' + TT.STRINGS.DEBUG_USER_EMAIL + ': ' + email + '</span>' +
+            '</div>';
+    } else {
+        authInfo.innerHTML =
+            '<div class="tt-debug-entry">' +
+            '<span class="tt-debug-level-warning">' + TT.STRINGS.AUTH_STATUS_NOT_AUTHORIZED + '</span>' +
+            '</div>';
+    }
 }

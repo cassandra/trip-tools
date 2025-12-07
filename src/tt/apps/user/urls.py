@@ -46,4 +46,14 @@ urlpatterns = [
         views.APIKeyDeleteModalView.as_view(),
         name='user_api_key_delete'
     ),
+    path(
+        'extensions/',
+        views.ExtensionsHomeView.as_view(),
+        name='user_extensions'
+    ),
+    path(
+        'extensions/authorize/',
+        views.ExtensionAuthorizeView.as_view(),
+        name='user_extension_authorize'
+    ),
 ]

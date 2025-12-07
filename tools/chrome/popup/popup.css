@@ -2,9 +2,10 @@
  * Trip Tools Chrome Extension - Popup Styles
  */
 
-body {
+html, body {
     width: 320px;
     min-height: 400px;
+    height: 400px;
     margin: 0;
     padding: 0;
     font-family: var(--tt-font-family);
@@ -91,8 +92,31 @@ body {
     background-color: var(--tt-error-color);
 }
 
+.tt-status-indicator.tt-offline {
+    background-color: var(--tt-warning-color);
+}
+
+.tt-status-indicator.tt-server-error {
+    background-color: #fd7e14;
+}
+
+/* Auth Section */
+.tt-auth-section {
+    text-align: center;
+    padding: 16px 12px;
+    background-color: var(--tt-primary-bg-light);
+}
+
+.tt-auth-status {
+    font-size: 13px;
+    color: var(--tt-muted-color);
+    margin-bottom: 12px;
+}
+
 .tt-popup-content {
     padding: 12px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .tt-maps-list {
@@ -188,6 +212,16 @@ input:checked + .tt-toggle-slider:before {
     padding: 8px 12px;
     max-height: 150px;
     overflow-y: auto;
+}
+
+.tt-debug-auth-info {
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #ccc;
+}
+
+.tt-debug-auth-info:empty {
+    display: none;
 }
 
 .tt-debug-entry {
@@ -312,4 +346,7 @@ input:checked + .tt-toggle-slider:before {
 #tt-popup-container {
     position: relative;
     overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }

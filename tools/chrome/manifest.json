@@ -8,6 +8,10 @@
         "tabs",
         "activeTab"
     ],
+    "host_permissions": [
+        "https://triptools.net/*",
+        "http://localhost:6777/*"
+    ],
     "action": {
         "default_popup": "popup/popup.html",
         "default_icon": {
@@ -24,5 +28,29 @@
     "background": {
         "service_worker": "background/service-worker.js"
     },
-    "options_page": "options/options.html"
+    "options_page": "options/options.html",
+    "content_scripts": [
+        {
+            "matches": [
+                "https://triptools.net/*",
+                "http://localhost:6777/*"
+            ],
+            "js": [
+                "shared/constants.js",
+                "content/triptools-state.js"
+            ],
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "https://triptools.net/user/extensions/*",
+                "http://localhost:6777/user/extensions/*"
+            ],
+            "js": [
+                "shared/constants.js",
+                "content/triptools-auth.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
 }

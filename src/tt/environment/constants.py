@@ -120,6 +120,21 @@ class TtConst:
     JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID = 'btn-entry-date-images'
     JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID = 'btn-recent-images'
 
+    # Chrome Extension Integration
+    # These constants must match values in tools/chrome/shared/constants.js
+    # Body classes added by extension content script (also in main.css)
+    EXT_STATE_CLASS_AUTHORIZED           = 'tt-ext-authorized'
+    EXT_STATE_CLASS_NOT_AUTHORIZED       = 'tt-ext-not-authorized'
+    # CSS visibility classes (also in main.css)
+    EXT_SHOW_AUTHORIZED_CLASS            = 'tt-ext-show-authorized'
+    EXT_SHOW_NOT_AUTHORIZED_CLASS        = 'tt-ext-show-not-authorized'
+    EXT_SHOW_NOT_INSTALLED_CLASS         = 'tt-ext-show-not-installed'
+    # PostMessage types for extension<->page communication
+    EXT_POSTMESSAGE_DATA_TYPE            = 'tt_extension_data'
+    EXT_POSTMESSAGE_ACK_TYPE             = 'tt_extension_ack'
+    # DOM element ID for token handoff
+    EXT_TOKEN_DATA_ELEMENT_ID            = 'extension-token-data'
+
     @classmethod
     def to_json_dict_str(cls):
         """Convert constants to JSON string for JavaScript injection."""

@@ -18,3 +18,4 @@ class AccountPageType(str, Enum):
 
     PROFILE    = 'profile'
     API_KEYS   = 'api_keys'
+    EXTENSIONS = 'extensions'

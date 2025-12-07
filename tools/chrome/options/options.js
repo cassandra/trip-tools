@@ -10,6 +10,20 @@ document.addEventListener( 'DOMContentLoaded', function() {
 function initializeOptions() {
     loadSettings();
     setupEventListeners();
+    checkAuthStatus();
+    listenForAuthStateChanges();
+}
+
+function listenForAuthStateChanges() {
+    chrome.runtime.onMessage.addListener( function( message ) {
+        if ( message.type === TT.MESSAGE.TYPE_AUTH_STATE_CHANGED ) {
+            if ( message.data.authorized ) {
+                showAuthorizedState( message.data.email );
+            } else {
+                showNotAuthorizedState();
+            }
+        }
+    });
 }
 
 function getDefaultServerUrl() {
@@ -54,6 +68,8 @@ function loadSettings() {
 }
 
 function setupEventListeners() {
+    setupAuthEventListeners();
+
     var developerModeToggle = document.getElementById( TT.DOM.ID_OPTIONS_DEVELOPER_MODE_TOGGLE );
     if ( developerModeToggle ) {
         developerModeToggle.addEventListener( 'change', function() {
@@ -116,5 +132,171 @@ function showSaveStatus() {
         setTimeout( function() {
             status.textContent = '';
         }, 2000 );
+    }
+}
+
+function checkAuthStatus() {
+    TTMessaging.send( TT.MESSAGE.TYPE_AUTH_STATUS_REQUEST, {} )
+        .then( function( response ) {
+            if ( response && response.success && response.data.authorized ) {
+                showAuthorizedState( response.data.email );
+            } else {
+                showNotAuthorizedState();
+            }
+        })
+        .catch( function() {
+            showNotAuthorizedState();
+        });
+}
+
+function showAuthorizedState( email ) {
+    var authorizedSection = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_AUTHORIZED );
+    var notAuthorizedSection = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_NOT_AUTHORIZED );
+    var emailSpan = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_EMAIL );
+
+    if ( authorizedSection ) {
+        authorizedSection.classList.remove( TT.DOM.CLASS_HIDDEN );
+    }
+    if ( notAuthorizedSection ) {
+        notAuthorizedSection.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
+    if ( emailSpan ) {
+        emailSpan.textContent = email;
+    }
+
+    clearTokenValidationStatus();
+}
+
+function showNotAuthorizedState() {
+    var authorizedSection = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_AUTHORIZED );
+    var notAuthorizedSection = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_NOT_AUTHORIZED );
+
+    if ( authorizedSection ) {
+        authorizedSection.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
+    if ( notAuthorizedSection ) {
+        notAuthorizedSection.classList.remove( TT.DOM.CLASS_HIDDEN );
+    }
+
+    clearTokenValidationStatus();
+}
+
+function setupAuthEventListeners() {
+    var authorizeBtn = document.getElementById( TT.DOM.ID_OPTIONS_AUTHORIZE_BTN );
+    if ( authorizeBtn ) {
+        authorizeBtn.addEventListener( 'click', function() {
+            openAuthorizePage();
+        });
+    }
+
+    var disconnectBtn = document.getElementById( TT.DOM.ID_OPTIONS_DISCONNECT_BTN );
+    if ( disconnectBtn ) {
+        disconnectBtn.addEventListener( 'click', function() {
+            handleDisconnect();
+        });
+    }
+
+    var validateBtn = document.getElementById( TT.DOM.ID_OPTIONS_VALIDATE_TOKEN_BTN );
+    if ( validateBtn ) {
+        validateBtn.addEventListener( 'click', function() {
+            handleManualTokenValidation();
+        });
+    }
+
+    var tokenInput = document.getElementById( TT.DOM.ID_OPTIONS_MANUAL_TOKEN_INPUT );
+    if ( tokenInput ) {
+        tokenInput.addEventListener( 'keypress', function( e ) {
+            if ( e.key === 'Enter' ) {
+                handleManualTokenValidation();
+            }
+        });
+    }
+}
+
+function openAuthorizePage() {
+    var defaultUrl = TT.CONFIG.IS_DEVELOPMENT
+        ? TT.CONFIG.DEFAULT_SERVER_URL_DEV
+        : TT.CONFIG.DEFAULT_SERVER_URL_PROD;
+
+    TTStorage.get( TT.STORAGE.KEY_SERVER_URL, defaultUrl )
+        .then( function( serverUrl ) {
+            var authUrl = serverUrl + TT.CONFIG.EXTENSION_AUTHORIZE_PATH;
+            chrome.tabs.create( { url: authUrl } );
+        });
+}
+
+function handleDisconnect() {
+    showTokenValidationStatus( TT.STRINGS.AUTH_STATUS_DISCONNECTING, 'info' );
+
+    TTMessaging.send( TT.MESSAGE.TYPE_DISCONNECT, {} )
+        .then( function( response ) {
+            if ( response && response.success ) {
+                // Auth state change is handled by listenForAuthStateChanges()
+                showTokenValidationStatus( TT.STRINGS.AUTH_SUCCESS_DISCONNECTED, 'success' );
+            } else {
+                var errorMsg = response && response.error
+                    ? response.error
+                    : TT.STRINGS.AUTH_ERROR_DISCONNECT_FAILED;
+                showTokenValidationStatus( errorMsg, 'error' );
+            }
+        })
+        .catch( function() {
+            showTokenValidationStatus( TT.STRINGS.AUTH_ERROR_NETWORK, 'error' );
+        });
+}
+
+function handleManualTokenValidation() {
+    var tokenInput = document.getElementById( TT.DOM.ID_OPTIONS_MANUAL_TOKEN_INPUT );
+    if ( !tokenInput ) {
+        return;
+    }
+
+    var token = tokenInput.value.trim();
+    if ( !token ) {
+        showTokenValidationStatus( TT.STRINGS.AUTH_ERROR_INVALID_FORMAT, 'error' );
+        return;
+    }
+
+    if ( !TTAuth.isValidTokenFormat( token ) ) {
+        showTokenValidationStatus( TT.STRINGS.AUTH_ERROR_INVALID_FORMAT, 'error' );
+        return;
+    }
+
+    showTokenValidationStatus( TT.STRINGS.AUTH_STATUS_CHECKING, 'info' );
+
+    TTMessaging.send( TT.MESSAGE.TYPE_TOKEN_RECEIVED, { token: token } )
+        .then( function( response ) {
+            if ( response && response.success && response.data.authorized ) {
+                // Auth state change is handled by listenForAuthStateChanges()
+                showTokenValidationStatus( TT.STRINGS.AUTH_SUCCESS_VALIDATED, 'success' );
+                tokenInput.value = '';
+            } else {
+                var errorMsg = response && response.data && response.data.error
+                    ? response.data.error
+                    : TT.STRINGS.AUTH_ERROR_INVALID_TOKEN;
+                showTokenValidationStatus( errorMsg, 'error' );
+            }
+        })
+        .catch( function() {
+            showTokenValidationStatus( TT.STRINGS.AUTH_ERROR_NETWORK, 'error' );
+        });
+}
+
+function showTokenValidationStatus( message, type ) {
+    var statusDiv = document.getElementById( TT.DOM.ID_OPTIONS_TOKEN_VALIDATION_STATUS );
+    if ( statusDiv ) {
+        statusDiv.textContent = message;
+        statusDiv.className = TT.DOM.CLASS_TOKEN_VALIDATION_STATUS;
+        if ( type ) {
+            statusDiv.classList.add( 'tt-validation-' + type );
+        }
+    }
+}
+
+function clearTokenValidationStatus() {
+    var statusDiv = document.getElementById( TT.DOM.ID_OPTIONS_TOKEN_VALIDATION_STATUS );
+    if ( statusDiv ) {
+        statusDiv.textContent = '';
+        statusDiv.className = TT.DOM.CLASS_TOKEN_VALIDATION_STATUS;
     }
 }

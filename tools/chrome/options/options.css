@@ -144,3 +144,57 @@ input:checked + .tt-toggle-slider {
 input:checked + .tt-toggle-slider:before {
     transform: translateX(20px);
 }
+
+/* Authorization Section */
+.tt-options-auth-status {
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.tt-auth-status-label {
+    color: var(--tt-muted-color);
+}
+
+.tt-options-auth-hint {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    color: var(--tt-muted-color);
+}
+
+.tt-manual-token-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--tt-line-color);
+}
+
+.tt-manual-token-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.tt-manual-token-row .tt-text-input {
+    flex: 1;
+}
+
+.tt-manual-token-row .tt-btn {
+    flex-shrink: 0;
+}
+
+.tt-token-validation-status {
+    margin-top: 8px;
+    font-size: 12px;
+    min-height: 16px;
+}
+
+.tt-validation-success {
+    color: var(--tt-success-color);
+}
+
+.tt-validation-error {
+    color: var(--tt-error-color);
+}
+
+.tt-validation-info {
+    color: var(--tt-muted-color);
+}

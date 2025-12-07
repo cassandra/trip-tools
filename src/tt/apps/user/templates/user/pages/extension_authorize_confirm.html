@@ -1,0 +1,104 @@
+{% extends "pages/prompt_page.html" %}
+{% load icons %}
+
+{% block title %}Authorize Extension - Trip Tools{% endblock %}
+
+{% block prompt_content %}
+<div class="text-center mb-4">
+  {% icon "plug" size="xxxl" css_class="text-primary" %}
+  <h2 class="mt-3">Authorize Extension</h2>
+  <p class="text-muted">Connect the Trip Tools browser extension to your account.</p>
+</div>
+
+<div class="card">
+  <div class="card-body text-center">
+    <p class="mb-3">You are signed in as <strong>{{ user.email }}</strong></p>
+
+    <!-- Already authorized state (extension will show this) -->
+    <div class="{{ TtConst.EXT_SHOW_AUTHORIZED_CLASS }}">
+      <div class="alert alert-success">
+        {% icon "check-circle" size="sm" %} Extension is already authorized.
+      </div>
+      <a href="{% url 'user_extensions' %}" class="btn btn-primary">
+        {% icon "chevron-left" size="sm" %} Back to Extensions
+      </a>
+    </div>
+
+    <!-- Not authorized state (extension will show this) -->
+    <div class="{{ TtConst.EXT_SHOW_NOT_AUTHORIZED_CLASS }}">
+      <p class="small text-muted mb-4">
+        Clicking "Authorize" will create an API token that allows the extension to access your Trip Tools account.
+      </p>
+      <div id="auth-form-area">
+        <form method="post" data-async="#auth-form-area" debounce>
+          {% csrf_token %}
+          <input type="hidden" name="platform" value="{{ platform }}">
+          <button type="submit" class="btn btn-primary btn-lg">
+            {% icon "check" size="sm" %} Authorize Extension
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Extension not installed state (default, shown before extension runs) -->
+    <div class="{{ TtConst.EXT_SHOW_NOT_INSTALLED_CLASS }}">
+      <div class="alert alert-warning">
+        {% icon "alert-triangle" size="sm" %} Extension not detected.
+      </div>
+      <p class="small text-muted">
+        Please install the Trip Tools browser extension first, then visit this page again.
+      </p>
+      <a href="{% url 'user_extensions' %}" class="btn btn-outline-secondary">
+        {% icon "chevron-left" size="sm" %} Back to Extensions
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var extensionResponded = false;
+
+  // Listen for extension acknowledgment
+  window.addEventListener('message', function(event) {
+    if (event.origin !== window.location.origin) return;
+    if (!event.data || event.data.type !== TtConst.EXT_POSTMESSAGE_ACK_TYPE) return;
+
+    extensionResponded = true;
+    var resultEl = document.getElementById('auth-result');
+    if (resultEl) {
+      if (event.data.payload.success) {
+        resultEl.innerHTML = '<div class="alert alert-success">Extension authorized successfully!</div>';
+      } else {
+        resultEl.innerHTML = '<div class="alert alert-danger">' + (event.data.payload.error || 'Authorization failed') + '</div>';
+      }
+    }
+  });
+
+  // antinode.js calls this after async content updates
+  window.handlePostAsyncUpdate = function() {
+    var tokenEl = document.getElementById(TtConst.EXT_TOKEN_DATA_ELEMENT_ID);
+    if (tokenEl) {
+      var token = tokenEl.dataset.token;
+      if (token) {
+        // Send token to extension
+        window.postMessage({
+          type: TtConst.EXT_POSTMESSAGE_DATA_TYPE,
+          payload: { action: 'authorize', token: token }
+        }, window.location.origin);
+
+        // Show fallback if extension doesn't respond
+        setTimeout(function() {
+          if (!extensionResponded) {
+            var fallbackEl = document.getElementById('auth-fallback');
+            if (fallbackEl) {
+              fallbackEl.classList.remove('d-none');
+            }
+          }
+        }, 2000);
+      }
+    }
+  };
+})();
+</script>
+{% endblock %}

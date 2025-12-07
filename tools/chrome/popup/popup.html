@@ -27,6 +27,14 @@
             <span id="tt-status-text">Checking connection...</span>
         </div>
 
+        <!-- Auth Section (shown when not authorized) -->
+        <div class="tt-section tt-auth-section tt-hidden" id="tt-auth-section">
+            <div class="tt-auth-status" id="tt-auth-status"></div>
+            <button class="tt-btn tt-btn-primary" id="tt-authorize-btn">
+                Authorize Extension
+            </button>
+        </div>
+
         <!-- Main Content -->
         <div class="tt-popup-content">
             <!-- Maps Section (stub) -->
@@ -72,6 +80,7 @@
                 <span id="tt-debug-arrow">&#9660;</span>
             </div>
             <div class="tt-debug-content" id="tt-debug-content">
+                <div class="tt-debug-auth-info" id="tt-debug-auth-info"></div>
                 <div id="tt-debug-log"></div>
             </div>
         </div>

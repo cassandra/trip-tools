@@ -6,8 +6,12 @@
 importScripts( '../shared/constants.js' );
 importScripts( '../shared/storage.js' );
 importScripts( '../shared/messaging.js' );
+importScripts( '../shared/auth.js' );
+importScripts( '../shared/api.js' );
 
 var extensionStartTime = Date.now();
+var lastAuthValidation = 0;
+var connectionStartTime = null;  // Time of last successful server contact (null = never or disrupted)
 
 chrome.runtime.onInstalled.addListener( function( details ) {
     console.log( '[TT Background] Extension installed:', details.reason );
@@ -36,6 +40,12 @@ TTMessaging.listen( function( message, sender ) {
             return handleGetState();
         case TT.MESSAGE.TYPE_LOG:
             return handleLog( message.data );
+        case TT.MESSAGE.TYPE_TOKEN_RECEIVED:
+            return handleTokenReceived( message.data );
+        case TT.MESSAGE.TYPE_AUTH_STATUS_REQUEST:
+            return handleAuthStatusRequest();
+        case TT.MESSAGE.TYPE_DISCONNECT:
+            return handleDisconnect();
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -44,10 +54,10 @@ TTMessaging.listen( function( message, sender ) {
 });
 
 function handlePing() {
-    var uptimeMs = Date.now() - extensionStartTime;
+    var connectionUptimeMs = connectionStartTime ? Date.now() - connectionStartTime : 0;
     return TTMessaging.createResponse( true, {
         type: TT.MESSAGE.TYPE_PONG,
-        uptime: uptimeMs,
+        uptime: connectionUptimeMs,
         version: TT.CONFIG.EXTENSION_VERSION
     });
 }
@@ -92,4 +102,247 @@ function addDebugLogEntry( level, message ) {
 
 function logMessage( direction, type, data ) {
     console.log( '[TT Background] ' + direction + ': ' + type, data );
+}
+
+/**
+ * Handle token received from content script or options page.
+ * Validates token, stores it, and updates auth state.
+ */
+function handleTokenReceived( data ) {
+    var token = data.token;
+
+    // Validate token format (security: never log the token value)
+    if ( !TTAuth.isValidTokenFormat( token ) ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: TT.STRINGS.AUTH_ERROR_INVALID_FORMAT
+        }));
+    }
+
+    // Store token first
+    return TTAuth.setApiToken( token )
+        .then( function() {
+            // Validate token by calling /api/v1/me/
+            return TTApi.validateToken( token );
+        })
+        .then( function( userInfo ) {
+            // Token is valid - store user email and update state
+            connectionStartTime = Date.now();
+            return TTAuth.setUserEmail( userInfo.email )
+                .then( function() {
+                    return TTAuth.setAuthState( TT.AUTH.STATE_AUTHORIZED );
+                })
+                .then( function() {
+                    // Log success (without revealing token)
+                    return addDebugLogEntry( 'info', 'Authorization successful: ' + userInfo.email );
+                })
+                .then( function() {
+                    broadcastAuthStateChange( true, userInfo.email );
+                    return TTMessaging.createResponse( true, {
+                        authorized: true,
+                        email: userInfo.email
+                    });
+                });
+        })
+        .catch( function( error ) {
+            // Token validation failed - clear it
+            connectionStartTime = null;
+            return TTAuth.clearApiToken()
+                .then( function() {
+                    return TTAuth.setAuthState( TT.AUTH.STATE_NOT_AUTHORIZED );
+                })
+                .then( function() {
+                    return addDebugLogEntry( 'error', 'Authorization failed: ' + error.message );
+                })
+                .then( function() {
+                    return TTMessaging.createResponse( false, {
+                        error: error.message
+                    });
+                });
+        });
+}
+
+/**
+ * Handle auth status request.
+ * Validates token with server (debounced) and returns auth state.
+ */
+function handleAuthStatusRequest() {
+    return TTAuth.getAuthState()
+        .then( function( state ) {
+            if ( state !== TT.AUTH.STATE_AUTHORIZED ) {
+                return TTMessaging.createResponse( true, {
+                    authorized: false,
+                    serverStatus: null
+                });
+            }
+
+            // Check debounce - return cached state if recent validation
+            var now = Date.now();
+            if ( now - lastAuthValidation < TT.CONFIG.AUTH_VALIDATION_DEBOUNCE_MS ) {
+                return TTAuth.getUserEmail()
+                    .then( function( email ) {
+                        return TTMessaging.createResponse( true, {
+                            authorized: true,
+                            email: email,
+                            serverStatus: TT.AUTH.STATUS_ONLINE,
+                            cached: true
+                        });
+                    });
+            }
+
+            lastAuthValidation = now;
+
+            // Validate with server
+            return validateAuthWithServer();
+        });
+}
+
+/**
+ * Validate token with server, handling various error states.
+ */
+function validateAuthWithServer() {
+    return TTAuth.getApiToken()
+        .then( function( token ) {
+            if ( !token ) {
+                return TTMessaging.createResponse( true, {
+                    authorized: false,
+                    serverStatus: null
+                });
+            }
+
+            // Create abort controller for timeout
+            var controller = new AbortController();
+            var timeoutId = setTimeout( function() {
+                controller.abort();
+            }, TT.CONFIG.AUTH_VALIDATION_TIMEOUT_MS );
+
+            return TTApi.validateTokenWithSignal( token, controller.signal )
+                .then( function( userInfo ) {
+                    clearTimeout( timeoutId );
+                    // Start uptime counter if not already running
+                    if ( !connectionStartTime ) {
+                        connectionStartTime = Date.now();
+                    }
+                    return TTMessaging.createResponse( true, {
+                        authorized: true,
+                        email: userInfo.email,
+                        serverStatus: TT.AUTH.STATUS_ONLINE
+                    });
+                })
+                .catch( function( error ) {
+                    clearTimeout( timeoutId );
+                    return handleValidationError( error );
+                });
+        });
+}
+
+/**
+ * Handle validation errors with distinct states.
+ * Any error resets the uptime counter since connection is disrupted.
+ */
+function handleValidationError( error ) {
+    // Any error disrupts the connection - reset uptime
+    connectionStartTime = null;
+
+    // 401 - Token revoked
+    if ( error.status === 401 ) {
+        return TTAuth.disconnect()
+            .then( function() {
+                return addDebugLogEntry( 'info', 'Token revoked by server' );
+            })
+            .then( function() {
+                broadcastAuthStateChange( false, null );
+                return TTMessaging.createResponse( true, {
+                    authorized: false,
+                    serverStatus: null
+                });
+            });
+    }
+
+    // Determine error type
+    var serverStatus;
+    if ( error.name === 'AbortError' ) {
+        serverStatus = TT.AUTH.STATUS_TIMEOUT;
+    } else if ( error.status >= 500 ) {
+        serverStatus = TT.AUTH.STATUS_SERVER_ERROR;
+    } else {
+        serverStatus = TT.AUTH.STATUS_OFFLINE;
+    }
+
+    // Keep cached auth, return with error status
+    return TTAuth.getUserEmail()
+        .then( function( email ) {
+            return addDebugLogEntry( 'warn', 'Server validation failed: ' + serverStatus )
+                .then( function() {
+                    return TTMessaging.createResponse( true, {
+                        authorized: true,
+                        email: email,
+                        serverStatus: serverStatus
+                    });
+                });
+        });
+}
+
+/**
+ * Handle disconnect request.
+ * Deletes token on server, then clears local auth state.
+ * Requires network connectivity - fails if offline.
+ */
+function handleDisconnect() {
+    var storedToken;
+
+    return TTAuth.getApiToken()
+        .then( function( token ) {
+            storedToken = token;
+            if ( !token ) {
+                // No token stored, just clear local state
+                return Promise.resolve();
+            }
+
+            var lookupKey = TTAuth.getLookupKey( token );
+            if ( !lookupKey ) {
+                // Invalid token format, just clear local state
+                return Promise.resolve();
+            }
+
+            // Delete token on server
+            return TTApi.deleteToken( lookupKey );
+        })
+        .then( function() {
+            // Clear local auth state
+            connectionStartTime = null;
+            return TTAuth.disconnect();
+        })
+        .then( function() {
+            return addDebugLogEntry( 'info', 'Disconnected from Trip Tools' );
+        })
+        .then( function() {
+            broadcastAuthStateChange( false, null );
+            return TTMessaging.createResponse( true, {} );
+        })
+        .catch( function( error ) {
+            return addDebugLogEntry( 'error', 'Disconnect failed: ' + error.message )
+                .then( function() {
+                    return TTMessaging.createResponse( false, {
+                        error: error.message
+                    });
+                });
+        });
+}
+
+/**
+ * Broadcast auth state change to all extension views (popup, options).
+ */
+function broadcastAuthStateChange( authorized, email ) {
+    var message = {
+        type: TT.MESSAGE.TYPE_AUTH_STATE_CHANGED,
+        data: {
+            authorized: authorized,
+            email: email
+        }
+    };
+
+    // Send to all extension pages (popup, options, etc.)
+    chrome.runtime.sendMessage( message ).catch( function() {
+        // Ignore errors - no listeners may be active
+    });
 }

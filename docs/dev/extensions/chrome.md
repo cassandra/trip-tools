@@ -51,3 +51,74 @@ Access via "All Options" link in the quick options panel. Contains all settings 
 - **Debug Panel**: Show/hide debug panel in popup (defaults to enabled when Developer Mode is turned on)
 
 In development builds, Developer Mode defaults to enabled. In production builds, it defaults to disabled but can be enabled by users who need it.
+
+## Authorization
+
+The extension authenticates with triptools.net using API tokens.
+
+### Authorization Flow
+
+1. User clicks "Authorize" in extension popup or options page
+2. Browser opens `/user/extensions/authorize/` on triptools.net
+3. User clicks "Authorize Extension" button (async POST via antinode.js)
+4. Server creates API token, returns fragment with token in data attribute
+5. Page JavaScript sends token to extension via `postMessage`
+6. Extension content script receives token, forwards to service worker
+7. Service worker validates token with `/api/v1/me/`, stores on success
+8. Extension sends ack back to page, which shows success/failure
+
+### Token Validation
+
+The service worker validates tokens on demand (debounced):
+- When popup opens
+- When options page opens
+- When content script queries auth state
+
+If validation fails:
+- **401**: Token revoked → clear auth state, show "Not connected"
+- **Network error**: Keep cached auth, show "Offline"
+- **5xx error**: Keep cached auth, show "Server error"
+- **Timeout**: Keep cached auth, show "Connection timeout"
+
+### Disconnect
+
+Disconnect deletes the token on the server before clearing local state. Requires network connectivity.
+
+## Extension State on triptools.net Pages
+
+Content scripts add CSS classes to `<body>` indicating extension state. Pages use visibility classes to show/hide content based on state.
+
+### Body State Classes
+
+Added by `triptools-state.js` content script:
+
+| Class | Meaning |
+|-------|---------|
+| `tt-ext-authorized` | Extension installed and authorized |
+| `tt-ext-not-authorized` | Extension installed but not authorized |
+| *(neither)* | Extension not installed |
+
+### Visibility Classes
+
+Use these on elements to control visibility:
+
+| Class | Visible When |
+|-------|--------------|
+| `tt-ext-show-authorized` | Extension authorized |
+| `tt-ext-show-not-authorized` | Extension installed but not authorized |
+| `tt-ext-show-not-installed` | Extension not installed (default state) |
+
+Example:
+```html
+<div class="tt-ext-show-authorized">Welcome back!</div>
+<div class="tt-ext-show-not-authorized">Please authorize the extension.</div>
+<div class="tt-ext-show-not-installed">Install our browser extension.</div>
+```
+
+### Synced Constants
+
+These values are defined in both:
+- Server: `TtConst` in `src/tt/environment/constants.py`
+- Extension: `TT.SERVER_SYNC` in `tools/chrome/shared/constants.js`
+
+Variable names are identical for searchability. CSS rules are in `src/tt/static/css/main.css`.

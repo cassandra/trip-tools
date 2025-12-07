@@ -19,6 +19,7 @@ from tt.async_view import ModalView
 from . import forms
 from .context import AccountPageContext
 from .enums import AccountPageType, SigninErrorType
+from .extension_service import ExtensionTokenService
 from .magic_code_generator import MagicCodeStatus, MagicCodeGenerator
 from .signin_manager import SigninManager
 from .schemas import UserAuthenticationData
@@ -323,4 +324,74 @@ class APIKeyDeleteModalView(LoginRequiredMixin, ModalView):
         api_key.delete()
         redirect_url = reverse('user_api_keys')
         return self.redirect_response( request, redirect_url )
+
+
+class ExtensionsHomeView(LoginRequiredMixin, View):
+    """Extensions management page - shows extension tokens and authorization options."""
+
+    def get(self, request, *args, **kwargs):
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.EXTENSIONS,
+        )
+        extension_tokens = ExtensionTokenService.get_extension_tokens( request.user )
+        context = {
+            'account_page': account_page_context,
+            'user': request.user,
+            'extension_tokens': extension_tokens,
+        }
+        return render( request, 'user/pages/extensions.html', context )
+
+
+class ExtensionAuthorizeView(LoginRequiredMixin, View):
+    """
+    Creates extension token and displays it for postMessage capture.
+
+    Flow:
+    1. User lands on this page (either from extension or web app)
+    2. If not logged in, LoginRequiredMixin redirects to signin
+    3. Extension content script (if installed) will hide.show page sections
+    3. If extension is not authorized, GET shows confirmation page with "Authorize" button
+    4. POST creates token with name format: "Chrome Extension - {Platform} - {Month Year}"
+    5. Handle collision by appending (2), (3), etc.
+    6. Render page that sends postMessage with token
+    7. Post-async call handling (via antinode.js callback) sends token to extension.
+    """
+
+    def get(self, request, *args, **kwargs):
+        platform = request.GET.get( 'platform', '' )
+        context = {
+            'user': request.user,
+            'platform': platform,
+        }
+        return render( request, 'user/pages/extension_authorize_confirm.html', context )
+
+    def post(self, request, *args, **kwargs):
+        from django.http import JsonResponse
+        from django.template.loader import render_to_string
+
+        # Get platform from form data (passed through from GET)
+        platform = request.POST.get( 'platform', None ) or None
+
+        # Create the extension token
+        token_data = ExtensionTokenService.create_extension_token(
+            user = request.user,
+            platform = platform,
+        )
+
+        # Render the result fragment
+        fragment_html = render_to_string(
+            'user/components/extension_authorize_result.html',
+            {
+                'token_str': token_data.api_token_str,
+                'token_name': token_data.api_token.name,
+            },
+            request = request,
+        )
+
+        # Return antinode.js compatible JSON response
+        return JsonResponse({
+            'insert': {
+                'auth-form-area': fragment_html,
+            }
+        })
 

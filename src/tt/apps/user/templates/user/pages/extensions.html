@@ -1,0 +1,102 @@
+{% extends "user/pages/account_subpage.html" %}
+{% load icons %}
+{% load humanize %}
+
+{% block subpage_header %}
+<h1 class="h2 m-4">Browser Extensions</h1>
+{% endblock %}
+
+{% block subpage_content %}
+<div class="container-fluid">
+
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Chrome Extension</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-8">
+              <p>The Trip Tools Chrome extension lets you save locations from travel sites directly to your trip maps.</p>
+              <p class="text-muted small">Works with Google My Maps, Booking.com, TripAdvisor, and more.</p>
+              <div class="mt-3">
+                <a href="{% url 'user_extension_authorize' %}" class="btn btn-primary">
+                  {% icon "plug" size="sm" %} Authorize Extension
+                </a>
+                <span class="text-muted ml-2 small">Already have the extension installed? Click to connect it.</span>
+              </div>
+            </div>
+            <div class="col-md-4 text-center">
+              {% icon "plug" size="xxxl" css_class="text-muted" %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if extension_tokens %}
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Connected Extensions</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Connected</th>
+                  <th>Last Used</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for token in extension_tokens %}
+                <tr>
+                  <td>
+                    {% icon "plug" size="sm" css_class="text-muted mr-2" %}
+                    <strong>{{ token.name }}</strong>
+                  </td>
+                  <td>{{ token.created_at|date:"M d, Y" }}</td>
+                  <td>
+                    {% if token.last_used_at %}
+                      {{ token.last_used_at|naturaltime }}
+                      <span class="badge badge-success ml-1">Active</span>
+                    {% else %}
+                      Never
+                      <span class="badge badge-secondary ml-1">Unused</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted small mb-0">
+            To disconnect an extension, go to <a href="{% url 'user_api_keys' %}">API Keys</a> and delete its token.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Installation</h5>
+        </div>
+        <div class="card-body">
+          <p>The Chrome extension is currently in development. Once published, you'll be able to install it from the Chrome Web Store.</p>
+          <p class="text-muted small mb-0">Future versions will also support Firefox and other browsers.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -16,6 +16,41 @@
 
         <!-- Main Settings -->
         <div class="tt-options-content">
+            <!-- Authorization Section -->
+            <div class="tt-section" id="tt-options-auth-section">
+                <div class="tt-section-header">Authorization</div>
+
+                <!-- Authorized State -->
+                <div class="tt-hidden" id="tt-options-auth-authorized">
+                    <p class="tt-options-auth-status">
+                        <span class="tt-auth-status-label">Authorized as</span>
+                        <strong id="tt-options-auth-email"></strong>
+                    </p>
+                    <button class="tt-btn tt-btn-secondary" id="tt-options-disconnect-btn">
+                        Disconnect
+                    </button>
+                </div>
+
+                <!-- Not Authorized State -->
+                <div id="tt-options-auth-not-authorized">
+                    <p class="tt-options-auth-hint">Connect to your Trip Tools account for full functionality.</p>
+                    <button class="tt-btn tt-btn-primary" id="tt-options-authorize-btn">
+                        Authorize Extension
+                    </button>
+
+                    <div class="tt-manual-token-section">
+                        <p class="tt-options-hint">Or enter your API token manually:</p>
+                        <div class="tt-manual-token-row">
+                            <input type="text" id="tt-options-manual-token-input" class="tt-text-input" placeholder="tt_...">
+                            <button class="tt-btn tt-btn-secondary" id="tt-options-validate-token-btn">
+                                Validate
+                            </button>
+                        </div>
+                        <div class="tt-token-validation-status" id="tt-options-token-validation-status"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Developer Mode Toggle -->
             <div class="tt-section">
                 <div class="tt-toggle-row">
@@ -57,6 +92,9 @@
 
     <script src="../shared/constants.js"></script>
     <script src="../shared/storage.js"></script>
+    <script src="../shared/messaging.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/api.js"></script>
     <script src="options.js"></script>
 </body>
 </html>
