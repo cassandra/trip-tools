@@ -28,23 +28,24 @@ User = get_user_model()
 class TestJournalPublishContextBuilder(TestCase):
     """Tests for JournalPublishContextBuilder context building."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        """Set up test fixtures once for all tests."""
+        cls.user = User.objects.create_user(
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = TripSyntheticData.create_test_trip(
-            user=self.user,
+        cls.trip = TripSyntheticData.create_test_trip(
+            user=cls.user,
             title='Test Trip',
             trip_status=TripStatus.CURRENT,
         )
-        self.journal = Journal.objects.create(
-            trip=self.trip,
+        cls.journal = Journal.objects.create(
+            trip=cls.trip,
             title='Test Journal',
             timezone='UTC',
             visibility=JournalVisibility.PRIVATE,
-            modified_by=self.user,
+            modified_by=cls.user,
         )
 
     def test_build_modal_context_includes_all_required_fields(self):
@@ -163,25 +164,26 @@ class TestJournalPublishContextBuilder(TestCase):
 class PublishingStatusHelperTestCase(TestCase):
     """Tests for PublishingStatusHelper class."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        """Set up test fixtures once for all tests."""
+        cls.user = User.objects.create_user(
             email='test@example.com',
             password='testpass123'
         )
-        self.trip = TripSyntheticData.create_test_trip(
-            user=self.user,
+        cls.trip = TripSyntheticData.create_test_trip(
+            user=cls.user,
             title='Test Trip',
             description='A test trip',
             trip_status=TripStatus.CURRENT,
         )
-        self.journal = Journal.objects.create(
-            trip=self.trip,
+        cls.journal = Journal.objects.create(
+            trip=cls.trip,
             title='Test Journal',
             description='A test journal',
             timezone='UTC',
             visibility=JournalVisibility.PRIVATE,
-            modified_by=self.user,
+            modified_by=cls.user,
         )
 
     def test_unpublished_journal(self):

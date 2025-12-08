@@ -27,14 +27,18 @@ User = get_user_model()
 class APITokenServiceTestCase(TestCase):
     """Test APITokenService business logic and security."""
 
-    def setUp(self):
-        """Create test user for token operations."""
-        from tt.apps.common import datetimeproxy
-        datetimeproxy.reset()
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        """Create test user once for all tests."""
+        cls.user = User.objects.create_user(
             email='testuser@example.com',
             password='testpass123'
         )
+
+    def setUp(self):
+        """Reset time proxy for each test."""
+        from tt.apps.common import datetimeproxy
+        datetimeproxy.reset()
 
     def tearDown(self):
         """Reset time after test."""

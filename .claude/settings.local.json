@@ -49,7 +49,8 @@
       "Bash(nvm use:*)",
       "Bash(npx playwright test:*)",
       "Bash(make test-e2e-extension-isolated:*)",
-      "Bash(make test-e2e-webapp-extension-real:*)"
+      "Bash(make test-e2e-webapp-extension-real:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
