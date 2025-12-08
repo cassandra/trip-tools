@@ -29,7 +29,7 @@
             Click "Authorize" to connect the extension to your Trip Tools account.
           </p>
           <div>
-            <form method="post" data-async="#{{ TtConst.EXT_AUTH_RESULT_ID }}" debounce>
+            <form method="post" data-async="true" debounce>
               {% csrf_token %}
               <button type="submit" class="btn btn-primary">
                 {% icon "plug" size="sm" %} Authorize Extension

@@ -8,12 +8,15 @@ from django.core.exceptions import BadRequest, ValidationError
 from django.core.validators import validate_email
 from django.http import Http404, HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
+from django.template.loader import get_template
 from django.urls import reverse
 from django.views.generic import View
 
 from tt.apps.api.enums import TokenType
 from tt.apps.api.services import APITokenService
 from tt.apps.common.rate_limit import rate_limit
+import tt.apps.common.antinode as antinode
+from tt.environment.constants import TtConst
 from tt.apps.notify.email_sender import EmailSender
 from tt.async_view import ModalView
 
@@ -348,15 +351,7 @@ class ExtensionsHomeView( LoginRequiredMixin, View ):
     """
 
     def get(self, request, *args, **kwargs):
-        account_page_context = AccountPageContext(
-            active_page = AccountPageType.EXTENSIONS,
-        )
-        api_token_list = ExtensionTokenService.get_extension_tokens( request.user )
-        context = {
-            'account_page': account_page_context,
-            'user': request.user,
-            'api_token_list': api_token_list,
-        }
+        context = self._get_template_context( request )
         return render( request, 'user/pages/extensions.html', context )
 
     def post(self, request, *args, **kwargs):
@@ -368,8 +363,32 @@ class ExtensionsHomeView( LoginRequiredMixin, View ):
             user = request.user,
             platform = platform,
         )
-        context = {
+        context = self._get_template_context( request )        
+        context.update({
             'token_str': token_data.api_token_str,
             'token_name': token_data.api_token.name,
+        })
+
+        auth_result_template = get_template( 'user/components/extension_authorize_result.html' )
+        auth_result_html = auth_result_template.render( context, request = request )
+        token_table_template = get_template( 'user/components/api_token_table_extension.html' )
+        token_table_html = token_table_template.render( context, request = request )
+        
+        return antinode.response(
+            insert_map = {
+                TtConst.EXT_AUTH_RESULT_ID:auth_result_html,
+                TtConst.EXT_API_TOKEN_TABLE_ID: token_table_html,
+            },
+        )
+
+    def _get_template_context( self, request ):
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.EXTENSIONS,
+        )
+        api_token_list = ExtensionTokenService.get_extension_tokens( request.user )
+        return {
+            'account_page': account_page_context,
+            'user': request.user,
+            'api_token_list': api_token_list,
         }
-        return render( request, 'user/components/extension_authorize_result.html', context )
+ 

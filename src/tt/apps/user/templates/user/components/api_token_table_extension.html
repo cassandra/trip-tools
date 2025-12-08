@@ -35,6 +35,8 @@
           </a>
         </td>
       </tr>
+      {% empty %}
+      <tr><td colspan="4"><div class="alert alert-info text-center"><em>No extensions currently connected.</em></div></td><?
       {% endfor %}
     </tbody>
   </table>
