@@ -42,7 +42,7 @@ urlpatterns = [
         name='user_api_token_create'
     ),
     path(
-        'api-keys/<int:api_token_id>/delete',
+        'api-keys/<str:lookup_key>/delete',
         views.APITokenDeleteModalView.as_view(),
         name='user_api_token_delete'
     ),

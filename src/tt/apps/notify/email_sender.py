@@ -164,7 +164,7 @@ class EmailSender:
 
         Requires:
         - Always: EMAIL_BACKEND, DEFAULT_FROM_EMAIL, SERVER_EMAIL
-        - One of: EMAIL_API_TOKEN (for API backend) OR EMAIL_HOST+EMAIL_HOST_USER (for SMTP)
+        - One of: EMAIL_API_KEY (for API backend) OR EMAIL_HOST+EMAIL_HOST_USER (for SMTP)
         """
         missing_names = []
 
@@ -174,11 +174,11 @@ class EmailSender:
                 missing_names.append(setting_name)
 
         # Check API OR SMTP - one delivery method must be configured
-        has_api = bool(getattr(settings, 'EMAIL_API_TOKEN', None))
+        has_api = bool(getattr(settings, 'EMAIL_API_KEY', None))
         has_smtp = (bool(getattr(settings, 'EMAIL_HOST', None))
                     and bool(getattr(settings, 'EMAIL_HOST_USER', None)))
 
         if not has_api and not has_smtp:
-            missing_names.append('EMAIL_API_TOKEN or (EMAIL_HOST + EMAIL_HOST_USER)')
+            missing_names.append('EMAIL_API_KEY or (EMAIL_HOST + EMAIL_HOST_USER)')
 
         return missing_names

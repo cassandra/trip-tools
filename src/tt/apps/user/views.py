@@ -6,8 +6,8 @@ from django.contrib.auth.models import User as UserType
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import BadRequest, ValidationError
 from django.core.validators import validate_email
-from django.http import HttpRequest, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.http import Http404, HttpRequest, HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import View
 
@@ -317,27 +317,47 @@ class APITokenCreateModalView(LoginRequiredMixin, ModalView):
 
 class APITokenDeleteModalView( LoginRequiredMixin, ModalView ):
 
-    def get_template_name(self) -> str:
+    def get_template_name( self ) -> str:
         return 'user/modals/api_token_delete.html'
 
-    def get(self, request, api_token_id: int, *args, **kwargs):
-        api_token = get_object_or_404(
-            APIToken,
-            id = api_token_id,
+    def _get_token_or_error( self, request, lookup_key: str ):
+        """
+        Get token by lookup_key with safety check for duplicates.
+        Returns (api_token, error_message) tuple.
+        """
+        tokens = APIToken.objects.filter(
+            lookup_key = lookup_key,
             user = request.user,
         )
-        context = {
-            'api_token': api_token,
-        }
-        return self.modal_response(request, context=context)
+        count = tokens.count()
+
+        if count == 0:
+            raise Http404( 'Token not found' )
+        if count > 1:
+            logger.error(
+                f'Multiple tokens found for lookup_key={lookup_key}, user={request.user.id}. '
+                f'Refusing to delete to prevent data loss.'
+            )
+            return None, 'Unable to delete token. Please contact support.'
+
+        return tokens.first(), None
+
+    def get( self, request, lookup_key: str, *args, **kwargs ):
+        api_token, error = self._get_token_or_error( request, lookup_key )
+        if error:
+            context = { 'error_message': error }
+            return self.modal_response( request, context = context, status = 400 )
+
+        context = { 'api_token': api_token }
+        return self.modal_response( request, context = context )
 
     @rate_limit( 'api_token_ops', limit = 100, period_secs = 3600 )
-    def post(self, request, api_token_id: int, *args, **kwargs):
-        api_token = get_object_or_404(
-            APIToken,
-            id = api_token_id,
-            user = request.user,
-        )
+    def post( self, request, lookup_key: str, *args, **kwargs ):
+        api_token, error = self._get_token_or_error( request, lookup_key )
+        if error:
+            context = { 'error_message': error }
+            return self.modal_response( request, context = context, status = 400 )
+
         api_token.delete()
         return self.refresh_response( request )
 

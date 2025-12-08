@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -9,6 +11,8 @@ from .messages import APIMessages as M
 from .models import APIToken
 from .services import APITokenService
 from .utils import clean_str, get_str
+
+logger = logging.getLogger( __name__ )
 
 
 class TokenListView(APIView):
@@ -66,24 +70,36 @@ class TokenListView(APIView):
         )
 
 
-class TokenDetailView(APIView):
+class TokenDetailView( APIView ):
     """
     Delete a specific API token.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ IsAuthenticated ]
 
-    def delete(self, request: Request, lookup_key: str) -> Response:
+    def delete( self, request: Request, lookup_key: str ) -> Response:
         """
-        Removes the token if it exists.
+        Removes the token if exactly one match exists.
 
         Always returns 204 regardless of whether the token existed to prevent
-        enumeration attacks (attacker cannot determine valid lookup keys by
-        observing different response codes).
+        enumeration attacks. Logs error and refuses deletion if multiple tokens
+        found with the same lookup_key (should never happen but defensive).
         """
-        APIToken.objects.filter(
+        tokens = APIToken.objects.filter(
             lookup_key = clean_str( lookup_key ),
             user = request.user,
-        ).delete()
+        )
+        count = tokens.count()
+
+        if count > 1:
+            logger.error(
+                f'Multiple tokens found for lookup_key={lookup_key}, user={request.user.id}. '
+                f'Refusing to delete to prevent data loss.'
+            )
+            return Response( status = status.HTTP_204_NO_CONTENT )
+
+        if count == 1:
+            tokens.first().delete()
+
         return Response( status = status.HTTP_204_NO_CONTENT )
 
 

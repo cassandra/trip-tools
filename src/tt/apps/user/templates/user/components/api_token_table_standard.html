@@ -30,7 +30,7 @@
           {% endif %}
         </td>
         <td>
-          <a href="{% url 'user_api_token_delete' api_token_id=api_token.id %}"
+          <a href="{% url 'user_api_token_delete' lookup_key=api_token.lookup_key %}"
              class="btn btn-outline-danger btn-sm"
              data-async="modal">
             {% icon "trash" size="sm" %} {% if delete_action %}{{ delete_action|capfirst }}{% else %}Delete{% endif %}

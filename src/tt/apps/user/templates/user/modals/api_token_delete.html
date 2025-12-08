@@ -3,11 +3,18 @@
 {% block title_text %}Delete API Key{% endblock %}
 
 {% block preamble %}
-<form method="post" action="{% url 'user_api_token_delete' api_token_id=api_token.id %}" data-async="modal">
+{% if api_token %}
+<form method="post" action="{% url 'user_api_token_delete' lookup_key=api_token.lookup_key %}" data-async="modal">
   {% csrf_token %}
+{% endif %}
 {% endblock %}
 
 {% block body %}
+{% if error_message %}
+<div class="alert alert-danger">
+  {{ error_message }}
+</div>
+{% else %}
 <div class="alert alert-warning">
   <strong>This action cannot be undone.</strong>
 </div>
@@ -21,12 +28,17 @@
 <p class="text-muted">
   Applications using this key will no longer be able to access your account.
 </p>
+{% endif %}
 {% endblock %}
 
 {% block action_right %}
+{% if api_token %}
 <button type="submit" class="btn btn-danger">Delete Key</button>
+{% endif %}
 {% endblock %}
 
 {% block postamble %}
+{% if api_token %}
 </form>
+{% endif %}
 {% endblock %}
