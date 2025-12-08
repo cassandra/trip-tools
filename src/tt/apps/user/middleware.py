@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.urls import resolve, reverse
 
@@ -23,10 +24,14 @@ class AuthenticationMiddleware(object):
     }
 
     # Path prefixes that are publicly accessible without authentication
-    EXEMPT_PATH_PREFIXES = (
+    EXEMPT_PATH_PREFIXES = [
         '/travelog/',
         '/media/',  # Needed for local development when Django serves these directly
-    )
+    ]
+
+    # Add /testing/ prefix only in DEBUG mode (for E2E test signin endpoint)
+    if settings.DEBUG:
+        EXEMPT_PATH_PREFIXES.append( '/testing/' )
 
     def __init__(self, get_response):
         self.get_response = get_response

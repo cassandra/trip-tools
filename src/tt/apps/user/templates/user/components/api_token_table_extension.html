@@ -14,7 +14,7 @@
       {% for api_token in api_token_list %}
       <tr>
         <td>
-          {% if icon_name %}{% icon icon_name size="sm" css_class="text-muted mr-2" %}{% endif %}
+          {% icon "plug" size="sm" css_class="text-muted mr-2" %}
           <strong>{{ api_token.name }}</strong>
         </td>
         <td>{{ api_token.created_at|date:"M d, Y" }}</td>
@@ -28,15 +28,15 @@
           {% endif %}
         </td>
         <td>
-          <a href="{% url 'user_api_token_delete' lookup_key=api_token.lookup_key %}"
+          <a href="{% url 'user_api_token_extension_disconnect' lookup_key=api_token.lookup_key %}"
              class="btn btn-outline-danger btn-sm"
              data-async="modal">
-            {% icon "trash" size="sm" %} {% if delete_action %}{{ delete_action|capfirst }}{% else %}Delete{% endif %}
+            {% icon "trash" size="sm" %} Disconnect
           </a>
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="4"><div class="alert alert-info text-center"><em>No extensions currently connected.</em></div></td><?
+      <tr data-empty-row><td colspan="4"><div class="alert alert-info text-center"><em>No extensions currently connected.</em></div></td></tr>
       {% endfor %}
     </tbody>
   </table>

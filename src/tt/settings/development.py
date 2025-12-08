@@ -100,3 +100,4 @@ SUPPRESS_MONITORS = False
 
 # For testing UI error display of the various attribute editing form errors.
 DEBUG_INJECT_ATTRIBUTE_FORM_ERRORS = False
+

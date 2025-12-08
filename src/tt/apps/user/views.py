@@ -342,6 +342,12 @@ class APITokenDeleteModalView( LoginRequiredMixin, ModalView ):
         return self.refresh_response( request )
 
 
+class APITokenExtensionDisconnectModalView( APITokenDeleteModalView ):
+
+    def get_template_name( self ) -> str:
+        return 'user/modals/api_token_extension_disconnect.html'
+
+
 class ExtensionsHomeView( LoginRequiredMixin, View ):
     """
     Extensions management page - shows extension tokens and authorization options.

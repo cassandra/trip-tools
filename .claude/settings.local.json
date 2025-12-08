@@ -44,7 +44,12 @@
       "WebFetch(domain:developer.chrome.com)",
       "WebFetch(domain:duo.com)",
       "WebFetch(domain:stackoverflow.com)",
-      "WebFetch(domain:owasp.org)"
+      "WebFetch(domain:owasp.org)",
+      "Bash(source ~/.nvm/nvm.sh)",
+      "Bash(nvm use:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(make test-e2e-extension-isolated:*)",
+      "Bash(make test-e2e-webapp-extension-real:*)"
     ],
     "deny": [],
     "ask": []

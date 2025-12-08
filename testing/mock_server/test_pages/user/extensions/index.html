@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Extension Test Page - /user/extensions/</title>
+</head>
+<body>
+  <!--
+    Minimal test page for extension authorization testing.
+    Mimics the structure of /user/extensions/ without needing Django.
+    Extension content scripts will attach to this page based on URL pattern.
+  -->
+
+  <div id="tt-ext-auth-result">
+    <div id="extension-token-data" data-token=""></div>
+    <div id="tt-ext-auth-pending" class="d-none"></div>
+    <div id="tt-ext-auth-success" class="d-none"></div>
+    <div id="tt-ext-auth-failure" class="d-none"></div>
+  </div>
+
+  <div id="test-status">
+    <p>Extension state: <span id="extension-state">waiting...</span></p>
+    <p>Last ack: <span id="last-ack">none</span></p>
+  </div>
+
+  <script>
+    /**
+     * Test helper: send token to extension via postMessage.
+     * @param {string} token - The API token to send
+     */
+    window.sendTokenToExtension = function( token ) {
+      window.postMessage({
+        type: 'tt_extension_data',
+        payload: { action: 'authorize', token: token }
+      }, window.location.origin );
+    };
+
+    /**
+     * Stored acknowledgment from extension.
+     * Tests can read this to verify extension response.
+     */
+    window.extensionAck = null;
+
+    /**
+     * Listen for extension acknowledgment messages.
+     */
+    window.addEventListener( 'message', function( event ) {
+      if ( event.origin !== window.location.origin ) return;
+      if ( !event.data || event.data.type !== 'tt_extension_ack' ) return;
+
+      window.extensionAck = event.data;
+
+      // Update UI for visual debugging
+      var ackEl = document.getElementById( 'last-ack' );
+      if ( ackEl ) {
+        ackEl.textContent = JSON.stringify( event.data.payload );
+      }
+    });
+
+    /**
+     * Monitor body class changes for extension state.
+     */
+    var observer = new MutationObserver( function( mutations ) {
+      var stateEl = document.getElementById( 'extension-state' );
+      if ( stateEl ) {
+        var classes = document.body.className;
+        if ( classes.includes( 'tt-ext-authorized' ) ) {
+          stateEl.textContent = 'authorized';
+        } else if ( classes.includes( 'tt-ext-not-authorized' ) ) {
+          stateEl.textContent = 'not-authorized';
+        } else {
+          stateEl.textContent = 'not-installed';
+        }
+      }
+    });
+    observer.observe( document.body, { attributes: true, attributeFilter: ['class'] });
+  </script>
+</body>
+</html>

@@ -47,6 +47,11 @@ urlpatterns = [
         name='user_api_token_delete'
     ),
     path(
+        'api-keys/<str:lookup_key>/extension-disconnect',
+        views.APITokenExtensionDisconnectModalView.as_view(),
+        name='user_api_token_extension_disconnect'
+    ),
+    path(
         'extensions/',
         views.ExtensionsHomeView.as_view(),
         name='user_extensions'

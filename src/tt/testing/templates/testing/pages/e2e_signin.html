@@ -1,0 +1,48 @@
+{% extends "pages/base.html" %}
+{% block head_title %}E2E Test Signin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-warning">
+          <h5 class="mb-0">E2E Test Signin</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-muted small">
+            This endpoint is only available in DEBUG mode for E2E testing.
+          </p>
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="id_email" class="form-label">Email</label>
+              <input type="email"
+                     class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                     id="id_email"
+                     name="email"
+                     value="{{ form.email.value|default:'' }}"
+                     required>
+              {% if form.email.errors %}
+              <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label for="id_password" class="form-label">Test Password</label>
+              <input type="password"
+                     class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                     id="id_password"
+                     name="password"
+                     required>
+              {% if form.password.errors %}
+              <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">Sign In</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

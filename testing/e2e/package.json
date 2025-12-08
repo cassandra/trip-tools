@@ -1,0 +1,17 @@
+{
+  "name": "trip-tools-e2e",
+  "version": "1.0.0",
+  "description": "End-to-end tests for Trip Tools",
+  "scripts": {
+    "test": "playwright test",
+    "test:webapp-extension-none": "playwright test --project=webapp-extension-none",
+    "test:webapp-extension-sim": "playwright test --project=webapp-extension-sim",
+    "test:extension-isolated": "playwright test --project=extension-isolated",
+    "test:webapp-extension-real": "playwright test --project=webapp-extension-real",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

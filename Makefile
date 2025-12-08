@@ -39,6 +39,31 @@ test-js:
 		echo "Cannot detect browser opener. Please open src/tt/static/tests/test-all.html manually."; \
 	fi
 
+# E2E Testing (Playwright)
+# Note: These targets source nvm to ensure correct Node.js version (see testing/e2e/.nvmrc)
+test-e2e:
+	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm test
+
+test-e2e-webapp-extension-none:
+	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm run test:webapp-extension-none
+
+test-e2e-webapp-extension-sim:
+	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm run test:webapp-extension-sim
+
+test-e2e-extension-isolated:
+	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm run test:extension-isolated
+
+test-e2e-webapp-extension-real:
+	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm run test:webapp-extension-real
+
+test-e2e-install:
+	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm install && npx playwright install chromium
+
+test-e2e-seed:
+	./src/manage.py seed_e2e_data
+
+test-all:	test test-js test-e2e
+
 check:	lint test
 
 docker-build:	check-docker Dockerfile

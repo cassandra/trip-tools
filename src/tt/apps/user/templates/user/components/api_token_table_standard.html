@@ -15,7 +15,7 @@
       {% for api_token in api_token_list %}
       <tr>
         <td>
-          {% if icon_name %}{% icon icon_name size="sm" css_class="text-muted mr-2" %}{% endif %}
+          {% icon "key" size="sm" css_class="text-muted mr-2" %}
           <strong>{{ api_token.name }}</strong>
         </td>
         <td><code>tt_{{ api_token.lookup_key }}</code></td>
@@ -33,7 +33,7 @@
           <a href="{% url 'user_api_token_delete' lookup_key=api_token.lookup_key %}"
              class="btn btn-outline-danger btn-sm"
              data-async="modal">
-            {% icon "trash" size="sm" %} {% if delete_action %}{{ delete_action|capfirst }}{% else %}Delete{% endif %}
+            {% icon "trash" size="sm" %} Delete
           </a>
         </td>
       </tr>

@@ -8,7 +8,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 });
 
 function initializePopup() {
-    displayVersion();
+    applyDevModeStyles();
     checkBackgroundConnection();
     loadSettings();
     setupEventListeners();
@@ -29,36 +29,18 @@ function listenForAuthStateChanges() {
     });
 }
 
-function displayVersion() {
-    var defaultDeveloperMode = TT.CONFIG.IS_DEVELOPMENT;
+function applyDevModeStyles() {
+    if ( TT.CONFIG.IS_DEVELOPMENT ) {
+        var header = document.querySelector( '.' + TT.DOM.CLASS_POPUP_HEADER );
+        if ( header ) {
+            header.classList.add( TT.DOM.CLASS_DEV_MODE );
+        }
 
-    TTStorage.get( TT.STORAGE.KEY_DEVELOPER_MODE, defaultDeveloperMode )
-        .then( function( developerModeEnabled ) {
-            var versionSpan = document.getElementById( TT.DOM.ID_VERSION );
-            if ( versionSpan ) {
-                if ( developerModeEnabled ) {
-                    var versionText = 'v' + TT.CONFIG.EXTENSION_VERSION;
-                    if ( TT.CONFIG.IS_DEVELOPMENT ) {
-                        versionText += ' (DEV)';
-                    }
-                    versionSpan.textContent = versionText;
-                } else {
-                    versionSpan.textContent = '';
-                }
-            }
-
-            if ( TT.CONFIG.IS_DEVELOPMENT ) {
-                var header = document.querySelector( '.' + TT.DOM.CLASS_POPUP_HEADER );
-                if ( header ) {
-                    header.classList.add( TT.DOM.CLASS_DEV_MODE );
-                }
-
-                var headerIcon = document.getElementById( TT.DOM.ID_HEADER_ICON );
-                if ( headerIcon ) {
-                    headerIcon.src = TT.CONFIG.ICON_DEV_48;
-                }
-            }
-        });
+        var headerIcon = document.getElementById( TT.DOM.ID_HEADER_ICON );
+        if ( headerIcon ) {
+            headerIcon.src = TT.CONFIG.ICON_DEV_48;
+        }
+    }
 }
 
 function checkBackgroundConnection() {
@@ -302,7 +284,8 @@ function showAuthorizedState( email, serverStatus ) {
             TT.DOM.CLASS_CONNECTED,
             TT.DOM.CLASS_DISCONNECTED,
             TT.DOM.CLASS_OFFLINE,
-            TT.DOM.CLASS_SERVER_ERROR
+            TT.DOM.CLASS_SERVER_ERROR,
+            TT.DOM.CLASS_RATE_LIMITED
         );
 
         switch ( serverStatus ) {
@@ -317,6 +300,10 @@ function showAuthorizedState( email, serverStatus ) {
             case TT.AUTH.STATUS_TIMEOUT:
                 indicator.classList.add( TT.DOM.CLASS_SERVER_ERROR );
                 statusText.textContent = TT.STRINGS.STATUS_TIMEOUT;
+                break;
+            case TT.AUTH.STATUS_RATE_LIMITED:
+                indicator.classList.add( TT.DOM.CLASS_RATE_LIMITED );
+                statusText.textContent = TT.STRINGS.STATUS_RATE_LIMITED;
                 break;
             default:
                 indicator.classList.add( TT.DOM.CLASS_CONNECTED );

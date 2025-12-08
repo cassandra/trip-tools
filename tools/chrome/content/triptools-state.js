@@ -11,6 +11,10 @@
  *
  * Pages can use CSS visibility classes to show/hide content based on state.
  * See TtConst in src/tt/environment/constants.py for the full list.
+ *
+ * Note: This script reads cached auth state from storage. It does NOT
+ * validate with the server - that happens when features are actually used.
+ * This is intentional to avoid excessive server calls during navigation.
  */
 
 (function() {
@@ -20,25 +24,23 @@
     var STATE_CLASS_NOT_AUTHORIZED = TT.SERVER_SYNC.EXT_STATE_CLASS_NOT_AUTHORIZED;
 
     /**
-     * Query auth status from service worker and update body classes.
+     * Read cached auth state from storage and update body classes.
+     * Does not validate with server - just uses locally stored state.
      */
     function updateExtensionState() {
-        chrome.runtime.sendMessage(
-            { type: TT.MESSAGE.TYPE_AUTH_STATUS_REQUEST, data: {} },
-            function( response ) {
-                if ( chrome.runtime.lastError ) {
-                    // Service worker not responding - treat as not authorized
-                    setStateClass( STATE_CLASS_NOT_AUTHORIZED );
-                    return;
-                }
-
-                if ( response && response.success && response.data && response.data.authorized ) {
-                    setStateClass( STATE_CLASS_AUTHORIZED );
-                } else {
-                    setStateClass( STATE_CLASS_NOT_AUTHORIZED );
-                }
+        chrome.storage.local.get( TT.STORAGE.KEY_AUTH_STATE, function( result ) {
+            if ( chrome.runtime.lastError ) {
+                setStateClass( STATE_CLASS_NOT_AUTHORIZED );
+                return;
             }
-        );
+
+            var authState = result[TT.STORAGE.KEY_AUTH_STATE];
+            if ( authState === TT.AUTH.STATE_AUTHORIZED ) {
+                setStateClass( STATE_CLASS_AUTHORIZED );
+            } else {
+                setStateClass( STATE_CLASS_NOT_AUTHORIZED );
+            }
+        });
     }
 
     /**

@@ -443,7 +443,7 @@ class APITokenServiceTestCase(TestCase):
             user = self.user,
             name = 'Duplicate Token',
             lookup_key = lookup_key,
-            api_token_hash = 'different_hash_12345678901234567890123456789012345678901234567890123456',
+            api_token_hash = 'different_hash_123456789012345678901234567890123456789012345678',
         )
 
         token, error = APITokenService.get_token_by_lookup_key( self.user, lookup_key )
@@ -483,7 +483,7 @@ class APITokenServiceTestCase(TestCase):
             user = self.user,
             name = 'Duplicate Token',
             lookup_key = lookup_key,
-            api_token_hash = 'different_hash_12345678901234567890123456789012345678901234567890123456',
+            api_token_hash = 'different_hash_123456789012345678901234567890123456789012345678',
         )
 
         success, error = APITokenService.delete_token( self.user, lookup_key )

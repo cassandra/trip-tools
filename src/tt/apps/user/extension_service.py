@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Optional
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
 from tt.apps.api.enums import TokenType
 from tt.apps.api.models import APIToken
@@ -27,13 +28,32 @@ class ExtensionTokenService:
         """
         Args:
             platform: Optional platform info (e.g., 'Windows', 'macOS').
+
+        Uses a transaction with select_for_update to prevent race conditions
+        when multiple requests try to create tokens simultaneously.
         """
-        token_name = cls.generate_token_name( user, platform )
-        return APITokenService.create_token(
-            user = user,
-            api_token_name = token_name,
-            token_type = TokenType.EXTENSION,
-        )
+        with transaction.atomic():
+            token_name = cls._generate_token_name_locked( user, platform )
+            return APITokenService.create_token(
+                user = user,
+                api_token_name = token_name,
+                token_type = TokenType.EXTENSION,
+            )
+
+    @classmethod
+    def _generate_token_name_locked( cls,
+                                     user      : User,
+                                     platform  : Optional[str] = None ) -> str:
+        """
+        Generate a unique token name while holding a lock on user's tokens.
+
+        Must be called within a transaction.atomic() block.
+        Uses select_for_update to prevent race conditions.
+        """
+        # Lock all tokens for this user to prevent concurrent name conflicts
+        list( APIToken.objects.filter( user=user ).select_for_update() )
+
+        return cls.generate_token_name( user, platform )
 
     @classmethod
     def generate_token_name( cls,
@@ -47,6 +67,9 @@ class ExtensionTokenService:
 
         Args:
             platform: Optional platform info (e.g., 'Windows', 'macOS').
+
+        Note: For race-condition-safe token creation, use create_extension_token()
+        which wraps this in a transaction with row locking.
         """
         # Build base name components
         parts = [cls.TOKEN_NAME_PREFIX]

@@ -43,7 +43,7 @@ TTMessaging.listen( function( message, sender ) {
         case TT.MESSAGE.TYPE_TOKEN_RECEIVED:
             return handleTokenReceived( message.data );
         case TT.MESSAGE.TYPE_AUTH_STATUS_REQUEST:
-            return handleAuthStatusRequest();
+            return handleAuthStatusRequest( sender );
         case TT.MESSAGE.TYPE_DISCONNECT:
             return handleDisconnect();
         default:
@@ -118,15 +118,26 @@ function handleTokenReceived( data ) {
         }));
     }
 
+    // Create abort controller for timeout
+    var controller = new AbortController();
+    var timeoutId = setTimeout( function() {
+        controller.abort();
+    }, TT.CONFIG.AUTH_VALIDATION_TIMEOUT_MS );
+
     // Store token first
     return TTAuth.setApiToken( token )
         .then( function() {
-            // Validate token by calling /api/v1/me/
-            return TTApi.validateToken( token );
+            // Validate token by calling /api/v1/me/ with timeout
+            return TTApi.validateTokenWithSignal( token, controller.signal );
+        })
+        .then( function( userInfo ) {
+            clearTimeout( timeoutId );
+            return userInfo;
         })
         .then( function( userInfo ) {
             // Token is valid - store user email and update state
             connectionStartTime = Date.now();
+            lastAuthValidation = 0;  // Reset debounce on auth state change
             return TTAuth.setUserEmail( userInfo.email )
                 .then( function() {
                     return TTAuth.setAuthState( TT.AUTH.STATE_AUTHORIZED );
@@ -144,8 +155,10 @@ function handleTokenReceived( data ) {
                 });
         })
         .catch( function( error ) {
+            clearTimeout( timeoutId );
             // Token validation failed - clear it
             connectionStartTime = null;
+            lastAuthValidation = 0;  // Reset debounce on auth state change
             return TTAuth.clearApiToken()
                 .then( function() {
                     return TTAuth.setAuthState( TT.AUTH.STATE_NOT_AUTHORIZED );
@@ -163,9 +176,18 @@ function handleTokenReceived( data ) {
 
 /**
  * Handle auth status request.
- * Validates token with server (debounced) and returns auth state.
+ * Validates token with server with differentiated debouncing:
+ * - Options page: Always validates fresh (no debounce)
+ * - Popup: Uses 1-minute debounce
+ *
+ * @param {Object} sender - Chrome message sender with url property
  */
-function handleAuthStatusRequest() {
+function handleAuthStatusRequest( sender ) {
+    // Determine debounce based on sender
+    // Options page always validates fresh, popup uses 1-minute debounce
+    var isOptionsPage = sender && sender.url && sender.url.includes( '/options/' );
+    var debounceMs = isOptionsPage ? 0 : TT.CONFIG.AUTH_VALIDATION_DEBOUNCE_POPUP_MS;
+
     return TTAuth.getAuthState()
         .then( function( state ) {
             if ( state !== TT.AUTH.STATE_AUTHORIZED ) {
@@ -176,16 +198,27 @@ function handleAuthStatusRequest() {
             }
 
             // Check debounce - return cached state if recent validation
+            // But still verify we're actually authorized (state could have changed)
             var now = Date.now();
-            if ( now - lastAuthValidation < TT.CONFIG.AUTH_VALIDATION_DEBOUNCE_MS ) {
-                return TTAuth.getUserEmail()
-                    .then( function( email ) {
-                        return TTMessaging.createResponse( true, {
-                            authorized: true,
-                            email: email,
-                            serverStatus: TT.AUTH.STATUS_ONLINE,
-                            cached: true
-                        });
+            if ( debounceMs > 0 && ( now - lastAuthValidation < debounceMs ) ) {
+                return TTAuth.getAuthState()
+                    .then( function( currentState ) {
+                        if ( currentState !== TT.AUTH.STATE_AUTHORIZED ) {
+                            // State changed (e.g., 401 cleared auth) - don't use cached result
+                            return TTMessaging.createResponse( true, {
+                                authorized: false,
+                                serverStatus: null
+                            });
+                        }
+                        return TTAuth.getUserEmail()
+                            .then( function( email ) {
+                                return TTMessaging.createResponse( true, {
+                                    authorized: true,
+                                    email: email,
+                                    serverStatus: TT.AUTH.STATUS_ONLINE,
+                                    cached: true
+                                });
+                            });
                     });
             }
 
@@ -245,6 +278,7 @@ function handleValidationError( error ) {
 
     // 401 - Token revoked
     if ( error.status === 401 ) {
+        lastAuthValidation = 0;  // Reset debounce on auth state change
         return TTAuth.disconnect()
             .then( function() {
                 return addDebugLogEntry( 'info', 'Token revoked by server' );
@@ -262,6 +296,8 @@ function handleValidationError( error ) {
     var serverStatus;
     if ( error.name === 'AbortError' ) {
         serverStatus = TT.AUTH.STATUS_TIMEOUT;
+    } else if ( error.status === 429 ) {
+        serverStatus = TT.AUTH.STATUS_RATE_LIMITED;
     } else if ( error.status >= 500 ) {
         serverStatus = TT.AUTH.STATUS_SERVER_ERROR;
     } else {
@@ -310,6 +346,7 @@ function handleDisconnect() {
         .then( function() {
             // Clear local auth state
             connectionStartTime = null;
+            lastAuthValidation = 0;  // Reset debounce on auth state change
             return TTAuth.disconnect();
         })
         .then( function() {

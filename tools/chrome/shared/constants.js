@@ -7,7 +7,7 @@
 var TT = TT || {};
 
 TT.CONFIG = {
-    EXTENSION_NAME: 'Trip Tools',
+    EXTENSION_NAME: 'Trip Tools Extension',
     EXTENSION_VERSION: '0.1.0',
     IS_DEVELOPMENT: true,
     DEBUG_LOG_MAX_ENTRIES: 50,
@@ -18,7 +18,7 @@ TT.CONFIG = {
     EXTENSION_AUTHORIZE_PATH: '/user/extensions/',
     API_ME_ENDPOINT: '/api/v1/me/',
     API_TOKENS_ENDPOINT: '/api/v1/tokens/',
-    AUTH_VALIDATION_DEBOUNCE_MS: 2000,
+    AUTH_VALIDATION_DEBOUNCE_POPUP_MS: 60000,
     AUTH_VALIDATION_TIMEOUT_MS: 5000
 };
 
@@ -52,7 +52,6 @@ TT.MESSAGE = {
 TT.DOM = {
     ID_POPUP_CONTAINER: 'tt-popup-container',
     ID_HEADER_ICON: 'tt-header-icon',
-    ID_VERSION: 'tt-version',
     ID_STATUS_INDICATOR: 'tt-status-indicator',
     ID_STATUS_TEXT: 'tt-status-text',
     ID_MAPS_SECTION: 'tt-maps-section',
@@ -81,6 +80,7 @@ TT.DOM = {
     CLASS_DEV_MODE: 'tt-dev-mode',
     CLASS_OFFLINE: 'tt-offline',
     CLASS_SERVER_ERROR: 'tt-server-error',
+    CLASS_RATE_LIMITED: 'tt-rate-limited',
     ID_OPTIONS_DEVELOPER_MODE_TOGGLE: 'tt-options-developer-mode-toggle',
     ID_OPTIONS_DEVELOPER_SECTION: 'tt-options-developer-section',
     ID_OPTIONS_SERVER_URL: 'tt-options-server-url',
@@ -150,7 +150,8 @@ TT.AUTH = {
     STATUS_ONLINE: 'online',
     STATUS_OFFLINE: 'offline',
     STATUS_SERVER_ERROR: 'server_error',
-    STATUS_TIMEOUT: 'timeout'
+    STATUS_TIMEOUT: 'timeout',
+    STATUS_RATE_LIMITED: 'rate_limited'
 };
 
 TT.STRINGS = {
@@ -179,5 +180,6 @@ TT.STRINGS = {
     STATUS_ONLINE: 'Connected',
     STATUS_OFFLINE: 'Offline',
     STATUS_SERVER_ERROR: 'Server error',
-    STATUS_TIMEOUT: 'Connection timeout'
+    STATUS_TIMEOUT: 'Connection timeout',
+    STATUS_RATE_LIMITED: 'Rate limited'
 };

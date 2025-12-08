@@ -3,7 +3,7 @@
  */
 
 html, body {
-    width: 320px;
+    width: 380px;
     max-height: 75vh;
     margin: 0;
     padding: 0;
@@ -35,13 +35,6 @@ html, body {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
-}
-
-.tt-popup-header .tt-version {
-    font-size: 10px;
-    opacity: 0.7;
-    margin-left: 8px;
-    flex-grow: 1;
 }
 
 .tt-settings-btn {
@@ -97,6 +90,10 @@ html, body {
 
 .tt-status-indicator.tt-server-error {
     background-color: #fd7e14;
+}
+
+.tt-status-indicator.tt-rate-limited {
+    background-color: #6f42c1;
 }
 
 /* Auth Section */
