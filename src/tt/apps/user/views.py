@@ -12,7 +12,6 @@ from django.urls import reverse
 from django.views.generic import View
 
 from tt.apps.api.enums import TokenType
-from tt.apps.api.models import APIToken
 from tt.apps.api.services import APITokenService
 from tt.apps.common.rate_limit import rate_limit
 from tt.apps.notify.email_sender import EmailSender
@@ -257,16 +256,13 @@ class APITokenManagementView( LoginRequiredMixin, View ):
         account_page_context = AccountPageContext(
             active_page = AccountPageType.API_TOKENS,
         )
-        api_token_list = APIToken.objects.filter(
-            user = request.user,
-            token_type = TokenType.STANDARD,
-        ).order_by( '-created_at' )
+        api_token_list = APITokenService.list_tokens( request.user, TokenType.STANDARD )
         context = {
             'account_page': account_page_context,
             'user': request.user,
             'api_token_list': api_token_list,
         }
-        return render(request, 'user/pages/api_tokens.html', context)
+        return render( request, 'user/pages/api_tokens.html', context )
 
 
 class APITokenCreateModalView(LoginRequiredMixin, ModalView):
@@ -320,31 +316,11 @@ class APITokenDeleteModalView( LoginRequiredMixin, ModalView ):
     def get_template_name( self ) -> str:
         return 'user/modals/api_token_delete.html'
 
-    def _get_token_or_error( self, request, lookup_key: str ):
-        """
-        Get token by lookup_key with safety check for duplicates.
-        Returns (api_token, error_message) tuple.
-        """
-        tokens = APIToken.objects.filter(
-            lookup_key = lookup_key,
-            user = request.user,
-        )
-        count = tokens.count()
-
-        if count == 0:
-            raise Http404( 'Token not found' )
-        if count > 1:
-            logger.error(
-                f'Multiple tokens found for lookup_key={lookup_key}, user={request.user.id}. '
-                f'Refusing to delete to prevent data loss.'
-            )
-            return None, 'Unable to delete token. Please contact support.'
-
-        return tokens.first(), None
-
     def get( self, request, lookup_key: str, *args, **kwargs ):
-        api_token, error = self._get_token_or_error( request, lookup_key )
+        api_token, error = APITokenService.get_token_by_lookup_key( request.user, lookup_key )
         if error:
+            if error == 'Token not found':
+                raise Http404( error )
             context = { 'error_message': error }
             return self.modal_response( request, context = context, status = 400 )
 
@@ -353,12 +329,13 @@ class APITokenDeleteModalView( LoginRequiredMixin, ModalView ):
 
     @rate_limit( 'api_token_ops', limit = 100, period_secs = 3600 )
     def post( self, request, lookup_key: str, *args, **kwargs ):
-        api_token, error = self._get_token_or_error( request, lookup_key )
-        if error:
+        success, error = APITokenService.delete_token( request.user, lookup_key )
+        if not success:
+            if error == 'Token not found':
+                raise Http404( error )
             context = { 'error_message': error }
             return self.modal_response( request, context = context, status = 400 )
 
-        api_token.delete()
         return self.refresh_response( request )
 
 

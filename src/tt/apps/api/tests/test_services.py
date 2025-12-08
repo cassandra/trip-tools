@@ -354,3 +354,238 @@ class APITokenServiceTestCase(TestCase):
         db_token = APIToken.objects.get( pk = result.api_token.pk )
 
         self.assertEqual( db_token.token_type, TokenType.EXTENSION )
+
+    # -------------------------------------------------------------------------
+    # name_exists() Tests
+    # -------------------------------------------------------------------------
+
+    def test_name_exists_returns_true_when_name_exists(self):
+        """Test name_exists returns True when token name exists for user."""
+        APITokenService.create_token( self.user, 'My Token' )
+
+        self.assertTrue( APITokenService.name_exists( self.user, 'My Token' ) )
+
+    def test_name_exists_returns_false_when_name_does_not_exist(self):
+        """Test name_exists returns False when token name doesn't exist."""
+        self.assertFalse( APITokenService.name_exists( self.user, 'Nonexistent Token' ) )
+
+    def test_name_exists_only_checks_current_user(self):
+        """Test name_exists only checks tokens for the specified user."""
+        user2 = User.objects.create_user(
+            email = 'user2@example.com',
+            password = 'testpass123'
+        )
+        APITokenService.create_token( user2, 'Shared Name' )
+
+        # Same name should not exist for self.user
+        self.assertFalse( APITokenService.name_exists( self.user, 'Shared Name' ) )
+
+    # -------------------------------------------------------------------------
+    # get_token_by_lookup_key() Tests
+    # -------------------------------------------------------------------------
+
+    def test_get_token_by_lookup_key_returns_token_when_found(self):
+        """Test get_token_by_lookup_key returns token when exactly one match."""
+        result = APITokenService.create_token( self.user, 'Test Token' )
+        lookup_key = result.api_token.lookup_key
+
+        token, error = APITokenService.get_token_by_lookup_key( self.user, lookup_key )
+
+        self.assertIsNotNone( token )
+        self.assertIsNone( error )
+        self.assertEqual( token.pk, result.api_token.pk )
+
+    def test_get_token_by_lookup_key_returns_error_when_not_found(self):
+        """Test get_token_by_lookup_key returns error when no match."""
+        token, error = APITokenService.get_token_by_lookup_key( self.user, 'nonexist' )
+
+        self.assertIsNone( token )
+        self.assertEqual( error, 'Token not found' )
+
+    def test_get_token_by_lookup_key_returns_error_for_other_users_token(self):
+        """Test get_token_by_lookup_key doesn't return another user's token."""
+        user2 = User.objects.create_user(
+            email = 'user2@example.com',
+            password = 'testpass123'
+        )
+        result = APITokenService.create_token( user2, 'Other User Token' )
+
+        # Try to get user2's token as self.user
+        token, error = APITokenService.get_token_by_lookup_key(
+            self.user,
+            result.api_token.lookup_key,
+        )
+
+        self.assertIsNone( token )
+        self.assertEqual( error, 'Token not found' )
+
+    def test_get_token_by_lookup_key_sanitizes_input(self):
+        """Test get_token_by_lookup_key sanitizes lookup_key input."""
+        result = APITokenService.create_token( self.user, 'Test Token' )
+        lookup_key = result.api_token.lookup_key
+
+        # Add whitespace to lookup_key - should still work after sanitization
+        token, error = APITokenService.get_token_by_lookup_key(
+            self.user,
+            f'  {lookup_key}  ',
+        )
+
+        self.assertIsNotNone( token )
+        self.assertIsNone( error )
+
+    def test_get_token_by_lookup_key_returns_error_on_duplicates(self):
+        """Test get_token_by_lookup_key returns error when duplicates found."""
+        result = APITokenService.create_token( self.user, 'Test Token' )
+        lookup_key = result.api_token.lookup_key
+
+        # Manually create a duplicate (should never happen normally)
+        APIToken.objects.create(
+            user = self.user,
+            name = 'Duplicate Token',
+            lookup_key = lookup_key,
+            api_token_hash = 'different_hash_12345678901234567890123456789012345678901234567890123456',
+        )
+
+        token, error = APITokenService.get_token_by_lookup_key( self.user, lookup_key )
+
+        self.assertIsNone( token )
+        self.assertEqual( error, 'Unable to process token. Please contact support.' )
+
+    # -------------------------------------------------------------------------
+    # delete_token() Tests
+    # -------------------------------------------------------------------------
+
+    def test_delete_token_deletes_token_when_found(self):
+        """Test delete_token successfully deletes token."""
+        result = APITokenService.create_token( self.user, 'To Delete' )
+        lookup_key = result.api_token.lookup_key
+
+        success, error = APITokenService.delete_token( self.user, lookup_key )
+
+        self.assertTrue( success )
+        self.assertIsNone( error )
+        self.assertFalse( APIToken.objects.filter( lookup_key = lookup_key ).exists() )
+
+    def test_delete_token_returns_error_when_not_found(self):
+        """Test delete_token returns error when token doesn't exist."""
+        success, error = APITokenService.delete_token( self.user, 'nonexist' )
+
+        self.assertFalse( success )
+        self.assertEqual( error, 'Token not found' )
+
+    def test_delete_token_refuses_when_duplicates_exist(self):
+        """Test delete_token refuses to delete when duplicates exist."""
+        result = APITokenService.create_token( self.user, 'Test Token' )
+        lookup_key = result.api_token.lookup_key
+
+        # Manually create a duplicate
+        APIToken.objects.create(
+            user = self.user,
+            name = 'Duplicate Token',
+            lookup_key = lookup_key,
+            api_token_hash = 'different_hash_12345678901234567890123456789012345678901234567890123456',
+        )
+
+        success, error = APITokenService.delete_token( self.user, lookup_key )
+
+        self.assertFalse( success )
+        self.assertEqual( error, 'Unable to process token. Please contact support.' )
+        # Both tokens should still exist
+        self.assertEqual( APIToken.objects.filter( lookup_key = lookup_key ).count(), 2 )
+
+    def test_delete_token_does_not_delete_other_users_token(self):
+        """Test delete_token doesn't delete another user's token."""
+        user2 = User.objects.create_user(
+            email = 'user2@example.com',
+            password = 'testpass123'
+        )
+        result = APITokenService.create_token( user2, 'Other User Token' )
+
+        success, error = APITokenService.delete_token(
+            self.user,
+            result.api_token.lookup_key,
+        )
+
+        self.assertFalse( success )
+        self.assertEqual( error, 'Token not found' )
+        # Token should still exist
+        self.assertTrue( APIToken.objects.filter( pk = result.api_token.pk ).exists() )
+
+    # -------------------------------------------------------------------------
+    # list_tokens() Tests
+    # -------------------------------------------------------------------------
+
+    def test_list_tokens_returns_all_tokens_when_no_filter(self):
+        """Test list_tokens returns all tokens when no type filter."""
+        APITokenService.create_token( self.user, 'Standard 1', TokenType.STANDARD )
+        APITokenService.create_token( self.user, 'Extension 1', TokenType.EXTENSION )
+        APITokenService.create_token( self.user, 'Standard 2', TokenType.STANDARD )
+
+        tokens = APITokenService.list_tokens( self.user )
+
+        self.assertEqual( tokens.count(), 3 )
+
+    def test_list_tokens_filters_by_standard_type(self):
+        """Test list_tokens returns only STANDARD tokens when filtered."""
+        APITokenService.create_token( self.user, 'Standard 1', TokenType.STANDARD )
+        APITokenService.create_token( self.user, 'Extension 1', TokenType.EXTENSION )
+        APITokenService.create_token( self.user, 'Standard 2', TokenType.STANDARD )
+
+        tokens = APITokenService.list_tokens( self.user, TokenType.STANDARD )
+
+        self.assertEqual( tokens.count(), 2 )
+        for token in tokens:
+            self.assertEqual( token.token_type, TokenType.STANDARD )
+
+    def test_list_tokens_filters_by_extension_type(self):
+        """Test list_tokens returns only EXTENSION tokens when filtered."""
+        APITokenService.create_token( self.user, 'Standard 1', TokenType.STANDARD )
+        APITokenService.create_token( self.user, 'Extension 1', TokenType.EXTENSION )
+        APITokenService.create_token( self.user, 'Extension 2', TokenType.EXTENSION )
+
+        tokens = APITokenService.list_tokens( self.user, TokenType.EXTENSION )
+
+        self.assertEqual( tokens.count(), 2 )
+        for token in tokens:
+            self.assertEqual( token.token_type, TokenType.EXTENSION )
+
+    def test_list_tokens_orders_by_created_at_descending(self):
+        """Test list_tokens returns tokens ordered by created_at descending."""
+        import datetime
+        import pytz
+        from tt.apps.common import datetimeproxy
+
+        datetimeproxy.set( datetime.datetime( 2024, 1, 1, tzinfo = pytz.UTC ) )
+        APITokenService.create_token( self.user, 'First Token' )
+
+        datetimeproxy.set( datetime.datetime( 2024, 1, 2, tzinfo = pytz.UTC ) )
+        APITokenService.create_token( self.user, 'Second Token' )
+
+        datetimeproxy.set( datetime.datetime( 2024, 1, 3, tzinfo = pytz.UTC ) )
+        APITokenService.create_token( self.user, 'Third Token' )
+
+        tokens = list( APITokenService.list_tokens( self.user ) )
+
+        self.assertEqual( tokens[0].name, 'Third Token' )
+        self.assertEqual( tokens[1].name, 'Second Token' )
+        self.assertEqual( tokens[2].name, 'First Token' )
+
+    def test_list_tokens_only_returns_current_users_tokens(self):
+        """Test list_tokens only returns tokens for specified user."""
+        user2 = User.objects.create_user(
+            email = 'user2@example.com',
+            password = 'testpass123'
+        )
+        APITokenService.create_token( self.user, 'My Token' )
+        APITokenService.create_token( user2, 'Other Token' )
+
+        tokens = APITokenService.list_tokens( self.user )
+
+        self.assertEqual( tokens.count(), 1 )
+        self.assertEqual( tokens.first().name, 'My Token' )
+
+    def test_list_tokens_returns_empty_queryset_for_user_with_no_tokens(self):
+        """Test list_tokens returns empty queryset for user with no tokens."""
+        tokens = APITokenService.list_tokens( self.user )
+
+        self.assertEqual( tokens.count(), 0 )

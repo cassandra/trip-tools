@@ -6,9 +6,13 @@ Handles auto-generation of descriptive token names and collision handling.
 from datetime import datetime
 from typing import Optional
 
+from django.contrib.auth import get_user_model
+
 from tt.apps.api.enums import TokenType
 from tt.apps.api.models import APIToken
 from tt.apps.api.services import APITokenData, APITokenService
+
+User = get_user_model()
 
 
 class ExtensionTokenService:
@@ -17,20 +21,12 @@ class ExtensionTokenService:
     TOKEN_NAME_PREFIX = 'Chrome Extension'
 
     @classmethod
-    def create_extension_token(
-        cls,
-        user,
-        platform: Optional[str] = None,
-    ) -> APITokenData:
+    def create_extension_token( cls,
+                                user      : User,
+                                platform  : Optional[str] = None ) -> APITokenData:
         """
-        Create a token for a browser extension with auto-generated name.
-
         Args:
-            user: The user to create the token for.
             platform: Optional platform info (e.g., 'Windows', 'macOS').
-
-        Returns:
-            APITokenData with the token and full token string.
         """
         token_name = cls.generate_token_name( user, platform )
         return APITokenService.create_token(
@@ -40,11 +36,9 @@ class ExtensionTokenService:
         )
 
     @classmethod
-    def generate_token_name(
-        cls,
-        user,
-        platform: Optional[str] = None,
-    ) -> str:
+    def generate_token_name( cls,
+                             user      : User,
+                             platform  : Optional[str] = None ) -> str:
         """
         Generate a descriptive token name with collision handling.
 
@@ -52,11 +46,7 @@ class ExtensionTokenService:
         If collision: "Chrome Extension - {Platform} - {Month Year} (2)"
 
         Args:
-            user: The user to check for existing tokens.
             platform: Optional platform info (e.g., 'Windows', 'macOS').
-
-        Returns:
-            A unique token name for this user.
         """
         # Build base name components
         parts = [cls.TOKEN_NAME_PREFIX]
@@ -75,16 +65,12 @@ class ExtensionTokenService:
         return cls._get_unique_name( user, base_name )
 
     @classmethod
-    def _get_unique_name( cls, user, base_name: str ) -> str:
+    def _get_unique_name( cls, user : User, base_name: str ) -> str:
         """
         Find a unique token name by appending (2), (3), etc. if needed.
 
         Args:
-            user: The user to check for existing tokens.
             base_name: The base name to make unique.
-
-        Returns:
-            A unique token name.
         """
         # Check if base name is available
         if not cls._name_exists( user, base_name ):
@@ -104,15 +90,12 @@ class ExtensionTokenService:
                 return f'{base_name} ({timestamp})'
 
     @classmethod
-    def _name_exists( cls, user, name: str ) -> bool:
-        """Check if a token with the given name exists for this user."""
+    def _name_exists( cls, user : User, name: str ) -> bool:
         return APIToken.objects.filter( user = user, name = name ).exists()
 
     @classmethod
-    def get_extension_tokens( cls, user ) -> list:
+    def get_extension_tokens( cls, user : User ) -> list:
         """
-        Get all extension tokens for a user.
-
         Returns tokens with token_type = EXTENSION.
         """
         return list(

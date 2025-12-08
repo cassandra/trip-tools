@@ -1,5 +1,3 @@
-import logging
-
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -8,14 +6,11 @@ from rest_framework.views import APIView
 
 from .constants import APIFields as F
 from .messages import APIMessages as M
-from .models import APIToken
 from .services import APITokenService
-from .utils import clean_str, get_str
-
-logger = logging.getLogger( __name__ )
+from .utils import get_str
 
 
-class TokenListView(APIView):
+class TokenCollectionView(APIView):
     """
     List user's API tokens or create a new one.
     """
@@ -23,7 +18,7 @@ class TokenListView(APIView):
 
     def get( self, request: Request ) -> Response:
         """Returns list of user's tokens (without secret keys)."""
-        api_tokens = APIToken.objects.filter( user = request.user )
+        api_tokens = APITokenService.list_tokens( request.user )
         data = [
             {
                 F.NAME: api_token.name,
@@ -36,20 +31,20 @@ class TokenListView(APIView):
         ]
         return Response( data )
 
-    def post(self, request: Request) -> Response:
+    def post( self, request: Request ) -> Response:
         """Creates a new token and returns the api_token_str (once only)."""
         api_token_name = get_str( request.data, F.NAME )
 
         if not api_token_name:
             return Response(
-                { F.ERROR: M.is_required('Token name') },
+                { F.ERROR: M.is_required( 'Token name' ) },
                 status = status.HTTP_400_BAD_REQUEST
             )
 
         # Check for duplicate name
-        if APIToken.objects.filter( user = request.user, name = api_token_name ).exists():
+        if APITokenService.name_exists( request.user, api_token_name ):
             return Response(
-                { F.ERROR: M.already_exists('Token', 'name') },
+                { F.ERROR: M.already_exists( 'Token', 'name' ) },
                 status = status.HTTP_400_BAD_REQUEST
             )
 
@@ -70,7 +65,7 @@ class TokenListView(APIView):
         )
 
 
-class TokenDetailView( APIView ):
+class TokenItemView( APIView ):
     """
     Delete a specific API token.
     """
@@ -78,28 +73,9 @@ class TokenDetailView( APIView ):
 
     def delete( self, request: Request, lookup_key: str ) -> Response:
         """
-        Removes the token if exactly one match exists.
-
-        Always returns 204 regardless of whether the token existed to prevent
-        enumeration attacks. Logs error and refuses deletion if multiple tokens
-        found with the same lookup_key (should never happen but defensive).
+        Delete token. Always returns 204 to prevent enumeration attacks.
         """
-        tokens = APIToken.objects.filter(
-            lookup_key = clean_str( lookup_key ),
-            user = request.user,
-        )
-        count = tokens.count()
-
-        if count > 1:
-            logger.error(
-                f'Multiple tokens found for lookup_key={lookup_key}, user={request.user.id}. '
-                f'Refusing to delete to prevent data loss.'
-            )
-            return Response( status = status.HTTP_204_NO_CONTENT )
-
-        if count == 1:
-            tokens.first().delete()
-
+        APITokenService.delete_token( request.user, lookup_key )
         return Response( status = status.HTTP_204_NO_CONTENT )
 
 

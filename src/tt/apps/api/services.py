@@ -1,12 +1,17 @@
 import hashlib
+import logging
 import secrets
-from typing import Optional
+from typing import Optional, Tuple
 
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 
 from .enums import TokenType
 from .models import APIToken
 from .schemas import APITokenData, APITokenGenerationData
+from .utils import clean_str
+
+logger = logging.getLogger( __name__ )
 
 User = get_user_model()
 
@@ -55,15 +60,6 @@ class APITokenService:
 
     @classmethod
     def _hash_api_token_str(cls, api_token_str: str) -> str:
-        """
-        Hash an API token string using SHA256.
-
-        Args:
-            api_token_str: The full API token string to hash
-
-        Returns:
-            str: Hex-encoded SHA256 hash
-        """
         return hashlib.sha256(api_token_str.encode()).hexdigest()
 
     @classmethod
@@ -72,7 +68,6 @@ class APITokenService:
                       api_token_name : str,
                       token_type     : TokenType = TokenType.STANDARD ) -> APITokenData:
         """
-        Create a new API token for a user.
         The api_token_str is only available at creation - it cannot be retrieved later.
         """
         token_generation_data = cls._generate_api_token_str()
@@ -93,11 +88,6 @@ class APITokenService:
     @classmethod
     def authenticate( cls, api_token_str: str ) -> Optional[User]:
         """
-        Authenticate an API token string and return the associated user.
-
-        Args:
-            api_token_str: The API token string to authenticate (format: tt_{lookup_key}_{secret_key})
-
         Returns:
             User instance if token is valid, None otherwise
         """
@@ -124,3 +114,74 @@ class APITokenService:
                 return token.user
 
         return None
+
+    # -------------------------------------------------------------------------
+    # Token Lookup and Deletion
+    # -------------------------------------------------------------------------
+
+    @classmethod
+    def name_exists( cls, user: User, name: str ) -> bool:
+        return APIToken.objects.filter( user = user, name = name ).exists()
+
+    @classmethod
+    def get_token_by_lookup_key( cls,
+                                 user       : User,
+                                 lookup_key : str ) -> Tuple[Optional[APIToken], Optional[str]]:
+        """
+        Sanitizes the lookup_key input and checks for exactly one match.
+
+        Returns:
+            (token, None) if exactly one token found
+            (None, error_message) if zero or multiple tokens found
+        """
+        tokens = APIToken.objects.filter(
+            lookup_key = clean_str( lookup_key ),
+            user = user,
+        )
+        count = tokens.count()
+
+        if count == 0:
+            return None, 'Token not found'
+        if count > 1:
+            logger.error(
+                f'Multiple tokens found for lookup_key={lookup_key}, user={user.id}. '
+                f'Refusing operation to prevent data loss.'
+            )
+            return None, 'Unable to process token. Please contact support.'
+
+        return tokens.first(), None
+
+    @classmethod
+    def delete_token( cls,
+                      user       : User,
+                      lookup_key : str ) -> Tuple[bool, Optional[str]]:
+        """
+        Delete a token with safety checks.
+
+        Returns:
+            (True, None) if token was deleted
+            (False, error_message) if token not found or deletion refused
+        """
+        token, error = cls.get_token_by_lookup_key( user, lookup_key )
+        if error:
+            return False, error
+
+        token.delete()
+        return True, None
+
+    # -------------------------------------------------------------------------
+    # Token Listing
+    # -------------------------------------------------------------------------
+
+    @classmethod
+    def list_tokens( cls,
+                     user       : User,
+                     token_type : Optional[TokenType] = None ) -> QuerySet:
+        """
+        List tokens for user, optionally filtered by type.
+        Returns queryset ordered by -created_at.
+        """
+        qs = APIToken.objects.filter( user = user )
+        if token_type is not None:
+            qs = qs.filter( token_type = token_type )
+        return qs.order_by( '-created_at' )
