@@ -8,6 +8,7 @@ from uuid import UUID
 from django.utils import timezone
 
 from tt.apps.locations.models import Location
+from tt.apps.trips.enums import TripStatus
 from tt.apps.trips.models import Trip
 
 from .enums import SyncObjectType
@@ -66,15 +67,21 @@ class SyncEnvelopeBuilder:
 
     def _build_trip_sync( self ) -> dict:
         """
-        Returns ALL accessible trips - absence means deleted/revoked.
+        Returns accessible trips excluding PAST status.
 
-        Always returns all trips (not filtered by since) to enable
+        Always returns all non-past trips (not filtered by since) to enable
         presence-based deletion detection.
+
+        PAST trips are excluded because marking a trip as "past" is a
+        deliberate user action indicating they're done working on it.
+        Users can still access past trips via the trip chooser.
 
         Each trip includes version and created_datetime for proper
         ordering when adding new trips to the extension's working set.
         """
-        trips = Trip.objects.for_user( self.user ).values(
+        trips = Trip.objects.for_user( self.user ).exclude(
+            trip_status = TripStatus.PAST
+        ).values(
             'uuid', 'version', 'created_datetime'
         )
         return {

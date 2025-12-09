@@ -123,6 +123,32 @@ class SyncableAPIViewResponseWrappingTestCase(TestCase):
         self.assertIn('versions', sync['trip'])
         self.assertIn(str(trip.uuid), sync['trip']['versions'])
 
+    def test_sync_envelope_excludes_past_trips(self):
+        """Test sync envelope excludes trips with PAST status."""
+        from tt.apps.trips.enums import TripStatus
+
+        upcoming_trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Upcoming Trip',
+            trip_status=TripStatus.UPCOMING
+        )
+        past_trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Past Trip',
+            trip_status=TripStatus.PAST
+        )
+
+        request = self.factory.get('/test/')
+        request.user = self.user
+
+        view = TestSyncableView.as_view()
+        response = view(request)
+
+        sync = response.data['sync']
+        versions = sync['trip']['versions']
+        self.assertIn(str(upcoming_trip.uuid), versions)
+        self.assertNotIn(str(past_trip.uuid), versions)
+
 
 # =============================================================================
 # SyncableAPIView Header Parsing Tests
