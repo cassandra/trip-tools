@@ -11,6 +11,7 @@
     "host_permissions": [
         "https://triptools.net/*",
         "http://localhost:6777/*",
+        "http://localhost:6778/*",
         "http://localhost:6779/*"
     ],
     "action": {
@@ -35,6 +36,7 @@
             "matches": [
                 "https://triptools.net/*",
                 "http://localhost:6777/*",
+                "http://localhost:6778/*",
                 "http://localhost:6779/*"
             ],
             "js": [
@@ -47,6 +49,7 @@
             "matches": [
                 "https://triptools.net/user/extensions/*",
                 "http://localhost:6777/user/extensions/*",
+                "http://localhost:6778/user/extensions/*",
                 "http://localhost:6779/user/extensions/*"
             ],
             "js": [

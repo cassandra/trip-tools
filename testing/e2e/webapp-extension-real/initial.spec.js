@@ -9,6 +9,7 @@
 const { test: base, expect, chromium } = require( '@playwright/test' );
 const path = require( 'path' );
 const { getExtensionId, waitForServiceWorker } = require( './fixtures/extension-helpers' );
+const { loginUser, DEFAULT_TEST_EMAIL } = require( '../webapp-extension-sim/fixtures/auth' );
 
 // Extension path (resolved from this file's location)
 const extensionPath = path.resolve( __dirname, '../../../tools/chrome' );
@@ -74,6 +75,79 @@ test.describe( 'Initial Integration Tests', () => {
         const authorizeBtn = page.locator( '#tt-options-authorize-btn' );
         await expect( authorizeBtn ).toBeVisible();
         await expect( authorizeBtn ).toHaveText( 'Authorize Extension' );
+    });
+
+    test( 'extension authorization happy path', async ({ context, page }) => {
+        // Step 1: Login to Django server
+        await page.goto( DJANGO_URL + '/testing/signin/' );
+        await page.fill( 'input[name="email"]', DEFAULT_TEST_EMAIL );
+        await page.fill( 'input[name="password"]', 'e2e-test-password' );
+        await page.click( 'button[type="submit"]' );
+        await page.waitForURL( /.*dashboard.*/ );
+
+        // Step 2: Open extension options page and configure server URL
+        const extensionId = await getExtensionId( context );
+        const optionsUrl = `chrome-extension://${extensionId}/options/options.html`;
+
+        const optionsPage = await context.newPage();
+        await optionsPage.goto( optionsUrl );
+
+        // Configure extension to use test server URL (port 6778)
+        // The extension defaults to port 6777, but our test server runs on 6778
+        await optionsPage.evaluate( ( url ) => {
+            return new Promise( ( resolve ) => {
+                chrome.storage.local.set( { 'tt_serverUrl': url }, resolve );
+            });
+        }, DJANGO_URL );
+
+        // Verify shows "not authorized" state
+        await expect( optionsPage.locator( '#tt-options-auth-not-authorized' ) ).toBeVisible();
+
+        // Step 3: Click Authorize button - this opens new tab to server
+        const [ serverExtPage ] = await Promise.all([
+            context.waitForEvent( 'page' ),
+            optionsPage.click( '#tt-options-authorize-btn' ),
+        ]);
+
+        // Wait for the server extensions page to load
+        await serverExtPage.waitForLoadState( 'domcontentloaded' );
+
+        // Step 4: Wait for extension content script to detect and set body class
+        // The content script sets tt-ext-not-authorized when extension is detected but not authorized
+        await serverExtPage.waitForSelector( 'body.tt-ext-not-authorized', { timeout: 10000 } );
+
+        // Verify the "Authorize Extension" button is visible on server page
+        const serverAuthBtn = serverExtPage.locator( 'form[data-async="true"] button[type="submit"]' );
+        await expect( serverAuthBtn ).toBeVisible();
+
+        // Step 5: Click Authorize on server page
+        await serverAuthBtn.click();
+
+        // Wait for the auth success indicator to appear
+        // The server renders extension_authorize_result.html with token data
+        // Then the extension receives it via postMessage and acknowledges
+        // Note: The async form replaces part of the DOM, element ID is tt-ext-auth-success
+        await serverExtPage.waitForSelector( '#tt-ext-auth-success:not(.d-none)', { timeout: 10000 } );
+
+        // Step 6: Verify extension is now authorized
+        // Reload the options page to see updated state
+        await optionsPage.reload();
+
+        // Verify authorized section is now visible
+        await expect( optionsPage.locator( '#tt-options-auth-authorized' ) ).toBeVisible();
+
+        // Verify email is displayed
+        const emailDisplay = optionsPage.locator( '#tt-options-auth-email' );
+        await expect( emailDisplay ).toHaveText( DEFAULT_TEST_EMAIL );
+
+        // Step 7: Verify server shows token in table
+        await serverExtPage.goto( DJANGO_URL + '/user/extensions/' );
+        await serverExtPage.waitForLoadState( 'domcontentloaded' );
+
+        // The token table should show a "Chrome Extension" token
+        const tokenTable = serverExtPage.locator( '#tt-ext-api-token-table' );
+        await expect( tokenTable ).toBeVisible();
+        await expect( tokenTable ).toContainText( 'Chrome Extension' );
     });
 
 });
