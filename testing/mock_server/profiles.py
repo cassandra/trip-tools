@@ -27,6 +27,14 @@ PROFILES = {
             },
             'delay_ms': 0,
         },
+        'api_extension_status': {
+            'status': 200,
+            'body': {
+                'email': 'test@example.com',
+                'config_version': 1,
+            },
+            'delay_ms': 0,
+        },
         'api_tokens_delete': {
             'status': 204,
         },
@@ -35,6 +43,13 @@ PROFILES = {
     # Extension authorization - 401 unauthorized
     'ext_auth_401': {
         'api_me': {
+            'status': 401,
+            'body': {
+                'detail': 'Authentication credentials were not provided.',
+            },
+            'delay_ms': 0,
+        },
+        'api_extension_status': {
             'status': 401,
             'body': {
                 'detail': 'Authentication credentials were not provided.',
@@ -53,11 +68,26 @@ PROFILES = {
             },
             'delay_ms': 0,
         },
+        'api_extension_status': {
+            'status': 200,
+            'body': {
+                'email': 'different@example.com',
+                'config_version': 1,
+            },
+            'delay_ms': 0,
+        },
     },
 
     # Generic - server error (500)
     'server_error': {
         'api_me': {
+            'status': 500,
+            'body': {
+                'detail': 'Internal server error',
+            },
+            'delay_ms': 0,
+        },
+        'api_extension_status': {
             'status': 500,
             'body': {
                 'detail': 'Internal server error',
@@ -81,11 +111,23 @@ PROFILES = {
             },
             'delay_ms': 0,
         },
+        'api_extension_status': {
+            'status': 503,
+            'body': {
+                'detail': 'Service temporarily unavailable',
+            },
+            'delay_ms': 0,
+        },
     },
 
     # Generic - timeout (10s delay exceeds extension's 5s timeout)
     'timeout': {
         'api_me': {
+            'status': 200,
+            'body': {},
+            'delay_ms': 10000,
+        },
+        'api_extension_status': {
             'status': 200,
             'body': {},
             'delay_ms': 10000,
@@ -102,6 +144,14 @@ PROFILES = {
             },
             'delay_ms': 2000,
         },
+        'api_extension_status': {
+            'status': 200,
+            'body': {
+                'email': 'slow@example.com',
+                'config_version': 1,
+            },
+            'delay_ms': 2000,
+        },
     },
 
     # Generic - rate limit (429)
@@ -113,11 +163,25 @@ PROFILES = {
             },
             'delay_ms': 0,
         },
+        'api_extension_status': {
+            'status': 429,
+            'body': {
+                'detail': 'Too many requests',
+            },
+            'delay_ms': 0,
+        },
     },
 
     # Generic - bad gateway (502)
     'bad_gateway': {
         'api_me': {
+            'status': 502,
+            'body': {
+                'detail': 'Bad Gateway',
+            },
+            'delay_ms': 0,
+        },
+        'api_extension_status': {
             'status': 502,
             'body': {
                 'detail': 'Bad Gateway',

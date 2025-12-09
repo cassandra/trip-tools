@@ -64,6 +64,11 @@ class MockServerHandler(SimpleHTTPRequestHandler):
             self._handle_api_me()
             return
 
+        # API endpoint: /api/v1/extension/status/
+        if path == '/api/v1/extension/status/' or path == '/api/v1/extension/status':
+            self._handle_api_extension_status()
+            return
+
         # Test control: health check
         if path == '/__test__/health':
             self._send_json_response(200, {
@@ -127,6 +132,31 @@ class MockServerHandler(SimpleHTTPRequestHandler):
             config.get('status', 200),
             config.get('body', {}),
         )
+
+    def _handle_api_extension_status(self):
+        """Handle GET /api/v1/extension/status/ with profile-controlled response.
+
+        This endpoint is used for auth validation and returns a sync envelope.
+        Uses same profile config as api_me for status/auth, but wraps response
+        in the expected {data: {...}} format.
+        """
+        config = get_endpoint_config('api_extension_status')
+
+        # Apply delay if configured
+        delay_ms = config.get('delay_ms', 0)
+        if delay_ms > 0:
+            time.sleep(delay_ms / 1000.0)
+
+        status = config.get('status', 200)
+        body = config.get('body', {})
+
+        # For success responses, wrap in data envelope like real API
+        if status == 200:
+            wrapped_body = {'data': body}
+        else:
+            wrapped_body = body
+
+        self._send_json_response(status, wrapped_body)
 
     def _handle_api_token_delete(self):
         """Handle DELETE /api/v1/tokens/<key>/ with profile-controlled response."""
