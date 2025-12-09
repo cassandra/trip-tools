@@ -1,7 +1,7 @@
 /*
  * Trip Tools Chrome Extension - API Module
  * Provides fetch wrapper with auth headers and 401 handling.
- * Depends on: constants.js, storage.js, auth.js
+ * Depends on: constants.js, storage.js, auth.js, sync.js
  */
 
 var TTApi = TTApi || {};
@@ -26,8 +26,31 @@ TTApi.getServerUrl = function() {
 };
 
 /**
+ * Get sync headers from storage.
+ * @private
+ * @returns {Promise<Object>} Object with X-Sync-Since and X-Sync-Trip headers.
+ */
+TTApi._getSyncHeaders = function() {
+    var headers = {};
+    return TTStorage.get( TT.STORAGE.KEY_SYNC_AS_OF, null )
+        .then( function( syncAsOf ) {
+            if ( syncAsOf ) {
+                headers[TT.HEADERS.SYNC_SINCE] = syncAsOf;
+            }
+            return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null );
+        })
+        .then( function( tripUuid ) {
+            if ( tripUuid ) {
+                headers[TT.HEADERS.SYNC_TRIP] = tripUuid;
+            }
+            return headers;
+        });
+};
+
+/**
  * Make an authenticated API request.
  * Automatically handles 401 responses by clearing auth state.
+ * Includes sync headers (X-Sync-Since, X-Sync-Trip) when available.
  * @param {string} endpoint - The API endpoint (e.g., '/api/v1/me/').
  * @param {Object} options - Fetch options (method, headers, body, etc.).
  * @returns {Promise<Response>} The fetch response.
@@ -37,6 +60,7 @@ TTApi.fetch = function( endpoint, options ) {
 
     var serverUrl;
     var token;
+    var syncHeaders;
 
     return TTApi.getServerUrl()
         .then( function( url ) {
@@ -45,21 +69,25 @@ TTApi.fetch = function( endpoint, options ) {
         })
         .then( function( storedToken ) {
             token = storedToken;
+            return TTApi._getSyncHeaders();
+        })
+        .then( function( headers ) {
+            syncHeaders = headers;
 
             var url = serverUrl + endpoint;
-            var headers = Object.assign( {}, options.headers || {} );
+            var allHeaders = Object.assign( {}, options.headers || {}, syncHeaders );
 
             // Add authorization header if we have a token
             if ( token ) {
-                headers['Authorization'] = 'Bearer ' + token;
+                allHeaders['Authorization'] = 'Bearer ' + token;
             }
 
             // Add content type for JSON if body is present
-            if ( options.body && !headers['Content-Type'] ) {
-                headers['Content-Type'] = 'application/json';
+            if ( options.body && !allHeaders['Content-Type'] ) {
+                allHeaders['Content-Type'] = 'application/json';
             }
 
-            var fetchOptions = Object.assign( {}, options, { headers: headers } );
+            var fetchOptions = Object.assign( {}, options, { headers: allHeaders } );
 
             return fetch( url, fetchOptions );
         })
@@ -219,5 +247,36 @@ TTApi.deleteToken = function( lookupKey ) {
             if ( !response.ok ) {
                 throw new Error( 'Failed to delete token: ' + response.status );
             }
+        });
+};
+
+/**
+ * Process API response: extract data, then process sync envelope.
+ * Sync envelope processing happens LAST, after main data handling.
+ *
+ * Use this for SyncableAPIView endpoints that return sync envelopes.
+ * For legacy endpoints (e.g., /api/v1/me/), use response.json() directly.
+ *
+ * @param {Response} response - Fetch Response object.
+ * @returns {Promise<Object>} Resolves with the data portion of response.
+ */
+TTApi.processResponse = function( response ) {
+    if ( !response.ok ) {
+        return Promise.reject( new Error( 'Request failed: ' + response.status ) );
+    }
+
+    return response.json()
+        .then( function( json ) {
+            // Check if response has sync envelope
+            if ( json[TT.SYNC.FIELD_SYNC] ) {
+                // Return data first, THEN process sync envelope
+                var data = json[TT.SYNC.FIELD_DATA];
+                return TTSync.processEnvelope( json[TT.SYNC.FIELD_SYNC] )
+                    .then( function() {
+                        return data;
+                    });
+            }
+            // Legacy response without envelope - return as-is
+            return json;
         });
 };

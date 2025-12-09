@@ -11,4 +11,5 @@ urlpatterns = [
 
     # Feature-specific delegated API routes
     path('v1/locations/', include('tt.apps.locations.api.urls')),
+    path('v1/trips/', include('tt.apps.trips.api.urls')),
 ]

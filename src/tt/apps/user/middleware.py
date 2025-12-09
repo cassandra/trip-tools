@@ -25,6 +25,7 @@ class AuthenticationMiddleware(object):
 
     # Path prefixes that are publicly accessible without authentication
     EXEMPT_PATH_PREFIXES = [
+        '/api/',  # API uses DRF token auth, not session auth
         '/travelog/',
         '/media/',  # Needed for local development when Django serves these directly
     ]

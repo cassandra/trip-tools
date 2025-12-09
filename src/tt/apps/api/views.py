@@ -1,3 +1,7 @@
+from datetime import datetime
+from typing import Optional
+from uuid import UUID
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -7,6 +11,7 @@ from rest_framework.views import APIView
 from .constants import APIFields as F
 from .messages import APIMessages as M
 from .services import APITokenService
+from .sync import SyncEnvelopeBuilder
 from .utils import get_str
 
 
@@ -92,3 +97,69 @@ class CurrentUserView(APIView):
             F.UUID: str( user.uuid ),
             F.EMAIL: user.email,
         })
+
+
+class SyncableAPIView( APIView ):
+    """
+    Base class for API views that include sync envelope in responses.
+
+    Views inherit from this class to automatically get sync envelopes.
+    The view implementation doesn't change - it still returns Response(data)
+    as normal. The finalize_response() hook wraps the data with sync envelope.
+
+    Example:
+        class LocationListView(SyncableAPIView):
+            def get(self, request):
+                locations = [...]
+                return Response(locations)  # Normal usage
+                # Response automatically becomes {"data": locations, "sync": {...}}
+
+    Sync headers:
+        X-Sync-Since: ISO 8601 timestamp for incremental sync
+        X-Sync-Trip: UUID of the current/active trip for location scoping
+    """
+
+    def finalize_response(
+        self,
+        request: Request,
+        response: Response,
+        *args,
+        **kwargs
+    ) -> Response:
+        """DRF hook called before response is returned to client."""
+        response = super().finalize_response( request, response, *args, **kwargs )
+
+        # Only add sync envelope for authenticated requests with data
+        if request.user.is_authenticated and hasattr( response, 'data' ):
+            sync_envelope = self._build_sync_envelope( request )
+            response.data = {
+                'data': response.data,
+                'sync': sync_envelope,
+            }
+
+        return response
+
+    def _build_sync_envelope( self, request: Request ) -> dict:
+        since = self._parse_sync_since( request )
+        trip_uuid = self._parse_sync_trip( request )
+        builder = SyncEnvelopeBuilder( request.user, since, trip_uuid )
+        return builder.build()
+
+    def _parse_sync_since( self, request: Request ) -> Optional[datetime]:
+        header = request.headers.get( 'X-Sync-Since' )
+        if header:
+            try:
+                # Handle 'Z' suffix for UTC
+                return datetime.fromisoformat( header.replace( 'Z', '+00:00' ) )
+            except ValueError:
+                return None
+        return None
+
+    def _parse_sync_trip( self, request: Request ) -> Optional[UUID]:
+        header = request.headers.get( 'X-Sync-Trip' )
+        if header:
+            try:
+                return UUID( header )
+            except ValueError:
+                return None
+        return None

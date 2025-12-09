@@ -18,6 +18,7 @@ TT.CONFIG = {
     EXTENSION_AUTHORIZE_PATH: '/user/extensions/',
     API_ME_ENDPOINT: '/api/v1/me/',
     API_TOKENS_ENDPOINT: '/api/v1/tokens/',
+    API_TRIPS_ENDPOINT: '/api/v1/trips/',
     AUTH_VALIDATION_DEBOUNCE_POPUP_MS: 60000,
     AUTH_VALIDATION_TIMEOUT_MS: 5000
 };
@@ -32,7 +33,12 @@ TT.STORAGE = {
     KEY_DEBUG_LOG: 'tt_debugLog',
     KEY_API_TOKEN: 'tt_apiToken',
     KEY_USER_EMAIL: 'tt_userEmail',
-    KEY_AUTH_STATE: 'tt_authState'
+    KEY_AUTH_STATE: 'tt_authState',
+    // Sync infrastructure
+    KEY_SYNC_AS_OF: 'tt_syncAsOf',
+    KEY_ACTIVE_TRIP_UUID: 'tt_activeTripUuid',
+    // Trip working set
+    KEY_WORKING_SET_TRIPS: 'tt_workingSetTrips'
 };
 
 TT.MESSAGE = {
@@ -46,7 +52,10 @@ TT.MESSAGE = {
     TYPE_AUTH_STATUS_REQUEST: 'tt_authStatusRequest',
     TYPE_AUTH_STATUS_RESPONSE: 'tt_authStatusResponse',
     TYPE_AUTH_STATE_CHANGED: 'tt_authStateChanged',
-    TYPE_DISCONNECT: 'tt_disconnect'
+    TYPE_DISCONNECT: 'tt_disconnect',
+    // Trip management
+    TYPE_GET_TRIPS: 'tt_getTrips',
+    TYPE_SET_ACTIVE_TRIP: 'tt_setActiveTrip'
 };
 
 TT.DOM = {
@@ -54,6 +63,12 @@ TT.DOM = {
     ID_HEADER_ICON: 'tt-header-icon',
     ID_STATUS_INDICATOR: 'tt-status-indicator',
     ID_STATUS_TEXT: 'tt-status-text',
+    // Trip section
+    ID_TRIP_SECTION: 'tt-trip-section',
+    ID_TRIP_LIST: 'tt-trip-list',
+    ID_TRIP_LOADING: 'tt-trip-loading',
+    ID_TRIP_EMPTY: 'tt-trip-empty',
+    // Maps section (stub)
     ID_MAPS_SECTION: 'tt-maps-section',
     ID_MAPS_LIST: 'tt-maps-list',
     ID_ADD_MAP_BTN: 'tt-add-map-btn',
@@ -107,7 +122,13 @@ TT.DOM = {
     ID_OPTIONS_TOKEN_VALIDATION_STATUS: 'tt-options-token-validation-status',
     ID_OPTIONS_VERSION: 'tt-options-version',
     CLASS_POPUP_HEADER: 'tt-popup-header',
-    CLASS_TOKEN_VALIDATION_STATUS: 'tt-token-validation-status'
+    CLASS_TOKEN_VALIDATION_STATUS: 'tt-token-validation-status',
+    // Trip UI
+    CLASS_TRIP_LIST: 'tt-trip-list',
+    CLASS_TRIP_ITEM: 'tt-trip-item',
+    CLASS_TRIP_ACTIVE: 'tt-active',
+    CLASS_TRIP_LOADING: 'tt-trip-loading',
+    CLASS_TRIP_EMPTY: 'tt-trip-empty'
 };
 
 TT.URL = {
@@ -154,6 +175,27 @@ TT.AUTH = {
     STATUS_RATE_LIMITED: 'rate_limited'
 };
 
+/*
+ * Sync infrastructure constants.
+ * Used for client-server data synchronization.
+ */
+TT.SYNC = {
+    // Response envelope fields
+    FIELD_DATA: 'data',
+    FIELD_SYNC: 'sync',
+    FIELD_AS_OF: 'as_of',
+    FIELD_VERSIONS: 'versions',
+    FIELD_DELETED: 'deleted',
+    // Object types (must match server SyncObjectType enum)
+    OBJECT_TYPE_TRIP: 'trip',
+    OBJECT_TYPE_LOCATION: 'location'
+};
+
+TT.HEADERS = {
+    SYNC_SINCE: 'X-Sync-Since',
+    SYNC_TRIP: 'X-Sync-Trip'
+};
+
 TT.STRINGS = {
     AUTH_BUTTON_AUTHORIZE: 'Authorize Extension',
     AUTH_BUTTON_DISCONNECT: 'Disconnect',
@@ -181,5 +223,10 @@ TT.STRINGS = {
     STATUS_OFFLINE: 'Offline',
     STATUS_SERVER_ERROR: 'Server error',
     STATUS_TIMEOUT: 'Connection timeout',
-    STATUS_RATE_LIMITED: 'Rate limited'
+    STATUS_RATE_LIMITED: 'Rate limited',
+    // Trip UI
+    TRIP_SECTION_HEADER: 'Active Trip',
+    TRIP_LOADING: 'Loading trips...',
+    TRIP_EMPTY: 'No trips available.',
+    TRIP_ERROR: 'Unable to load trips.'
 };

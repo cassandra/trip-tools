@@ -8,6 +8,8 @@ importScripts( '../shared/storage.js' );
 importScripts( '../shared/messaging.js' );
 importScripts( '../shared/auth.js' );
 importScripts( '../shared/api.js' );
+importScripts( '../shared/trips.js' );
+importScripts( '../shared/sync.js' );
 
 var extensionStartTime = Date.now();
 var lastAuthValidation = 0;
@@ -46,6 +48,10 @@ TTMessaging.listen( function( message, sender ) {
             return handleAuthStatusRequest( sender );
         case TT.MESSAGE.TYPE_DISCONNECT:
             return handleDisconnect();
+        case TT.MESSAGE.TYPE_GET_TRIPS:
+            return handleGetTrips();
+        case TT.MESSAGE.TYPE_SET_ACTIVE_TRIP:
+            return handleSetActiveTrip( message.data );
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -350,6 +356,14 @@ function handleDisconnect() {
             return TTAuth.disconnect();
         })
         .then( function() {
+            // Clear trip state
+            return TTTrips.clearAll();
+        })
+        .then( function() {
+            // Clear sync state
+            return TTSync.clearState();
+        })
+        .then( function() {
             return addDebugLogEntry( 'info', 'Disconnected from Trip Tools' );
         })
         .then( function() {
@@ -382,4 +396,76 @@ function broadcastAuthStateChange( authorized, email ) {
     chrome.runtime.sendMessage( message ).catch( function() {
         // Ignore errors - no listeners may be active
     });
+}
+
+// =============================================================================
+// Trip Handlers
+// =============================================================================
+
+/**
+ * Handle request to get trips.
+ * Fetches from server, seeds working set if empty, returns combined data.
+ */
+function handleGetTrips() {
+    var serverTrips;
+    var workingSet;
+    var activeTripUuid;
+
+    return TTTrips.fetchTripsFromServer()
+        .then( function( trips ) {
+            serverTrips = trips;
+            // Seed working set if empty
+            return TTTrips.seedWorkingSet( trips );
+        })
+        .then( function() {
+            return TTTrips.getWorkingSet();
+        })
+        .then( function( trips ) {
+            workingSet = trips;
+            return TTTrips.getActiveTripUuid();
+        })
+        .then( function( uuid ) {
+            activeTripUuid = uuid;
+            return TTMessaging.createResponse( true, {
+                workingSet: workingSet,
+                activeTripUuid: activeTripUuid,
+                serverTrips: serverTrips
+            });
+        })
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            });
+        });
+}
+
+/**
+ * Handle request to set active trip.
+ * Adds trip to working set and sets as active.
+ * @param {Object} data - Object with trip property.
+ */
+function handleSetActiveTrip( data ) {
+    var trip = data.trip;
+
+    if ( !trip || !trip.uuid ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'Trip with uuid required'
+        }));
+    }
+
+    return TTTrips.setActiveTrip( trip )
+        .then( function() {
+            return TTTrips.getWorkingSet();
+        })
+        .then( function( workingSet ) {
+            return TTMessaging.createResponse( true, {
+                workingSet: workingSet,
+                activeTripUuid: trip.uuid
+            });
+        })
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            });
+        });
 }

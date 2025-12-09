@@ -36,18 +36,12 @@
 
         <!-- Main Content -->
         <div class="tt-popup-content">
-            <!-- Maps Section (stub) -->
-            <div class="tt-section" id="tt-maps-section">
-                <div class="tt-section-header">My Maps</div>
-                <div class="tt-maps-list" id="tt-maps-list">
-                    <div class="tt-maps-list-empty">No maps added yet.</div>
-                </div>
-                <button class="tt-btn tt-btn-stub" id="tt-add-map-btn" disabled>
-                    Add Current Map
-                </button>
-                <button class="tt-btn tt-btn-stub" id="tt-refresh-maps-btn" disabled>
-                    Refresh Maps
-                </button>
+            <!-- Trip Section -->
+            <div class="tt-section" id="tt-trip-section">
+                <div class="tt-section-header">Active Trip</div>
+                <div class="tt-trip-loading" id="tt-trip-loading">Loading trips...</div>
+                <div class="tt-trip-list tt-hidden" id="tt-trip-list"></div>
+                <div class="tt-trip-empty tt-hidden" id="tt-trip-empty">No trips available.</div>
             </div>
 
             <!-- Actions Section (stub) -->

@@ -15,6 +15,7 @@ function initializePopup() {
     loadDebugLog();
     checkAuthStatus();
     listenForAuthStateChanges();
+    // Trip loading happens after auth check via showAuthorizedState()
 }
 
 function listenForAuthStateChanges() {
@@ -313,6 +314,10 @@ function showAuthorizedState( email, serverStatus ) {
     }
 
     updateDebugAuthInfo( email );
+
+    // Show trip section and load trips
+    showTripSection();
+    loadTrips();
 }
 
 function showNotAuthorizedState() {
@@ -336,6 +341,9 @@ function showNotAuthorizedState() {
     }
 
     updateDebugAuthInfo( null );
+
+    // Hide trip section when not authorized
+    hideTripSection();
 }
 
 function setupAuthEventListeners() {
@@ -384,4 +392,135 @@ function updateDebugAuthInfo( email ) {
 
     entryDiv.appendChild( messageSpan );
     authInfo.appendChild( entryDiv );
+}
+
+// =============================================================================
+// Trip Section
+// =============================================================================
+
+function showTripSection() {
+    var tripSection = document.getElementById( TT.DOM.ID_TRIP_SECTION );
+    if ( tripSection ) {
+        tripSection.classList.remove( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+function hideTripSection() {
+    var tripSection = document.getElementById( TT.DOM.ID_TRIP_SECTION );
+    if ( tripSection ) {
+        tripSection.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
+    // Clear trip list
+    var tripList = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    if ( tripList ) {
+        tripList.innerHTML = '';
+    }
+}
+
+function showTripLoading() {
+    var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
+    var list = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
+
+    if ( loading ) loading.classList.remove( TT.DOM.CLASS_HIDDEN );
+    if ( list ) list.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( empty ) empty.classList.add( TT.DOM.CLASS_HIDDEN );
+}
+
+function showTripList() {
+    var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
+    var list = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
+
+    if ( loading ) loading.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( list ) list.classList.remove( TT.DOM.CLASS_HIDDEN );
+    if ( empty ) empty.classList.add( TT.DOM.CLASS_HIDDEN );
+}
+
+function showTripEmpty() {
+    var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
+    var list = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
+
+    if ( loading ) loading.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( list ) list.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( empty ) empty.classList.remove( TT.DOM.CLASS_HIDDEN );
+}
+
+function loadTrips() {
+    showTripLoading();
+
+    TTMessaging.send( TT.MESSAGE.TYPE_GET_TRIPS, {} )
+        .then( function( response ) {
+            if ( response && response.success ) {
+                renderTrips( response.data.workingSet, response.data.activeTripUuid );
+            } else {
+                showTripEmpty();
+                var errorMsg = response && response.error ? response.error : 'Unknown error';
+                addLocalDebugEntry( 'error', 'Load trips failed: ' + errorMsg );
+            }
+        })
+        .catch( function( error ) {
+            showTripEmpty();
+            addLocalDebugEntry( 'error', 'Load trips error: ' + error.message );
+        });
+}
+
+function renderTrips( workingSet, activeTripUuid ) {
+    var tripList = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    if ( !tripList ) {
+        return;
+    }
+
+    // Clear existing content
+    tripList.innerHTML = '';
+
+    if ( !workingSet || workingSet.length === 0 ) {
+        showTripEmpty();
+        return;
+    }
+
+    workingSet.forEach( function( trip ) {
+        var tripItem = document.createElement( 'div' );
+        tripItem.className = TT.DOM.CLASS_TRIP_ITEM;
+        if ( trip.uuid === activeTripUuid ) {
+            tripItem.classList.add( TT.DOM.CLASS_TRIP_ACTIVE );
+        }
+
+        // Radio indicator
+        var radio = document.createElement( 'div' );
+        radio.className = 'tt-trip-item-radio';
+        tripItem.appendChild( radio );
+
+        // Title
+        var title = document.createElement( 'span' );
+        title.className = 'tt-trip-item-title';
+        title.textContent = trip.title;
+        tripItem.appendChild( title );
+
+        // Click handler
+        tripItem.addEventListener( 'click', function() {
+            selectTrip( trip );
+        });
+
+        tripList.appendChild( tripItem );
+    });
+
+    showTripList();
+}
+
+function selectTrip( trip ) {
+    TTMessaging.send( TT.MESSAGE.TYPE_SET_ACTIVE_TRIP, { trip: trip } )
+        .then( function( response ) {
+            if ( response && response.success ) {
+                renderTrips( response.data.workingSet, response.data.activeTripUuid );
+                addLocalDebugEntry( 'info', 'Selected trip: ' + trip.title );
+            } else {
+                var errorMsg = response && response.error ? response.error : 'Unknown error';
+                addLocalDebugEntry( 'error', 'Select trip failed: ' + errorMsg );
+            }
+        })
+        .catch( function( error ) {
+            addLocalDebugEntry( 'error', 'Select trip error: ' + error.message );
+        });
 }
