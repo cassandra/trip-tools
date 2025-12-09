@@ -1,0 +1,191 @@
+/*
+ * Trip Tools Chrome Extension - Google My Maps Styles
+ * Styles for GMM content script UI elements.
+ */
+
+/* =============================================================================
+ * Category Buttons
+ * ============================================================================= */
+
+.tt-category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #dadce0;
+}
+
+.tt-gmm-btn {
+    padding: 6px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    background: #fff;
+    color: #1a73e8;
+    font-size: 13px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.tt-gmm-btn:hover {
+    background: #f1f3f4;
+    border-color: #1a73e8;
+}
+
+.tt-gmm-btn:active {
+    background: #e8f0fe;
+}
+
+.tt-category-btn {
+    background: #e8f0fe;
+    border-color: #1a73e8;
+}
+
+.tt-category-btn:hover {
+    background: #d2e3fc;
+}
+
+/* =============================================================================
+ * Subcategory Picker
+ * ============================================================================= */
+
+.tt-subcategory-picker {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 16px;
+    z-index: 10000;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.tt-picker-header {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 12px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-picker-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tt-picker-buttons .tt-gmm-btn {
+    flex: 0 0 calc(50% - 4px);
+    text-align: center;
+}
+
+.tt-cancel-btn {
+    width: 100%;
+    background: #f1f3f4;
+    color: #5f6368;
+    border-color: #dadce0;
+}
+
+.tt-cancel-btn:hover {
+    background: #e8eaed;
+    border-color: #dadce0;
+}
+
+/* =============================================================================
+ * Custom Attributes UI
+ * ============================================================================= */
+
+.tt-attributes-container {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #dadce0;
+}
+
+.tt-attribute-group {
+    margin-bottom: 12px;
+}
+
+.tt-attribute-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #5f6368;
+    margin-bottom: 4px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-attribute-value {
+    font-size: 13px;
+    color: #202124;
+}
+
+.tt-attribute-select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: Roboto, Arial, sans-serif;
+}
+
+.tt-attribute-textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: Roboto, Arial, sans-serif;
+    resize: vertical;
+    min-height: 60px;
+}
+
+.tt-attribute-select:focus,
+.tt-attribute-textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* =============================================================================
+ * Loading/Status Indicators
+ * ============================================================================= */
+
+.tt-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #5f6368;
+    font-size: 13px;
+}
+
+.tt-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #dadce0;
+    border-top-color: #1a73e8;
+    border-radius: 50%;
+    animation: tt-spin 0.8s linear infinite;
+}
+
+@keyframes tt-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.tt-error {
+    color: #d93025;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.tt-success {
+    color: #1e8e3e;
+    font-size: 12px;
+    margin-top: 4px;
+}

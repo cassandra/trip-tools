@@ -51,7 +51,9 @@
       "Bash(make test-e2e-extension-isolated:*)",
       "Bash(make test-e2e-webapp-extension-real:*)",
       "Bash(ls:*)",
-      "Bash(. ~/.nvm/nvm.sh)"
+      "Bash(. ~/.nvm/nvm.sh)",
+      "WebFetch(domain:issuetracker.google.com)",
+      "WebFetch(domain:www.google.com)"
     ],
     "deny": [],
     "ask": []

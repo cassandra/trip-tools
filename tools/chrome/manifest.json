@@ -57,6 +57,37 @@
                 "content/triptools-auth.js"
             ],
             "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "https://www.google.com/maps/d/edit*",
+                "https://www.google.com/maps/d/u/*/edit*"
+            ],
+            "css": [
+                "styles/gmm.css"
+            ],
+            "js": [
+                "shared/constants.js",
+                "shared/storage.js",
+                "shared/client-config.js",
+                "shared/dom.js",
+                "shared/site-adapter.js",
+                "adapters/gmm-selectors.js",
+                "adapters/gmm-adapter.js",
+                "content/gmm.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "images/*",
+                "styles/*"
+            ],
+            "matches": [
+                "https://www.google.com/*"
+            ]
         }
     ]
 }

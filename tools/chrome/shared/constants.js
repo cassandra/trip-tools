@@ -63,7 +63,15 @@ TT.MESSAGE = {
     // Trip management
     TYPE_GET_TRIPS: 'tt_getTrips',
     TYPE_SET_ACTIVE_TRIP: 'tt_setActiveTrip',
-    TYPE_GET_ALL_TRIPS: 'tt_getAllTrips'
+    TYPE_GET_ALL_TRIPS: 'tt_getAllTrips',
+    // Location management (GMM content script <-> background)
+    TYPE_SAVE_LOCATION: 'tt_saveLocation',
+    TYPE_GET_LOCATION: 'tt_getLocation',
+    TYPE_UPDATE_LOCATION: 'tt_updateLocation',
+    TYPE_DELETE_LOCATION: 'tt_deleteLocation',
+    // GMM content script commands
+    TYPE_GMM_SEARCH_AND_ADD: 'tt_gmmSearchAndAdd',
+    TYPE_GMM_GET_MAP_INFO: 'tt_gmmGetMapInfo'
 };
 
 TT.DOM = {
