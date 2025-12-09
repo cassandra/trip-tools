@@ -62,25 +62,44 @@ TTTrips.setActiveTripUuid = function( uuid ) {
  * Updates lastAccessedAt and enforces MAX_WORKING_SET_SIZE by removing
  * the least recently accessed trip if needed.
  * @param {Object} trip - Trip object with uuid, title, version.
+ * @param {Object} [options] - Optional settings.
+ * @param {string} [options.lastAccessedAt] - Custom lastAccessedAt timestamp (ISO string).
+ *     If not provided, uses current time.
  * @returns {Promise<void>}
  */
-TTTrips.addToWorkingSet = function( trip ) {
+TTTrips.addToWorkingSet = function( trip, options ) {
+    options = options || {};
+    var accessTime = options.lastAccessedAt || new Date().toISOString();
+
     return TTTrips.getWorkingSet()
         .then( function( workingSet ) {
-            // Remove if already present (will be re-added with updated timestamp)
+            // Remove if already present (will be re-added with new timestamp)
             workingSet = workingSet.filter( function( t ) {
                 return t.uuid !== trip.uuid;
             });
 
-            // Add with timestamp
-            workingSet.unshift({
+            // Create entry
+            var entry = {
                 uuid: trip.uuid,
                 title: trip.title,
                 version: trip.version,
-                lastAccessedAt: new Date().toISOString()
-            });
+                lastAccessedAt: accessTime
+            };
 
-            // Enforce max size by removing least recently accessed
+            // Find insertion point to maintain descending order by lastAccessedAt
+            var insertIndex = 0;
+            for ( var i = 0; i < workingSet.length; i++ ) {
+                if ( workingSet[i].lastAccessedAt > accessTime ) {
+                    insertIndex = i + 1;
+                } else {
+                    break;
+                }
+            }
+
+            // Insert at correct position
+            workingSet.splice( insertIndex, 0, entry );
+
+            // Enforce max size by removing least recently accessed (end of list)
             if ( workingSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
                 workingSet = workingSet.slice( 0, TTTrips.MAX_WORKING_SET_SIZE );
             }
@@ -138,6 +157,48 @@ TTTrips.fetchTripsFromServer = function() {
     return TTApi.get( TT.CONFIG.API_TRIPS_ENDPOINT )
         .then( function( response ) {
             return TTApi.processResponse( response );
+        });
+};
+
+/**
+ * Merge server trips into the working set.
+ * For trips not already in the working set, adds them using their
+ * created_datetime as lastAccessedAt. This allows LRU eviction to
+ * naturally determine which trips belong in the working set.
+ * @param {Array} serverTrips - Array of trips from server with created_datetime.
+ * @returns {Promise<void>}
+ */
+TTTrips.mergeServerTrips = function( serverTrips ) {
+    if ( !serverTrips || serverTrips.length === 0 ) {
+        return Promise.resolve();
+    }
+
+    return TTTrips.getWorkingSet()
+        .then( function( workingSet ) {
+            // Build set of UUIDs already in working set
+            var existingUuids = {};
+            workingSet.forEach( function( trip ) {
+                existingUuids[trip.uuid] = true;
+            });
+
+            // Find trips not in working set
+            var newTrips = serverTrips.filter( function( trip ) {
+                return !existingUuids[trip.uuid];
+            });
+
+            if ( newTrips.length === 0 ) {
+                return Promise.resolve();
+            }
+
+            // Add each new trip using created_datetime as lastAccessedAt
+            // Process sequentially to maintain correct ordering
+            return newTrips.reduce( function( promise, trip ) {
+                return promise.then( function() {
+                    return TTTrips.addToWorkingSet( trip, {
+                        lastAccessedAt: trip.created_datetime
+                    });
+                });
+            }, Promise.resolve() );
         });
 };
 

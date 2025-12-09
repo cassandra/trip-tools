@@ -418,6 +418,10 @@ function handleGetTrips() {
             return TTTrips.seedWorkingSet( trips );
         })
         .then( function() {
+            // Merge any new trips from server into working set
+            return TTTrips.mergeServerTrips( serverTrips );
+        })
+        .then( function() {
             return TTTrips.getWorkingSet();
         })
         .then( function( trips ) {
