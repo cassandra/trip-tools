@@ -601,9 +601,12 @@ function switchToTrip( trip ) {
         .then( function( response ) {
             if ( response && response.success ) {
                 addLocalDebugEntry( 'info', 'Switched to trip: ' + trip.title );
-                // Future: Navigate to trip page here
-                // For now, just re-render to show the switch
+                // Re-render to show the switch
                 renderTrips( response.data.workingSet, response.data.activeTripUuid );
+                // If trip has a linked GMM map, navigate to it
+                if ( trip.gmm_map_id ) {
+                    openGmmMap( trip.gmm_map_id );
+                }
             } else {
                 var errorMsg = response && response.error ? response.error : 'Unknown error';
                 addLocalDebugEntry( 'error', 'Switch trip failed: ' + errorMsg );
@@ -807,6 +810,10 @@ function selectTripFromList( trip ) {
                 hideMoreTripsPanel();
                 // Refresh main trip display
                 renderTrips( response.data.workingSet, response.data.activeTripUuid );
+                // If trip has a linked GMM map, navigate to it
+                if ( trip.gmm_map_id ) {
+                    openGmmMap( trip.gmm_map_id );
+                }
             } else {
                 var errorMsg = response && response.error ? response.error : 'Unknown error';
                 addLocalDebugEntry( 'error', 'Select trip failed: ' + errorMsg );
