@@ -358,68 +358,82 @@ input:checked + .tt-toggle-slider:before {
     padding: 8px 0;
 }
 
-.tt-trip-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.tt-trip-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 10px;
-    background-color: var(--tt-primary-bg-light);
-    border: 1px solid var(--tt-line-color);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s;
-}
-
-.tt-trip-item:hover {
+/* Active Trip Display */
+.tt-active-trip {
     background-color: #e8f4ea;
-    border-color: var(--tt-primary-color);
+    border: 2px solid var(--tt-primary-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
 }
 
-.tt-trip-item.tt-active {
-    background-color: #e8f4ea;
-    border-color: var(--tt-primary-color);
-    border-width: 2px;
-    padding: 7px 9px; /* Adjust for thicker border */
+.tt-active-trip-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--tt-primary-color);
+    font-weight: 600;
+    margin-bottom: 4px;
 }
 
-.tt-trip-item-radio {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid var(--tt-muted-color);
-    margin-right: 10px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.tt-trip-item.tt-active .tt-trip-item-radio {
-    border-color: var(--tt-primary-color);
-}
-
-.tt-trip-item.tt-active .tt-trip-item-radio::after {
-    content: '';
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--tt-primary-color);
-}
-
-.tt-trip-item-title {
-    font-size: 13px;
+.tt-active-trip-title {
+    font-size: 15px;
+    font-weight: 500;
     color: var(--tt-black);
-    flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.tt-trip-item.tt-active .tt-trip-item-title {
+/* Other Trips Section */
+.tt-other-trips {
+    margin-bottom: 12px;
+}
+
+.tt-other-trips-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--tt-muted-color);
     font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.tt-other-trips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Switch Trip Buttons */
+.tt-switch-trip-btn {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    background-color: var(--tt-primary-bg-light);
+    border: 1px solid var(--tt-line-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--tt-black);
+    text-align: left;
+    transition: background-color 0.15s, border-color 0.15s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tt-switch-trip-btn:hover {
+    background-color: #f0f7f1;
+    border-color: var(--tt-primary-color);
+}
+
+.tt-switch-trip-btn:focus {
+    outline: 2px solid var(--tt-primary-color);
+    outline-offset: 1px;
+}
+
+.tt-btn-new-trip {
+    width: 100%;
+    margin-top: 8px;
 }

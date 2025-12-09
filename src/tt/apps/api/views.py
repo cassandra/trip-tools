@@ -99,20 +99,42 @@ class CurrentUserView(APIView):
         })
 
 
-class SyncableAPIView( APIView ):
+class TtApiView( APIView ):
     """
-    Base class for API views that include sync envelope in responses.
+    Base class for Trip Tools API views.
 
-    Views inherit from this class to automatically get sync envelopes.
-    The view implementation doesn't change - it still returns Response(data)
-    as normal. The finalize_response() hook wraps the data with sync envelope.
+    Wraps successful response data in a consistent envelope: {"data": ...}
+    This provides flexibility to add metadata fields later without breaking clients.
 
-    Example:
-        class LocationListView(SyncableAPIView):
-            def get(self, request):
-                locations = [...]
-                return Response(locations)  # Normal usage
-                # Response automatically becomes {"data": locations, "sync": {...}}
+    Only 2xx responses are wrapped. Error responses pass through unchanged.
+    """
+
+    def finalize_response(
+        self,
+        request: Request,
+        response: Response,
+        *args,
+        **kwargs
+    ) -> Response:
+        """Wrap successful response data in {"data": ...} envelope."""
+        response = super().finalize_response( request, response, *args, **kwargs )
+
+        # Only wrap successful responses (2xx status codes)
+        if hasattr( response, 'data' ) and 200 <= response.status_code < 300:
+            response.data = {
+                'data': response.data,
+            }
+
+        return response
+
+
+class SyncableAPIView( TtApiView ):
+    """
+    API view that includes sync envelope in responses.
+
+    Extends TtApiView to add sync data: {"data": ..., "sync": {...}}
+    The SyncEnvelopeBuilder determines what sync data is appropriate
+    for the request context (authenticated user, anonymous, etc.).
 
     Sync headers:
         X-Sync-Since: ISO 8601 timestamp for incremental sync
@@ -126,16 +148,13 @@ class SyncableAPIView( APIView ):
         *args,
         **kwargs
     ) -> Response:
-        """DRF hook called before response is returned to client."""
+        """Add sync envelope to wrapped response."""
         response = super().finalize_response( request, response, *args, **kwargs )
 
-        # Only add sync envelope for authenticated requests with data
-        if request.user.is_authenticated and hasattr( response, 'data' ):
+        # Only add sync to successful responses (already wrapped by TtApiView)
+        if hasattr( response, 'data' ) and 200 <= response.status_code < 300:
             sync_envelope = self._build_sync_envelope( request )
-            response.data = {
-                'data': response.data,
-                'sync': sync_envelope,
-            }
+            response.data['sync'] = sync_envelope
 
         return response
 
@@ -163,3 +182,20 @@ class SyncableAPIView( APIView ):
             except ValueError:
                 return None
         return None
+
+
+class ExtensionStatusView( SyncableAPIView ):
+    """
+    Extension-specific status endpoint.
+
+    Returns user info and config version, with sync envelope for trips.
+    Used by the Chrome extension for combined auth validation and sync.
+    """
+    permission_classes = [ IsAuthenticated ]
+
+    def get( self, request: Request ) -> Response:
+        """Returns user email and config version with sync envelope."""
+        return Response({
+            F.EMAIL: request.user.email,
+            'config_version': 1,  # Placeholder for future config sync
+        })

@@ -35,15 +35,15 @@
   </a>
 </li>
 <li>
-  <a href="{% url 'user_api_tokens' %}"{% if account_page.active_page.value == 'api_tokens' %} class="active" aria-current="page"{% endif %}>
-    {% icon "key" size="sm" %}
-    <span>API Keys</span>
-  </a>
-</li>
-<li>
   <a href="{% url 'user_extensions' %}"{% if account_page.active_page.value == 'extensions' %} class="active" aria-current="page"{% endif %}>
     {% icon "plug" size="sm" %}
     <span>Extensions</span>
+  </a>
+</li>
+<li>
+  <a href="{% url 'user_api_tokens' %}"{% if account_page.active_page.value == 'api_tokens' %} class="active" aria-current="page"{% endif %}>
+    {% icon "key" size="sm" %}
+    <span>API Keys</span>
   </a>
 </li>
 {% endblock %}

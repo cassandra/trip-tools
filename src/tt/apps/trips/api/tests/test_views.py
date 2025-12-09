@@ -109,23 +109,6 @@ class TripCollectionViewTestCase( TestCase ):
         self.assertEqual( len( data ), 1 )
         self.assertEqual( data[0]['title'], 'Shared Trip' )
 
-    def test_response_includes_sync_envelope( self ):
-        """Test response includes sync envelope."""
-        TripSyntheticData.create_test_trip(
-            user = self.user,
-            title = 'Test Trip'
-        )
-
-        self.client.credentials(
-            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
-        )
-        response = self.client.get( '/api/v1/trips/' )
-
-        self.assertEqual( response.status_code, 200 )
-        json_data = response.json()
-        self.assertIn( 'sync', json_data )
-        self.assertIn( 'as_of', json_data['sync'] )
-
     def test_ordered_by_created_datetime_desc( self ):
         """Test trips ordered by created_datetime descending."""
         TripSyntheticData.create_test_trip(
@@ -168,6 +151,21 @@ class TripCollectionViewTestCase( TestCase ):
         self.assertIn( 'trip_status', data )
         self.assertIn( 'version', data )
         self.assertIn( 'created_datetime', data )
+
+    def test_response_does_not_include_sync( self ):
+        """Test response does not include sync envelope (TtApiView, not SyncableAPIView)."""
+        TripSyntheticData.create_test_trip(
+            user = self.user,
+            title = 'Test Trip'
+        )
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/trips/' )
+
+        self.assertEqual( response.status_code, 200 )
+        self.assertNotIn( 'sync', response.json() )
 
 
 # =============================================================================
@@ -213,6 +211,7 @@ class TripItemViewTestCase( TestCase ):
         response = self.client.get( f'/api/v1/trips/{self.trip.uuid}/' )
 
         self.assertEqual( response.status_code, 200 )
+        self.assertIn( 'data', response.json() )
         data = response.json()['data']
         self.assertEqual( data['uuid'], str( self.trip.uuid ) )
         self.assertEqual( data['title'], 'Test Trip' )
@@ -264,14 +263,12 @@ class TripItemViewTestCase( TestCase ):
         data = response.json()['data']
         self.assertEqual( data['title'], 'Shared Trip' )
 
-    def test_response_includes_sync_envelope( self ):
-        """Test response includes sync envelope."""
+    def test_response_does_not_include_sync( self ):
+        """Test response does not include sync envelope (TtApiView, not SyncableAPIView)."""
         self.client.credentials(
             HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
         )
         response = self.client.get( f'/api/v1/trips/{self.trip.uuid}/' )
 
         self.assertEqual( response.status_code, 200 )
-        json_data = response.json()
-        self.assertIn( 'sync', json_data )
-        self.assertIn( 'as_of', json_data['sync'] )
+        self.assertNotIn( 'sync', response.json() )

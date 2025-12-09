@@ -5,6 +5,7 @@ Focuses on high-value testing of:
 - SyncableAPIView response wrapping behavior
 - Header parsing (X-Sync-Since, X-Sync-Trip)
 - Sync envelope inclusion for authenticated requests
+- ExtensionStatusView response format
 """
 import logging
 from datetime import datetime
@@ -14,8 +15,9 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIClient, APIRequestFactory
 
+from tt.apps.api.services import APITokenService
 from tt.apps.api.views import SyncableAPIView
 from tt.apps.trips.tests.synthetic_data import TripSyntheticData
 
@@ -73,8 +75,8 @@ class SyncableAPIViewResponseWrappingTestCase(TestCase):
         self.assertIn('sync', response.data)
         self.assertEqual(response.data['data'], {'message': 'test data'})
 
-    def test_anonymous_request_does_not_wrap_response(self):
-        """Test anonymous request does NOT wrap response."""
+    def test_anonymous_request_wraps_without_trip_sync(self):
+        """Test anonymous request wraps response without trip sync."""
         from django.contrib.auth.models import AnonymousUser
 
         request = self.factory.get('/test/')
@@ -83,9 +85,12 @@ class SyncableAPIViewResponseWrappingTestCase(TestCase):
         view = TestSyncableView.as_view()
         response = view(request)
 
-        # Response should NOT be wrapped
-        self.assertNotIn('sync', response.data)
-        self.assertEqual(response.data, {'message': 'test data'})
+        # Response should be wrapped with sync envelope
+        self.assertIn('data', response.data)
+        self.assertIn('sync', response.data)
+        self.assertEqual(response.data['data'], {'message': 'test data'})
+        # Trip sync should be absent (not applicable for anonymous)
+        self.assertNotIn('trip', response.data['sync'])
 
     def test_sync_envelope_includes_as_of(self):
         """Test sync envelope includes as_of timestamp."""
@@ -261,3 +266,83 @@ class SyncableAPIViewLocationSyncTestCase(TestCase):
 
         sync = response.data['sync']
         self.assertNotIn('location', sync)
+
+
+# =============================================================================
+# ExtensionStatusView Tests
+# =============================================================================
+
+class ExtensionStatusViewTestCase( TestCase ):
+    """Test GET /api/v1/extension/status/ endpoint."""
+
+    @classmethod
+    def setUpTestData( cls ):
+        cls.user = User.objects.create_user(
+            email = 'testuser@example.com',
+            password = 'testpass123'
+        )
+        cls.token_data = APITokenService.create_token(
+            cls.user,
+            'Test Token'
+        )
+
+    def setUp( self ):
+        self.client = APIClient()
+
+    def test_requires_authentication( self ):
+        """Test endpoint requires authentication."""
+        response = self.client.get( '/api/v1/extension/status/' )
+        self.assertEqual( response.status_code, 401 )
+
+    def test_returns_user_email( self ):
+        """Test returns user email."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/extension/status/' )
+
+        self.assertEqual( response.status_code, 200 )
+        self.assertIn( 'data', response.json() )
+        data = response.json()['data']
+        self.assertEqual( data['email'], 'testuser@example.com' )
+
+    def test_returns_config_version( self ):
+        """Test returns config_version field."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/extension/status/' )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertIn( 'config_version', data )
+        self.assertEqual( data['config_version'], 1 )
+
+    def test_response_includes_sync_envelope( self ):
+        """Test response includes sync envelope."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/extension/status/' )
+
+        self.assertEqual( response.status_code, 200 )
+        json_data = response.json()
+        self.assertIn( 'sync', json_data )
+        self.assertIn( 'as_of', json_data['sync'] )
+        self.assertIn( 'trip', json_data['sync'] )
+
+    def test_sync_includes_user_trips( self ):
+        """Test sync envelope includes user's accessible trips."""
+        trip = TripSyntheticData.create_test_trip(
+            user = self.user,
+            title = 'Test Trip'
+        )
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/extension/status/' )
+
+        self.assertEqual( response.status_code, 200 )
+        sync = response.json()['sync']
+        self.assertIn( str( trip.uuid ), sync['trip']['versions'] )

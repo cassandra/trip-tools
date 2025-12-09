@@ -286,7 +286,7 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         self.assertIn(str(new_trip.uuid), trip_versions)
 
     def test_build_includes_correct_versions(self):
-        """Test trip sync includes correct version numbers."""
+        """Test trip sync includes correct version numbers and created dates."""
         trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip'
@@ -300,7 +300,9 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         envelope = builder.build()
 
         trip_versions = envelope['trip']['versions']
-        self.assertEqual(trip_versions[str(trip.uuid)], trip.version)
+        trip_data = trip_versions[str(trip.uuid)]
+        self.assertEqual(trip_data['version'], trip.version)
+        self.assertEqual(trip_data['created'], trip.created_datetime.isoformat())
 
 
 class SyncEnvelopeBuilderLocationSyncTestCase(TestCase):

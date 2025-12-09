@@ -60,7 +60,7 @@ TTTrips.setActiveTripUuid = function( uuid ) {
 /**
  * Add a trip to the working set.
  * Updates lastAccessedAt and enforces MAX_WORKING_SET_SIZE by removing
- * the least recently accessed trip if needed.
+ * the least recently accessed trip if needed (but never the active trip).
  * @param {Object} trip - Trip object with uuid, title, version.
  * @param {Object} [options] - Optional settings.
  * @param {string} [options.lastAccessedAt] - Custom lastAccessedAt timestamp (ISO string).
@@ -71,40 +71,49 @@ TTTrips.addToWorkingSet = function( trip, options ) {
     options = options || {};
     var accessTime = options.lastAccessedAt || new Date().toISOString();
 
-    return TTTrips.getWorkingSet()
-        .then( function( workingSet ) {
-            // Remove if already present (will be re-added with new timestamp)
-            workingSet = workingSet.filter( function( t ) {
-                return t.uuid !== trip.uuid;
-            });
+    return TTTrips.getActiveTripUuid()
+        .then( function( activeUuid ) {
+            return TTTrips.getWorkingSet()
+                .then( function( workingSet ) {
+                    // Remove if already present (will be re-added with new timestamp)
+                    workingSet = workingSet.filter( function( t ) {
+                        return t.uuid !== trip.uuid;
+                    });
 
-            // Create entry
-            var entry = {
-                uuid: trip.uuid,
-                title: trip.title,
-                version: trip.version,
-                lastAccessedAt: accessTime
-            };
+                    // Create entry
+                    var entry = {
+                        uuid: trip.uuid,
+                        title: trip.title,
+                        version: trip.version,
+                        lastAccessedAt: accessTime
+                    };
 
-            // Find insertion point to maintain descending order by lastAccessedAt
-            var insertIndex = 0;
-            for ( var i = 0; i < workingSet.length; i++ ) {
-                if ( workingSet[i].lastAccessedAt > accessTime ) {
-                    insertIndex = i + 1;
-                } else {
-                    break;
-                }
-            }
+                    // Add new entry
+                    workingSet.push( entry );
 
-            // Insert at correct position
-            workingSet.splice( insertIndex, 0, entry );
+                    // Sort by lastAccessedAt descending (most recent first)
+                    workingSet.sort( function( a, b ) {
+                        return b.lastAccessedAt.localeCompare( a.lastAccessedAt );
+                    });
 
-            // Enforce max size by removing least recently accessed (end of list)
-            if ( workingSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
-                workingSet = workingSet.slice( 0, TTTrips.MAX_WORKING_SET_SIZE );
-            }
+                    // Enforce max size by removing from end (but never active trip)
+                    while ( workingSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
+                        // Find last trip that isn't active
+                        for ( var j = workingSet.length - 1; j >= 0; j-- ) {
+                            if ( workingSet[j].uuid !== activeUuid ) {
+                                workingSet.splice( j, 1 );
+                                break;
+                            }
+                        }
+                        // Safety: if somehow all are active (shouldn't happen), just slice
+                        if ( workingSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
+                            workingSet = workingSet.slice( 0, TTTrips.MAX_WORKING_SET_SIZE );
+                            break;
+                        }
+                    }
 
-            return TTTrips.setWorkingSet( workingSet );
+                    return TTTrips.setWorkingSet( workingSet );
+                });
         });
 };
 
@@ -157,6 +166,120 @@ TTTrips.fetchTripsFromServer = function() {
     return TTApi.get( TT.CONFIG.API_TRIPS_ENDPOINT )
         .then( function( response ) {
             return TTApi.processResponse( response );
+        });
+};
+
+/**
+ * Fetch a single trip by UUID.
+ * @param {string} uuid - The trip UUID.
+ * @returns {Promise<Object>} Trip object with uuid, title, version, created_datetime.
+ */
+TTTrips.fetchTripByUuid = function( uuid ) {
+    return TTApi.get( TT.CONFIG.API_TRIPS_ENDPOINT + uuid + '/' )
+        .then( function( response ) {
+            if ( !response.ok ) {
+                throw new Error( 'Failed to fetch trip: ' + response.status );
+            }
+            return response.json();
+        })
+        .then( function( json ) {
+            // Extract data from TtApiView envelope
+            return json[TT.SYNC.FIELD_DATA] || json;
+        });
+};
+
+/**
+ * Refresh stale trips in the working set.
+ * Fetches details for any trip with stale=true flag.
+ * Called by handleGetTrips() before returning data.
+ * @returns {Promise<void>}
+ */
+TTTrips.refreshStaleTrips = function() {
+    return TTTrips.getWorkingSet()
+        .then( function( workingSet ) {
+            // Find stale trips
+            var staleTrips = workingSet.filter( function( trip ) {
+                return trip.stale === true;
+            });
+
+            if ( staleTrips.length === 0 ) {
+                return Promise.resolve();
+            }
+
+            // Fetch details for all stale trips in parallel
+            var fetchPromises = staleTrips.map( function( trip ) {
+                return TTTrips.fetchTripByUuid( trip.uuid )
+                    .then( function( details ) {
+                        return {
+                            uuid: trip.uuid,
+                            details: details,
+                            originalTrip: trip
+                        };
+                    })
+                    .catch( function( error ) {
+                        console.log( '[TTTrips] Failed to refresh trip ' + trip.uuid + ':', error );
+                        return {
+                            uuid: trip.uuid,
+                            details: null,
+                            originalTrip: trip
+                        };
+                    });
+            });
+
+            return Promise.all( fetchPromises )
+                .then( function( results ) {
+                    return Promise.all([
+                        TTTrips.getWorkingSet(),
+                        TTTrips.getActiveTripUuid()
+                    ]).then( function( data ) {
+                        var currentSet = data[0];
+                        var activeUuid = data[1];
+
+                        // Update working set with fetched details
+                        var updatedSet = currentSet.map( function( trip ) {
+                            var result = results.find( function( r ) {
+                                return r.uuid === trip.uuid;
+                            });
+
+                            if ( !result || !result.details ) {
+                                // Not a stale trip or fetch failed - keep as-is
+                                return trip;
+                            }
+
+                            // Update with fetched details, keep existing lastAccessedAt
+                            return {
+                                uuid: trip.uuid,
+                                title: result.details.title,
+                                version: result.details.version,
+                                lastAccessedAt: trip.lastAccessedAt
+                                // No stale flag - it's now fresh
+                            };
+                        });
+
+                        // Re-sort by lastAccessedAt descending
+                        updatedSet.sort( function( a, b ) {
+                            return b.lastAccessedAt.localeCompare( a.lastAccessedAt );
+                        });
+
+                        // Enforce max size, but never evict active trip
+                        while ( updatedSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
+                            var removed = false;
+                            for ( var j = updatedSet.length - 1; j >= 0; j-- ) {
+                                if ( updatedSet[j].uuid !== activeUuid ) {
+                                    updatedSet.splice( j, 1 );
+                                    removed = true;
+                                    break;
+                                }
+                            }
+                            if ( !removed ) {
+                                updatedSet = updatedSet.slice( 0, TTTrips.MAX_WORKING_SET_SIZE );
+                                break;
+                            }
+                        }
+
+                        return TTTrips.setWorkingSet( updatedSet );
+                    });
+                });
         });
 };
 
@@ -248,52 +371,123 @@ TTTrips.seedWorkingSet = function( serverTrips ) {
 };
 
 /**
- * Validate the working set against trip versions from sync.
- * Removes trips that are no longer accessible (not in versions map).
- * Updates version numbers for trips that have changed.
- * @param {Object} versions - Map of uuid -> version from sync envelope.
+ * Sync working set with server trip versions.
+ * Called by sync handler. Does NOT make API calls - only updates local state.
+ *
+ * For each trip in sync envelope:
+ * - Not in working set: Add as stale stub (needs detail fetch)
+ * - In working set with different version: Mark as stale (needs refresh)
+ * - In working set with same version: Keep as-is
+ * - In working set but not in sync: Remove (deleted/access revoked)
+ *
+ * @param {Object} versions - Map of uuid -> {version, created} from sync envelope.
  * @returns {Promise<void>}
  */
-TTTrips.validateWorkingSet = function( versions ) {
-    var activeUuidBeforeValidation;
+TTTrips.syncWorkingSet = function( versions ) {
+    if ( !versions ) {
+        versions = {};
+    }
+
+    var activeUuidBeforeSync;
 
     return TTTrips.getActiveTripUuid()
         .then( function( activeUuid ) {
-            activeUuidBeforeValidation = activeUuid;
+            activeUuidBeforeSync = activeUuid;
             return TTTrips.getWorkingSet();
         })
         .then( function( workingSet ) {
-            // Filter to only trips that are still accessible
-            var validatedSet = workingSet.filter( function( trip ) {
-                return versions.hasOwnProperty( trip.uuid );
+            // Build map of existing trips by UUID
+            var existingByUuid = {};
+            workingSet.forEach( function( trip ) {
+                existingByUuid[trip.uuid] = trip;
             });
 
-            // Update versions for remaining trips
-            validatedSet = validatedSet.map( function( trip ) {
-                return {
-                    uuid: trip.uuid,
-                    title: trip.title,
-                    version: versions[trip.uuid],
-                    lastAccessedAt: trip.lastAccessedAt
-                };
+            // Process existing trips: keep, mark stale, or remove
+            var updatedSet = [];
+            workingSet.forEach( function( trip ) {
+                if ( !versions.hasOwnProperty( trip.uuid ) ) {
+                    // Trip no longer accessible - remove it
+                    return;
+                }
+
+                var serverData = versions[trip.uuid];
+                var serverVersion = serverData.version;
+                if ( trip.version !== serverVersion ) {
+                    // Version changed - mark as stale
+                    updatedSet.push({
+                        uuid: trip.uuid,
+                        title: trip.title,
+                        version: serverVersion,
+                        lastAccessedAt: trip.lastAccessedAt,
+                        stale: true
+                    });
+                } else {
+                    // Version matches - keep as-is (preserve stale flag if present)
+                    updatedSet.push( trip );
+                }
             });
 
-            return TTTrips.setWorkingSet( validatedSet )
+            // Add stale stubs for new trips not in working set
+            var serverUuids = Object.keys( versions );
+            serverUuids.forEach( function( uuid ) {
+                if ( !existingByUuid[uuid] ) {
+                    var serverData = versions[uuid];
+                    // New trip - add as stale stub with created time for ordering
+                    updatedSet.push({
+                        uuid: uuid,
+                        title: null,  // Unknown until fetched
+                        version: serverData.version,
+                        lastAccessedAt: serverData.created,
+                        stale: true
+                    });
+                }
+            });
+
+            // Sort by lastAccessedAt descending (most recent first)
+            updatedSet.sort( function( a, b ) {
+                return b.lastAccessedAt.localeCompare( a.lastAccessedAt );
+            });
+
+            // Enforce max size, but never evict active trip
+            while ( updatedSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
+                // Find last trip that isn't active
+                var removed = false;
+                for ( var j = updatedSet.length - 1; j >= 0; j-- ) {
+                    if ( updatedSet[j].uuid !== activeUuidBeforeSync ) {
+                        updatedSet.splice( j, 1 );
+                        removed = true;
+                        break;
+                    }
+                }
+                // Safety: if all trips are active (shouldn't happen), just slice
+                if ( !removed ) {
+                    updatedSet = updatedSet.slice( 0, TTTrips.MAX_WORKING_SET_SIZE );
+                    break;
+                }
+            }
+
+            return TTTrips.setWorkingSet( updatedSet )
                 .then( function() {
-                    return validatedSet;
+                    return updatedSet;
                 });
         })
-        .then( function( validatedSet ) {
-            // Clear active trip if it was removed from working set
-            if ( activeUuidBeforeValidation ) {
-                var stillExists = validatedSet.some( function( trip ) {
-                    return trip.uuid === activeUuidBeforeValidation;
+        .then( function( updatedSet ) {
+            // Handle active trip if it was removed (deleted on server)
+            if ( activeUuidBeforeSync ) {
+                var stillExists = updatedSet.some( function( trip ) {
+                    return trip.uuid === activeUuidBeforeSync;
                 });
 
                 if ( !stillExists ) {
-                    // Active trip was removed - clear or set to first available
-                    if ( validatedSet.length > 0 ) {
-                        return TTTrips.setActiveTripUuid( validatedSet[0].uuid );
+                    // Active trip was deleted - set to first non-stale, or first available
+                    var firstNonStale = updatedSet.find( function( trip ) {
+                        return !trip.stale;
+                    });
+                    if ( firstNonStale ) {
+                        return TTTrips.setActiveTripUuid( firstNonStale.uuid );
+                    }
+                    if ( updatedSet.length > 0 ) {
+                        return TTTrips.setActiveTripUuid( updatedSet[0].uuid );
                     }
                     return TTTrips.setActiveTripUuid( null );
                 }

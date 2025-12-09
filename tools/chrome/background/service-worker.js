@@ -237,6 +237,7 @@ function handleAuthStatusRequest( sender ) {
 
 /**
  * Validate token with server, handling various error states.
+ * Uses the extension status endpoint which also processes sync data.
  */
 function validateAuthWithServer() {
     return TTAuth.getApiToken()
@@ -254,16 +255,18 @@ function validateAuthWithServer() {
                 controller.abort();
             }, TT.CONFIG.AUTH_VALIDATION_TIMEOUT_MS );
 
-            return TTApi.validateTokenWithSignal( token, controller.signal )
-                .then( function( userInfo ) {
+            // Use extension status endpoint - processes sync envelope automatically
+            return TTApi.getExtensionStatus( token, controller.signal )
+                .then( function( data ) {
                     clearTimeout( timeoutId );
                     // Start uptime counter if not already running
                     if ( !connectionStartTime ) {
                         connectionStartTime = Date.now();
                     }
+                    // Sync envelope already processed by TTApi.getExtensionStatus()
                     return TTMessaging.createResponse( true, {
                         authorized: true,
-                        email: userInfo.email,
+                        email: data.email,
                         serverStatus: TT.AUTH.STATUS_ONLINE
                     });
                 })
@@ -404,23 +407,15 @@ function broadcastAuthStateChange( authorized, email ) {
 
 /**
  * Handle request to get trips.
- * Fetches from server, seeds working set if empty, returns combined data.
+ * Refreshes any stale trips, then returns the working set.
+ * Sync happens during auth validation; this handles the deferred fetching.
  */
 function handleGetTrips() {
-    var serverTrips;
     var workingSet;
     var activeTripUuid;
 
-    return TTTrips.fetchTripsFromServer()
-        .then( function( trips ) {
-            serverTrips = trips;
-            // Seed working set if empty
-            return TTTrips.seedWorkingSet( trips );
-        })
-        .then( function() {
-            // Merge any new trips from server into working set
-            return TTTrips.mergeServerTrips( serverTrips );
-        })
+    // First refresh any stale trips (fetches details from server)
+    return TTTrips.refreshStaleTrips()
         .then( function() {
             return TTTrips.getWorkingSet();
         })
@@ -432,8 +427,7 @@ function handleGetTrips() {
             activeTripUuid = uuid;
             return TTMessaging.createResponse( true, {
                 workingSet: workingSet,
-                activeTripUuid: activeTripUuid,
-                serverTrips: serverTrips
+                activeTripUuid: activeTripUuid
             });
         })
         .catch( function( error ) {

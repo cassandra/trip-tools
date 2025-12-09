@@ -95,6 +95,15 @@ if os.getenv('TT_SSL_CERT_FILE'):
 SUPPRESS_MONITORS = False
 
 # ====================
+# API Throttling
+# Disable throttling in development to avoid rate limiting during testing
+REST_FRAMEWORK = {
+    **REST_FRAMEWORK,
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {},
+}
+
+# ====================
 # Development Testing Injection Points
 # Enable/disable these here for frontend testing
 

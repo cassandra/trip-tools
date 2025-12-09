@@ -27,6 +27,7 @@ class TripAdmin(admin.ModelAdmin):
         'title',
         'owner_link',
         'trip_status',
+        'version',
         'uuid',
         'created_datetime',
         'modified_datetime',

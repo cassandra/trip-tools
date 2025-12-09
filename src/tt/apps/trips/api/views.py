@@ -4,14 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from tt.apps.api.views import SyncableAPIView
+from tt.apps.api.views import TtApiView
 from tt.apps.trips.mixins import TripViewMixin
 from tt.apps.trips.models import Trip
 
 from .serializers import TripSerializer
 
 
-class TripCollectionView( SyncableAPIView ):
+class TripCollectionView( TtApiView ):
     """
     List all trips for the authenticated user.
 
@@ -26,7 +26,7 @@ class TripCollectionView( SyncableAPIView ):
         return Response( serializer.data )
 
 
-class TripItemView( TripViewMixin, SyncableAPIView ):
+class TripItemView( TripViewMixin, TtApiView ):
     """
     Get a single trip by UUID.
 

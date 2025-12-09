@@ -16,10 +16,12 @@ TT.CONFIG = {
     ICON_PROD_48: '../images/icon-48.png',
     ICON_DEV_48: '../images/icon-on-secondary-48.png',
     EXTENSION_AUTHORIZE_PATH: '/user/extensions/',
+    TRIP_CREATE_PATH: '/trips/create',
     API_ME_ENDPOINT: '/api/v1/me/',
     API_TOKENS_ENDPOINT: '/api/v1/tokens/',
     API_TRIPS_ENDPOINT: '/api/v1/trips/',
-    AUTH_VALIDATION_DEBOUNCE_POPUP_MS: 60000,
+    API_EXTENSION_STATUS_ENDPOINT: '/api/v1/extension/status/',
+    AUTH_VALIDATION_DEBOUNCE_POPUP_MS: 2000,
     AUTH_VALIDATION_TIMEOUT_MS: 5000
 };
 
@@ -68,6 +70,7 @@ TT.DOM = {
     ID_TRIP_LIST: 'tt-trip-list',
     ID_TRIP_LOADING: 'tt-trip-loading',
     ID_TRIP_EMPTY: 'tt-trip-empty',
+    ID_NEW_TRIP_BTN: 'tt-new-trip-btn',
     // Maps section (stub)
     ID_MAPS_SECTION: 'tt-maps-section',
     ID_MAPS_LIST: 'tt-maps-list',
@@ -124,11 +127,13 @@ TT.DOM = {
     CLASS_POPUP_HEADER: 'tt-popup-header',
     CLASS_TOKEN_VALIDATION_STATUS: 'tt-token-validation-status',
     // Trip UI
-    CLASS_TRIP_LIST: 'tt-trip-list',
-    CLASS_TRIP_ITEM: 'tt-trip-item',
-    CLASS_TRIP_ACTIVE: 'tt-active',
+    ID_ACTIVE_TRIP: 'tt-active-trip',
+    ID_ACTIVE_TRIP_TITLE: 'tt-active-trip-title',
+    ID_OTHER_TRIPS: 'tt-other-trips',
+    ID_OTHER_TRIPS_LIST: 'tt-other-trips-list',
     CLASS_TRIP_LOADING: 'tt-trip-loading',
-    CLASS_TRIP_EMPTY: 'tt-trip-empty'
+    CLASS_TRIP_EMPTY: 'tt-trip-empty',
+    CLASS_SWITCH_TRIP_BTN: 'tt-switch-trip-btn'
 };
 
 TT.URL = {

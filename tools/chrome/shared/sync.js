@@ -36,13 +36,22 @@ TTSync.processEnvelope = function( sync ) {
 
         var handler = TTSync.handlers[objectType];
         var data = sync[objectType];
-        if ( handler ) {
-            var versions = data[TT.SYNC.FIELD_VERSIONS] || {};
-            var deleted = data[TT.SYNC.FIELD_DELETED] || [];
-            promises.push( handler( versions, deleted ) );
-        } else {
+
+        // Skip if no handler or if data has no versions field
+        // (empty object means sync not applicable for this context)
+        if ( !handler ) {
             console.log( 'TTSync: no handler registered for ' + objectType );
+            continue;
         }
+
+        if ( !data.hasOwnProperty( TT.SYNC.FIELD_VERSIONS ) ) {
+            // Sync data not applicable (e.g., anonymous user)
+            continue;
+        }
+
+        var versions = data[TT.SYNC.FIELD_VERSIONS];
+        var deleted = data[TT.SYNC.FIELD_DELETED] || [];
+        promises.push( handler( versions, deleted ) );
     }
 
     return Promise.all( promises )
@@ -72,7 +81,9 @@ TTSync.clearState = function() {
  * Trip sync handler.
  * Validates working set against current trip versions.
  * Trips use presence-based deletion detection (not in versions = no access).
+ * Marks trips as stale when version changes or new trips detected.
+ * Actual detail fetching happens in handleGetTrips().
  */
 TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_TRIP, function( versions, deleted ) {
-    return TTTrips.validateWorkingSet( versions );
+    return TTTrips.syncWorkingSet( versions );
 });

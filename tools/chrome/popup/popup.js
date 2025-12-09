@@ -107,6 +107,7 @@ function loadDebugPanelVisibility() {
 function setupEventListeners() {
     setupQuickSettingsListeners();
     setupAuthEventListeners();
+    setupTripEventListeners();
 
     var decorateToggle = document.getElementById( TT.DOM.ID_DECORATE_TOGGLE );
     if ( decorateToggle ) {
@@ -355,6 +356,15 @@ function setupAuthEventListeners() {
     }
 }
 
+function setupTripEventListeners() {
+    var newTripBtn = document.getElementById( TT.DOM.ID_NEW_TRIP_BTN );
+    if ( newTripBtn ) {
+        newTripBtn.addEventListener( 'click', function() {
+            openNewTripPage();
+        });
+    }
+}
+
 function openAuthorizePage() {
     var defaultUrl = TT.CONFIG.IS_DEVELOPMENT
         ? TT.CONFIG.DEFAULT_SERVER_URL_DEV
@@ -364,6 +374,18 @@ function openAuthorizePage() {
         .then( function( serverUrl ) {
             var authUrl = serverUrl + TT.CONFIG.EXTENSION_AUTHORIZE_PATH;
             chrome.tabs.create( { url: authUrl } );
+        });
+}
+
+function openNewTripPage() {
+    var defaultUrl = TT.CONFIG.IS_DEVELOPMENT
+        ? TT.CONFIG.DEFAULT_SERVER_URL_DEV
+        : TT.CONFIG.DEFAULT_SERVER_URL_PROD;
+
+    TTStorage.get( TT.STORAGE.KEY_SERVER_URL, defaultUrl )
+        .then( function( serverUrl ) {
+            var createUrl = serverUrl + TT.CONFIG.TRIP_CREATE_PATH;
+            chrome.tabs.create( { url: createUrl } );
         });
 }
 
@@ -410,40 +432,62 @@ function hideTripSection() {
     if ( tripSection ) {
         tripSection.classList.add( TT.DOM.CLASS_HIDDEN );
     }
-    // Clear trip list
-    var tripList = document.getElementById( TT.DOM.ID_TRIP_LIST );
-    if ( tripList ) {
-        tripList.innerHTML = '';
+    // Clear trip UI
+    var activeTripTitle = document.getElementById( TT.DOM.ID_ACTIVE_TRIP_TITLE );
+    if ( activeTripTitle ) {
+        activeTripTitle.textContent = '';
+    }
+    var otherTripsList = document.getElementById( TT.DOM.ID_OTHER_TRIPS_LIST );
+    if ( otherTripsList ) {
+        otherTripsList.innerHTML = '';
     }
 }
 
 function showTripLoading() {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
-    var list = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    var activeTrip = document.getElementById( TT.DOM.ID_ACTIVE_TRIP );
+    var otherTrips = document.getElementById( TT.DOM.ID_OTHER_TRIPS );
     var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
 
     if ( loading ) loading.classList.remove( TT.DOM.CLASS_HIDDEN );
-    if ( list ) list.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( activeTrip ) activeTrip.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( otherTrips ) otherTrips.classList.add( TT.DOM.CLASS_HIDDEN );
     if ( empty ) empty.classList.add( TT.DOM.CLASS_HIDDEN );
 }
 
-function showTripList() {
+function showTripContent( hasActiveTrip, hasOtherTrips ) {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
-    var list = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    var activeTrip = document.getElementById( TT.DOM.ID_ACTIVE_TRIP );
+    var otherTrips = document.getElementById( TT.DOM.ID_OTHER_TRIPS );
     var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
 
     if ( loading ) loading.classList.add( TT.DOM.CLASS_HIDDEN );
-    if ( list ) list.classList.remove( TT.DOM.CLASS_HIDDEN );
+    if ( activeTrip ) {
+        if ( hasActiveTrip ) {
+            activeTrip.classList.remove( TT.DOM.CLASS_HIDDEN );
+        } else {
+            activeTrip.classList.add( TT.DOM.CLASS_HIDDEN );
+        }
+    }
+    if ( otherTrips ) {
+        if ( hasOtherTrips ) {
+            otherTrips.classList.remove( TT.DOM.CLASS_HIDDEN );
+        } else {
+            otherTrips.classList.add( TT.DOM.CLASS_HIDDEN );
+        }
+    }
     if ( empty ) empty.classList.add( TT.DOM.CLASS_HIDDEN );
 }
 
 function showTripEmpty() {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
-    var list = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    var activeTrip = document.getElementById( TT.DOM.ID_ACTIVE_TRIP );
+    var otherTrips = document.getElementById( TT.DOM.ID_OTHER_TRIPS );
     var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
 
     if ( loading ) loading.classList.add( TT.DOM.CLASS_HIDDEN );
-    if ( list ) list.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( activeTrip ) activeTrip.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( otherTrips ) otherTrips.classList.add( TT.DOM.CLASS_HIDDEN );
     if ( empty ) empty.classList.remove( TT.DOM.CLASS_HIDDEN );
 }
 
@@ -467,60 +511,65 @@ function loadTrips() {
 }
 
 function renderTrips( workingSet, activeTripUuid ) {
-    var tripList = document.getElementById( TT.DOM.ID_TRIP_LIST );
-    if ( !tripList ) {
-        return;
-    }
-
-    // Clear existing content
-    tripList.innerHTML = '';
-
     if ( !workingSet || workingSet.length === 0 ) {
         showTripEmpty();
         return;
     }
 
+    // Find active trip and other trips
+    var activeTrip = null;
+    var otherTrips = [];
+
     workingSet.forEach( function( trip ) {
-        var tripItem = document.createElement( 'div' );
-        tripItem.className = TT.DOM.CLASS_TRIP_ITEM;
         if ( trip.uuid === activeTripUuid ) {
-            tripItem.classList.add( TT.DOM.CLASS_TRIP_ACTIVE );
+            activeTrip = trip;
+        } else {
+            otherTrips.push( trip );
         }
-
-        // Radio indicator
-        var radio = document.createElement( 'div' );
-        radio.className = 'tt-trip-item-radio';
-        tripItem.appendChild( radio );
-
-        // Title
-        var title = document.createElement( 'span' );
-        title.className = 'tt-trip-item-title';
-        title.textContent = trip.title;
-        tripItem.appendChild( title );
-
-        // Click handler
-        tripItem.addEventListener( 'click', function() {
-            selectTrip( trip );
-        });
-
-        tripList.appendChild( tripItem );
     });
 
-    showTripList();
+    // Render active trip display
+    var activeTripTitle = document.getElementById( TT.DOM.ID_ACTIVE_TRIP_TITLE );
+    if ( activeTripTitle && activeTrip ) {
+        activeTripTitle.textContent = activeTrip.title || 'Loading...';
+    }
+
+    // Render other trips as switch buttons
+    var otherTripsList = document.getElementById( TT.DOM.ID_OTHER_TRIPS_LIST );
+    if ( otherTripsList ) {
+        otherTripsList.innerHTML = '';
+
+        otherTrips.forEach( function( trip ) {
+            var button = document.createElement( 'button' );
+            button.className = TT.DOM.CLASS_SWITCH_TRIP_BTN;
+            button.textContent = trip.title || 'Loading...';
+
+            // Click handler - switch trip (will eventually also navigate)
+            button.addEventListener( 'click', function() {
+                switchToTrip( trip );
+            });
+
+            otherTripsList.appendChild( button );
+        });
+    }
+
+    showTripContent( activeTrip !== null, otherTrips.length > 0 );
 }
 
-function selectTrip( trip ) {
+function switchToTrip( trip ) {
     TTMessaging.send( TT.MESSAGE.TYPE_SET_ACTIVE_TRIP, { trip: trip } )
         .then( function( response ) {
             if ( response && response.success ) {
+                addLocalDebugEntry( 'info', 'Switched to trip: ' + trip.title );
+                // Future: Navigate to trip page here
+                // For now, just re-render to show the switch
                 renderTrips( response.data.workingSet, response.data.activeTripUuid );
-                addLocalDebugEntry( 'info', 'Selected trip: ' + trip.title );
             } else {
                 var errorMsg = response && response.error ? response.error : 'Unknown error';
-                addLocalDebugEntry( 'error', 'Select trip failed: ' + errorMsg );
+                addLocalDebugEntry( 'error', 'Switch trip failed: ' + errorMsg );
             }
         })
         .catch( function( error ) {
-            addLocalDebugEntry( 'error', 'Select trip error: ' + error.message );
+            addLocalDebugEntry( 'error', 'Switch trip error: ' + error.message );
         });
 }

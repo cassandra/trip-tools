@@ -38,10 +38,24 @@
         <div class="tt-popup-content">
             <!-- Trip Section -->
             <div class="tt-section" id="tt-trip-section">
-                <div class="tt-section-header">Active Trip</div>
                 <div class="tt-trip-loading" id="tt-trip-loading">Loading trips...</div>
-                <div class="tt-trip-list tt-hidden" id="tt-trip-list"></div>
+
+                <!-- Active Trip Display -->
+                <div class="tt-active-trip tt-hidden" id="tt-active-trip">
+                    <div class="tt-active-trip-label">Active Trip</div>
+                    <div class="tt-active-trip-title" id="tt-active-trip-title"></div>
+                </div>
+
+                <!-- Other Trips (switch buttons) -->
+                <div class="tt-other-trips tt-hidden" id="tt-other-trips">
+                    <div class="tt-other-trips-label">Switch Trip</div>
+                    <div class="tt-other-trips-list" id="tt-other-trips-list"></div>
+                </div>
+
                 <div class="tt-trip-empty tt-hidden" id="tt-trip-empty">No trips available.</div>
+                <button class="tt-btn tt-btn-secondary tt-btn-new-trip" id="tt-new-trip-btn">
+                    + New Trip
+                </button>
             </div>
 
             <!-- Actions Section (stub) -->

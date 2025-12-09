@@ -42,14 +42,26 @@ class SyncEnvelopeBuilder:
         self.trip_uuid = trip_uuid
 
     def build( self ) -> dict:
-        """Build and return the sync envelope."""
+        """
+        Build and return the sync envelope.
+
+        For anonymous users, returns only as_of timestamp.
+        For authenticated users, includes trip and optionally location sync.
+        """
         self.as_of = timezone.now()
         envelope = {
             'as_of': self.as_of.isoformat(),
-            'trip': self._build_trip_sync(),
         }
+
+        # Sync data requires authentication
+        if not self.user.is_authenticated:
+            return envelope
+
+        envelope['trip'] = self._build_trip_sync()
+
         if self.trip_uuid:
             envelope['location'] = self._build_location_sync()
+
         return envelope
 
     def _build_trip_sync( self ) -> dict:
@@ -58,10 +70,21 @@ class SyncEnvelopeBuilder:
 
         Always returns all trips (not filtered by since) to enable
         presence-based deletion detection.
+
+        Each trip includes version and created_datetime for proper
+        ordering when adding new trips to the extension's working set.
         """
-        trips = Trip.objects.for_user( self.user ).values( 'uuid', 'version' )
+        trips = Trip.objects.for_user( self.user ).values(
+            'uuid', 'version', 'created_datetime'
+        )
         return {
-            'versions': { str( t['uuid'] ): t['version'] for t in trips },
+            'versions': {
+                str( t['uuid'] ): {
+                    'version': t['version'],
+                    'created': t['created_datetime'].isoformat(),
+                }
+                for t in trips
+            },
         }
 
     def _build_location_sync( self ) -> dict:
