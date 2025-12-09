@@ -108,6 +108,7 @@ function setupEventListeners() {
     setupQuickSettingsListeners();
     setupAuthEventListeners();
     setupTripEventListeners();
+    setupGmmEventListeners();
 
     var decorateToggle = document.getElementById( TT.DOM.ID_DECORATE_TOGGLE );
     if ( decorateToggle ) {
@@ -548,6 +549,11 @@ function renderTrips( workingSet, activeTripUuid ) {
         activeTripTitle.textContent = activeTrip.title || 'Loading...';
     }
 
+    // Update GMM status for active trip
+    if ( activeTrip ) {
+        updateGmmStatus( activeTrip );
+    }
+
     // Render other trips as switch buttons
     var otherTripsList = document.getElementById( TT.DOM.ID_OTHER_TRIPS_LIST );
     if ( otherTripsList ) {
@@ -706,4 +712,192 @@ function selectTripFromList( trip ) {
         .catch( function( error ) {
             addLocalDebugEntry( 'error', 'Select trip error: ' + error.message );
         });
+}
+
+// =============================================================================
+// GMM Map Management
+// =============================================================================
+
+// Current active trip for GMM operations
+var currentActiveTrip = null;
+
+/**
+ * Update GMM status indicator for the active trip.
+ * @param {Object} trip - The active trip with optional gmm_map_id.
+ */
+function updateGmmStatus( trip ) {
+    var statusEl = document.getElementById( TT.DOM.ID_GMM_STATUS );
+    if ( !statusEl ) {
+        return;
+    }
+
+    // Store trip for later use
+    currentActiveTrip = trip;
+
+    var hasMap = trip && trip.gmm_map_id;
+
+    if ( hasMap ) {
+        statusEl.classList.add( TT.DOM.CLASS_GMM_LINKED );
+        statusEl.classList.remove( TT.DOM.CLASS_GMM_UNLINKED );
+        statusEl.title = 'Map linked - click to open';
+    } else {
+        statusEl.classList.remove( TT.DOM.CLASS_GMM_LINKED );
+        statusEl.classList.add( TT.DOM.CLASS_GMM_UNLINKED );
+        statusEl.title = 'No map - click to create';
+    }
+}
+
+/**
+ * Set up event listeners for GMM features.
+ */
+function setupGmmEventListeners() {
+    // Active trip row click - open map or show create dialog
+    var activeTripRow = document.getElementById( TT.DOM.ID_ACTIVE_TRIP_ROW );
+    if ( activeTripRow ) {
+        activeTripRow.addEventListener( 'click', handleActiveTripClick );
+    }
+
+    // Create map dialog buttons
+    var cancelBtn = document.getElementById( TT.DOM.ID_CREATE_MAP_CANCEL );
+    if ( cancelBtn ) {
+        cancelBtn.addEventListener( 'click', hideCreateMapDialog );
+    }
+
+    var confirmBtn = document.getElementById( TT.DOM.ID_CREATE_MAP_CONFIRM );
+    if ( confirmBtn ) {
+        confirmBtn.addEventListener( 'click', confirmCreateMap );
+    }
+}
+
+/**
+ * Handle click on active trip row.
+ * Opens existing map or shows create map dialog.
+ */
+function handleActiveTripClick() {
+    if ( !currentActiveTrip ) {
+        return;
+    }
+
+    if ( currentActiveTrip.gmm_map_id ) {
+        // Has map - open it
+        openGmmMap( currentActiveTrip.gmm_map_id );
+    } else {
+        // No map - show create dialog
+        showCreateMapDialog( currentActiveTrip );
+    }
+}
+
+/**
+ * Open a GMM map in browser.
+ * @param {string} mapId - The GMM map ID.
+ */
+function openGmmMap( mapId ) {
+    TTMessaging.send( TT.MESSAGE.TYPE_GMM_OPEN_MAP, { mapId: mapId } )
+        .then( function( response ) {
+            if ( response && response.success ) {
+                addLocalDebugEntry( 'info', 'Opened GMM map: ' + mapId );
+                // Close popup after opening
+                window.close();
+            } else {
+                var errorMsg = response && response.error ? response.error : 'Unknown error';
+                addLocalDebugEntry( 'error', 'Open map failed: ' + errorMsg );
+            }
+        })
+        .catch( function( error ) {
+            addLocalDebugEntry( 'error', 'Open map error: ' + error.message );
+        });
+}
+
+/**
+ * Show the create map confirmation dialog.
+ * @param {Object} trip - The trip to create a map for.
+ */
+function showCreateMapDialog( trip ) {
+    var dialog = document.getElementById( TT.DOM.ID_CREATE_MAP_DIALOG );
+    var titleEl = document.getElementById( TT.DOM.ID_CREATE_MAP_TRIP_TITLE );
+
+    if ( titleEl ) {
+        titleEl.textContent = trip.title || 'Untitled Trip';
+    }
+
+    if ( dialog ) {
+        dialog.classList.remove( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+/**
+ * Hide the create map confirmation dialog.
+ */
+function hideCreateMapDialog() {
+    var dialog = document.getElementById( TT.DOM.ID_CREATE_MAP_DIALOG );
+    if ( dialog ) {
+        dialog.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+/**
+ * Show the creating map progress dialog.
+ * @param {string} message - Status message to display.
+ */
+function showCreatingMapDialog( message ) {
+    var dialog = document.getElementById( TT.DOM.ID_CREATING_MAP_DIALOG );
+    var statusEl = document.getElementById( TT.DOM.ID_CREATING_MAP_STATUS );
+
+    if ( statusEl && message ) {
+        statusEl.textContent = message;
+    }
+
+    if ( dialog ) {
+        dialog.classList.remove( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+/**
+ * Hide the creating map progress dialog.
+ */
+function hideCreatingMapDialog() {
+    var dialog = document.getElementById( TT.DOM.ID_CREATING_MAP_DIALOG );
+    if ( dialog ) {
+        dialog.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+/**
+ * Confirm and start creating a new map.
+ */
+function confirmCreateMap() {
+    if ( !currentActiveTrip ) {
+        return;
+    }
+
+    hideCreateMapDialog();
+    showCreatingMapDialog( 'Creating map in Google My Maps...' );
+
+    TTMessaging.send( TT.MESSAGE.TYPE_GMM_CREATE_MAP, {
+        tripUuid: currentActiveTrip.uuid,
+        tripTitle: currentActiveTrip.title
+    })
+    .then( function( response ) {
+        hideCreatingMapDialog();
+
+        if ( response && response.success ) {
+            addLocalDebugEntry( 'info', 'Created GMM map: ' + response.data.mapId );
+
+            // Update local trip data and UI
+            currentActiveTrip.gmm_map_id = response.data.mapId;
+            updateGmmStatus( currentActiveTrip );
+
+            // Close popup - user is now on the new map
+            window.close();
+        } else {
+            var errorMsg = response && response.error ? response.error : 'Unknown error';
+            addLocalDebugEntry( 'error', 'Create map failed: ' + errorMsg );
+            alert( 'Failed to create map: ' + errorMsg );
+        }
+    })
+    .catch( function( error ) {
+        hideCreatingMapDialog();
+        addLocalDebugEntry( 'error', 'Create map error: ' + error.message );
+        alert( 'Failed to create map: ' + error.message );
+    });
 }

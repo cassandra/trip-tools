@@ -272,3 +272,201 @@ class TripItemViewTestCase( TestCase ):
 
         self.assertEqual( response.status_code, 200 )
         self.assertNotIn( 'sync', response.json() )
+
+    def test_response_includes_gmm_map_id( self ):
+        """Test response includes gmm_map_id field."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( f'/api/v1/trips/{self.trip.uuid}/' )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertIn( 'gmm_map_id', data )
+        self.assertIsNone( data['gmm_map_id'] )
+
+
+# =============================================================================
+# TripItemView PATCH Tests
+# =============================================================================
+
+class TripItemViewPatchTestCase( TestCase ):
+    """Test PATCH /api/v1/trips/{uuid}/ endpoint."""
+
+    @classmethod
+    def setUpTestData( cls ):
+        cls.owner = User.objects.create_user(
+            email = 'owner@example.com',
+            password = 'testpass123'
+        )
+        cls.editor = User.objects.create_user(
+            email = 'editor@example.com',
+            password = 'testpass123'
+        )
+        cls.viewer = User.objects.create_user(
+            email = 'viewer@example.com',
+            password = 'testpass123'
+        )
+        cls.non_member = User.objects.create_user(
+            email = 'nonmember@example.com',
+            password = 'testpass123'
+        )
+        cls.owner_token = APITokenService.create_token( cls.owner, 'Owner Token' )
+        cls.editor_token = APITokenService.create_token( cls.editor, 'Editor Token' )
+        cls.viewer_token = APITokenService.create_token( cls.viewer, 'Viewer Token' )
+        cls.non_member_token = APITokenService.create_token( cls.non_member, 'Non-member Token' )
+
+    def setUp( self ):
+        self.client = APIClient()
+        self.trip = TripSyntheticData.create_test_trip(
+            user = self.owner,
+            title = 'Test Trip',
+            trip_status = TripStatus.CURRENT
+        )
+        TripSyntheticData.add_trip_member(
+            trip = self.trip,
+            user = self.editor,
+            permission_level = TripPermissionLevel.EDITOR,
+            added_by = self.owner
+        )
+        TripSyntheticData.add_trip_member(
+            trip = self.trip,
+            user = self.viewer,
+            permission_level = TripPermissionLevel.VIEWER,
+            added_by = self.owner
+        )
+
+    def test_requires_authentication( self ):
+        """Test endpoint requires authentication."""
+        response = self.client.patch(
+            f'/api/v1/trips/{self.trip.uuid}/',
+            data = { 'gmm_map_id': 'abc123' },
+            format = 'json'
+        )
+        self.assertEqual( response.status_code, 401 )
+
+    def test_owner_can_update_gmm_map_id( self ):
+        """Test owner can update gmm_map_id."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.owner_token.api_token_str
+        )
+        response = self.client.patch(
+            f'/api/v1/trips/{self.trip.uuid}/',
+            data = { 'gmm_map_id': '1ABCxyz123' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertEqual( data['gmm_map_id'], '1ABCxyz123' )
+
+        # Verify persisted
+        self.trip.refresh_from_db()
+        self.assertEqual( self.trip.gmm_map_id, '1ABCxyz123' )
+
+    def test_editor_can_update_gmm_map_id( self ):
+        """Test editor can update gmm_map_id."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.editor_token.api_token_str
+        )
+        response = self.client.patch(
+            f'/api/v1/trips/{self.trip.uuid}/',
+            data = { 'gmm_map_id': '2DEFxyz456' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertEqual( data['gmm_map_id'], '2DEFxyz456' )
+
+    def test_viewer_cannot_update( self ):
+        """Test viewer cannot update trip."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.viewer_token.api_token_str
+        )
+        response = self.client.patch(
+            f'/api/v1/trips/{self.trip.uuid}/',
+            data = { 'gmm_map_id': 'should-fail' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 403 )
+
+    def test_non_member_returns_404( self ):
+        """Test non-member gets 404 (not 403) for privacy."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.non_member_token.api_token_str
+        )
+        response = self.client.patch(
+            f'/api/v1/trips/{self.trip.uuid}/',
+            data = { 'gmm_map_id': 'should-fail' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 404 )
+
+    def test_can_update_title( self ):
+        """Test can update title field."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.owner_token.api_token_str
+        )
+        response = self.client.patch(
+            f'/api/v1/trips/{self.trip.uuid}/',
+            data = { 'title': 'New Title' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertEqual( data['title'], 'New Title' )
+
+    def test_partial_update_preserves_other_fields( self ):
+        """Test partial update only changes specified fields."""
+        # Set initial gmm_map_id
+        self.trip.gmm_map_id = 'original-id'
+        self.trip.save()
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.owner_token.api_token_str
+        )
+        response = self.client.patch(
+            f'/api/v1/trips/{self.trip.uuid}/',
+            data = { 'title': 'Changed Title' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertEqual( data['title'], 'Changed Title' )
+        self.assertEqual( data['gmm_map_id'], 'original-id' )
+
+    def test_can_clear_gmm_map_id( self ):
+        """Test can clear gmm_map_id by setting to null."""
+        self.trip.gmm_map_id = 'some-id'
+        self.trip.save()
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.owner_token.api_token_str
+        )
+        response = self.client.patch(
+            f'/api/v1/trips/{self.trip.uuid}/',
+            data = { 'gmm_map_id': None },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertIsNone( data['gmm_map_id'] )
+
+    def test_nonexistent_trip_returns_404( self ):
+        """Test returns 404 for nonexistent UUID."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.owner_token.api_token_str
+        )
+        response = self.client.patch(
+            '/api/v1/trips/00000000-0000-0000-0000-000000000000/',
+            data = { 'gmm_map_id': 'test' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 404 )

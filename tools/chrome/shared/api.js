@@ -282,6 +282,19 @@ TTApi.getExtensionStatus = function( token, signal ) {
 };
 
 /**
+ * Make a PATCH request with JSON body.
+ * @param {string} endpoint - The API endpoint.
+ * @param {Object} data - The data to send.
+ * @returns {Promise<Response>} The fetch response.
+ */
+TTApi.patch = function( endpoint, data ) {
+    return TTApi.fetch( endpoint, {
+        method: 'PATCH',
+        body: JSON.stringify( data )
+    });
+};
+
+/**
  * Make a DELETE request.
  * @param {string} endpoint - The API endpoint.
  * @returns {Promise<Response>} The fetch response.
@@ -306,6 +319,23 @@ TTApi.deleteToken = function( lookupKey ) {
             if ( !response.ok ) {
                 throw new Error( 'Failed to delete token: ' + response.status );
             }
+        });
+};
+
+/**
+ * Update a trip with partial data.
+ * @param {string} tripUuid - The trip UUID.
+ * @param {Object} data - The data to update (e.g., { gmm_map_id: '...' }).
+ * @returns {Promise<Object>} Updated trip data.
+ */
+TTApi.updateTrip = function( tripUuid, data ) {
+    var endpoint = TT.CONFIG.API_TRIPS_ENDPOINT + tripUuid + '/';
+    return TTApi.patch( endpoint, data )
+        .then( function( response ) {
+            if ( !response.ok ) {
+                throw new Error( 'Failed to update trip: ' + response.status );
+            }
+            return TTApi.processResponse( response );
         });
 };
 

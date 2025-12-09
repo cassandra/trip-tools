@@ -37,6 +37,12 @@ class Trip( SyncableModel ):
         TripStatus,
         'Trip Status',
     )
+    gmm_map_id = models.CharField(
+        max_length = 255,
+        blank = True,
+        null = True,
+        help_text = 'Google My Maps map identifier (from URL mid parameter)',
+    )
 
     class Meta:
         verbose_name = 'Trip'

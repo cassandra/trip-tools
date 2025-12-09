@@ -77,6 +77,25 @@
                 "content/gmm.js"
             ],
             "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "https://www.google.com/maps/d/",
+                "https://www.google.com/maps/d/u/*/"
+            ],
+            "exclude_matches": [
+                "https://www.google.com/maps/d/edit*",
+                "https://www.google.com/maps/d/u/*/edit*"
+            ],
+            "js": [
+                "shared/constants.js",
+                "shared/dom.js",
+                "shared/site-adapter.js",
+                "adapters/gmm-home-selectors.js",
+                "adapters/gmm-home-adapter.js",
+                "content/gmm-home.js"
+            ],
+            "run_at": "document_idle"
         }
     ],
     "web_accessible_resources": [

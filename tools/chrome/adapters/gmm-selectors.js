@@ -15,6 +15,19 @@ var TTGmmSelectors = {
     VERSION: '2024-12',
 
     // =========================================================================
+    // Map Title (for renaming)
+    // =========================================================================
+
+    // Map title in header - clickable element with data-tooltip and aria-label
+    MAP_TITLE_CONTAINER: '#map-title-desc-bar',
+    MAP_TITLE_TEXT: '#map-title-desc-bar > div[data-tooltip][aria-label]',
+    // Edit map title/description dialog (id="update-map")
+    MAP_TITLE_DIALOG: '#update-map',
+    MAP_TITLE_INPUT: 'input[type="text"]',
+    MAP_DESCRIPTION_INPUT: 'textarea',
+    MAP_TITLE_SAVE_BUTTON: 'button[name="save"]',
+
+    // =========================================================================
     // Dialog Detection
     // =========================================================================
 

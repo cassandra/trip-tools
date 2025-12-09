@@ -80,13 +80,10 @@ TTTrips.addToWorkingSet = function( trip, options ) {
                         return t.uuid !== trip.uuid;
                     });
 
-                    // Create entry
-                    var entry = {
-                        uuid: trip.uuid,
-                        title: trip.title,
-                        version: trip.version,
+                    // Create entry - preserve all fields from trip, set lastAccessedAt
+                    var entry = Object.assign( {}, trip, {
                         lastAccessedAt: accessTime
-                    };
+                    });
 
                     // Add new entry
                     workingSet.push( entry );
@@ -239,14 +236,15 @@ TTTrips.refreshStaleTrips = function() {
                                 return trip;
                             }
 
-                            // Update with fetched details, keep existing lastAccessedAt
-                            return {
-                                uuid: trip.uuid,
-                                title: result.details.title,
-                                version: result.details.version,
+                            // Merge server data with local state:
+                            // - Start with all server fields
+                            // - Preserve local lastAccessedAt
+                            // - Remove stale flag (now fresh)
+                            var merged = Object.assign( {}, result.details, {
                                 lastAccessedAt: trip.lastAccessedAt
-                                // No stale flag - it's now fresh
-                            };
+                            });
+                            delete merged.stale;
+                            return merged;
                         });
 
                         // Re-sort by lastAccessedAt descending
@@ -342,12 +340,10 @@ TTTrips.seedWorkingSet = function( serverTrips ) {
             var now = new Date().toISOString();
 
             var newWorkingSet = toSeed.map( function( trip ) {
-                return {
-                    uuid: trip.uuid,
-                    title: trip.title,
-                    version: trip.version,
+                // Preserve all fields from server, set lastAccessedAt
+                return Object.assign( {}, trip, {
                     lastAccessedAt: now
-                };
+                });
             });
 
             return TTTrips.setWorkingSet( newWorkingSet )
@@ -406,14 +402,12 @@ TTTrips.syncWorkingSet = function( versions ) {
                 var serverData = versions[trip.uuid];
                 var serverVersion = serverData.version;
                 if ( trip.version !== serverVersion ) {
-                    // Version changed - mark as stale
-                    updatedSet.push({
-                        uuid: trip.uuid,
-                        title: trip.title,
+                    // Version changed - mark as stale, preserve all existing fields
+                    var updated = Object.assign( {}, trip, {
                         version: serverVersion,
-                        lastAccessedAt: trip.lastAccessedAt,
                         stale: true
                     });
+                    updatedSet.push( updated );
                 } else {
                     // Version matches - keep as-is (preserve stale flag if present)
                     updatedSet.push( trip );
@@ -485,6 +479,30 @@ TTTrips.syncWorkingSet = function( versions ) {
                     return TTTrips.setActiveTripUuid( null );
                 }
             }
+        });
+};
+
+// =============================================================================
+// Trip Updates
+// =============================================================================
+
+/**
+ * Update a trip in the working set with new data.
+ * Used when trip is updated (e.g., gmm_map_id is set).
+ * @param {string} uuid - The trip UUID.
+ * @param {Object} updates - Object with fields to update (e.g., { gmm_map_id: '...' }).
+ * @returns {Promise<void>}
+ */
+TTTrips.updateTripInWorkingSet = function( uuid, updates ) {
+    return TTTrips.getWorkingSet()
+        .then( function( workingSet ) {
+            var updatedSet = workingSet.map( function( trip ) {
+                if ( trip.uuid === uuid ) {
+                    return Object.assign( {}, trip, updates );
+                }
+                return trip;
+            });
+            return TTTrips.setWorkingSet( updatedSet );
         });
 };
 

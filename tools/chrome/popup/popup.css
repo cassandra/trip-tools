@@ -376,6 +376,21 @@ input:checked + .tt-toggle-slider:before {
     margin-bottom: 4px;
 }
 
+.tt-active-trip-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 4px;
+    margin: -4px;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+}
+
+.tt-active-trip-row:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
 .tt-active-trip-title {
     font-size: 15px;
     font-weight: 500;
@@ -383,6 +398,48 @@ input:checked + .tt-toggle-slider:before {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    flex: 1;
+}
+
+/* GMM Status Indicator */
+.tt-gmm-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-left: 8px;
+    position: relative;
+}
+
+.tt-gmm-status svg {
+    color: var(--tt-muted-color);
+}
+
+.tt-gmm-status.tt-gmm-linked svg {
+    color: var(--tt-primary-color);
+}
+
+.tt-gmm-status.tt-gmm-unlinked svg {
+    color: var(--tt-warning-color);
+}
+
+.tt-gmm-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--tt-muted-color);
+}
+
+.tt-gmm-status.tt-gmm-linked .tt-gmm-indicator {
+    background-color: var(--tt-success-color);
+}
+
+.tt-gmm-status.tt-gmm-unlinked .tt-gmm-indicator {
+    background-color: var(--tt-warning-color);
 }
 
 /* Other Trips Section */
@@ -561,4 +618,92 @@ input:checked + .tt-toggle-slider:before {
     font-size: 13px;
     padding: 8px 0;
     text-align: center;
+}
+
+/* =============================================================================
+ * Dialog Overlay
+ * ============================================================================= */
+
+.tt-dialog-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 16px;
+}
+
+.tt-dialog-overlay.tt-hidden {
+    display: none;
+}
+
+.tt-dialog {
+    background-color: var(--tt-white);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    max-width: 320px;
+    width: 100%;
+}
+
+.tt-dialog-header {
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--tt-line-color);
+}
+
+.tt-dialog-content {
+    padding: 16px;
+}
+
+.tt-dialog-content p {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.tt-dialog-content p:last-child {
+    margin-bottom: 0;
+}
+
+.tt-dialog-hint {
+    color: var(--tt-muted-color);
+    font-size: 12px !important;
+}
+
+.tt-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--tt-line-color);
+}
+
+/* Progress Indicator */
+.tt-progress-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.tt-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--tt-line-color);
+    border-top-color: var(--tt-primary-color);
+    border-radius: 50%;
+    animation: tt-spin 0.8s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes tt-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

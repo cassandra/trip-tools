@@ -28,10 +28,13 @@ class TripCollectionView( TtApiView ):
 
 class TripItemView( TripViewMixin, TtApiView ):
     """
-    Get a single trip by UUID.
+    Get or update a single trip by UUID.
 
     GET /api/v1/trips/{uuid}/
     Returns trip details if user is a member.
+
+    PATCH /api/v1/trips/{uuid}/
+    Updates trip fields. Requires EDITOR permission.
     """
     permission_classes = [ IsAuthenticated ]
 
@@ -40,4 +43,14 @@ class TripItemView( TripViewMixin, TtApiView ):
         self.assert_is_viewer( trip_member )
 
         serializer = TripSerializer( trip_member.trip )
+        return Response( serializer.data )
+
+    def patch( self, request: Request, trip_uuid: UUID ) -> Response:
+        trip_member = self.get_trip_member( request, trip_uuid = trip_uuid )
+        self.assert_is_editor( trip_member )
+
+        serializer = TripSerializer( trip_member.trip, data = request.data, partial = True )
+        serializer.is_valid( raise_exception = True )
+        serializer.save()
+
         return Response( serializer.data )

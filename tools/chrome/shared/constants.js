@@ -71,7 +71,12 @@ TT.MESSAGE = {
     TYPE_DELETE_LOCATION: 'tt_deleteLocation',
     // GMM content script commands
     TYPE_GMM_SEARCH_AND_ADD: 'tt_gmmSearchAndAdd',
-    TYPE_GMM_GET_MAP_INFO: 'tt_gmmGetMapInfo'
+    TYPE_GMM_GET_MAP_INFO: 'tt_gmmGetMapInfo',
+    // GMM map management
+    TYPE_GMM_CREATE_MAP: 'tt_gmmCreateMap',
+    TYPE_GMM_OPEN_MAP: 'tt_gmmOpenMap',
+    TYPE_GMM_RENAME_MAP: 'tt_gmmRenameMap',
+    TYPE_GMM_LINK_MAP: 'tt_gmmLinkMap'
 };
 
 TT.DOM = {
@@ -154,7 +159,19 @@ TT.DOM = {
     ID_MORE_TRIPS_BACK: 'tt-more-trips-back',
     ID_MORE_TRIPS_LIST: 'tt-more-trips-list',
     ID_MORE_TRIPS_LOADING: 'tt-more-trips-loading',
-    ID_MORE_TRIPS_ERROR: 'tt-more-trips-error'
+    ID_MORE_TRIPS_ERROR: 'tt-more-trips-error',
+    // GMM Map Status
+    ID_ACTIVE_TRIP_ROW: 'tt-active-trip-row',
+    ID_GMM_STATUS: 'tt-gmm-status',
+    CLASS_GMM_LINKED: 'tt-gmm-linked',
+    CLASS_GMM_UNLINKED: 'tt-gmm-unlinked',
+    // Create Map Dialog
+    ID_CREATE_MAP_DIALOG: 'tt-create-map-dialog',
+    ID_CREATE_MAP_TRIP_TITLE: 'tt-create-map-trip-title',
+    ID_CREATE_MAP_CANCEL: 'tt-create-map-cancel',
+    ID_CREATE_MAP_CONFIRM: 'tt-create-map-confirm',
+    ID_CREATING_MAP_DIALOG: 'tt-creating-map-dialog',
+    ID_CREATING_MAP_STATUS: 'tt-creating-map-status'
 };
 
 TT.URL = {

@@ -55,6 +55,12 @@ TTMessaging.listen( function( message, sender ) {
             return handleSetActiveTrip( message.data );
         case TT.MESSAGE.TYPE_GET_ALL_TRIPS:
             return handleGetAllTrips();
+        case TT.MESSAGE.TYPE_GMM_CREATE_MAP:
+            return handleGmmCreateMap( message.data );
+        case TT.MESSAGE.TYPE_GMM_OPEN_MAP:
+            return handleGmmOpenMap( message.data );
+        case TT.MESSAGE.TYPE_GMM_LINK_MAP:
+            return handleGmmLinkMap( message.data );
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -486,5 +492,306 @@ function handleGetAllTrips() {
         })
         .catch( function( error ) {
             return TTMessaging.createResponse( false, null, error.message );
+        });
+}
+
+// =============================================================================
+// GMM Map Handlers
+// =============================================================================
+
+/**
+ * Build GMM home page URL.
+ * @returns {string}
+ */
+function buildGmmHomeUrl() {
+    return 'https://' + TT.URL.GMM_DOMAIN + TT.URL.GMM_HOME_PATH;
+}
+
+/**
+ * Build GMM edit page URL for a map.
+ * @param {string} mapId - The GMM map ID.
+ * @returns {string}
+ */
+function buildGmmEditUrl( mapId ) {
+    return 'https://' + TT.URL.GMM_DOMAIN + TT.URL.GMM_EDIT_PATH + '?' +
+           TT.URL.GMM_MAP_ID_PARAM + '=' + encodeURIComponent( mapId );
+}
+
+/**
+ * Find existing GMM tab matching a URL pattern.
+ * @param {string} urlPattern - URL pattern to match.
+ * @returns {Promise<chrome.tabs.Tab|null>}
+ */
+function findGmmTab( urlPattern ) {
+    return new Promise( function( resolve ) {
+        chrome.tabs.query( { url: urlPattern }, function( tabs ) {
+            resolve( tabs && tabs.length > 0 ? tabs[0] : null );
+        });
+    });
+}
+
+/**
+ * Wait for tab to complete loading.
+ * @param {number} tabId - The tab ID.
+ * @param {number} timeoutMs - Maximum wait time.
+ * @returns {Promise<void>}
+ */
+function waitForTabLoad( tabId, timeoutMs ) {
+    return new Promise( function( resolve, reject ) {
+        var timeoutId = setTimeout( function() {
+            chrome.tabs.onUpdated.removeListener( listener );
+            reject( new Error( 'Tab load timeout' ) );
+        }, timeoutMs );
+
+        function listener( updatedTabId, changeInfo ) {
+            if ( updatedTabId === tabId && changeInfo.status === 'complete' ) {
+                clearTimeout( timeoutId );
+                chrome.tabs.onUpdated.removeListener( listener );
+                resolve();
+            }
+        }
+
+        chrome.tabs.onUpdated.addListener( listener );
+    });
+}
+
+/**
+ * Send message to content script and wait for response.
+ * Retries if content script not ready.
+ * @param {number} tabId - The tab ID.
+ * @param {Object} message - The message to send.
+ * @param {number} maxRetries - Maximum retry attempts.
+ * @param {number} retryDelayMs - Delay between retries.
+ * @returns {Promise<Object>}
+ */
+function sendMessageToTab( tabId, message, maxRetries, retryDelayMs ) {
+    maxRetries = maxRetries || 5;
+    retryDelayMs = retryDelayMs || 500;
+
+    function attempt( retriesLeft ) {
+        return new Promise( function( resolve, reject ) {
+            chrome.tabs.sendMessage( tabId, message, function( response ) {
+                if ( chrome.runtime.lastError ) {
+                    if ( retriesLeft > 0 ) {
+                        setTimeout( function() {
+                            attempt( retriesLeft - 1 ).then( resolve ).catch( reject );
+                        }, retryDelayMs );
+                    } else {
+                        reject( new Error( chrome.runtime.lastError.message ) );
+                    }
+                    return;
+                }
+                resolve( response );
+            });
+        });
+    }
+
+    return attempt( maxRetries );
+}
+
+/**
+ * Handle create GMM map request.
+ * Orchestrates: navigate to GMM home → click create → wait for edit page →
+ * rename map → extract map ID → PATCH trip.
+ * @param {Object} data - { tripUuid, tripTitle }
+ */
+function handleGmmCreateMap( data ) {
+    if ( !data || !data.tripUuid || !data.tripTitle ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'tripUuid and tripTitle are required'
+        }));
+    }
+
+    var tripUuid = data.tripUuid;
+    var tripTitle = data.tripTitle;
+    var tripDescription = '';
+    var tabId = null;
+    var mapId = null;
+
+    console.log( '[TT Background] Creating GMM map for trip:', tripTitle );
+
+    // Get trip description from working set
+    return TTTrips.getWorkingSet()
+        .then( function( workingSet ) {
+            var trip = workingSet.find( function( t ) {
+                return t.uuid === tripUuid;
+            });
+            if ( trip && trip.description ) {
+                tripDescription = trip.description;
+            }
+
+            // Step 1: Find or create GMM home tab
+            return findGmmTab( 'https://www.google.com/maps/d/*' );
+        })
+        .then( function( existingTab ) {
+            if ( existingTab ) {
+                // Use existing tab, navigate to home
+                tabId = existingTab.id;
+                return chrome.tabs.update( tabId, { url: buildGmmHomeUrl(), active: true } );
+            } else {
+                // Create new tab
+                return chrome.tabs.create( { url: buildGmmHomeUrl(), active: true } )
+                    .then( function( tab ) {
+                        tabId = tab.id;
+                        return tab;
+                    });
+            }
+        })
+        .then( function() {
+            // Wait for home page to load
+            return waitForTabLoad( tabId, 15000 );
+        })
+        .then( function() {
+            // Give content script time to initialize
+            return new Promise( function( resolve ) {
+                setTimeout( resolve, 1000 );
+            });
+        })
+        .then( function() {
+            // Step 2: Tell content script to click create button
+            return sendMessageToTab( tabId, {
+                type: TT.MESSAGE.TYPE_GMM_CREATE_MAP
+            });
+        })
+        .then( function( response ) {
+            if ( !response || !response.success ) {
+                throw new Error( response && response.error || 'Failed to click create button' );
+            }
+
+            // Step 3: Wait for navigation to edit page
+            // The click will cause GMM to redirect to the new map's edit page
+            return waitForTabLoad( tabId, 15000 );
+        })
+        .then( function() {
+            // Give edit page time to fully load
+            return new Promise( function( resolve ) {
+                setTimeout( resolve, 2000 );
+            });
+        })
+        .then( function() {
+            // Step 4: Get map info from edit page (extract mid from URL)
+            return sendMessageToTab( tabId, {
+                type: TT.MESSAGE.TYPE_GMM_GET_MAP_INFO
+            });
+        })
+        .then( function( response ) {
+            if ( !response || !response.success || !response.data || !response.data.mapId ) {
+                throw new Error( 'Failed to get map ID from new map' );
+            }
+            mapId = response.data.mapId;
+            console.log( '[TT Background] New map created with ID:', mapId );
+
+            // Step 5: Set map title and description
+            return sendMessageToTab( tabId, {
+                type: TT.MESSAGE.TYPE_GMM_RENAME_MAP,
+                data: { title: tripTitle, description: tripDescription }
+            });
+        })
+        .then( function( response ) {
+            if ( !response || !response.success ) {
+                // Rename failed but map was created - log warning but continue
+                console.warn( '[TT Background] Failed to rename map:', response && response.error );
+            }
+
+            // Step 6: PATCH trip with gmm_map_id
+            return TTApi.updateTrip( tripUuid, { gmm_map_id: mapId } );
+        })
+        .then( function( updatedTrip ) {
+            console.log( '[TT Background] Trip linked to map:', mapId );
+
+            // Update local trip cache
+            return TTTrips.updateTripInWorkingSet( tripUuid, { gmm_map_id: mapId } )
+                .then( function() {
+                    return TTMessaging.createResponse( true, {
+                        mapId: mapId,
+                        trip: updatedTrip
+                    });
+                });
+        })
+        .catch( function( error ) {
+            console.error( '[TT Background] GMM create map failed:', error );
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            });
+        });
+}
+
+/**
+ * Handle open GMM map request.
+ * Navigates to existing GMM tab or creates new one.
+ * @param {Object} data - { mapId }
+ */
+function handleGmmOpenMap( data ) {
+    if ( !data || !data.mapId ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'mapId is required'
+        }));
+    }
+
+    var mapId = data.mapId;
+    var editUrl = buildGmmEditUrl( mapId );
+
+    // Look for tab with this specific map open
+    return findGmmTab( editUrl + '*' )
+        .then( function( existingTab ) {
+            if ( existingTab ) {
+                // Switch to existing tab
+                return chrome.tabs.update( existingTab.id, { active: true } )
+                    .then( function() {
+                        return chrome.windows.update( existingTab.windowId, { focused: true } );
+                    })
+                    .then( function() {
+                        return TTMessaging.createResponse( true, {
+                            tabId: existingTab.id,
+                            existing: true
+                        });
+                    });
+            } else {
+                // Create new tab
+                return chrome.tabs.create( { url: editUrl, active: true } )
+                    .then( function( tab ) {
+                        return TTMessaging.createResponse( true, {
+                            tabId: tab.id,
+                            existing: false
+                        });
+                    });
+            }
+        })
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            });
+        });
+}
+
+/**
+ * Handle link GMM map request.
+ * PATCHes trip with gmm_map_id.
+ * @param {Object} data - { tripUuid, mapId }
+ */
+function handleGmmLinkMap( data ) {
+    if ( !data || !data.tripUuid || !data.mapId ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'tripUuid and mapId are required'
+        }));
+    }
+
+    var tripUuid = data.tripUuid;
+    var mapId = data.mapId;
+
+    return TTApi.updateTrip( tripUuid, { gmm_map_id: mapId } )
+        .then( function( updatedTrip ) {
+            // Update local trip cache
+            return TTTrips.updateTripInWorkingSet( tripUuid, { gmm_map_id: mapId } )
+                .then( function() {
+                    return TTMessaging.createResponse( true, {
+                        trip: updatedTrip
+                    });
+                });
+        })
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            });
         });
 }

@@ -43,7 +43,16 @@
                 <!-- Active Trip Display -->
                 <div class="tt-active-trip tt-hidden" id="tt-active-trip">
                     <div class="tt-active-trip-label">Active Trip</div>
-                    <div class="tt-active-trip-title" id="tt-active-trip-title"></div>
+                    <div class="tt-active-trip-row" id="tt-active-trip-row">
+                        <div class="tt-active-trip-title" id="tt-active-trip-title"></div>
+                        <div class="tt-gmm-status" id="tt-gmm-status" title="No map linked">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span class="tt-gmm-indicator"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Other Trips (switch buttons) -->
@@ -127,6 +136,34 @@
                 <div class="tt-more-trips-loading tt-hidden" id="tt-more-trips-loading">Loading trips...</div>
                 <div class="tt-more-trips-error tt-hidden" id="tt-more-trips-error"></div>
                 <div class="tt-more-trips-list" id="tt-more-trips-list"></div>
+            </div>
+        </div>
+
+        <!-- Create Map Dialog Overlay -->
+        <div class="tt-dialog-overlay tt-hidden" id="tt-create-map-dialog">
+            <div class="tt-dialog">
+                <div class="tt-dialog-header">Create Map</div>
+                <div class="tt-dialog-content">
+                    <p>Create a Google My Maps map for <strong id="tt-create-map-trip-title"></strong>?</p>
+                    <p class="tt-dialog-hint">This will open Google My Maps and create a new map linked to this trip.</p>
+                </div>
+                <div class="tt-dialog-actions">
+                    <button class="tt-btn tt-btn-secondary" id="tt-create-map-cancel">Cancel</button>
+                    <button class="tt-btn tt-btn-primary" id="tt-create-map-confirm">Create Map</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Creating Map Progress Overlay -->
+        <div class="tt-dialog-overlay tt-hidden" id="tt-creating-map-dialog">
+            <div class="tt-dialog">
+                <div class="tt-dialog-header">Creating Map</div>
+                <div class="tt-dialog-content">
+                    <div class="tt-progress-indicator">
+                        <div class="tt-spinner"></div>
+                        <p id="tt-creating-map-status">Creating map in Google My Maps...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

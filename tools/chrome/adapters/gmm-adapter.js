@@ -504,6 +504,64 @@ var TTGmmAdapter = TTSiteAdapter.create({
         },
 
         // =====================================================================
+        // Map Title Operations
+        // =====================================================================
+
+        /**
+         * Get the current map title.
+         * @returns {string|null}
+         */
+        getMapTitle: function() {
+            var titleNode = this.getElement( 'MAP_TITLE_TEXT' );
+            return titleNode ? titleNode.textContent : null;
+        },
+
+        /**
+         * Update the current map's title and description.
+         * Clicks the title, waits for edit dialog, enters values, saves.
+         * @param {Object} options - { title, description }
+         * @param {string} options.title - New map title.
+         * @param {string} [options.description] - New map description (optional).
+         * @returns {Promise<void>}
+         */
+        renameMap: function( options ) {
+            var self = this;
+            var title = options.title;
+            var description = options.description;
+
+            return this.waitForElement( 'MAP_TITLE_TEXT' )
+                .then( function( titleText ) {
+                    self.log( 'Clicking map title to edit' );
+                    return TTDom.clickRealistic( titleText );
+                })
+                .then( function() {
+                    return self.waitForElement( 'MAP_TITLE_DIALOG' );
+                })
+                .then( function( dialog ) {
+                    var titleInput = dialog.querySelector( self.selectors.MAP_TITLE_INPUT );
+                    var descInput = dialog.querySelector( self.selectors.MAP_DESCRIPTION_INPUT );
+                    var saveButton = dialog.querySelector( self.selectors.MAP_TITLE_SAVE_BUTTON );
+
+                    if ( !titleInput || !saveButton ) {
+                        throw new Error( 'Map title dialog elements not found' );
+                    }
+
+                    self.log( 'Setting map title: ' + title );
+                    TTDom.setInputValue( titleInput, title );
+
+                    if ( description && descInput ) {
+                        self.log( 'Setting map description' );
+                        TTDom.setInputValue( descInput, description );
+                    }
+
+                    return TTDom.clickRealistic( saveButton );
+                })
+                .then( function() {
+                    self.log( 'Map updated: ' + title );
+                });
+        },
+
+        // =====================================================================
         // High-Level Operations
         // =====================================================================
 

@@ -69,6 +69,20 @@
                 });
                 return false;
 
+            case TT.MESSAGE.TYPE_GMM_RENAME_MAP:
+                handleRenameMap( request.data )
+                    .then( function( result ) {
+                        sendResponse({ success: true, data: result });
+                    })
+                    .catch( function( error ) {
+                        sendResponse({ success: false, error: error.message });
+                    });
+                return true; // Async response
+
+            case TT.MESSAGE.TYPE_PING:
+                sendResponse({ success: true, page: 'gmm-edit' });
+                return false;
+
             default:
                 return false;
         }
@@ -141,6 +155,28 @@
             mapId: mapId,
             url: window.location.href
         };
+    }
+
+    /**
+     * Handle rename map request.
+     * @param {Object} data - { title, description }
+     * @returns {Promise<Object>}
+     */
+    function handleRenameMap( data ) {
+        if ( !data || !data.title ) {
+            return Promise.reject( new Error( 'Title is required' ) );
+        }
+
+        return TTGmmAdapter.renameMap({
+            title: data.title,
+            description: data.description
+        })
+            .then( function() {
+                return {
+                    success: true,
+                    title: data.title
+                };
+            });
     }
 
     // =========================================================================

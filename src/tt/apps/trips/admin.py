@@ -29,6 +29,7 @@ class TripAdmin(admin.ModelAdmin):
         'trip_status',
         'version',
         'uuid',
+        'gmm_map_id',
         'created_datetime',
         'modified_datetime',
     )
