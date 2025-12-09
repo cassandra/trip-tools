@@ -42,7 +42,16 @@
 
                 <!-- Active Trip Display -->
                 <div class="tt-active-trip tt-hidden" id="tt-active-trip">
-                    <div class="tt-active-trip-label">Active Trip</div>
+                    <div class="tt-active-trip-header">
+                        <div class="tt-active-trip-label">Active Trip</div>
+                        <button class="tt-trip-details-btn" id="tt-trip-details-btn" title="Trip details">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                        </button>
+                    </div>
                     <div class="tt-active-trip-row" id="tt-active-trip-row">
                         <div class="tt-active-trip-title" id="tt-active-trip-title"></div>
                         <div class="tt-gmm-status" id="tt-gmm-status" title="No map linked">
@@ -136,6 +145,41 @@
                 <div class="tt-more-trips-loading tt-hidden" id="tt-more-trips-loading">Loading trips...</div>
                 <div class="tt-more-trips-error tt-hidden" id="tt-more-trips-error"></div>
                 <div class="tt-more-trips-list" id="tt-more-trips-list"></div>
+            </div>
+        </div>
+
+        <!-- Trip Details Slide-in Panel -->
+        <div class="tt-trip-details-panel tt-hidden" id="tt-trip-details-panel">
+            <div class="tt-panel-header">
+                <button class="tt-back-btn" id="tt-trip-details-back" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>Trip Details</span>
+            </div>
+            <div class="tt-panel-content">
+                <div class="tt-detail-row">
+                    <label>Title</label>
+                    <div id="tt-trip-details-title" class="tt-detail-value"></div>
+                </div>
+                <div class="tt-detail-row">
+                    <label>Description</label>
+                    <div id="tt-trip-details-description" class="tt-detail-value tt-detail-description"></div>
+                </div>
+                <div class="tt-detail-row">
+                    <label>Trip ID</label>
+                    <div id="tt-trip-details-uuid" class="tt-detail-value tt-detail-mono"></div>
+                </div>
+                <div class="tt-detail-row tt-hidden" id="tt-trip-details-gmm-row">
+                    <label>Map ID</label>
+                    <div id="tt-trip-details-gmm-id" class="tt-detail-value tt-detail-mono"></div>
+                </div>
+                <div class="tt-detail-actions tt-hidden" id="tt-trip-details-actions">
+                    <button class="tt-btn tt-btn-secondary" id="tt-trip-details-unlink-btn">
+                        Unlink Map
+                    </button>
+                </div>
             </div>
         </div>
 

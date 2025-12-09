@@ -61,6 +61,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleGmmOpenMap( message.data );
         case TT.MESSAGE.TYPE_GMM_LINK_MAP:
             return handleGmmLinkMap( message.data );
+        case TT.MESSAGE.TYPE_GMM_UNLINK_MAP:
+            return handleGmmUnlinkMap( message.data );
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -788,6 +790,36 @@ function handleGmmLinkMap( data ) {
                         trip: updatedTrip
                     });
                 });
+        })
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            });
+        });
+}
+
+/**
+ * Handle unlink GMM map request.
+ * Clears gmm_map_id from trip via PATCH.
+ * @param {Object} data - { tripUuid }
+ */
+function handleGmmUnlinkMap( data ) {
+    if ( !data || !data.tripUuid ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'tripUuid is required'
+        }));
+    }
+
+    var tripUuid = data.tripUuid;
+
+    return TTApi.updateTrip( tripUuid, { gmm_map_id: null } )
+        .then( function() {
+            // Update local trip cache
+            return TTTrips.updateTripInWorkingSet( tripUuid, { gmm_map_id: null } );
+        })
+        .then( function() {
+            console.log( '[TT Background] Unlinked map from trip:', tripUuid );
+            return TTMessaging.createResponse( true );
         })
         .catch( function( error ) {
             return TTMessaging.createResponse( false, {

@@ -367,13 +367,19 @@ input:checked + .tt-toggle-slider:before {
     margin-bottom: 12px;
 }
 
+.tt-active-trip-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
 .tt-active-trip-label {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--tt-primary-color);
     font-weight: 600;
-    margin-bottom: 4px;
 }
 
 .tt-active-trip-row {
@@ -706,4 +712,105 @@ input:checked + .tt-toggle-slider:before {
     to {
         transform: rotate(360deg);
     }
+}
+
+/* =============================================================================
+ * Trip Details Button
+ * ============================================================================= */
+
+.tt-trip-details-btn {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: var(--tt-primary-color);
+    opacity: 0.5;
+    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tt-trip-details-btn:hover {
+    opacity: 1;
+}
+
+.tt-trip-details-btn:focus {
+    outline: 2px solid var(--tt-primary-color);
+    outline-offset: 1px;
+    border-radius: 2px;
+}
+
+/* =============================================================================
+ * Trip Details Slide-in Panel
+ * ============================================================================= */
+
+.tt-trip-details-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--tt-white);
+    transform: translateX(100%);
+    transition: transform 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.tt-trip-details-panel.tt-visible {
+    transform: translateX(0);
+}
+
+.tt-trip-details-panel.tt-hidden {
+    display: flex;
+    transform: translateX(100%);
+}
+
+/* Detail rows */
+.tt-detail-row {
+    margin-bottom: 16px;
+}
+
+.tt-detail-row label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--tt-muted-color);
+    margin-bottom: 4px;
+}
+
+.tt-detail-value {
+    font-size: 14px;
+    color: var(--tt-text-color);
+    word-break: break-word;
+}
+
+.tt-detail-value.tt-detail-mono {
+    font-family: monospace;
+    font-size: 12px;
+    background: var(--tt-primary-bg-light);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.tt-detail-value.tt-detail-description {
+    white-space: pre-wrap;
+    color: var(--tt-muted-color);
+    font-style: italic;
+}
+
+.tt-detail-description:empty::before {
+    content: 'No description';
+    color: var(--tt-muted-color);
+    opacity: 0.6;
+}
+
+/* Actions section */
+.tt-detail-actions {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--tt-line-color);
 }

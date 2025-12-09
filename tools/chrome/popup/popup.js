@@ -378,6 +378,26 @@ function setupTripEventListeners() {
             hideMoreTripsPanel();
         });
     }
+
+    var tripDetailsBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_BTN );
+    if ( tripDetailsBtn ) {
+        tripDetailsBtn.addEventListener( 'click', function( e ) {
+            e.stopPropagation();
+            showTripDetailsPanel();
+        });
+    }
+
+    var tripDetailsBackBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_BACK );
+    if ( tripDetailsBackBtn ) {
+        tripDetailsBackBtn.addEventListener( 'click', function() {
+            hideTripDetailsPanel();
+        });
+    }
+
+    var unlinkMapBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_UNLINK_BTN );
+    if ( unlinkMapBtn ) {
+        unlinkMapBtn.addEventListener( 'click', handleUnlinkMap );
+    }
 }
 
 function openAuthorizePage() {
@@ -625,6 +645,89 @@ function hideMoreTripsPanel() {
             panel.removeEventListener( 'transitionend', handler );
         });
     }
+}
+
+// =============================================================================
+// Trip Details Panel
+// =============================================================================
+
+function showTripDetailsPanel() {
+    var panel = document.getElementById( TT.DOM.ID_TRIP_DETAILS_PANEL );
+    if ( panel ) {
+        populateTripDetails();
+        panel.classList.remove( TT.DOM.CLASS_HIDDEN );
+        requestAnimationFrame( function() {
+            panel.classList.add( TT.DOM.CLASS_VISIBLE );
+        });
+    }
+
+    // Apply dev mode styling to panel header
+    var header = panel.querySelector( '.tt-panel-header' );
+    if ( header && TT.CONFIG.IS_DEVELOPMENT ) {
+        header.classList.add( TT.DOM.CLASS_DEV_MODE );
+    }
+}
+
+function hideTripDetailsPanel() {
+    var panel = document.getElementById( TT.DOM.ID_TRIP_DETAILS_PANEL );
+    if ( panel ) {
+        panel.classList.remove( TT.DOM.CLASS_VISIBLE );
+        panel.addEventListener( 'transitionend', function handler() {
+            panel.classList.add( TT.DOM.CLASS_HIDDEN );
+            panel.removeEventListener( 'transitionend', handler );
+        });
+    }
+}
+
+function populateTripDetails() {
+    if ( !currentActiveTrip ) return;
+
+    var titleEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_TITLE );
+    var descEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_DESCRIPTION );
+    var uuidEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_UUID );
+    var gmmIdEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_GMM_ID );
+    var gmmRow = document.getElementById( TT.DOM.ID_TRIP_DETAILS_GMM_ROW );
+    var actionsEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_ACTIONS );
+
+    if ( titleEl ) titleEl.textContent = currentActiveTrip.title;
+    if ( descEl ) descEl.textContent = currentActiveTrip.description || '';
+    if ( uuidEl ) uuidEl.textContent = currentActiveTrip.uuid;
+
+    if ( currentActiveTrip.gmm_map_id ) {
+        if ( gmmIdEl ) gmmIdEl.textContent = currentActiveTrip.gmm_map_id;
+        if ( gmmRow ) gmmRow.classList.remove( TT.DOM.CLASS_HIDDEN );
+        if ( actionsEl ) actionsEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+    } else {
+        if ( gmmRow ) gmmRow.classList.add( TT.DOM.CLASS_HIDDEN );
+        if ( actionsEl ) actionsEl.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+function handleUnlinkMap() {
+    if ( !currentActiveTrip || !currentActiveTrip.gmm_map_id ) return;
+
+    // eslint-disable-next-line no-alert
+    if ( !confirm( 'Unlink the Google My Maps map from this trip?' ) ) {
+        return;
+    }
+
+    TTMessaging.send( TT.MESSAGE.TYPE_GMM_UNLINK_MAP, {
+        tripUuid: currentActiveTrip.uuid
+    })
+    .then( function( response ) {
+        if ( response && response.success ) {
+            currentActiveTrip.gmm_map_id = null;
+            populateTripDetails();
+            updateGmmStatus( currentActiveTrip );
+            addLocalDebugEntry( 'info', 'Map unlinked from trip' );
+        } else {
+            var errorMsg = response && response.error ? response.error : 'Unknown error';
+            addLocalDebugEntry( 'error', 'Failed to unlink map: ' + errorMsg );
+        }
+    })
+    .catch( function( error ) {
+        addLocalDebugEntry( 'error', 'Unlink map error: ' + error.message );
+    });
 }
 
 function loadAllTrips() {

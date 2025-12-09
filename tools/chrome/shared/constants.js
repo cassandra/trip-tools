@@ -76,7 +76,8 @@ TT.MESSAGE = {
     TYPE_GMM_CREATE_MAP: 'tt_gmmCreateMap',
     TYPE_GMM_OPEN_MAP: 'tt_gmmOpenMap',
     TYPE_GMM_RENAME_MAP: 'tt_gmmRenameMap',
-    TYPE_GMM_LINK_MAP: 'tt_gmmLinkMap'
+    TYPE_GMM_LINK_MAP: 'tt_gmmLinkMap',
+    TYPE_GMM_UNLINK_MAP: 'tt_gmmUnlinkMap'
 };
 
 TT.DOM = {
@@ -171,7 +172,18 @@ TT.DOM = {
     ID_CREATE_MAP_CANCEL: 'tt-create-map-cancel',
     ID_CREATE_MAP_CONFIRM: 'tt-create-map-confirm',
     ID_CREATING_MAP_DIALOG: 'tt-creating-map-dialog',
-    ID_CREATING_MAP_STATUS: 'tt-creating-map-status'
+    ID_CREATING_MAP_STATUS: 'tt-creating-map-status',
+    // Trip Details Panel
+    ID_TRIP_DETAILS_BTN: 'tt-trip-details-btn',
+    ID_TRIP_DETAILS_PANEL: 'tt-trip-details-panel',
+    ID_TRIP_DETAILS_BACK: 'tt-trip-details-back',
+    ID_TRIP_DETAILS_TITLE: 'tt-trip-details-title',
+    ID_TRIP_DETAILS_DESCRIPTION: 'tt-trip-details-description',
+    ID_TRIP_DETAILS_UUID: 'tt-trip-details-uuid',
+    ID_TRIP_DETAILS_GMM_ID: 'tt-trip-details-gmm-id',
+    ID_TRIP_DETAILS_GMM_ROW: 'tt-trip-details-gmm-row',
+    ID_TRIP_DETAILS_ACTIONS: 'tt-trip-details-actions',
+    ID_TRIP_DETAILS_UNLINK_BTN: 'tt-trip-details-unlink-btn'
 };
 
 TT.URL = {
