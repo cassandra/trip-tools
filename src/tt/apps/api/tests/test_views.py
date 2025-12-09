@@ -333,7 +333,7 @@ class ExtensionStatusViewTestCase( TestCase ):
         self.assertEqual( data['email'], 'testuser@example.com' )
 
     def test_returns_config_version( self ):
-        """Test returns config_version field."""
+        """Test returns config_version field as MD5 hash."""
         self.client.credentials(
             HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
         )
@@ -342,7 +342,10 @@ class ExtensionStatusViewTestCase( TestCase ):
         self.assertEqual( response.status_code, 200 )
         data = response.json()['data']
         self.assertIn( 'config_version', data )
-        self.assertEqual( data['config_version'], 1 )
+        # config_version is an MD5 hash (32 hex characters)
+        version = data['config_version']
+        self.assertEqual( len( version ), 32 )
+        self.assertTrue( all( c in '0123456789abcdef' for c in version ) )
 
     def test_response_includes_sync_envelope( self ):
         """Test response includes sync envelope."""

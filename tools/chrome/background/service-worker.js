@@ -10,6 +10,7 @@ importScripts( '../shared/auth.js' );
 importScripts( '../shared/api.js' );
 importScripts( '../shared/trips.js' );
 importScripts( '../shared/sync.js' );
+importScripts( '../shared/client-config.js' );
 
 var extensionStartTime = Date.now();
 var lastAuthValidation = 0;
@@ -363,6 +364,10 @@ function handleDisconnect() {
         .then( function() {
             // Clear trip state
             return TTTrips.clearAll();
+        })
+        .then( function() {
+            // Clear client config state
+            return TTClientConfig.clearAll();
         })
         .then( function() {
             // Clear sync state

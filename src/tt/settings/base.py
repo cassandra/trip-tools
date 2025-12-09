@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     'tt.apps.console',
     'tt.apps.notify',
     'tt.apps.api',
+    'tt.apps.client_config',
 
     'tt.apps.geo',
     'tt.apps.routes',

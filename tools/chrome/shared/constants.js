@@ -21,6 +21,7 @@ TT.CONFIG = {
     API_TOKENS_ENDPOINT: '/api/v1/tokens/',
     API_TRIPS_ENDPOINT: '/api/v1/trips/',
     API_EXTENSION_STATUS_ENDPOINT: '/api/v1/extension/status/',
+    API_CLIENT_CONFIG_ENDPOINT: '/api/v1/client-config/',
     AUTH_VALIDATION_DEBOUNCE_POPUP_MS: 2000,
     AUTH_VALIDATION_TIMEOUT_MS: 5000
 };
@@ -40,7 +41,11 @@ TT.STORAGE = {
     KEY_SYNC_AS_OF: 'tt_syncAsOf',
     KEY_ACTIVE_TRIP_UUID: 'tt_activeTripUuid',
     // Trip working set
-    KEY_WORKING_SET_TRIPS: 'tt_workingSetTrips'
+    KEY_WORKING_SET_TRIPS: 'tt_workingSetTrips',
+    // Client config
+    KEY_CLIENT_CONFIG: 'tt_clientConfig',
+    KEY_CLIENT_CONFIG_VERSION: 'tt_clientConfigVersion',
+    KEY_CLIENT_CONFIG_STALE: 'tt_clientConfigStale'
 };
 
 TT.MESSAGE = {

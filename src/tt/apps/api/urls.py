@@ -16,6 +16,7 @@ urlpatterns = [
     path('v1/extension/status/', ExtensionStatusView.as_view(), name='api-extension-status'),
 
     # Feature-specific delegated API routes
+    path('v1/client-config/', include('tt.apps.client_config.api.urls')),
     path('v1/locations/', include('tt.apps.locations.api.urls')),
     path('v1/trips/', include('tt.apps.trips.api.urls')),
 ]

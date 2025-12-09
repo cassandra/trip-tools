@@ -77,6 +77,15 @@ function displayVersion() {
             versionText += ' (DEV)';
         }
         versionSpan.textContent = versionText;
+
+        // Also show config version if available
+        TTClientConfig.getVersion()
+            .then( function( configVersion ) {
+                if ( configVersion ) {
+                    // Show first 8 chars of MD5 hash for brevity
+                    versionSpan.textContent = versionText + ' | cfg:' + configVersion.substring( 0, 8 );
+                }
+            });
     }
 }
 

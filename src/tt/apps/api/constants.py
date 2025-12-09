@@ -48,3 +48,14 @@ class APIFields:
     LONGITUDE = 'longitude'
     SUBCATEGORY_SLUG = 'subcategory_slug'
     TRIP_UUID = 'trip_uuid'
+
+    # -------------------------------------------------------------------------
+    # Client Config / Location Categories
+    # -------------------------------------------------------------------------
+    ID = 'id'
+    SLUG = 'slug'
+    ICON_CODE = 'icon_code'
+    COLOR_CODE = 'color_code'
+    SUBCATEGORIES = 'subcategories'
+    LOCATION_CATEGORIES = 'location_categories'
+    CONFIG_VERSION = 'config_version'

@@ -225,6 +225,7 @@ TTApi.validateTokenWithSignal = function( token, signal ) {
 /**
  * Get extension status from /api/v1/extension/status/.
  * Validates auth and processes sync envelope for trips.
+ * Also syncs client config version.
  * @param {string} token - The API token to use.
  * @param {AbortSignal|null} signal - Optional abort signal for timeout.
  * @returns {Promise<Object>} Status data with email and config_version.
@@ -267,6 +268,16 @@ TTApi.getExtensionStatus = function( token, signal ) {
             }
             // Process sync envelope and return data
             return TTApi.processResponse( response );
+        })
+        .then( function( data ) {
+            // Sync client config version (marks stale if version changed)
+            if ( data && data.config_version && typeof TTClientConfig !== 'undefined' ) {
+                return TTClientConfig.handleVersionSync( data.config_version )
+                    .then( function() {
+                        return data;
+                    });
+            }
+            return data;
         });
 };
 

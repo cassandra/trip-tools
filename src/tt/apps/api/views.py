@@ -14,6 +14,8 @@ from .services import APITokenService
 from .sync import SyncEnvelopeBuilder
 from .utils import get_str
 
+from tt.apps.client_config.services import ClientConfigService
+
 
 class TokenCollectionView(APIView):
     """
@@ -197,5 +199,5 @@ class ExtensionStatusView( SyncableAPIView ):
         """Returns user email and config version with sync envelope."""
         return Response({
             F.EMAIL: request.user.email,
-            'config_version': 1,  # Placeholder for future config sync
+            F.CONFIG_VERSION: ClientConfigService.get_version(),
         })
