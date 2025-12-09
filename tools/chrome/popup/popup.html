@@ -53,9 +53,12 @@
                 </div>
 
                 <div class="tt-trip-empty tt-hidden" id="tt-trip-empty">No trips available.</div>
-                <button class="tt-btn tt-btn-secondary tt-btn-new-trip" id="tt-new-trip-btn">
-                    + New Trip
-                </button>
+                <div class="tt-trip-actions">
+                    <button class="tt-btn tt-btn-secondary tt-btn-new-trip" id="tt-new-trip-btn">
+                        + New Trip
+                    </button>
+                    <button class="tt-btn tt-btn-link" id="tt-more-trips-btn">More trips...</button>
+                </div>
             </div>
 
             <!-- Actions Section (stub) -->
@@ -107,6 +110,23 @@
             </div>
             <div class="tt-quick-settings-footer">
                 <a href="#" id="tt-all-options-link" class="tt-all-options-link">All Options</a>
+            </div>
+        </div>
+
+        <!-- More Trips Slide-in Panel -->
+        <div class="tt-more-trips-panel tt-hidden" id="tt-more-trips-panel">
+            <div class="tt-panel-header">
+                <button class="tt-back-btn" id="tt-more-trips-back" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>All Trips</span>
+            </div>
+            <div class="tt-panel-content">
+                <div class="tt-more-trips-loading tt-hidden" id="tt-more-trips-loading">Loading trips...</div>
+                <div class="tt-more-trips-error tt-hidden" id="tt-more-trips-error"></div>
+                <div class="tt-more-trips-list" id="tt-more-trips-list"></div>
             </div>
         </div>
     </div>

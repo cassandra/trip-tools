@@ -177,14 +177,7 @@ TTTrips.fetchTripsFromServer = function() {
 TTTrips.fetchTripByUuid = function( uuid ) {
     return TTApi.get( TT.CONFIG.API_TRIPS_ENDPOINT + uuid + '/' )
         .then( function( response ) {
-            if ( !response.ok ) {
-                throw new Error( 'Failed to fetch trip: ' + response.status );
-            }
-            return response.json();
-        })
-        .then( function( json ) {
-            // Extract data from TtApiView envelope
-            return json[TT.SYNC.FIELD_DATA] || json;
+            return TTApi.processResponse( response );
         });
 };
 

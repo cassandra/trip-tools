@@ -363,6 +363,20 @@ function setupTripEventListeners() {
             openNewTripPage();
         });
     }
+
+    var moreTripsBtn = document.getElementById( TT.DOM.ID_MORE_TRIPS_BTN );
+    if ( moreTripsBtn ) {
+        moreTripsBtn.addEventListener( 'click', function() {
+            showMoreTripsPanel();
+        });
+    }
+
+    var moreTripsBackBtn = document.getElementById( TT.DOM.ID_MORE_TRIPS_BACK );
+    if ( moreTripsBackBtn ) {
+        moreTripsBackBtn.addEventListener( 'click', function() {
+            hideMoreTripsPanel();
+        });
+    }
 }
 
 function openAuthorizePage() {
@@ -571,5 +585,125 @@ function switchToTrip( trip ) {
         })
         .catch( function( error ) {
             addLocalDebugEntry( 'error', 'Switch trip error: ' + error.message );
+        });
+}
+
+// =============================================================================
+// More Trips Panel
+// =============================================================================
+
+function showMoreTripsPanel() {
+    var panel = document.getElementById( TT.DOM.ID_MORE_TRIPS_PANEL );
+    if ( panel ) {
+        panel.classList.remove( TT.DOM.CLASS_HIDDEN );
+        requestAnimationFrame( function() {
+            panel.classList.add( TT.DOM.CLASS_VISIBLE );
+        });
+    }
+
+    // Apply dev mode styling to panel header
+    var header = panel.querySelector( '.tt-panel-header' );
+    if ( header && TT.CONFIG.IS_DEVELOPMENT ) {
+        header.classList.add( TT.DOM.CLASS_DEV_MODE );
+    }
+
+    loadAllTrips();
+}
+
+function hideMoreTripsPanel() {
+    var panel = document.getElementById( TT.DOM.ID_MORE_TRIPS_PANEL );
+    if ( panel ) {
+        panel.classList.remove( TT.DOM.CLASS_VISIBLE );
+        panel.addEventListener( 'transitionend', function handler() {
+            panel.classList.add( TT.DOM.CLASS_HIDDEN );
+            panel.removeEventListener( 'transitionend', handler );
+        });
+    }
+}
+
+function loadAllTrips() {
+    var listEl = document.getElementById( TT.DOM.ID_MORE_TRIPS_LIST );
+    var loadingEl = document.getElementById( TT.DOM.ID_MORE_TRIPS_LOADING );
+    var errorEl = document.getElementById( TT.DOM.ID_MORE_TRIPS_ERROR );
+
+    if ( listEl ) listEl.innerHTML = '';
+    if ( loadingEl ) loadingEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+    if ( errorEl ) errorEl.classList.add( TT.DOM.CLASS_HIDDEN );
+
+    TTMessaging.send( TT.MESSAGE.TYPE_GET_ALL_TRIPS, {} )
+        .then( function( response ) {
+            if ( loadingEl ) loadingEl.classList.add( TT.DOM.CLASS_HIDDEN );
+
+            if ( !response || !response.success ) {
+                var errorMsg = response && response.error ? response.error : 'Failed to load trips';
+                if ( errorEl ) {
+                    errorEl.textContent = errorMsg;
+                    errorEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+                }
+                addLocalDebugEntry( 'error', 'Load all trips failed: ' + errorMsg );
+                return;
+            }
+
+            renderAllTrips( response.data.trips );
+        })
+        .catch( function( error ) {
+            if ( loadingEl ) loadingEl.classList.add( TT.DOM.CLASS_HIDDEN );
+            if ( errorEl ) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+            }
+            addLocalDebugEntry( 'error', 'Load all trips error: ' + error.message );
+        });
+}
+
+function renderAllTrips( trips ) {
+    var listEl = document.getElementById( TT.DOM.ID_MORE_TRIPS_LIST );
+    if ( !listEl ) {
+        return;
+    }
+
+    listEl.innerHTML = '';
+
+    if ( !trips || trips.length === 0 ) {
+        var emptyDiv = document.createElement( 'div' );
+        emptyDiv.className = 'tt-empty-message';
+        emptyDiv.textContent = 'No trips found.';
+        listEl.appendChild( emptyDiv );
+        return;
+    }
+
+    trips.forEach( function( trip ) {
+        var item = document.createElement( 'div' );
+        item.className = 'tt-trip-item';
+
+        var title = document.createElement( 'span' );
+        title.className = 'tt-trip-item-title';
+        title.textContent = trip.title;
+        item.appendChild( title );
+
+        item.addEventListener( 'click', function() {
+            selectTripFromList( trip );
+        });
+
+        listEl.appendChild( item );
+    });
+}
+
+function selectTripFromList( trip ) {
+    // Use existing setActiveTrip which adds to working set AND sets active
+    TTMessaging.send( TT.MESSAGE.TYPE_SET_ACTIVE_TRIP, { trip: trip } )
+        .then( function( response ) {
+            if ( response && response.success ) {
+                addLocalDebugEntry( 'info', 'Selected trip from list: ' + trip.title );
+                hideMoreTripsPanel();
+                // Refresh main trip display
+                renderTrips( response.data.workingSet, response.data.activeTripUuid );
+            } else {
+                var errorMsg = response && response.error ? response.error : 'Unknown error';
+                addLocalDebugEntry( 'error', 'Select trip failed: ' + errorMsg );
+            }
+        })
+        .catch( function( error ) {
+            addLocalDebugEntry( 'error', 'Select trip error: ' + error.message );
         });
 }

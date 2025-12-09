@@ -57,7 +57,8 @@ TT.MESSAGE = {
     TYPE_DISCONNECT: 'tt_disconnect',
     // Trip management
     TYPE_GET_TRIPS: 'tt_getTrips',
-    TYPE_SET_ACTIVE_TRIP: 'tt_setActiveTrip'
+    TYPE_SET_ACTIVE_TRIP: 'tt_setActiveTrip',
+    TYPE_GET_ALL_TRIPS: 'tt_getAllTrips'
 };
 
 TT.DOM = {
@@ -133,7 +134,14 @@ TT.DOM = {
     ID_OTHER_TRIPS_LIST: 'tt-other-trips-list',
     CLASS_TRIP_LOADING: 'tt-trip-loading',
     CLASS_TRIP_EMPTY: 'tt-trip-empty',
-    CLASS_SWITCH_TRIP_BTN: 'tt-switch-trip-btn'
+    CLASS_SWITCH_TRIP_BTN: 'tt-switch-trip-btn',
+    // More Trips Panel
+    ID_MORE_TRIPS_BTN: 'tt-more-trips-btn',
+    ID_MORE_TRIPS_PANEL: 'tt-more-trips-panel',
+    ID_MORE_TRIPS_BACK: 'tt-more-trips-back',
+    ID_MORE_TRIPS_LIST: 'tt-more-trips-list',
+    ID_MORE_TRIPS_LOADING: 'tt-more-trips-loading',
+    ID_MORE_TRIPS_ERROR: 'tt-more-trips-error'
 };
 
 TT.URL = {

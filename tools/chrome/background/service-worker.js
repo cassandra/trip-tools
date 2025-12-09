@@ -52,6 +52,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleGetTrips();
         case TT.MESSAGE.TYPE_SET_ACTIVE_TRIP:
             return handleSetActiveTrip( message.data );
+        case TT.MESSAGE.TYPE_GET_ALL_TRIPS:
+            return handleGetAllTrips();
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -465,5 +467,19 @@ function handleSetActiveTrip( data ) {
             return TTMessaging.createResponse( false, {
                 error: error.message
             });
+        });
+}
+
+/**
+ * Handle request to get all trips from server.
+ * Returns the full list of trips (not just working set).
+ */
+function handleGetAllTrips() {
+    return TTTrips.fetchTripsFromServer()
+        .then( function( trips ) {
+            return TTMessaging.createResponse( true, { trips: trips });
+        })
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, null, error.message );
         });
 }

@@ -299,11 +299,10 @@ TTApi.deleteToken = function( lookupKey ) {
 };
 
 /**
- * Process API response: extract data, then process sync envelope.
- * Sync envelope processing happens LAST, after main data handling.
+ * Process API response from TtApiView or SyncableAPIView endpoints.
  *
- * Use this for SyncableAPIView endpoints that return sync envelopes.
- * For legacy endpoints (e.g., /api/v1/me/), use response.json() directly.
+ * Both view types wrap responses in {data: ...} envelope.
+ * SyncableAPIView additionally includes {sync: {...}} which is processed here.
  *
  * @param {Response} response - Fetch Response object.
  * @returns {Promise<Object>} Resolves with the data portion of response.
@@ -315,16 +314,14 @@ TTApi.processResponse = function( response ) {
 
     return response.json()
         .then( function( json ) {
-            // Check if response has sync envelope
+            var data = json[TT.SYNC.FIELD_DATA];
+            // Process sync envelope if present (SyncableAPIView)
             if ( json[TT.SYNC.FIELD_SYNC] ) {
-                // Return data first, THEN process sync envelope
-                var data = json[TT.SYNC.FIELD_DATA];
                 return TTSync.processEnvelope( json[TT.SYNC.FIELD_SYNC] )
                     .then( function() {
                         return data;
                     });
             }
-            // Legacy response without envelope - return as-is
-            return json;
+            return data;
         });
 };
