@@ -6,9 +6,6 @@ Focuses on high-value testing of:
 - Version hash stability (same data = same hash)
 - Caching behavior (get from cache, build on miss)
 - Cache invalidation
-
-Note: These tests use the seeded location data from migrations.
-They do not create their own test categories to avoid conflicts.
 """
 
 import logging
@@ -25,11 +22,48 @@ logging.disable(logging.CRITICAL)
 
 
 class ClientConfigServiceTestCase(TestCase):
-    """
-    Test ClientConfigService business logic.
+    """Test ClientConfigService business logic."""
 
-    Uses the seeded location data from migrations (Dining, Attractions, etc.)
-    """
+    @classmethod
+    def setUpTestData(cls):
+        """Create test categories and subcategories."""
+        # Category with subcategories
+        cls.dining = LocationCategory.objects.create(
+            name='Dining',
+            slug='dining',
+            icon_code='1577',
+            color_code='RGB(251,192,45)',
+        )
+        LocationSubCategory.objects.create(
+            category=cls.dining,
+            name='Coffee',
+            slug='coffee',
+            icon_code='1534',
+            color_code='RGB(121,85,72)',
+        )
+        LocationSubCategory.objects.create(
+            category=cls.dining,
+            name='Bar',
+            slug='bar',
+            icon_code='1517',
+            color_code='RGB(156,39,176)',
+        )
+
+        # Category without subcategories
+        cls.towns = LocationCategory.objects.create(
+            name='Towns',
+            slug='towns',
+            icon_code='1603',
+            color_code='RGB(165,39,20)',
+        )
+
+        # Another category for sorting tests
+        cls.attractions = LocationCategory.objects.create(
+            name='Attractions',
+            slug='attractions',
+            icon_code='1535',
+            color_code='RGB(245,124,0)',
+        )
 
     def setUp(self):
         """Clear cache before each test."""
@@ -53,28 +87,28 @@ class ClientConfigServiceTestCase(TestCase):
         config = ClientConfigService.get_config_serialized()
         categories = config[F.LOCATION_CATEGORIES]
 
-        # Verify at least some categories exist from seed data
-        self.assertGreater(len(categories), 0)
+        # Verify our test categories exist
+        self.assertEqual(len(categories), 3)
 
-        # Verify alphabetical order
+        # Verify alphabetical order: Attractions, Dining, Towns
         names = [c[F.NAME] for c in categories]
-        self.assertEqual(names, sorted(names))
+        self.assertEqual(names, ['Attractions', 'Dining', 'Towns'])
 
     def test_get_config_serialized_subcategories_sorted_alphabetically(self):
         """Test subcategories within each category are sorted alphabetically."""
         config = ClientConfigService.get_config_serialized()
         categories = config[F.LOCATION_CATEGORIES]
 
-        # Find Dining category (from seed data)
+        # Find Dining category
         dining = next((c for c in categories if c[F.SLUG] == 'dining'), None)
-        self.assertIsNotNone(dining, 'Dining category should exist from seed')
+        self.assertIsNotNone(dining)
 
         subcategories = dining[F.SUBCATEGORIES]
-        self.assertGreater(len(subcategories), 0)
+        self.assertEqual(len(subcategories), 2)
 
-        # Verify alphabetical order within category
+        # Verify alphabetical order: Bar, Coffee
         names = [s[F.NAME] for s in subcategories]
-        self.assertEqual(names, sorted(names))
+        self.assertEqual(names, ['Bar', 'Coffee'])
 
     def test_get_config_serialized_category_has_all_fields(self):
         """Test each category has all required fields."""
@@ -91,7 +125,7 @@ class ClientConfigServiceTestCase(TestCase):
     def test_get_config_serialized_subcategory_has_all_fields(self):
         """Test each subcategory has all required fields."""
         config = ClientConfigService.get_config_serialized()
-        # Find a category with subcategories (Dining has them)
+        # Find Dining category which has subcategories
         dining = next(
             c for c in config[F.LOCATION_CATEGORIES]
             if c[F.SLUG] == 'dining'
@@ -131,11 +165,10 @@ class ClientConfigServiceTestCase(TestCase):
         config1 = ClientConfigService.get_config_serialized()
         version1 = config1[F.VERSION]
 
-        # Change a category (use Dining from seed data)
-        dining = LocationCategory.objects.get(slug='dining')
-        original_name = dining.name
-        dining.name = 'Fine Dining'
-        dining.save()
+        # Change a category
+        original_name = self.dining.name
+        self.dining.name = 'Fine Dining'
+        self.dining.save()
 
         ClientConfigService.invalidate_cache()
         config2 = ClientConfigService.get_config_serialized()
@@ -144,8 +177,8 @@ class ClientConfigServiceTestCase(TestCase):
         self.assertNotEqual(version1, version2)
 
         # Restore original name
-        dining.name = original_name
-        dining.save()
+        self.dining.name = original_name
+        self.dining.save()
 
     def test_get_version_returns_same_as_config_serialized_version(self):
         """Test get_version() returns same value as get_config_serialized()[version]."""
@@ -218,41 +251,54 @@ class ClientConfigServiceTestCase(TestCase):
 
     def test_get_config_serialized_category_with_no_subcategories(self):
         """Test category with no subcategories has empty subcategories list."""
-        # Towns category from seed data has no subcategories
         config = ClientConfigService.get_config_serialized()
         towns = next(
             (c for c in config[F.LOCATION_CATEGORIES] if c[F.SLUG] == 'towns'),
             None
         )
 
-        self.assertIsNotNone(towns, 'Towns category should exist from seed')
+        self.assertIsNotNone(towns)
         self.assertEqual(towns[F.SUBCATEGORIES], [])
 
 
 class ClientConfigSignalTests(TestCase):
-    """
-    Test signal-based cache invalidation.
-
-    Uses existing Dining category from seed data for signal tests
-    to avoid unique constraint issues.
-    """
+    """Test signal-based cache invalidation."""
 
     @classmethod
     def setUpTestData(cls):
-        """Get reference to seeded category (runs once per class)."""
-        cls.category = LocationCategory.objects.get(slug='dining')
+        """Create test category and subcategory for signal tests."""
+        cls.category = LocationCategory.objects.create(
+            name='Signal Test Category',
+            slug='signal-test',
+            icon_code='1000',
+            color_code='RGB(100,100,100)',
+        )
         cls.original_name = cls.category.name
+
+        cls.subcategory = LocationSubCategory.objects.create(
+            category=cls.category,
+            name='Signal Test Sub',
+            slug='signal-test-sub',
+            icon_code='2000',
+            color_code='RGB(150,150,150)',
+        )
+        cls.original_sub_name = cls.subcategory.name
 
     def setUp(self):
         """Clear cache before each test."""
         ClientConfigService.invalidate_cache()
 
     def tearDown(self):
-        """Restore original name if changed."""
+        """Restore original names if changed."""
         self.category.refresh_from_db()
         if self.category.name != self.original_name:
             self.category.name = self.original_name
             self.category.save()
+
+        self.subcategory.refresh_from_db()
+        if self.subcategory.name != self.original_sub_name:
+            self.subcategory.name = self.original_sub_name
+            self.subcategory.save()
 
     def test_category_save_invalidates_cache(self):
         """Test saving a category invalidates the cache."""
@@ -279,10 +325,10 @@ class ClientConfigSignalTests(TestCase):
             ClientConfigService, 'invalidate_cache',
             wraps=ClientConfigService.invalidate_cache
         ) as mock_invalidate:
-            # Create new category with unique slug
+            # Create new category
             new_cat = LocationCategory.objects.create(
-                name='Signal Test Category',
-                slug='signal-test-unique',
+                name='New Category For Create Test',
+                slug='new-cat-create-test',
                 icon_code='1001',
                 color_code='RGB(50,50,50)',
             )
@@ -317,13 +363,6 @@ class ClientConfigSignalTests(TestCase):
 
     def test_subcategory_save_invalidates_cache(self):
         """Test saving a subcategory invalidates the cache."""
-        # Use existing subcategory from seed data
-        subcategory = LocationSubCategory.objects.filter(
-            category=self.category
-        ).first()
-        original_name = subcategory.name
-        ClientConfigService.invalidate_cache()
-
         # Prime the cache
         ClientConfigService.get_config_serialized()
 
@@ -332,14 +371,10 @@ class ClientConfigSignalTests(TestCase):
             wraps=ClientConfigService.invalidate_cache
         ) as mock_invalidate:
             # Update subcategory
-            subcategory.name = 'Updated Sub'
-            subcategory.save()
+            self.subcategory.name = 'Updated Sub'
+            self.subcategory.save()
 
             mock_invalidate.assert_called()
-
-        # Restore
-        subcategory.name = original_name
-        subcategory.save()
 
     def test_subcategory_delete_invalidates_cache(self):
         """Test deleting a subcategory invalidates the cache."""
