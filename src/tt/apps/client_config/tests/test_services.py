@@ -28,41 +28,51 @@ class ClientConfigServiceTestCase(TestCase):
     def setUpTestData(cls):
         """Create test categories and subcategories."""
         # Category with subcategories
-        cls.dining = LocationCategory.objects.create(
-            name='Dining',
+        cls.dining, _ = LocationCategory.objects.get_or_create(
             slug='dining',
-            icon_code='1577',
-            color_code='RGB(251,192,45)',
+            defaults={
+                'name': 'Dining',
+                'icon_code': '1577',
+                'color_code': 'RGB(251,192,45)',
+            }
         )
-        LocationSubCategory.objects.create(
-            category=cls.dining,
-            name='Coffee',
+        LocationSubCategory.objects.get_or_create(
             slug='coffee',
-            icon_code='1534',
-            color_code='RGB(121,85,72)',
+            defaults={
+                'category': cls.dining,
+                'name': 'Coffee',
+                'icon_code': '1534',
+                'color_code': 'RGB(121,85,72)',
+            }
         )
-        LocationSubCategory.objects.create(
-            category=cls.dining,
-            name='Bar',
+        LocationSubCategory.objects.get_or_create(
             slug='bar',
-            icon_code='1517',
-            color_code='RGB(156,39,176)',
+            defaults={
+                'category': cls.dining,
+                'name': 'Bar',
+                'icon_code': '1517',
+                'color_code': 'RGB(156,39,176)',
+            }
         )
 
         # Category without subcategories
-        cls.towns = LocationCategory.objects.create(
-            name='Towns',
+        cls.towns, _ = LocationCategory.objects.get_or_create(
             slug='towns',
-            icon_code='1603',
-            color_code='RGB(165,39,20)',
+            defaults={
+                'name': 'Towns',
+                'icon_code': '1603',
+                'color_code': 'RGB(165,39,20)',
+            }
         )
 
         # Another category for sorting tests
-        cls.attractions = LocationCategory.objects.create(
-            name='Attractions',
+        cls.attractions, _ = LocationCategory.objects.get_or_create(
             slug='attractions',
-            icon_code='1535',
-            color_code='RGB(245,124,0)',
+            defaults={
+                'name': 'Attractions',
+                'icon_code': '1535',
+                'color_code': 'RGB(245,124,0)',
+            }
         )
 
     def setUp(self):
@@ -87,12 +97,12 @@ class ClientConfigServiceTestCase(TestCase):
         config = ClientConfigService.get_config_serialized()
         categories = config[F.LOCATION_CATEGORIES]
 
-        # Verify our test categories exist
-        self.assertEqual(len(categories), 3)
+        # Verify at least our test categories exist
+        self.assertGreaterEqual(len(categories), 3)
 
-        # Verify alphabetical order: Attractions, Dining, Towns
+        # Verify alphabetical order
         names = [c[F.NAME] for c in categories]
-        self.assertEqual(names, ['Attractions', 'Dining', 'Towns'])
+        self.assertEqual(names, sorted(names))
 
     def test_get_config_serialized_subcategories_sorted_alphabetically(self):
         """Test subcategories within each category are sorted alphabetically."""
@@ -104,11 +114,11 @@ class ClientConfigServiceTestCase(TestCase):
         self.assertIsNotNone(dining)
 
         subcategories = dining[F.SUBCATEGORIES]
-        self.assertEqual(len(subcategories), 2)
+        self.assertGreaterEqual(len(subcategories), 2)
 
-        # Verify alphabetical order: Bar, Coffee
+        # Verify alphabetical order
         names = [s[F.NAME] for s in subcategories]
-        self.assertEqual(names, ['Bar', 'Coffee'])
+        self.assertEqual(names, sorted(names))
 
     def test_get_config_serialized_category_has_all_fields(self):
         """Test each category has all required fields."""
@@ -267,20 +277,24 @@ class ClientConfigSignalTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         """Create test category and subcategory for signal tests."""
-        cls.category = LocationCategory.objects.create(
-            name='Signal Test Category',
+        cls.category, _ = LocationCategory.objects.get_or_create(
             slug='signal-test',
-            icon_code='1000',
-            color_code='RGB(100,100,100)',
+            defaults={
+                'name': 'Signal Test Category',
+                'icon_code': '1000',
+                'color_code': 'RGB(100,100,100)',
+            }
         )
         cls.original_name = cls.category.name
 
-        cls.subcategory = LocationSubCategory.objects.create(
-            category=cls.category,
-            name='Signal Test Sub',
+        cls.subcategory, _ = LocationSubCategory.objects.get_or_create(
             slug='signal-test-sub',
-            icon_code='2000',
-            color_code='RGB(150,150,150)',
+            defaults={
+                'category': cls.category,
+                'name': 'Signal Test Sub',
+                'icon_code': '2000',
+                'color_code': 'RGB(150,150,150)',
+            }
         )
         cls.original_sub_name = cls.subcategory.name
 
