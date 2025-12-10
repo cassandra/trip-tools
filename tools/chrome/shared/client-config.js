@@ -103,16 +103,22 @@ TTClientConfig.refresh = function() {
 };
 
 /**
- * Refresh config if marked as stale.
+ * Refresh config if marked as stale or missing.
  * @returns {Promise<Object|null>} The config (possibly refreshed) or null.
  */
 TTClientConfig.refreshIfStale = function() {
-    return TTClientConfig.isStale()
-        .then( function( stale ) {
-            if ( stale ) {
+    return Promise.all([
+        TTClientConfig.isStale(),
+        TTClientConfig.getConfig()
+    ])
+        .then( function( results ) {
+            var stale = results[0];
+            var config = results[1];
+
+            if ( stale || !config ) {
                 return TTClientConfig.refresh();
             }
-            return TTClientConfig.getConfig();
+            return config;
         });
 };
 
@@ -149,11 +155,27 @@ TTClientConfig.handleVersionSync = function( serverVersion ) {
 // =============================================================================
 
 /**
- * Get all location categories.
- * Refreshes if stale before returning.
+ * Get all location categories from cache only.
+ * Does NOT attempt to refresh from server.
+ * Safe to use in content script context (where TTApi is not available).
  * @returns {Promise<Array>} Array of category objects.
  */
 TTClientConfig.getLocationCategories = function() {
+    return TTClientConfig.getConfig()
+        .then( function( config ) {
+            if ( config && config.location_categories ) {
+                return config.location_categories;
+            }
+            return [];
+        });
+};
+
+/**
+ * Get all location categories, refreshing if stale.
+ * Only use in contexts where TTApi is available (service worker, popup).
+ * @returns {Promise<Array>} Array of category objects.
+ */
+TTClientConfig.getLocationCategoriesWithRefresh = function() {
     return TTClientConfig.refreshIfStale()
         .then( function( config ) {
             if ( config && config.location_categories ) {

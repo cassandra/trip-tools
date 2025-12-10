@@ -69,7 +69,6 @@
             "js": [
                 "shared/constants.js",
                 "shared/storage.js",
-                "shared/client-config.js",
                 "shared/dom.js",
                 "shared/site-adapter.js",
                 "adapters/gmm-selectors.js",

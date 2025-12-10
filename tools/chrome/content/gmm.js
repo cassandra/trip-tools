@@ -1,8 +1,8 @@
 /*
  * Trip Tools Chrome Extension - GMM Content Script
  * Injected into Google My Maps pages.
- * Uses TTGmmAdapter for DOM operations, TTClientConfig for categories.
- * Depends on: constants.js, storage.js, client-config.js, dom.js,
+ * Uses TTGmmAdapter for DOM operations, service worker for categories.
+ * Depends on: constants.js, storage.js, dom.js,
  *             site-adapter.js, gmm-selectors.js, gmm-adapter.js
  */
 
@@ -35,6 +35,46 @@
         });
 
         console.log( '[TT GMM] Adapter initialized, waiting for dialogs' );
+    }
+
+    // =========================================================================
+    // Service Worker Communication
+    // =========================================================================
+
+    /**
+     * Request location categories from service worker.
+     * @returns {Promise<Array>} Array of category objects.
+     */
+    function getLocationCategories() {
+        return new Promise( function( resolve, reject ) {
+            chrome.runtime.sendMessage({
+                type: TT.MESSAGE.TYPE_GET_LOCATION_CATEGORIES
+            }, function( response ) {
+                if ( chrome.runtime.lastError ) {
+                    reject( new Error( chrome.runtime.lastError.message ) );
+                    return;
+                }
+                if ( response && response.success ) {
+                    resolve( response.data || [] );
+                } else {
+                    reject( new Error( response ? response.error : 'No response' ) );
+                }
+            });
+        });
+    }
+
+    /**
+     * Get a category by slug from cached categories.
+     * @param {string} slug - Category slug.
+     * @returns {Promise<Object|null>} Category object or null.
+     */
+    function getCategoryBySlug( slug ) {
+        return getLocationCategories()
+            .then( function( categories ) {
+                return categories.find( function( c ) {
+                    return c.slug === slug;
+                }) || null;
+            });
     }
 
     // =========================================================================
@@ -94,7 +134,7 @@
      * @returns {Promise<Object>}
      */
     function handleSearchAndAdd( data ) {
-        return TTClientConfig.getCategoryBySlug( data.categorySlug )
+        return getCategoryBySlug( data.categorySlug )
             .then( function( category ) {
                 if ( !category ) {
                     throw new Error( 'Category not found: ' + data.categorySlug );
@@ -107,11 +147,11 @@
                     });
                 }
 
-                var colorRgb = subcategory ? subcategory.gmm_color : category.gmm_color;
-                var iconCode = subcategory ? subcategory.gmm_icon : category.gmm_icon;
+                var colorRgb = subcategory ? subcategory.color_code : category.color_code;
+                var iconCode = subcategory ? subcategory.icon_code : category.icon_code;
 
                 return TTGmmAdapter.searchAndAddLocation( data.searchText, {
-                    layerTitle: category.title,
+                    layerTitle: category.name,
                     colorRgb: colorRgb,
                     iconCode: iconCode
                 });
@@ -195,8 +235,8 @@
         }
         dialogNode.setAttribute( TT_DECORATED_ATTR, 'true' );
 
-        // Get categories from client config
-        TTClientConfig.getLocationCategories()
+        // Get categories from service worker
+        getLocationCategories()
             .then( function( categories ) {
                 if ( categories && categories.length > 0 ) {
                     decorateAddToMapDialog( dialogNode, categories );
@@ -220,6 +260,9 @@
             return;
         }
 
+        // Hide the original "Add to map" button
+        addButton.style.display = 'none';
+
         var container = addButton.parentNode;
 
         // Create button container
@@ -232,7 +275,7 @@
             var button = TTDom.createElement( 'button', {
                 id: 'tt-add-' + category.slug,
                 className: TT_BUTTON_CLASS + ' ' + TT_CATEGORY_BTN_CLASS,
-                text: category.title
+                text: category.name
             });
 
             button.addEventListener( 'click', function( event ) {
@@ -254,7 +297,7 @@
      * @param {Object} category - Category from server.
      */
     function handleCategoryButtonClick( dialogNode, category ) {
-        console.log( '[TT GMM] Category selected: ' + category.title );
+        console.log( '[TT GMM] Category selected: ' + category.name );
 
         // If category has subcategories, show picker
         if ( category.subcategories && category.subcategories.length > 0 ) {
@@ -284,7 +327,7 @@
         // Add header
         var header = TTDom.createElement( 'div', {
             className: 'tt-picker-header',
-            text: 'Select ' + category.title + ' type:'
+            text: 'Select ' + category.name + ' type:'
         });
         picker.appendChild( header );
 
@@ -297,7 +340,7 @@
         category.subcategories.forEach( function( subcategory ) {
             var btn = TTDom.createElement( 'button', {
                 className: TT_BUTTON_CLASS,
-                text: subcategory.title
+                text: subcategory.name
             });
 
             btn.addEventListener( 'click', function( event ) {
@@ -331,14 +374,14 @@
      * @param {Object|null} subcategory - Subcategory or null.
      */
     function addLocationWithCategory( dialogNode, category, subcategory ) {
-        var colorRgb = subcategory ? subcategory.gmm_color : category.gmm_color;
-        var iconCode = subcategory ? subcategory.gmm_icon : category.gmm_icon;
+        var colorRgb = subcategory ? subcategory.color_code : category.color_code;
+        var iconCode = subcategory ? subcategory.icon_code : category.icon_code;
 
-        console.log( '[TT GMM] Adding location - layer: ' + category.title +
+        console.log( '[TT GMM] Adding location - layer: ' + category.name +
                      ', color: ' + colorRgb + ', icon: ' + iconCode );
 
         TTGmmAdapter.addLocationToLayer({
-            layerTitle: category.title,
+            layerTitle: category.name,
             colorRgb: colorRgb,
             iconCode: iconCode
         })
@@ -367,6 +410,7 @@
         })
         .catch( function( error ) {
             console.error( '[TT GMM] Failed to add location:', error );
+            showErrorNotification( 'Location not saved to server. Try syncing later.' );
         });
     }
 
@@ -414,7 +458,7 @@
         var isEditMode = TTGmmAdapter.isEditMode();
 
         // Get category definition for custom attributes
-        TTClientConfig.getCategoryBySlug( location.category_slug )
+        getCategoryBySlug( location.category_slug )
             .then( function( category ) {
                 if ( category ) {
                     addCustomAttributeUI( dialogNode, location, category, isEditMode );
@@ -441,6 +485,54 @@
     // =========================================================================
 
     /**
+     * Show error notification banner in GMM page.
+     * Auto-dismisses after 5 seconds.
+     * @param {string} message - Error message to display.
+     */
+    function showErrorNotification( message ) {
+        // Remove any existing notification
+        var existing = document.querySelector( '.tt-error-notification' );
+        if ( existing ) {
+            existing.remove();
+        }
+
+        var notification = TTDom.createElement( 'div', {
+            className: 'tt-error-notification',
+            text: message
+        });
+
+        // Style inline to ensure it displays correctly in GMM
+        notification.style.cssText = [
+            'position: fixed',
+            'top: 20px',
+            'left: 50%',
+            'transform: translateX(-50%)',
+            'background: #d93025',
+            'color: white',
+            'padding: 12px 24px',
+            'border-radius: 8px',
+            'font-family: "Google Sans", Roboto, Arial, sans-serif',
+            'font-size: 14px',
+            'box-shadow: 0 4px 12px rgba(0,0,0,0.3)',
+            'z-index: 10000',
+            'cursor: pointer'
+        ].join( ';' );
+
+        notification.addEventListener( 'click', function() {
+            notification.remove();
+        });
+
+        document.body.appendChild( notification );
+
+        // Auto-dismiss after 5 seconds
+        setTimeout( function() {
+            if ( notification.parentNode ) {
+                notification.remove();
+            }
+        }, 5000 );
+    }
+
+    /**
      * Save location to server via background script.
      * @param {Object} locationData - Location data to save.
      * @returns {Promise<Object>} Server response.
@@ -458,7 +550,10 @@
                 if ( response && response.success ) {
                     resolve( response.data );
                 } else {
-                    reject( new Error( response ? response.error : 'No response' ) );
+                    var errorMsg = ( response && response.data && response.data.error )
+                        ? response.data.error
+                        : 'No response';
+                    reject( new Error( errorMsg ) );
                 }
             });
         });

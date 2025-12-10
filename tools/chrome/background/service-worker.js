@@ -64,6 +64,10 @@ TTMessaging.listen( function( message, sender ) {
             return handleGmmLinkMap( message.data );
         case TT.MESSAGE.TYPE_GMM_UNLINK_MAP:
             return handleGmmUnlinkMap( message.data );
+        case TT.MESSAGE.TYPE_SAVE_LOCATION:
+            return handleSaveLocation( message.data );
+        case TT.MESSAGE.TYPE_GET_LOCATION_CATEGORIES:
+            return handleGetLocationCategories();
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -275,7 +279,6 @@ function validateAuthWithServer() {
                     if ( !connectionStartTime ) {
                         connectionStartTime = Date.now();
                     }
-                    // Sync envelope already processed by TTApi.getExtensionStatus()
                     return TTMessaging.createResponse( true, {
                         authorized: true,
                         email: data.email,
@@ -829,6 +832,82 @@ function handleGmmUnlinkMap( data ) {
         .catch( function( error ) {
             return TTMessaging.createResponse( false, {
                 error: error.message
+            });
+        });
+}
+
+// =============================================================================
+// Location Handlers
+// =============================================================================
+
+/**
+ * Handle save location request from GMM content script.
+ * Creates location on server and updates local sync metadata.
+ * @param {Object} data - { gmm_id, title, latitude, longitude, category_slug, subcategory_slug }
+ */
+function handleSaveLocation( data ) {
+    if ( !data || !data.gmm_id || !data.title ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'gmm_id and title are required'
+        }));
+    }
+
+    var tripUuid;
+
+    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
+        .then( function( activeTripUuid ) {
+            if ( !activeTripUuid ) {
+                throw new Error( 'No active trip selected' );
+            }
+            tripUuid = activeTripUuid;
+
+            var locationData = {
+                trip_uuid: tripUuid,
+                gmm_id: data.gmm_id,
+                title: data.title,
+                subcategory_slug: data.subcategory_slug || null
+            };
+
+            // Include coordinates if available
+            if ( data.latitude !== undefined && data.longitude !== undefined ) {
+                locationData.latitude = data.latitude;
+                locationData.longitude = data.longitude;
+            }
+
+            return TTApi.createLocation( locationData );
+        })
+        .then( function( location ) {
+            console.log( '[TT Background] Location saved:', location.uuid );
+
+            // Update local sync metadata
+            return TTLocations.updateMetadataFromLocation( tripUuid, location )
+                .then( function() {
+                    return TTMessaging.createResponse( true, location );
+                });
+        })
+        .catch( function( error ) {
+            console.error( '[TT Background] Save location failed:', error );
+            return TTMessaging.createResponse( false, {
+                error: error.message || 'Failed to save location'
+            });
+        });
+}
+
+/**
+ * Handle get location categories request from content script.
+ * Refreshes config if stale/missing, then returns categories.
+ * @returns {Promise<Object>} Response with categories array.
+ */
+function handleGetLocationCategories() {
+    return TTClientConfig.refreshIfStale()
+        .then( function( config ) {
+            var categories = ( config && config.location_categories ) || [];
+            return TTMessaging.createResponse( true, categories );
+        })
+        .catch( function( error ) {
+            console.error( '[TT Background] Get categories failed:', error );
+            return TTMessaging.createResponse( false, {
+                error: error.message || 'Failed to get categories'
             });
         });
 }

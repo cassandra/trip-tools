@@ -64,7 +64,6 @@ class LocationAdmin(admin.ModelAdmin):
 
     list_display = (
         'title',
-        'user_link',
         'trip_link',
         'gmm_id',
         'version',
@@ -77,12 +76,8 @@ class LocationAdmin(admin.ModelAdmin):
 
     list_filter = ('desirability', 'advanced_booking', 'subcategory__category')
     search_fields = ['title', 'user__email', 'trip__title']
-    readonly_fields = ('created_datetime', 'modified_datetime')
+    readonly_fields = ( 'trip', 'created_datetime', 'modified_datetime')
     inlines = [LocationNoteInline]
-
-    @admin_link('user', 'User')
-    def user_link(self, user):
-        return user.email
 
     @admin_link('trip', 'Trip')
     def trip_link(self, trip):

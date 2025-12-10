@@ -72,6 +72,8 @@ TT.MESSAGE = {
     TYPE_GET_LOCATION: 'tt_getLocation',
     TYPE_UPDATE_LOCATION: 'tt_updateLocation',
     TYPE_DELETE_LOCATION: 'tt_deleteLocation',
+    // Client config (content script <-> background)
+    TYPE_GET_LOCATION_CATEGORIES: 'tt_getLocationCategories',
     // GMM content script commands
     TYPE_GMM_SEARCH_AND_ADD: 'tt_gmmSearchAndAdd',
     TYPE_GMM_GET_MAP_INFO: 'tt_gmmGetMapInfo',
