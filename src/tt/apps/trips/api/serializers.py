@@ -36,17 +36,3 @@ class TripSerializer( serializers.Serializer ):
             F.CREATED_DATETIME: instance.created_datetime.isoformat(),
             F.GMM_MAP_ID: instance.gmm_map_id,
         }
-
-    def update( self, instance: Trip, validated_data: Dict[str, Any] ) -> Trip:
-        """
-        Update Trip instance with validated data.
-        Only updates fields that are present in validated_data.
-        """
-        if 'gmm_map_id' in validated_data:
-            instance.gmm_map_id = validated_data['gmm_map_id']
-        if 'title' in validated_data:
-            instance.title = validated_data['title']
-        if 'description' in validated_data:
-            instance.description = validated_data['description']
-        instance.save()
-        return instance

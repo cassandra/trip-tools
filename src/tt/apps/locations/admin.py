@@ -66,6 +66,7 @@ class LocationAdmin(admin.ModelAdmin):
         'title',
         'user_link',
         'trip_link',
+        'gmm_id',
         'version',
         'subcategory_link',
         'rating',

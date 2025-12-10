@@ -366,3 +366,86 @@ TTApi.processResponse = function( response ) {
             return data;
         });
 };
+
+// =============================================================================
+// Location API Methods
+// =============================================================================
+
+/**
+ * Get locations for a trip.
+ * @param {string} tripUuid - The trip UUID.
+ * @returns {Promise<Array>} Array of location objects.
+ */
+TTApi.getLocations = function( tripUuid ) {
+    var endpoint = TT.CONFIG.API_LOCATIONS_ENDPOINT + '?trip=' + tripUuid;
+    return TTApi.get( endpoint )
+        .then( function( response ) {
+            if ( !response.ok ) {
+                throw new Error( 'Failed to get locations: ' + response.status );
+            }
+            return TTApi.processResponse( response );
+        });
+};
+
+/**
+ * Get a single location by UUID.
+ * @param {string} locationUuid - The location UUID.
+ * @returns {Promise<Object>} Location data.
+ */
+TTApi.getLocation = function( locationUuid ) {
+    var endpoint = TT.CONFIG.API_LOCATIONS_ENDPOINT + locationUuid + '/';
+    return TTApi.get( endpoint )
+        .then( function( response ) {
+            if ( !response.ok ) {
+                throw new Error( 'Failed to get location: ' + response.status );
+            }
+            return TTApi.processResponse( response );
+        });
+};
+
+/**
+ * Create a new location.
+ * @param {Object} locationData - Location data including trip_uuid, title, etc.
+ * @returns {Promise<Object>} Created location data.
+ */
+TTApi.createLocation = function( locationData ) {
+    return TTApi.post( TT.CONFIG.API_LOCATIONS_ENDPOINT, locationData )
+        .then( function( response ) {
+            if ( !response.ok ) {
+                throw new Error( 'Failed to create location: ' + response.status );
+            }
+            return TTApi.processResponse( response );
+        });
+};
+
+/**
+ * Update a location with partial data.
+ * @param {string} locationUuid - The location UUID.
+ * @param {Object} data - The data to update.
+ * @returns {Promise<Object>} Updated location data.
+ */
+TTApi.updateLocation = function( locationUuid, data ) {
+    var endpoint = TT.CONFIG.API_LOCATIONS_ENDPOINT + locationUuid + '/';
+    return TTApi.patch( endpoint, data )
+        .then( function( response ) {
+            if ( !response.ok ) {
+                throw new Error( 'Failed to update location: ' + response.status );
+            }
+            return TTApi.processResponse( response );
+        });
+};
+
+/**
+ * Delete a location.
+ * @param {string} locationUuid - The location UUID.
+ * @returns {Promise<void>} Resolves on success.
+ */
+TTApi.deleteLocation = function( locationUuid ) {
+    var endpoint = TT.CONFIG.API_LOCATIONS_ENDPOINT + locationUuid + '/';
+    return TTApi.delete( endpoint )
+        .then( function( response ) {
+            if ( !response.ok ) {
+                throw new Error( 'Failed to delete location: ' + response.status );
+            }
+        });
+};

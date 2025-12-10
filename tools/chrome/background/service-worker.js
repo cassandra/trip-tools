@@ -9,6 +9,7 @@ importScripts( '../shared/messaging.js' );
 importScripts( '../shared/auth.js' );
 importScripts( '../shared/api.js' );
 importScripts( '../shared/trips.js' );
+importScripts( '../shared/locations.js' );
 importScripts( '../shared/sync.js' );
 importScripts( '../shared/client-config.js' );
 
@@ -372,6 +373,10 @@ function handleDisconnect() {
         .then( function() {
             // Clear trip state
             return TTTrips.clearAll();
+        })
+        .then( function() {
+            // Clear location sync metadata
+            return TTLocations.clearAll();
         })
         .then( function() {
             // Clear client config state

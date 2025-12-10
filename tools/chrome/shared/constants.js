@@ -22,6 +22,7 @@ TT.CONFIG = {
     API_TRIPS_ENDPOINT: '/api/v1/trips/',
     API_EXTENSION_STATUS_ENDPOINT: '/api/v1/extension/status/',
     API_CLIENT_CONFIG_ENDPOINT: '/api/v1/client-config/',
+    API_LOCATIONS_ENDPOINT: '/api/v1/locations/',
     AUTH_VALIDATION_DEBOUNCE_POPUP_MS: 2000,
     AUTH_VALIDATION_TIMEOUT_MS: 5000
 };
@@ -45,7 +46,9 @@ TT.STORAGE = {
     // Client config
     KEY_CLIENT_CONFIG: 'tt_clientConfig',
     KEY_CLIENT_CONFIG_VERSION: 'tt_clientConfigVersion',
-    KEY_CLIENT_CONFIG_STALE: 'tt_clientConfigStale'
+    KEY_CLIENT_CONFIG_STALE: 'tt_clientConfigStale',
+    // Location sync metadata (per-trip)
+    KEY_LOCATION_SYNC_PREFIX: 'tt_locationSync_'
 };
 
 TT.MESSAGE = {

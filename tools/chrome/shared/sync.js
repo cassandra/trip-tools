@@ -87,3 +87,20 @@ TTSync.clearState = function() {
 TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_TRIP, function( versions, deleted ) {
     return TTTrips.syncWorkingSet( versions );
 });
+
+/*
+ * Location sync handler.
+ * Updates location sync metadata for the active trip.
+ * Locations are scoped to trips - only syncs if an active trip is set.
+ * Marks locations as stale when version changes or new locations detected.
+ */
+TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_LOCATION, function( versions, deleted ) {
+    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
+        .then( function( activeTripUuid ) {
+            if ( !activeTripUuid ) {
+                // No active trip - can't store location metadata
+                return;
+            }
+            return TTLocations.syncMetadata( activeTripUuid, versions, deleted );
+        });
+});

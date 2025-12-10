@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from tt.apps.api.views import TtApiView
 from tt.apps.trips.mixins import TripViewMixin
 from tt.apps.trips.models import Trip
+from tt.apps.trips.services import TripService
 
 from .serializers import TripSerializer
 
@@ -51,6 +52,12 @@ class TripItemView( TripViewMixin, TtApiView ):
 
         serializer = TripSerializer( trip_member.trip, data = request.data, partial = True )
         serializer.is_valid( raise_exception = True )
-        serializer.save()
 
-        return Response( serializer.data )
+        trip = TripService.update(
+            trip = trip_member.trip,
+            validated_data = serializer.validated_data,
+        )
+
+        # Re-serialize with updated data
+        output_serializer = TripSerializer( trip )
+        return Response( output_serializer.data )

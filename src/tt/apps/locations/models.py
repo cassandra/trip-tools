@@ -144,6 +144,12 @@ class Location( GeoPointModelMixin, SyncableModel ):
         # Maybe make this data more structured in the future?
         blank = True,
     )
+    gmm_id = models.CharField(
+        max_length = 255,
+        blank = True,
+        null = True,
+        help_text = 'Google My Maps feature ID for extension sync',
+    )
 
     class Meta:
         verbose_name = 'Location'

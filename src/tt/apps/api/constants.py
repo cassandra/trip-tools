@@ -48,8 +48,24 @@ class APIFields:
     # -------------------------------------------------------------------------
     LATITUDE = 'latitude'
     LONGITUDE = 'longitude'
+    ELEVATION_FT = 'elevation_ft'
     SUBCATEGORY_SLUG = 'subcategory_slug'
     TRIP_UUID = 'trip_uuid'
+    GMM_ID = 'gmm_id'
+    MODIFIED_DATETIME = 'modified_datetime'
+    CONTACT_INFO = 'contact_info'
+    RATING = 'rating'
+    DESIRABILITY = 'desirability'
+    ADVANCED_BOOKING = 'advanced_booking'
+    OPEN_DAYS_TIMES = 'open_days_times'
+    LOCATION_NOTES = 'location_notes'
+
+    # -------------------------------------------------------------------------
+    # Location Notes
+    # -------------------------------------------------------------------------
+    TEXT = 'text'
+    SOURCE_LABEL = 'source_label'
+    SOURCE_URL = 'source_url'
 
     # -------------------------------------------------------------------------
     # Client Config / Location Categories

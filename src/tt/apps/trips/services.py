@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User as UserType
@@ -11,6 +11,36 @@ from tt.apps.members.models import TripMember
 from .enums import TripStatus
 from .models import Trip
 from .schemas import JournalOverviewSection, TripCategorizedDisplayData, TripOverviewData
+
+
+class TripService:
+    """
+    Service class for Trip CRUD operations.
+    """
+
+    @classmethod
+    def update(
+        cls,
+        trip: Trip,
+        validated_data: Dict[str, Any],
+    ) -> Trip:
+        """
+        Update a Trip with validated data.
+
+        Args:
+            trip: The Trip instance to update.
+            validated_data: Validated data from serializer (only fields present will be updated).
+
+        Returns:
+            Updated Trip instance.
+        """
+        simple_fields = [ 'title', 'description', 'gmm_map_id' ]
+        for field in simple_fields:
+            if field in validated_data:
+                setattr( trip, field, validated_data[field] )
+
+        trip.save()
+        return trip
 
 
 class TripOverviewBuilder:
