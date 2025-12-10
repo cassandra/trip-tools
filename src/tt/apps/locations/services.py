@@ -6,8 +6,11 @@ separate from the API serializers and views.
 """
 from typing import Any, Dict, List
 
+from django.db import transaction
+
 from tt.apps.trips.models import Trip
 
+from .heuristics import apply_note_heuristics
 from .models import Location, LocationNote, LocationSubCategory
 
 
@@ -73,30 +76,31 @@ class LocationService:
         Returns:
             Updated Location instance.
         """
-        # Handle subcategory if present
-        if 'subcategory_slug' in validated_data:
-            subcategory_slug = validated_data.pop( 'subcategory_slug' )
-            if subcategory_slug:
-                location.subcategory = LocationSubCategory.objects.filter(
-                    slug = subcategory_slug
-                ).first()
-            else:
-                location.subcategory = None
+        with transaction.atomic():
+            # Handle subcategory if present
+            if 'subcategory_slug' in validated_data:
+                subcategory_slug = validated_data.pop( 'subcategory_slug' )
+                if subcategory_slug:
+                    location.subcategory = LocationSubCategory.objects.filter(
+                        slug = subcategory_slug
+                    ).first()
+                else:
+                    location.subcategory = None
 
-        # Update simple fields if present
-        simple_fields = [
-            'title', 'latitude', 'longitude', 'elevation_ft', 'gmm_id',
-            'rating', 'desirability', 'advanced_booking', 'open_days_times',
-        ]
-        for field in simple_fields:
-            if field in validated_data:
-                setattr( location, field, validated_data[field] )
+            # Update simple fields if present
+            simple_fields = [
+                'title', 'latitude', 'longitude', 'elevation_ft', 'gmm_id',
+                'rating', 'desirability', 'advanced_booking', 'open_days_times',
+            ]
+            for field in simple_fields:
+                if field in validated_data:
+                    setattr( location, field, validated_data[field] )
 
-        location.save()
+            location.save()
 
-        # Handle location_notes if present (replace all strategy)
-        if 'location_notes' in validated_data:
-            cls._replace_location_notes( location, validated_data['location_notes'] )
+            # Handle location_notes if present (replace all strategy)
+            if 'location_notes' in validated_data:
+                cls._replace_location_notes( location, validated_data['location_notes'] )
 
         return location
 
@@ -107,10 +111,11 @@ class LocationService:
         notes_data: List[Dict[str, Any]],
     ) -> None:
         """
-        Replace all location notes with new data.
+        Replace all location notes with new data using bulk operations.
 
         Deletes existing notes and creates new ones from the provided data.
-        Empty notes (no text) are filtered out.
+        Empty notes (no text) are filtered out. Source attribution heuristics
+        are applied to each note before creation.
 
         Args:
             location: The Location to update notes for.
@@ -119,18 +124,25 @@ class LocationService:
         # Delete existing notes
         location.location_notes.all().delete()
 
-        # Create new notes, filtering out empty ones
+        # Build note instances with heuristics applied
+        notes_to_create = []
         sort_order = 0
         for note_data in notes_data:
             text = ( note_data.get( 'text' ) or '' ).strip()
             if not text:
                 continue
 
-            LocationNote.objects.create(
+            note = LocationNote(
                 location = location,
                 text = text,
                 source_label = note_data.get( 'source_label' ) or '',
                 source_url = note_data.get( 'source_url' ) or '',
                 sort_order = sort_order,
             )
+            apply_note_heuristics( note )
+            notes_to_create.append( note )
             sort_order += 1
+
+        # Bulk create all notes
+        if notes_to_create:
+            LocationNote.objects.bulk_create( notes_to_create )
