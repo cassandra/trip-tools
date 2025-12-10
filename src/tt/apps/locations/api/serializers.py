@@ -81,6 +81,10 @@ class LocationSerializer( serializers.Serializer ):
         required = False,
         allow_blank = True,
     )
+    location_notes = LocationNoteSerializer(
+        many = True,
+        required = False,
+    )
     version = serializers.IntegerField( read_only = True )
     created_datetime = serializers.DateTimeField( read_only = True )
     modified_datetime = serializers.DateTimeField( read_only = True )

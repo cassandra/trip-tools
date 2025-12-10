@@ -4,11 +4,11 @@ Location service for CRUD operations.
 Handles database operations for Location model, keeping business logic
 separate from the API serializers and views.
 """
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from tt.apps.trips.models import Trip
 
-from .models import Location, LocationSubCategory
+from .models import Location, LocationNote, LocationSubCategory
 
 
 class LocationService:
@@ -93,4 +93,44 @@ class LocationService:
                 setattr( location, field, validated_data[field] )
 
         location.save()
+
+        # Handle location_notes if present (replace all strategy)
+        if 'location_notes' in validated_data:
+            cls._replace_location_notes( location, validated_data['location_notes'] )
+
         return location
+
+    @classmethod
+    def _replace_location_notes(
+        cls,
+        location: Location,
+        notes_data: List[Dict[str, Any]],
+    ) -> None:
+        """
+        Replace all location notes with new data.
+
+        Deletes existing notes and creates new ones from the provided data.
+        Empty notes (no text) are filtered out.
+
+        Args:
+            location: The Location to update notes for.
+            notes_data: List of note dicts with text, source_label, source_url.
+        """
+        # Delete existing notes
+        location.location_notes.all().delete()
+
+        # Create new notes, filtering out empty ones
+        sort_order = 0
+        for note_data in notes_data:
+            text = ( note_data.get( 'text' ) or '' ).strip()
+            if not text:
+                continue
+
+            LocationNote.objects.create(
+                location = location,
+                text = text,
+                source_label = note_data.get( 'source_label' ) or '',
+                source_url = note_data.get( 'source_url' ) or '',
+                sort_order = sort_order,
+            )
+            sort_order += 1

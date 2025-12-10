@@ -633,6 +633,449 @@
         return null;
     }
 
+    // =========================================================================
+    // Location Notes UI Helpers
+    // =========================================================================
+
+    var TT_NOTES_CONTAINER_ID = 'tt-notes-container';
+
+    /**
+     * Extract hostname from URL for compact display.
+     * @param {string} url - Full URL.
+     * @returns {string} Hostname or original URL if parsing fails.
+     */
+    function getHostnameFromUrl( url ) {
+        if ( !url ) {
+            return '';
+        }
+        try {
+            var urlObj = new URL( url );
+            return urlObj.hostname;
+        } catch ( e ) {
+            return url;
+        }
+    }
+
+    /**
+     * Set up auto-grow behavior on a textarea.
+     * @param {HTMLTextAreaElement} textarea - The textarea element.
+     */
+    function setupTextareaAutoGrow( textarea ) {
+        function adjustHeight() {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+        textarea.addEventListener( 'input', adjustHeight );
+        // Initial adjustment
+        adjustHeight();
+    }
+
+    /**
+     * Prevent Enter key from submitting form on single-line inputs.
+     * @param {HTMLInputElement} input - The input element.
+     */
+    function preventEnterSubmit( input ) {
+        input.addEventListener( 'keydown', function( e ) {
+            if ( e.key === 'Enter' ) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    /**
+     * Build a read-only note card for view mode.
+     * @param {Object} note - Note object with text, source_label, source_url.
+     * @returns {Element} The note card element.
+     */
+    function buildReadOnlyNoteCard( note ) {
+        var card = TTDom.createElement( 'div', {
+            className: 'tt-note-card'
+        });
+
+        // Note text
+        var textEl = TTDom.createElement( 'div', {
+            className: 'tt-note-text-display',
+            text: note.text || ''
+        });
+        card.appendChild( textEl );
+
+        // Source line (only if source_label or source_url present)
+        if ( note.source_label || note.source_url ) {
+            var sourceEl = TTDom.createElement( 'div', {
+                className: 'tt-note-source-display'
+            });
+
+            var sourceText = '— ';
+            if ( note.source_label && note.source_url ) {
+                sourceText += note.source_label + ' · ';
+                var link = TTDom.createElement( 'a', {
+                    text: getHostnameFromUrl( note.source_url )
+                });
+                link.href = note.source_url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                sourceEl.appendChild( document.createTextNode( sourceText ) );
+                sourceEl.appendChild( link );
+                sourceEl.appendChild( document.createTextNode( ' ↗' ) );
+            } else if ( note.source_label ) {
+                sourceEl.textContent = sourceText + note.source_label;
+            } else if ( note.source_url ) {
+                var link = TTDom.createElement( 'a', {
+                    text: getHostnameFromUrl( note.source_url )
+                });
+                link.href = note.source_url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                sourceEl.appendChild( document.createTextNode( sourceText ) );
+                sourceEl.appendChild( link );
+                sourceEl.appendChild( document.createTextNode( ' ↗' ) );
+            }
+            card.appendChild( sourceEl );
+        }
+
+        return card;
+    }
+
+    // =========================================================================
+    // Notes Radio Selector UI (Edit Mode)
+    // =========================================================================
+
+    /**
+     * Build truncated preview text for note radio label.
+     * @param {Object} note - Note object with text, source_label.
+     * @returns {string} Preview text for display.
+     */
+    function buildNotePreview( note ) {
+        var preview = '';
+
+        // Prepend source label if exists
+        if ( note.source_label ) {
+            preview = note.source_label + ': ';
+        }
+
+        // Get first line, truncate to ~40 chars
+        var text = ( note.text || '' ).split( '\n' )[0];
+        if ( text.length > 40 ) {
+            text = text.substring( 0, 37 ) + '...';
+        }
+        preview += text;
+
+        return preview || '(empty note)';
+    }
+
+    var TT_DESCRIPTION_OWNER_ATTR = 'data-tt-note-owner';
+
+    /**
+     * Handle note radio selection change.
+     * Saves current description text to its owner, loads newly selected note.
+     * @param {Element} container - The notes selector container.
+     * @param {number} noteIndex - Index of note to select (-1 for New Note).
+     * @param {Element} gmmDescriptionValue - GMM's description contenteditable element.
+     */
+    function selectNoteRadio( container, noteIndex, gmmDescriptionValue ) {
+        // Save current description text to its owner (the note whose content is currently displayed)
+        var ownerAttr = gmmDescriptionValue.getAttribute( TT_DESCRIPTION_OWNER_ATTR );
+        if ( ownerAttr !== null ) {
+            var ownerIndex = parseInt( ownerAttr, 10 );
+            var ownerItem = container.querySelector( '[data-tt-note-index="' + ownerIndex + '"]' );
+            if ( ownerItem ) {
+                var currentText = ( gmmDescriptionValue.innerText || '' ).trim();
+                ownerItem.setAttribute( 'data-tt-note-text', currentText );
+            }
+        }
+
+        // Find and select new item
+        var newItem = container.querySelector( '[data-tt-note-index="' + noteIndex + '"]' );
+        if ( newItem ) {
+            var radio = newItem.querySelector( 'input[type="radio"]' );
+            radio.checked = true;
+
+            // Load selected note's stored text into description
+            var noteText = newItem.getAttribute( 'data-tt-note-text' ) || '';
+            gmmDescriptionValue.innerHTML = noteText.replace( /\n/g, '<br>' );
+
+            // Update description owner to new note
+            gmmDescriptionValue.setAttribute( TT_DESCRIPTION_OWNER_ATTR, String( noteIndex ) );
+
+            gmmDescriptionValue.focus();
+        }
+    }
+
+    /**
+     * Handle delete button click on a note item.
+     * @param {Element} item - The radio item element to delete.
+     * @param {Element} container - The notes selector container.
+     * @param {Element} gmmDescriptionValue - GMM's description contenteditable element.
+     */
+    function deleteNoteItem( item, container, gmmDescriptionValue ) {
+        var wasSelected = item.querySelector( 'input:checked' ) !== null;
+
+        // Remove item from DOM
+        item.remove();
+
+        // If was selected, switch to New Note
+        if ( wasSelected ) {
+            selectNoteRadio( container, -1, gmmDescriptionValue );
+        }
+    }
+
+    /**
+     * Build a radio item for an existing note.
+     * @param {Object} note - Note object with text, source_label, source_url.
+     * @param {number} index - Index of the note in original array.
+     * @param {Element} gmmDescriptionValue - GMM's description contenteditable element.
+     * @param {Element} container - The notes selector container.
+     * @returns {Element} The radio item element.
+     */
+    function buildNoteRadioItem( note, index, gmmDescriptionValue, container ) {
+        var item = TTDom.createElement( 'div', {
+            className: 'tt-note-radio-item'
+        });
+        item.setAttribute( 'data-tt-note-index', index );
+        item.setAttribute( 'data-tt-note-text', note.text || '' );
+
+        // Wrap radio and label in <label> for click-to-select behavior
+        var labelWrapper = TTDom.createElement( 'label', {
+            className: 'tt-note-radio-wrapper'
+        });
+
+        // Radio input
+        var radio = TTDom.createElement( 'input', {
+            className: 'tt-note-radio'
+        });
+        radio.type = 'radio';
+        radio.name = 'tt-note-selector';
+        radio.addEventListener( 'change', function() {
+            if ( radio.checked ) {
+                selectNoteRadio( container, index, gmmDescriptionValue );
+            }
+        });
+        labelWrapper.appendChild( radio );
+
+        // Label text with truncated preview
+        var labelText = TTDom.createElement( 'span', {
+            className: 'tt-note-radio-label',
+            text: buildNotePreview( note )
+        });
+        labelWrapper.appendChild( labelText );
+
+        item.appendChild( labelWrapper );
+
+        // Delete button
+        var deleteBtn = TTDom.createElement( 'button', {
+            className: 'tt-note-delete',
+            text: '×'
+        });
+        deleteBtn.type = 'button';
+        deleteBtn.title = 'Delete note';
+        deleteBtn.addEventListener( 'click', function( e ) {
+            e.preventDefault();
+            deleteNoteItem( item, container, gmmDescriptionValue );
+        });
+        item.appendChild( deleteBtn );
+
+        return item;
+    }
+
+    /**
+     * Build the "New Note" radio item.
+     * @param {Element} gmmDescriptionValue - GMM's description contenteditable element.
+     * @param {Element} container - The notes selector container.
+     * @returns {Element} The radio item element.
+     */
+    function buildNewNoteRadioItem( gmmDescriptionValue, container ) {
+        var item = TTDom.createElement( 'div', {
+            className: 'tt-note-radio-item tt-note-new'
+        });
+        item.setAttribute( 'data-tt-note-index', '-1' );
+        item.setAttribute( 'data-tt-note-text', '' );
+
+        // Wrap radio and label in <label> for click-to-select behavior
+        var labelWrapper = TTDom.createElement( 'label', {
+            className: 'tt-note-radio-wrapper'
+        });
+
+        // Radio input
+        var radio = TTDom.createElement( 'input', {
+            className: 'tt-note-radio'
+        });
+        radio.type = 'radio';
+        radio.name = 'tt-note-selector';
+        radio.addEventListener( 'change', function() {
+            if ( radio.checked ) {
+                selectNoteRadio( container, -1, gmmDescriptionValue );
+            }
+        });
+        labelWrapper.appendChild( radio );
+
+        // Label text
+        var labelText = TTDom.createElement( 'span', {
+            className: 'tt-note-radio-label',
+            text: 'New Note'
+        });
+        labelWrapper.appendChild( labelText );
+
+        item.appendChild( labelWrapper );
+
+        // No delete button for New Note
+
+        return item;
+    }
+
+    /**
+     * Build the note selector UI for edit mode.
+     * @param {Object} location - Location from server with location_notes.
+     * @param {Element} gmmDescriptionValue - GMM's description contenteditable element.
+     * @returns {Element} The notes selector container element.
+     */
+    function buildNoteSelectorUI( location, gmmDescriptionValue ) {
+        var container = TTDom.createElement( 'div', {
+            id: TT_NOTES_CONTAINER_ID,
+            className: 'tt-note-selector'
+        });
+
+        // Store original notes for source_label/source_url preservation on save
+        var notes = location.location_notes || [];
+        container.setAttribute( 'data-tt-original-notes', JSON.stringify( notes ) );
+
+        // Build radio items for existing notes
+        notes.forEach( function( note, index ) {
+            var item = buildNoteRadioItem( note, index, gmmDescriptionValue, container );
+            container.appendChild( item );
+        });
+
+        // Build "New Note" radio item (always last, always exists)
+        var newNoteItem = buildNewNoteRadioItem( gmmDescriptionValue, container );
+        container.appendChild( newNoteItem );
+
+        // Select "New Note" by default
+        var newNoteRadio = newNoteItem.querySelector( 'input[type="radio"]' );
+        newNoteRadio.checked = true;
+
+        // Set description owner to "New Note" (-1)
+        // Description already cleared by caller
+        gmmDescriptionValue.setAttribute( TT_DESCRIPTION_OWNER_ATTR, '-1' );
+
+        return container;
+    }
+
+    /**
+     * Flatten notes array to text for GMM description field.
+     * Format: Note text, then source line, then separator between notes.
+     * @param {Array} notes - Array of note objects.
+     * @returns {string} Flattened text.
+     */
+    function flattenNotesToDescription( notes ) {
+        var parts = [];
+        notes.forEach( function( note ) {
+            var text = note.text || '';
+            if ( !text.trim() ) {
+                return;
+            }
+
+            var notePart = text;
+
+            // Add source line if present
+            if ( note.source_label || note.source_url ) {
+                notePart += '\n— ';
+                if ( note.source_label && note.source_url ) {
+                    notePart += note.source_label + ' (' + note.source_url + ')';
+                } else if ( note.source_label ) {
+                    notePart += note.source_label;
+                } else {
+                    notePart += note.source_url;
+                }
+            }
+
+            parts.push( notePart );
+        });
+        return parts.join( '\n-----\n' );
+    }
+
+    /**
+     * Build the notes UI section for view mode (read-only).
+     * @param {Object} location - Location from server with location_notes.
+     * @returns {Element} The notes container element.
+     */
+    function buildNotesUI( location ) {
+        var container = TTDom.createElement( 'div', {
+            id: TT_NOTES_CONTAINER_ID,
+            className: 'tt-notes-container'
+        });
+
+        var notes = location.location_notes || [];
+
+        // View mode: show read-only cards
+        notes.forEach( function( note ) {
+            container.appendChild( buildReadOnlyNoteCard( note ) );
+        });
+
+        return container;
+    }
+
+    /**
+     * Collect final notes array from radio selector DOM state.
+     * @param {Element} gmmDescriptionValue - GMM's description contenteditable element.
+     * @param {Element} notesContainer - The notes selector container (may be null).
+     * @returns {Array} Final notes array to save.
+     */
+    function collectNoteChanges( gmmDescriptionValue, notesContainer ) {
+        var finalNotes = [];
+
+        // If no notes container, just handle description as single note
+        if ( !notesContainer ) {
+            var text = ( gmmDescriptionValue.innerText || '' ).trim();
+            if ( text ) {
+                finalNotes.push({ text: text, source_label: '', source_url: '' });
+            }
+            return finalNotes;
+        }
+
+        // Save current description to its owner (the note whose content is displayed)
+        var ownerAttr = gmmDescriptionValue.getAttribute( TT_DESCRIPTION_OWNER_ATTR );
+        if ( ownerAttr !== null ) {
+            var ownerIndex = parseInt( ownerAttr, 10 );
+            var ownerItem = notesContainer.querySelector( '[data-tt-note-index="' + ownerIndex + '"]' );
+            if ( ownerItem ) {
+                var currentText = ( gmmDescriptionValue.innerText || '' ).trim();
+                ownerItem.setAttribute( 'data-tt-note-text', currentText );
+            }
+        }
+
+        // Get original notes for source_label/source_url preservation
+        var originalNotes = [];
+        try {
+            originalNotes = JSON.parse( notesContainer.getAttribute( 'data-tt-original-notes' ) || '[]' );
+        } catch ( e ) {
+            // Ignore parse errors
+        }
+
+        // Iterate all radio items, collect non-empty notes
+        var items = notesContainer.querySelectorAll( '.tt-note-radio-item' );
+        items.forEach( function( item ) {
+            var text = ( item.getAttribute( 'data-tt-note-text' ) || '' ).trim();
+            if ( !text ) {
+                return; // Skip empty notes
+            }
+
+            var index = parseInt( item.getAttribute( 'data-tt-note-index' ), 10 );
+
+            if ( index >= 0 && originalNotes[index] ) {
+                // Existing note - preserve source info, update text
+                finalNotes.push({
+                    text: text,
+                    source_label: originalNotes[index].source_label || '',
+                    source_url: originalNotes[index].source_url || ''
+                });
+            } else {
+                // New note (index -1)
+                finalNotes.push({ text: text, source_label: '', source_url: '' });
+            }
+        });
+
+        return finalNotes;
+    }
+
     /**
      * Send location update to server via background.
      * @param {string} locationUuid - Location UUID.
@@ -659,11 +1102,12 @@
     }
 
     /**
-     * Intercept GMM save button to capture custom attribute values.
+     * Intercept GMM save button to capture custom attribute values and notes.
      * @param {Element} dialogNode - The dialog element.
-     * @param {Object} location - Location object with uuid.
+     * @param {Object} location - Location object with uuid and location_notes.
+     * @param {Element} gmmDescriptionValue - GMM's description contenteditable element.
      */
-    function interceptSaveButton( dialogNode, location ) {
+    function interceptSaveButton( dialogNode, location, gmmDescriptionValue ) {
         var saveButton = dialogNode.querySelector( TTGmmAdapter.selectors.EDIT_SAVE_BUTTON );
         if ( !saveButton || saveButton.hasAttribute( TT_INTERCEPTED_ATTR ) ) {
             return;
@@ -680,11 +1124,27 @@
             var desirabilitySelect = container.querySelector( '#tt-attr-desirability' );
             var advancedBookingSelect = container.querySelector( '#tt-attr-advanced-booking' );
 
+            // Collect notes from radio selector state
+            var notesContainer = document.getElementById( TT_NOTES_CONTAINER_ID );
+            var locationNotes = [];
+
+            if ( gmmDescriptionValue ) {
+                locationNotes = collectNoteChanges( gmmDescriptionValue, notesContainer );
+            }
+
             var updates = {
                 subcategory_slug: categorySelect ? ( categorySelect.value || null ) : null,
                 desirability: desirabilitySelect ? ( desirabilitySelect.value || null ) : null,
-                advanced_booking: advancedBookingSelect ? ( advancedBookingSelect.value || null ) : null
+                advanced_booking: advancedBookingSelect ? ( advancedBookingSelect.value || null ) : null,
+                location_notes: locationNotes
             };
+
+            // Write flattened notes to GMM description for native storage sync
+            // Convert \n to <br> for contenteditable
+            if ( gmmDescriptionValue && locationNotes.length > 0 ) {
+                var flattenedDescription = flattenNotesToDescription( locationNotes );
+                gmmDescriptionValue.innerHTML = flattenedDescription.replace( /\n/g, '<br>' );
+            }
 
             updateLocationOnServer( location.uuid, updates );
             // Don't prevent default - let GMM save proceed
@@ -705,17 +1165,27 @@
             existing.remove();
         }
 
-        // Find title div to insert after
+        // Remove any existing notes container
+        var existingNotes = document.getElementById( TT_NOTES_CONTAINER_ID );
+        if ( existingNotes ) {
+            existingNotes.remove();
+        }
+
+        // Find title div to insert after (for attribute dropdowns)
         var titleDiv = dialogNode.querySelector( TTGmmAdapter.selectors.TITLE_DIV );
         if ( !titleDiv ) {
             console.warn( '[TT GMM] Could not find title div for custom attributes' );
             return;
         }
 
-        // Get notes container for hiding in edit mode
-        var notesContainer = dialogNode.querySelector( TTGmmAdapter.selectors.NOTES_CONTAINER );
+        // Get GMM notes container - we'll insert our notes near it
+        var gmmNotesContainer = dialogNode.querySelector( TTGmmAdapter.selectors.NOTES_CONTAINER );
 
-        // Create container
+        // Get #map-infowindow-content - GMM's keyboard handlers likely check if
+        // events originate from within this container
+        var gmmContentContainer = dialogNode.querySelector( '#map-infowindow-content' );
+
+        // Create container for attributes (dropdowns go after title)
         var container = TTDom.createElement( 'div', {
             id: TT_CUSTOM_ATTRS_CONTAINER_ID,
             className: 'tt-custom-attrs'
@@ -726,10 +1196,11 @@
         var advancedBookingTypes = config.advanced_booking_type || [];
 
         if ( isEditMode ) {
-            // Edit mode: show dropdowns, hide description
-            if ( notesContainer ) {
-                notesContainer.style.display = 'none';
-            }
+            // Edit mode: show dropdowns
+            // Find GMM's contenteditable description div - we'll embed our notes UI inside it
+            // so it inherits GMM's keyboard handler protection
+            var gmmDescriptionValue = gmmNotesContainer ?
+                gmmNotesContainer.querySelector( '#map-infowindow-attr-description-value' ) : null;
 
             // Category dropdown
             var categoryOptions = buildCategoryOptions( categories );
@@ -759,13 +1230,35 @@
             );
             container.appendChild( advancedBookingDropdown );
 
+            // Insert attribute dropdowns after title
+            titleDiv.parentNode.insertBefore( container, titleDiv.nextSibling );
+
+            // Clear GMM description on edit start (we manage notes separately)
+            if ( gmmDescriptionValue ) {
+                gmmDescriptionValue.innerHTML = '';
+            }
+
+            // Build note selector UI for edit mode
+            // Always show selector (includes "New Note" option even with no existing notes)
+            if ( gmmDescriptionValue ) {
+                var notesUI = buildNoteSelectorUI( location, gmmDescriptionValue );
+                // Insert before the GMM description so selector appears above edit area
+                if ( gmmDescriptionValue.parentNode ) {
+                    gmmDescriptionValue.parentNode.insertBefore( notesUI, gmmDescriptionValue );
+                } else if ( gmmNotesContainer ) {
+                    gmmNotesContainer.insertBefore( notesUI, gmmNotesContainer.firstChild );
+                } else {
+                    container.appendChild( notesUI );
+                }
+            }
+
             // Set up save button interception
-            interceptSaveButton( dialogNode, location );
+            interceptSaveButton( dialogNode, location, gmmDescriptionValue );
 
         } else {
-            // Read-only mode: show values, keep description visible
-            if ( notesContainer ) {
-                notesContainer.style.display = '';
+            // Read-only mode: show values, hide GMM description (we show our notes instead)
+            if ( gmmNotesContainer ) {
+                gmmNotesContainer.style.display = 'none';
             }
 
             // Category
@@ -786,14 +1279,21 @@
                 container.appendChild( buildReadOnlyField( 'Advanced Booking', advancedBookingLabel ) );
             }
 
-            // If no attributes to show, don't add empty container
+            // Add notes section (read-only) - only if there are notes
+            var notes = location.location_notes || [];
+            if ( notes.length > 0 ) {
+                var notesUI = buildNotesUI( location );
+                container.appendChild( notesUI );
+            }
+
+            // If no attributes and no notes to show, don't add empty container
             if ( container.children.length === 0 ) {
                 return;
             }
-        }
 
-        // Insert after title div
-        titleDiv.parentNode.insertBefore( container, titleDiv.nextSibling );
+            // Insert after title div
+            titleDiv.parentNode.insertBefore( container, titleDiv.nextSibling );
+        }
     }
 
     // =========================================================================
