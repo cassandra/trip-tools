@@ -77,3 +77,12 @@ class APIFields:
     SUBCATEGORIES = 'subcategories'
     LOCATION_CATEGORIES = 'location_categories'
     CONFIG_VERSION = 'config_version'
+
+    # -------------------------------------------------------------------------
+    # Enum type definitions (for client config)
+    # -------------------------------------------------------------------------
+    SERVER_VERSION = 'server_version'
+    DESIRABILITY_TYPE = 'desirability_type'
+    ADVANCED_BOOKING_TYPE = 'advanced_booking_type'
+    VALUE = 'value'
+    LABEL = 'label'

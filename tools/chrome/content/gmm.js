@@ -576,10 +576,13 @@
                 }
                 if ( response && response.success ) {
                     resolve( response.data );
-                } else if ( response && !response.success && response.notFound ) {
+                } else if ( response && response.data && response.data.notFound ) {
                     resolve( null );
                 } else {
-                    reject( new Error( response ? response.error : 'No response' ) );
+                    var errorMsg = ( response && response.data && response.data.error )
+                        ? response.data.error
+                        : 'No response';
+                    reject( new Error( errorMsg ) );
                 }
             });
         });

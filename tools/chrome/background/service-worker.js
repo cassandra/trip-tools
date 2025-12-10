@@ -66,6 +66,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleGmmUnlinkMap( message.data );
         case TT.MESSAGE.TYPE_SAVE_LOCATION:
             return handleSaveLocation( message.data );
+        case TT.MESSAGE.TYPE_GET_LOCATION:
+            return handleGetLocation( message.data );
         case TT.MESSAGE.TYPE_GET_LOCATION_CATEGORIES:
             return handleGetLocationCategories();
         default:
@@ -889,6 +891,50 @@ function handleSaveLocation( data ) {
             console.error( '[TT Background] Save location failed:', error );
             return TTMessaging.createResponse( false, {
                 error: error.message || 'Failed to save location'
+            });
+        });
+}
+
+/**
+ * Handle get location request from content script.
+ * Looks up UUID by gmm_id, then fetches location from server.
+ * @param {Object} data - { gmm_id }
+ * @returns {Promise<Object>} Response with location data or notFound flag.
+ */
+function handleGetLocation( data ) {
+    if ( !data || !data.gmm_id ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'gmm_id is required'
+        }));
+    }
+
+    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
+        .then( function( tripUuid ) {
+            if ( !tripUuid ) {
+                return TTMessaging.createResponse( false, {
+                    error: 'No active trip selected',
+                    notFound: true
+                });
+            }
+
+            return TTLocations.getUuidByGmmId( tripUuid, data.gmm_id )
+                .then( function( locationUuid ) {
+                    if ( !locationUuid ) {
+                        return TTMessaging.createResponse( false, {
+                            notFound: true
+                        });
+                    }
+
+                    return TTApi.getLocation( locationUuid )
+                        .then( function( location ) {
+                            return TTMessaging.createResponse( true, location );
+                        });
+                });
+        })
+        .catch( function( error ) {
+            console.error( '[TT Background] Get location failed:', error );
+            return TTMessaging.createResponse( false, {
+                error: error.message || 'Failed to get location'
             });
         });
 }

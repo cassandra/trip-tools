@@ -8,9 +8,13 @@ efficient caching and signal-based invalidation.
 import hashlib
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
+from django.conf import settings
+
+from tt.apps.api.constants import APIFields as F
 from tt.apps.common.redis_client import get_redis_client
+from tt.apps.locations.enums import AdvancedBookingType, DesirabilityType
 from tt.apps.locations.models import LocationCategory
 
 from .api.serializers import ClientConfigSerializer
@@ -127,6 +131,21 @@ class ClientConfigService:
         return None
 
     @classmethod
+    def _build_enum_type_list(cls, enum_class) -> List[Dict[str, str]]:
+        """
+        Build a list of enum value/label pairs with lowercase values.
+
+        Uses str() on enum items to get lowercase value names.
+
+        Returns:
+            List of dicts with 'value' and 'label' keys
+        """
+        return [
+            {F.VALUE: str(item), F.LABEL: item.label}
+            for item in enum_class
+        ]
+
+    @classmethod
     def _build_and_cache_config(cls) -> Dict[str, Any]:
         """
         Build config from database, serialize it, and cache.
@@ -140,22 +159,23 @@ class ClientConfigService:
         categories = list(LocationCategory.objects.order_by('name'))
         client_config = ClientConfig(
             version='',  # Placeholder - computed after serialization
+            server_version=settings.ENV.VERSION,
             location_categories=categories,
+            desirability_type=cls._build_enum_type_list(DesirabilityType),
+            advanced_booking_type=cls._build_enum_type_list(AdvancedBookingType),
         )
 
         # Serialize using ClientConfigSerializer
         serialized = ClientConfigSerializer(client_config).data
 
-        # Compute version hash from serialized location_categories
+        # Compute version hash from all serialized content (excluding version itself)
         # Use sort_keys=True for stable ordering
-        categories_json = json.dumps(
-            serialized['location_categories'],
-            sort_keys=True
-        )
-        version = hashlib.md5(categories_json.encode('utf-8')).hexdigest()
+        hash_content = {k: v for k, v in serialized.items() if k != F.VERSION}
+        content_json = json.dumps(hash_content, sort_keys=True)
+        version = hashlib.md5(content_json.encode('utf-8')).hexdigest()
 
         # Update version in serialized output
-        serialized['version'] = version
+        serialized[F.VERSION] = version
 
         # Cache the result
         cls._cache_payload(serialized, version)

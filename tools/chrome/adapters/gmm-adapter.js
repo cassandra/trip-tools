@@ -147,15 +147,39 @@ var TTGmmAdapter = TTSiteAdapter.create({
 
         /**
          * Get or create layer by title.
+         * If an empty "Untitled layer" exists, repurposes it instead of creating new.
          * @param {string} title - Layer title.
          * @returns {Promise<Object>} Layer info.
          */
         getOrCreateLayer: function( title ) {
+            var self = this;
             var existing = this.findLayerByTitle( title );
             if ( existing ) {
                 return Promise.resolve( existing );
             }
+
+            // Check for empty default layer to repurpose
+            var untitledLayer = this.findLayerByTitle( TT.CONFIG.GMM_DEFAULT_LAYER_NAME );
+            if ( untitledLayer && this._isLayerEmpty( untitledLayer ) ) {
+                this.log( 'Repurposing empty default layer as: ' + title );
+                return this._renameLayer( untitledLayer, title );
+            }
+
             return this.createLayer( title );
+        },
+
+        /**
+         * Check if a layer has no location items.
+         * @private
+         * @param {Object} layer - Layer info from getLayers().
+         * @returns {boolean} True if layer is empty.
+         */
+        _isLayerEmpty: function( layer ) {
+            if ( !layer || !layer.node ) {
+                return false;
+            }
+            var locationItems = layer.node.querySelectorAll( this.selectors.LOCATION_ITEM );
+            return locationItems.length === 0;
         },
 
         /**

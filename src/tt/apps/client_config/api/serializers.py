@@ -62,7 +62,10 @@ class ClientConfigSerializer(serializers.Serializer):
     def to_representation(self, instance: ClientConfig) -> Dict[str, Any]:
         return {
             F.VERSION: instance.version,
+            F.SERVER_VERSION: instance.server_version,
             F.LOCATION_CATEGORIES: LocationCategorySerializer(
                 instance.location_categories, many=True
             ).data,
+            F.DESIRABILITY_TYPE: instance.desirability_type,
+            F.ADVANCED_BOOKING_TYPE: instance.advanced_booking_type,
         }

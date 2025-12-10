@@ -24,7 +24,9 @@ TT.CONFIG = {
     API_CLIENT_CONFIG_ENDPOINT: '/api/v1/client-config/',
     API_LOCATIONS_ENDPOINT: '/api/v1/locations/',
     AUTH_VALIDATION_DEBOUNCE_POPUP_MS: 2000,
-    AUTH_VALIDATION_TIMEOUT_MS: 5000
+    AUTH_VALIDATION_TIMEOUT_MS: 5000,
+    // Google My Maps default layer name (used for repurposing empty layers)
+    GMM_DEFAULT_LAYER_NAME: 'Untitled layer'
 };
 
 TT.STORAGE = {
