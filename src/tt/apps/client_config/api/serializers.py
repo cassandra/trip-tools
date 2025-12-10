@@ -61,7 +61,7 @@ class ClientConfigSerializer(serializers.Serializer):
 
     def to_representation(self, instance: ClientConfig) -> Dict[str, Any]:
         return {
-            F.VERSION: instance.version,
+            F.CONFIG_VERSION: instance.config_version,
             F.SERVER_VERSION: instance.server_version,
             F.LOCATION_CATEGORIES: LocationCategorySerializer(
                 instance.location_categories, many=True

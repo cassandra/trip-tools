@@ -49,7 +49,7 @@ class ClientConfigService:
         serializes, and caches it.
 
         Returns:
-            Dict with 'version' and 'location_categories' keys, ready for API response
+            Dict with 'config_version' and 'location_categories' keys, ready for API response
         """
         # Try cache first
         cached = cls._get_cached_payload()
@@ -77,13 +77,13 @@ class ClientConfigService:
                 cached_version = redis_client.get(cls.CACHE_KEY_VERSION)
                 if cached_version:
                     logger.debug("Cache hit for config version")
-                    return cached_version.decode('utf-8')
+                    return cached_version  # Already a string (decode_responses=True)
         except Exception as e:
             logger.warning(f"Redis error getting config version: {e}")
 
         # Cache miss - need to build full config to get version
         config = cls._build_and_cache_config()
-        return config['version']
+        return config[F.CONFIG_VERSION]
 
     @classmethod
     def invalidate_cache(cls) -> None:
@@ -158,7 +158,7 @@ class ClientConfigService:
         # Build typed ClientConfig with model instances
         categories = list(LocationCategory.objects.order_by('name'))
         client_config = ClientConfig(
-            version='',  # Placeholder - computed after serialization
+            config_version='',  # Placeholder - computed after serialization
             server_version=settings.ENV.VERSION,
             location_categories=categories,
             desirability_type=cls._build_enum_type_list(DesirabilityType),
@@ -170,12 +170,12 @@ class ClientConfigService:
 
         # Compute version hash from all serialized content (excluding version itself)
         # Use sort_keys=True for stable ordering
-        hash_content = {k: v for k, v in serialized.items() if k != F.VERSION}
+        hash_content = {k: v for k, v in serialized.items() if k != F.CONFIG_VERSION}
         content_json = json.dumps(hash_content, sort_keys=True)
         version = hashlib.md5(content_json.encode('utf-8')).hexdigest()
 
         # Update version in serialized output
-        serialized[F.VERSION] = version
+        serialized[F.CONFIG_VERSION] = version
 
         # Cache the result
         cls._cache_payload(serialized, version)

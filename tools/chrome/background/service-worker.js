@@ -68,6 +68,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleSaveLocation( message.data );
         case TT.MESSAGE.TYPE_GET_LOCATION:
             return handleGetLocation( message.data );
+        case TT.MESSAGE.TYPE_UPDATE_LOCATION:
+            return handleUpdateLocation( message.data );
         case TT.MESSAGE.TYPE_GET_LOCATION_CATEGORIES:
             return handleGetLocationCategories();
         default:
@@ -940,15 +942,56 @@ function handleGetLocation( data ) {
 }
 
 /**
+ * Handle update location request from content script.
+ * Updates location on server with provided data.
+ * @param {Object} data - { uuid, updates }
+ * @returns {Promise<Object>} Response with updated location.
+ */
+function handleUpdateLocation( data ) {
+    if ( !data || !data.uuid || !data.updates ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'uuid and updates are required'
+        }));
+    }
+
+    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
+        .then( function( tripUuid ) {
+            if ( !tripUuid ) {
+                throw new Error( 'No active trip selected' );
+            }
+
+            return TTApi.updateLocation( data.uuid, data.updates )
+                .then( function( location ) {
+                    console.log( '[TT Background] Location updated:', location.uuid );
+
+                    // Update local sync metadata
+                    return TTLocations.updateMetadataFromLocation( tripUuid, location )
+                        .then( function() {
+                            return TTMessaging.createResponse( true, location );
+                        });
+                });
+        })
+        .catch( function( error ) {
+            console.error( '[TT Background] Update location failed:', error );
+            return TTMessaging.createResponse( false, {
+                error: error.message || 'Failed to update location'
+            });
+        });
+}
+
+/**
  * Handle get location categories request from content script.
- * Refreshes config if stale/missing, then returns categories.
- * @returns {Promise<Object>} Response with categories array.
+ * Refreshes config if stale/missing, then returns categories and enum types.
+ * @returns {Promise<Object>} Response with categories and enum type arrays.
  */
 function handleGetLocationCategories() {
     return TTClientConfig.refreshIfStale()
         .then( function( config ) {
-            var categories = ( config && config.location_categories ) || [];
-            return TTMessaging.createResponse( true, categories );
+            return TTMessaging.createResponse( true, {
+                location_categories: ( config && config.location_categories ) || [],
+                desirability_type: ( config && config.desirability_type ) || [],
+                advanced_booking_type: ( config && config.advanced_booking_type ) || []
+            });
         })
         .catch( function( error ) {
             console.error( '[TT Background] Get categories failed:', error );

@@ -16,7 +16,7 @@ class ClientConfig:
     """
     Complete client configuration with version hash.
 
-    The version is an MD5 hash of the serialized config content,
+    The config_version is an MD5 hash of the serialized config content,
     used for efficient sync detection by clients.
 
     The location_categories is a List (not QuerySet) to ensure the data is
@@ -29,7 +29,7 @@ class ClientConfig:
     is updated, even if database content hasn't changed.
     """
 
-    version: str
+    config_version: str
     server_version: str
     location_categories: List[LocationCategory]
     desirability_type: List[Dict[str, str]] = field(default_factory=list)

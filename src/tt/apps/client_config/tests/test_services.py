@@ -84,12 +84,12 @@ class ClientConfigServiceTestCase(TestCase):
     # -------------------------------------------------------------------------
 
     def test_get_config_serialized_returns_correct_structure(self):
-        """Test get_config_serialized returns dict with version and location_categories."""
+        """Test get_config_serialized returns dict with config_version and location_categories."""
         config = ClientConfigService.get_config_serialized()
 
-        self.assertIn(F.VERSION, config)
+        self.assertIn(F.CONFIG_VERSION, config)
         self.assertIn(F.LOCATION_CATEGORIES, config)
-        self.assertIsInstance(config[F.VERSION], str)
+        self.assertIsInstance(config[F.CONFIG_VERSION], str)
         self.assertIsInstance(config[F.LOCATION_CATEGORIES], list)
 
     def test_get_config_serialized_categories_sorted_alphabetically(self):
@@ -153,9 +153,9 @@ class ClientConfigServiceTestCase(TestCase):
     # -------------------------------------------------------------------------
 
     def test_version_is_md5_hash(self):
-        """Test version is a valid MD5 hash (32 hex characters)."""
+        """Test config_version is a valid MD5 hash (32 hex characters)."""
         config = ClientConfigService.get_config_serialized()
-        version = config[F.VERSION]
+        version = config[F.CONFIG_VERSION]
 
         self.assertEqual(len(version), 32)
         self.assertTrue(all(c in '0123456789abcdef' for c in version))
@@ -168,12 +168,12 @@ class ClientConfigServiceTestCase(TestCase):
         ClientConfigService.invalidate_cache()
         config2 = ClientConfigService.get_config_serialized()
 
-        self.assertEqual(config1[F.VERSION], config2[F.VERSION])
+        self.assertEqual(config1[F.CONFIG_VERSION], config2[F.CONFIG_VERSION])
 
     def test_version_changes_when_data_changes(self):
-        """Test version changes when category data changes."""
+        """Test config_version changes when category data changes."""
         config1 = ClientConfigService.get_config_serialized()
-        version1 = config1[F.VERSION]
+        version1 = config1[F.CONFIG_VERSION]
 
         # Change a category
         original_name = self.dining.name
@@ -182,7 +182,7 @@ class ClientConfigServiceTestCase(TestCase):
 
         ClientConfigService.invalidate_cache()
         config2 = ClientConfigService.get_config_serialized()
-        version2 = config2[F.VERSION]
+        version2 = config2[F.CONFIG_VERSION]
 
         self.assertNotEqual(version1, version2)
 
@@ -191,11 +191,11 @@ class ClientConfigServiceTestCase(TestCase):
         self.dining.save()
 
     def test_get_version_returns_same_as_config_serialized_version(self):
-        """Test get_version() returns same value as get_config_serialized()[version]."""
+        """Test get_version() returns same value as get_config_serialized()[config_version]."""
         config = ClientConfigService.get_config_serialized()
         version = ClientConfigService.get_version()
 
-        self.assertEqual(version, config[F.VERSION])
+        self.assertEqual(version, config[F.CONFIG_VERSION])
 
     # -------------------------------------------------------------------------
     # Caching Tests
@@ -241,7 +241,7 @@ class ClientConfigServiceTestCase(TestCase):
             # Should still return valid config
             config = ClientConfigService.get_config_serialized()
 
-            self.assertIn(F.VERSION, config)
+            self.assertIn(F.CONFIG_VERSION, config)
             self.assertIn(F.LOCATION_CATEGORIES, config)
 
     def test_get_version_works_without_redis(self):

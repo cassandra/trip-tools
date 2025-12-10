@@ -94,7 +94,7 @@ TTClientConfig.refresh = function() {
         .then( function( config ) {
             return Promise.all([
                 TTClientConfig.setConfig( config ),
-                TTClientConfig.setVersion( config.version ),
+                TTClientConfig.setVersion( config.config_version ),
                 TTClientConfig.clearStale()
             ]).then( function() {
                 return config;

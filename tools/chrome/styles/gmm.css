@@ -101,6 +101,15 @@
  * Custom Attributes UI
  * ============================================================================= */
 
+/* Container for custom attributes in info dialog */
+.tt-custom-attrs {
+    margin: 12px 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e8eaed;
+}
+
 .tt-attributes-container {
     margin-top: 12px;
     padding-top: 12px;
@@ -111,26 +120,42 @@
     margin-bottom: 12px;
 }
 
+.tt-attribute-group:last-child {
+    margin-bottom: 0;
+}
+
 .tt-attribute-label {
-    font-size: 12px;
+    display: block;
+    font-size: 11px;
     font-weight: 500;
     color: #5f6368;
     margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 .tt-attribute-value {
+    display: block;
     font-size: 13px;
     color: #202124;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
 .tt-attribute-select {
     width: 100%;
-    padding: 8px;
+    padding: 8px 12px;
     border: 1px solid #dadce0;
     border-radius: 4px;
-    font-size: 13px;
-    font-family: Roboto, Arial, sans-serif;
+    font-size: 14px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    background: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.tt-attribute-select:hover {
+    border-color: #1a73e8;
 }
 
 .tt-attribute-textarea {
@@ -142,6 +167,7 @@
     font-family: Roboto, Arial, sans-serif;
     resize: vertical;
     min-height: 60px;
+    box-sizing: border-box;
 }
 
 .tt-attribute-select:focus,

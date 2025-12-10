@@ -42,10 +42,11 @@
     // =========================================================================
 
     /**
-     * Request location categories from service worker.
-     * @returns {Promise<Array>} Array of category objects.
+     * Request full client config from service worker.
+     * Includes categories and enum type definitions.
+     * @returns {Promise<Object>} Config with location_categories, desirability_type, advanced_booking_type.
      */
-    function getLocationCategories() {
+    function getClientConfig() {
         return new Promise( function( resolve, reject ) {
             chrome.runtime.sendMessage({
                 type: TT.MESSAGE.TYPE_GET_LOCATION_CATEGORIES
@@ -55,12 +56,23 @@
                     return;
                 }
                 if ( response && response.success ) {
-                    resolve( response.data || [] );
+                    resolve( response.data || {} );
                 } else {
                     reject( new Error( response ? response.error : 'No response' ) );
                 }
             });
         });
+    }
+
+    /**
+     * Request location categories from service worker.
+     * @returns {Promise<Array>} Array of category objects.
+     */
+    function getLocationCategories() {
+        return getClientConfig()
+            .then( function( config ) {
+                return config.location_categories || [];
+            });
     }
 
     /**
@@ -455,29 +467,333 @@
      * @param {Object} location - Location from server.
      */
     function decorateLocationDetails( dialogNode, location ) {
-        var isEditMode = TTGmmAdapter.isEditMode();
-
-        // Get category definition for custom attributes
-        getCategoryBySlug( location.category_slug )
-            .then( function( category ) {
-                if ( category ) {
-                    addCustomAttributeUI( dialogNode, location, category, isEditMode );
+        // Get full client config for categories and enum types
+        getClientConfig()
+            .then( function( config ) {
+                // Render UI for current mode
+                function renderUI() {
+                    var isEditMode = TTGmmAdapter.isEditMode();
+                    addCustomAttributeUI( dialogNode, location, config, isEditMode );
                 }
+
+                renderUI();
+
+                // Watch for edit mode changes via contenteditable attribute
+                var titleNode = dialogNode.querySelector( TTGmmAdapter.selectors.TITLE_DIV );
+                if ( titleNode ) {
+                    var observer = new MutationObserver( function( mutations ) {
+                        mutations.forEach( function( mutation ) {
+                            if ( mutation.attributeName === 'contenteditable' ) {
+                                renderUI();
+                            }
+                        });
+                    });
+                    observer.observe( titleNode, { attributes: true } );
+                }
+            })
+            .catch( function( error ) {
+                console.error( '[TT GMM] Failed to get client config:', error );
             });
+    }
+
+    // =========================================================================
+    // Custom Attributes UI Helpers
+    // =========================================================================
+
+    var TT_CUSTOM_ATTRS_CONTAINER_ID = 'tt-custom-attrs-container';
+    var TT_INTERCEPTED_ATTR = 'data-tt-intercepted';
+
+    /**
+     * Build a dropdown select element.
+     * @param {string} id - Element ID.
+     * @param {string} label - Label text.
+     * @param {Array} options - Array of {value, label} objects.
+     * @param {string} currentValue - Currently selected value.
+     * @returns {Element} The dropdown group element.
+     */
+    function buildDropdown( id, label, options, currentValue ) {
+        var group = TTDom.createElement( 'div', {
+            className: 'tt-attribute-group'
+        });
+
+        var labelEl = TTDom.createElement( 'label', {
+            className: 'tt-attribute-label',
+            text: label
+        });
+        labelEl.setAttribute( 'for', id );
+
+        var select = TTDom.createElement( 'select', {
+            id: id,
+            className: 'tt-attribute-select'
+        });
+
+        // Add empty option
+        var emptyOption = TTDom.createElement( 'option', {
+            text: '-- Select --'
+        });
+        emptyOption.value = '';
+        select.appendChild( emptyOption );
+
+        // Add options
+        options.forEach( function( opt ) {
+            var option = TTDom.createElement( 'option', {
+                text: opt.label
+            });
+            option.value = opt.value;
+            if ( opt.value === currentValue ) {
+                option.selected = true;
+            }
+            select.appendChild( option );
+        });
+
+        group.appendChild( labelEl );
+        group.appendChild( select );
+        return group;
+    }
+
+    /**
+     * Build a read-only field display.
+     * @param {string} label - Label text.
+     * @param {string} value - Display value.
+     * @returns {Element} The field group element.
+     */
+    function buildReadOnlyField( label, value ) {
+        var group = TTDom.createElement( 'div', {
+            className: 'tt-attribute-group'
+        });
+
+        var labelEl = TTDom.createElement( 'span', {
+            className: 'tt-attribute-label',
+            text: label
+        });
+
+        var valueEl = TTDom.createElement( 'span', {
+            className: 'tt-attribute-value',
+            text: value || '—'
+        });
+
+        group.appendChild( labelEl );
+        group.appendChild( valueEl );
+        return group;
+    }
+
+    /**
+     * Build category dropdown options from categories hierarchy.
+     * @param {Array} categories - Array of category objects with subcategories.
+     * @returns {Array} Flattened array of {value, label} options.
+     */
+    function buildCategoryOptions( categories ) {
+        var options = [];
+        categories.forEach( function( category ) {
+            category.subcategories.forEach( function( sub ) {
+                options.push({
+                    value: sub.slug,
+                    label: category.name + ' — ' + sub.name
+                });
+            });
+        });
+        return options;
+    }
+
+    /**
+     * Look up display label for an enum value.
+     * @param {Array} enumList - Array of {value, label} objects.
+     * @param {string} value - Value to look up.
+     * @returns {string|null} Label or null if not found.
+     */
+    function getLabelForValue( enumList, value ) {
+        if ( !value || !enumList ) {
+            return null;
+        }
+        var item = enumList.find( function( e ) {
+            return e.value === value;
+        });
+        return item ? item.label : null;
+    }
+
+    /**
+     * Find subcategory label from categories hierarchy.
+     * @param {Array} categories - Array of category objects with subcategories.
+     * @param {string} subcategorySlug - Subcategory slug to find.
+     * @returns {string|null} "Category — Subcategory" label or null.
+     */
+    function getSubcategoryLabel( categories, subcategorySlug ) {
+        if ( !subcategorySlug || !categories ) {
+            return null;
+        }
+        for ( var i = 0; i < categories.length; i++ ) {
+            var category = categories[i];
+            for ( var j = 0; j < category.subcategories.length; j++ ) {
+                var sub = category.subcategories[j];
+                if ( sub.slug === subcategorySlug ) {
+                    return category.name + ' — ' + sub.name;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Send location update to server via background.
+     * @param {string} locationUuid - Location UUID.
+     * @param {Object} updates - Fields to update.
+     */
+    function updateLocationOnServer( locationUuid, updates ) {
+        chrome.runtime.sendMessage({
+            type: TT.MESSAGE.TYPE_UPDATE_LOCATION,
+            data: {
+                uuid: locationUuid,
+                updates: updates
+            }
+        }, function( response ) {
+            if ( chrome.runtime.lastError ) {
+                console.error( '[TT GMM] Update location failed:', chrome.runtime.lastError.message );
+                return;
+            }
+            if ( response && response.success ) {
+                console.log( '[TT GMM] Location updated on server' );
+            } else {
+                console.error( '[TT GMM] Update location failed:', response && response.error );
+            }
+        });
+    }
+
+    /**
+     * Intercept GMM save button to capture custom attribute values.
+     * @param {Element} dialogNode - The dialog element.
+     * @param {Object} location - Location object with uuid.
+     */
+    function interceptSaveButton( dialogNode, location ) {
+        var saveButton = dialogNode.querySelector( TTGmmAdapter.selectors.EDIT_SAVE_BUTTON );
+        if ( !saveButton || saveButton.hasAttribute( TT_INTERCEPTED_ATTR ) ) {
+            return;
+        }
+        saveButton.setAttribute( TT_INTERCEPTED_ATTR, 'true' );
+
+        saveButton.addEventListener( 'click', function( event ) {
+            var container = document.getElementById( TT_CUSTOM_ATTRS_CONTAINER_ID );
+            if ( !container ) {
+                return; // Let native save proceed
+            }
+
+            var categorySelect = container.querySelector( '#tt-attr-category' );
+            var desirabilitySelect = container.querySelector( '#tt-attr-desirability' );
+            var advancedBookingSelect = container.querySelector( '#tt-attr-advanced-booking' );
+
+            var updates = {
+                subcategory_slug: categorySelect ? ( categorySelect.value || null ) : null,
+                desirability: desirabilitySelect ? ( desirabilitySelect.value || null ) : null,
+                advanced_booking: advancedBookingSelect ? ( advancedBookingSelect.value || null ) : null
+            };
+
+            updateLocationOnServer( location.uuid, updates );
+            // Don't prevent default - let GMM save proceed
+        }, true ); // Capture phase to run before GMM's handler
     }
 
     /**
      * Add custom attribute UI to location details.
      * @param {Element} dialogNode - The dialog element.
      * @param {Object} location - Location from server.
-     * @param {Object} category - Category definition.
+     * @param {Object} config - Client config with categories and enum types.
      * @param {boolean} isEditMode - Whether in edit mode.
      */
-    function addCustomAttributeUI( dialogNode, location, category, isEditMode ) {
-        // TODO: Implement custom attribute display/editing
-        // This will be similar to the prototype but pulling attribute definitions
-        // from category.custom_attributes (from server config)
-        console.log( '[TT GMM] Custom attributes UI not yet implemented' );
+    function addCustomAttributeUI( dialogNode, location, config, isEditMode ) {
+        // Remove any existing custom attributes container
+        var existing = document.getElementById( TT_CUSTOM_ATTRS_CONTAINER_ID );
+        if ( existing ) {
+            existing.remove();
+        }
+
+        // Find title div to insert after
+        var titleDiv = dialogNode.querySelector( TTGmmAdapter.selectors.TITLE_DIV );
+        if ( !titleDiv ) {
+            console.warn( '[TT GMM] Could not find title div for custom attributes' );
+            return;
+        }
+
+        // Get notes container for hiding in edit mode
+        var notesContainer = dialogNode.querySelector( TTGmmAdapter.selectors.NOTES_CONTAINER );
+
+        // Create container
+        var container = TTDom.createElement( 'div', {
+            id: TT_CUSTOM_ATTRS_CONTAINER_ID,
+            className: 'tt-custom-attrs'
+        });
+
+        var categories = config.location_categories || [];
+        var desirabilityTypes = config.desirability_type || [];
+        var advancedBookingTypes = config.advanced_booking_type || [];
+
+        if ( isEditMode ) {
+            // Edit mode: show dropdowns, hide description
+            if ( notesContainer ) {
+                notesContainer.style.display = 'none';
+            }
+
+            // Category dropdown
+            var categoryOptions = buildCategoryOptions( categories );
+            var categoryDropdown = buildDropdown(
+                'tt-attr-category',
+                'Category',
+                categoryOptions,
+                location.subcategory_slug
+            );
+            container.appendChild( categoryDropdown );
+
+            // Desirability dropdown
+            var desirabilityDropdown = buildDropdown(
+                'tt-attr-desirability',
+                'Desirability',
+                desirabilityTypes,
+                location.desirability
+            );
+            container.appendChild( desirabilityDropdown );
+
+            // Advanced Booking dropdown
+            var advancedBookingDropdown = buildDropdown(
+                'tt-attr-advanced-booking',
+                'Advanced Booking',
+                advancedBookingTypes,
+                location.advanced_booking
+            );
+            container.appendChild( advancedBookingDropdown );
+
+            // Set up save button interception
+            interceptSaveButton( dialogNode, location );
+
+        } else {
+            // Read-only mode: show values, keep description visible
+            if ( notesContainer ) {
+                notesContainer.style.display = '';
+            }
+
+            // Category
+            var categoryLabel = getSubcategoryLabel( categories, location.subcategory_slug );
+            if ( categoryLabel ) {
+                container.appendChild( buildReadOnlyField( 'Category', categoryLabel ) );
+            }
+
+            // Desirability
+            var desirabilityLabel = getLabelForValue( desirabilityTypes, location.desirability );
+            if ( desirabilityLabel ) {
+                container.appendChild( buildReadOnlyField( 'Desirability', desirabilityLabel ) );
+            }
+
+            // Advanced Booking
+            var advancedBookingLabel = getLabelForValue( advancedBookingTypes, location.advanced_booking );
+            if ( advancedBookingLabel ) {
+                container.appendChild( buildReadOnlyField( 'Advanced Booking', advancedBookingLabel ) );
+            }
+
+            // If no attributes to show, don't add empty container
+            if ( container.children.length === 0 ) {
+                return;
+            }
+        }
+
+        // Insert after title div
+        titleDiv.parentNode.insertBefore( container, titleDiv.nextSibling );
     }
 
     // =========================================================================
