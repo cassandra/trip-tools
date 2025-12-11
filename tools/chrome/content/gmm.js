@@ -335,7 +335,7 @@
      */
     function handleAddToMapDialog( dialogNode ) {
         // Skip decoration during sync mode
-        if ( TTSyncMode.isActive() ) {
+        if ( TTSyncExecuteMode.isActive() ) {
             return;
         }
 
@@ -550,7 +550,7 @@
      */
     function handleLocationDetailsDialog( dialogNode ) {
         // Skip decoration during sync mode
-        if ( TTSyncMode.isActive() ) {
+        if ( TTSyncExecuteMode.isActive() ) {
             return;
         }
 

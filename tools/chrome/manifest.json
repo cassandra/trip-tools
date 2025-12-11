@@ -72,7 +72,7 @@
                 "shared/dom.js",
                 "shared/text-utils.js",
                 "shared/site-adapter.js",
-                "shared/sync-mode.js",
+                "shared/sync-execute-mode.js",
                 "adapters/gmm-selectors.js",
                 "adapters/gmm-adapter.js",
                 "content/gmm.js",

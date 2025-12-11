@@ -1,20 +1,20 @@
 /*
- * Trip Tools Chrome Extension - Sync Mode Manager
- * Coordinates modal sync operations and provides visual feedback.
- * Disables dialog decoration during sync to prevent interference.
+ * Trip Tools Chrome Extension - Sync Execute Mode Manager
+ * Coordinates modal sync execute operations and provides visual feedback.
+ * Disables dialog decoration during sync execute phase to prevent interference.
  */
 
-var TTSyncMode = ( function() {
+var TTSyncExecuteMode = ( function() {
     'use strict';
 
-    var BANNER_ID = 'tt-sync-mode-banner';
-    var BORDER_CLASS = 'tt-sync-mode-active';
+    var BANNER_ID = 'tt-sync-execute-banner';
+    var BORDER_CLASS = 'tt-sync-execute-active';
 
     var _active = false;
     var _onStopCallback = null;
 
     /**
-     * Check if sync mode is currently active.
+     * Check if sync execute mode is currently active.
      * @returns {boolean}
      */
     function isActive() {
@@ -22,7 +22,7 @@ var TTSyncMode = ( function() {
     }
 
     /**
-     * Enter sync mode.
+     * Enter sync execute mode.
      * Shows visual indicator and disables dialog decoration.
      * @param {Object} options - Configuration options.
      * @param {Function} options.onStop - Callback when user clicks Stop button.
@@ -37,11 +37,11 @@ var TTSyncMode = ( function() {
         _active = true;
 
         _showIndicator();
-        console.log( '[TT Sync Mode] Entered' );
+        console.log( '[TT Sync Execute] Mode entered' );
     }
 
     /**
-     * Exit sync mode.
+     * Exit sync execute mode.
      * Hides visual indicator and re-enables dialog decoration.
      */
     function exit() {
@@ -53,7 +53,7 @@ var TTSyncMode = ( function() {
         _onStopCallback = null;
 
         _hideIndicator();
-        console.log( '[TT Sync Mode] Exited' );
+        console.log( '[TT Sync Execute] Mode exited' );
     }
 
     /**
@@ -61,7 +61,7 @@ var TTSyncMode = ( function() {
      * @private
      */
     function _handleStopClick() {
-        console.log( '[TT Sync Mode] Stop requested by user' );
+        console.log( '[TT Sync Execute] Stop requested by user' );
 
         if ( _onStopCallback ) {
             _onStopCallback();
@@ -72,7 +72,7 @@ var TTSyncMode = ( function() {
     }
 
     /**
-     * Show the sync mode visual indicator.
+     * Show the sync execute mode visual indicator.
      * @private
      */
     function _showIndicator() {
@@ -88,11 +88,11 @@ var TTSyncMode = ( function() {
         banner.id = BANNER_ID;
 
         var messageSpan = document.createElement( 'span' );
-        messageSpan.className = 'tt-sync-mode-message';
+        messageSpan.className = 'tt-sync-execute-message';
         messageSpan.textContent = 'Sync in Progress \u2014 Please do not interact with the map';
 
         var stopButton = document.createElement( 'button' );
-        stopButton.className = 'tt-sync-mode-stop-btn';
+        stopButton.className = 'tt-sync-execute-stop-btn';
         stopButton.textContent = 'Stop Sync';
         stopButton.addEventListener( 'click', _handleStopClick );
 
@@ -102,7 +102,7 @@ var TTSyncMode = ( function() {
     }
 
     /**
-     * Hide the sync mode visual indicator.
+     * Hide the sync execute mode visual indicator.
      * @private
      */
     function _hideIndicator() {

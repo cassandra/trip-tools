@@ -11,8 +11,8 @@
     // Distance threshold for coordinate validation (meters)
     var COORDINATE_DISTANCE_THRESHOLD_M = 1000;
 
-    // Cancellation state for sync operations
-    var _syncCancelled = false;
+    // Cancellation state for sync execute phase
+    var _executeStopRequested = false;
 
     // Warning types for post-sync review
     var WARNING_TYPE = {
@@ -34,8 +34,8 @@
     var WARNING_MESSAGES = {};
     WARNING_MESSAGES[WARNING_TYPE.NO_CATEGORY] = "Added to 'Other' layer - move to correct layer";
     WARNING_MESSAGES[WARNING_TYPE.UNKNOWN_CATEGORY] = "Unknown category - added to 'Other' layer";
-    WARNING_MESSAGES[WARNING_TYPE.MULTIPLE_RESULTS] = "Multiple matches found - verify correct one";
-    WARNING_MESSAGES[WARNING_TYPE.COORDINATE_MISMATCH] = "Location may not match - verify correct one";
+    WARNING_MESSAGES[WARNING_TYPE.MULTIPLE_RESULTS] = "Multiple matches found - verify location is correct";
+    WARNING_MESSAGES[WARNING_TYPE.COORDINATE_MISMATCH] = "Location may not match - verify location is correct";
     WARNING_MESSAGES[WARNING_TYPE.LAYER_LIMIT] = "Could not create 'Other' layer - added to first layer";
 
     // Human-readable error messages
@@ -94,13 +94,23 @@
         return false;
     }
 
+    // Track if a sync is currently in progress to prevent duplicate requests
+    var _syncInProgress = false;
+
     /**
      * Perform the sync operation: fetch data, compare, show dialog, execute.
      * @param {Object} data - Sync request data (tripUuid, tripTitle, mapId).
      * @returns {Promise<Object>} Result of sync operation.
      */
     function performSync( data ) {
-        console.log( '[TT GMM Sync] Fetching locations for comparison...' );
+        // Guard against duplicate sync requests (e.g., from service worker retries after page reload)
+        if ( _syncInProgress ) {
+            console.log( '[TT GMM Sync] Sync already in progress, ignoring duplicate request' );
+            return Promise.resolve( { cancelled: true, reason: 'sync_in_progress' } );
+        }
+
+        _syncInProgress = true;
+        console.log( '[TT Sync Compare] Fetching locations...' );
 
         return Promise.all( [
             fetchServerLocations( data.tripUuid ),
@@ -110,18 +120,18 @@
             var serverLocations = results[0];
             var gmmLocations = results[1];
 
-            console.log( '[TT GMM Sync] Server locations:', serverLocations.length );
-            console.log( '[TT GMM Sync] GMM locations:', gmmLocations.length );
+            console.log( '[TT Sync Compare] Server locations:', serverLocations.length );
+            console.log( '[TT Sync Compare] GMM locations:', gmmLocations.length );
 
             var diff = compareLocations( serverLocations, gmmLocations );
 
-            console.log( '[TT GMM Sync] Diff results:', {
+            console.log( '[TT Sync Compare] Diff results:', {
                 serverOnly: diff.serverOnly.length,
                 gmmOnly: diff.gmmOnly.length,
                 inBoth: diff.inBoth.length
             });
 
-            return showSyncDialog( data, diff );
+            return showSyncCompareDialog( data, diff );
         })
         .then( function( dialogResult ) {
             if ( dialogResult.cancelled ) {
@@ -129,7 +139,7 @@
                 return { cancelled: true };
             }
 
-            console.log( '[TT GMM Sync] Executing sync with decisions:', dialogResult.decisions );
+            console.log( '[TT Sync Execute] Starting with decisions:', dialogResult.decisions );
             return executeSyncDecisions( data.tripUuid, dialogResult.decisions );
         })
         .then( function( results ) {
@@ -137,18 +147,21 @@
                 return results;
             }
 
-            // Show results dialog
-            return showSyncResultsDialog( results );
+            // Show execute results dialog
+            return showSyncExecuteResultsDialog( results );
+        })
+        .finally( function() {
+            _syncInProgress = false;
         });
     }
 
     /**
-     * Check if sync was cancelled and throw if so.
+     * Check if sync execute was stopped and throw if so.
      * @private
      */
-    function checkCancelled() {
-        if ( _syncCancelled ) {
-            throw new Error( 'Sync cancelled by user' );
+    function checkExecuteStopped() {
+        if ( _executeStopRequested ) {
+            throw new Error( 'Sync execute stopped by user' );
         }
     }
 
@@ -190,11 +203,11 @@
             gmmToServerKeep.push( match.gmm );
         });
 
-        console.log( '[TT GMM Sync] GMM->Server (keep):', gmmToServerKeep.length );
-        console.log( '[TT GMM Sync] GMM (discard):', gmmToDiscard.length );
-        console.log( '[TT GMM Sync] Server->GMM (keep):', serverToGmmKeep.length );
-        console.log( '[TT GMM Sync] Server (discard):', serverToDiscard.length );
-        console.log( '[TT GMM Sync] Title matches to link:', matchesToLink.length );
+        console.log( '[TT Sync Execute] GMM->Server (keep):', gmmToServerKeep.length );
+        console.log( '[TT Sync Execute] GMM (discard):', gmmToDiscard.length );
+        console.log( '[TT Sync Execute] Server->GMM (keep):', serverToGmmKeep.length );
+        console.log( '[TT Sync Execute] Server (discard):', serverToDiscard.length );
+        console.log( '[TT Sync Execute] Title matches to link:', matchesToLink.length );
 
         // Three-tier results structure
         var results = {
@@ -219,11 +232,11 @@
         };
 
         // Reset cancellation state and enter sync mode
-        _syncCancelled = false;
-        TTSyncMode.enter({
+        _executeStopRequested = false;
+        TTSyncExecuteMode.enter({
             onStop: function() {
-                console.log( '[TT GMM Sync] Stop requested' );
-                _syncCancelled = true;
+                console.log( '[TT Sync Execute] Stop requested' );
+                _executeStopRequested = true;
             }
         });
 
@@ -233,14 +246,14 @@
         // Title matches to link: just update gmm_id on server (no GMM manipulation)
         matchesToLink.forEach( function( match ) {
             syncPromise = syncPromise.then( function() {
-                checkCancelled();
-                console.log( '[TT GMM Sync] Linking by title:', match.server.title );
+                checkExecuteStopped();
+                console.log( '[TT Sync Execute] Linking by title:', match.server.title );
                 return updateServerLocationGmmId( match.server.uuid, match.gmm.fl_id )
                     .then( function() {
                         results.linkedByTitle.push( { server: match.server, gmm: match.gmm } );
                     })
                     .catch( function( error ) {
-                        console.error( '[TT GMM Sync] Error linking by title:', match.server.title, error );
+                        console.error( '[TT Sync Execute] Error linking by title:', match.server.title, error );
                         results.errors.push( { location: match.server, error: error.message } );
                     });
             });
@@ -249,7 +262,7 @@
         // GMM -> Server (keep): add to server
         gmmToServerKeep.forEach( function( gmmLoc ) {
             syncPromise = syncPromise.then( function() {
-                checkCancelled();
+                checkExecuteStopped();
                 return syncGmmLocationToServer( tripUuid, gmmLoc )
                     .then( function( serverLoc ) {
                         results.addedToServer.push( { gmm: gmmLoc, server: serverLoc } );
@@ -264,7 +277,7 @@
         // GMM (discard): delete from GMM
         gmmToDiscard.forEach( function( gmmLoc ) {
             syncPromise = syncPromise.then( function() {
-                checkCancelled();
+                checkExecuteStopped();
                 return deleteGmmLocation( gmmLoc.fl_id )
                     .then( function() {
                         results.deletedFromGmm.push( gmmLoc );
@@ -279,7 +292,7 @@
         // Server -> GMM (keep): add to GMM
         serverToGmmKeep.forEach( function( serverLoc ) {
             syncPromise = syncPromise.then( function() {
-                checkCancelled();
+                checkExecuteStopped();
                 return syncServerLocationToGmm( serverLoc )
                     .then( function( syncResult ) {
                         if ( syncResult.success ) {
@@ -316,7 +329,7 @@
         // Server (discard): delete from server
         serverToDiscard.forEach( function( serverLoc ) {
             syncPromise = syncPromise.then( function() {
-                checkCancelled();
+                checkExecuteStopped();
                 return deleteServerLocation( serverLoc.uuid )
                     .then( function() {
                         results.deletedFromServer.push( serverLoc );
@@ -330,12 +343,12 @@
 
         return syncPromise
             .then( function() {
-                console.log( '[TT GMM Sync] Sync complete:', results );
+                console.log( '[TT Sync Execute] Complete:', results );
                 return results;
             })
             .catch( function( error ) {
-                if ( error.message === 'Sync cancelled by user' ) {
-                    console.log( '[TT GMM Sync] Sync stopped by user' );
+                if ( error.message === 'Sync execute stopped by user' ) {
+                    console.log( '[TT Sync Execute] Stopped by user' );
                     results.stopped = true;
                     return results;
                 }
@@ -343,7 +356,7 @@
             })
             .finally( function() {
                 // Always exit sync mode when done
-                TTSyncMode.exit();
+                TTSyncExecuteMode.exit();
             });
     }
 
@@ -437,7 +450,7 @@
                 // Check for multiple results warning from adapter
                 if ( result.warning === 'multiple_results' ) {
                     var multiMsg = 'Multiple matches found (' + result.resultCount +
-                        ' results) - verify correct one';
+                        ' results) - verify location is correct';
                     accumulatedWarnings.push({
                         type: WARNING_TYPE.MULTIPLE_RESULTS,
                         message: multiMsg,
@@ -467,7 +480,7 @@
                             '- distance:', distanceKm, 'km' );
                         accumulatedWarnings.push({
                             type: WARNING_TYPE.COORDINATE_MISMATCH,
-                            message: 'Location is ' + distanceKm + 'km away - verify correct match',
+                            message: 'Location is ' + distanceKm + 'km away - verify location is correct',
                             distance: Math.round( distance )
                         });
                     }
@@ -885,14 +898,14 @@
     }
 
     /**
-     * Show the sync dialog with diff results.
+     * Show the sync compare dialog with diff results.
      * Shows per-location KEEP/DISCARD toggles for differences.
      * Shows Link/Don't Link toggles for suggested title matches.
      * @param {Object} data - Sync request data (tripUuid, tripTitle, etc.).
      * @param {Object} diff - Diff results from compareLocations.
      * @returns {Promise<Object>} Result of sync operation.
      */
-    function showSyncDialog( data, diff ) {
+    function showSyncCompareDialog( data, diff ) {
         return new Promise( function( resolve ) {
             // Remove any existing dialog
             var existingDialog = document.querySelector( '.' + TT_SYNC_DIALOG_CLASS );
@@ -1057,7 +1070,7 @@
             dialog.appendChild( buttonContainer );
 
             document.body.appendChild( dialog );
-            console.log( '[TT GMM Sync] Sync dialog displayed' );
+            console.log( '[TT Sync Compare] Dialog displayed' );
         });
     }
 
@@ -1127,12 +1140,12 @@
     }
 
     /**
-     * Show sync results dialog after sync completes.
+     * Show sync execute results dialog after sync completes.
      * Three-tier display: Synced (green), Needs Review (yellow), Failed (red).
      * @param {Object} results - Sync results object.
      * @returns {Promise<Object>} The results (passed through).
      */
-    function showSyncResultsDialog( results ) {
+    function showSyncExecuteResultsDialog( results ) {
         return new Promise( function( resolve ) {
             // Remove any existing dialog
             var existingDialog = document.querySelector( '.' + TT_SYNC_DIALOG_CLASS );
@@ -1332,7 +1345,7 @@
             dialog.appendChild( buttonContainer );
 
             document.body.appendChild( dialog );
-            console.log( '[TT GMM Sync] Results dialog displayed' );
+            console.log( '[TT Sync Execute] Results dialog displayed' );
         });
     }
 

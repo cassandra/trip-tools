@@ -721,17 +721,17 @@
 }
 
 /* =============================================================================
- * Sync Mode Indicator
+ * Sync Execute Mode Indicator
  * ============================================================================= */
 
-/* Border around entire viewport when sync mode is active */
-.tt-sync-mode-active {
+/* Border around entire viewport when sync execute mode is active */
+.tt-sync-execute-active {
     outline: 4px solid #ea8600 !important;
     outline-offset: -4px;
 }
 
 /* Fixed banner at top of viewport */
-#tt-sync-mode-banner {
+#tt-sync-execute-banner {
     position: fixed;
     top: 0;
     left: 0;
@@ -750,11 +750,11 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.tt-sync-mode-message {
+.tt-sync-execute-message {
     flex: 0 0 auto;
 }
 
-.tt-sync-mode-stop-btn {
+.tt-sync-execute-stop-btn {
     padding: 6px 16px;
     border: 2px solid #fff;
     border-radius: 4px;
@@ -767,11 +767,11 @@
     transition: background-color 0.2s;
 }
 
-.tt-sync-mode-stop-btn:hover {
+.tt-sync-execute-stop-btn:hover {
     background: rgba(255, 255, 255, 0.2);
 }
 
-.tt-sync-mode-stop-btn:active {
+.tt-sync-execute-stop-btn:active {
     background: rgba(255, 255, 255, 0.3);
 }
 
