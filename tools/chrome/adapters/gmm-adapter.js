@@ -397,6 +397,60 @@ var TTGmmAdapter = TTSiteAdapter.create({
         },
 
         /**
+         * Rename the current location in the info window.
+         * Clicks edit, changes the title, and saves.
+         * @param {string} newTitle - The new title for the location.
+         * @returns {Promise<void>}
+         */
+        renameCurrentLocation: function( newTitle ) {
+            var self = this;
+
+            return this.waitForElement( 'EDIT_BUTTON' )
+                .then( function( editButton ) {
+                    self.log( 'Clicking edit button to rename location' );
+                    return TTDom.clickRealistic( editButton );
+                })
+                .then( function() {
+                    // Wait for edit mode (title becomes contenteditable)
+                    return TTDom.wait( 500 );
+                })
+                .then( function() {
+                    var titleDiv = self.getElement( 'TITLE_DIV' );
+                    if ( !titleDiv ) {
+                        throw new Error( 'Title element not found' );
+                    }
+
+                    // Check if in edit mode
+                    if ( titleDiv.getAttribute( self.selectors.ATTR_CONTENT_EDITABLE ) !== 'true' ) {
+                        throw new Error( 'Title is not editable' );
+                    }
+
+                    // Set the new title
+                    self.log( 'Setting location title to: ' + newTitle );
+                    titleDiv.textContent = newTitle;
+
+                    // Trigger input event for GMM to detect the change
+                    titleDiv.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+
+                    return TTDom.wait( 200 );
+                })
+                .then( function() {
+                    // Click save button - need to click the inner div[role="button"]
+                    return self.waitForElement( 'EDIT_SAVE_BUTTON' );
+                })
+                .then( function( saveButton ) {
+                    // GMM buttons have inner div[role="button"] that handles clicks
+                    var innerButton = saveButton.querySelector( 'div[role="button"]' );
+                    var clickTarget = innerButton || saveButton;
+                    self.log( 'Saving location rename (clicking ' + ( innerButton ? 'inner button' : 'outer element' ) + ')' );
+                    return TTDom.clickRealistic( clickTarget );
+                })
+                .then( function() {
+                    return TTDom.wait( 500 );
+                });
+        },
+
+        /**
          * Get the current location title from the info window.
          * @returns {string|null}
          */
@@ -680,14 +734,17 @@ var TTGmmAdapter = TTSiteAdapter.create({
          * @param {string} options.layerTitle - Title for the layer.
          * @param {string} options.colorRgb - Color value like "RGB (245, 124, 0)".
          * @param {string} options.iconCode - Icon code like "1535".
-         * @returns {Promise<Object>} Result with { gmmId, title, coordinates }.
+         * @param {string} [options.customTitle] - Custom title to use (renames from Google's title).
+         * @returns {Promise<Object>} Result with { gmmId, title, googleTitle, coordinates }.
          */
         addLocationToLayer: function( options ) {
             var self = this;
             var layerTitle = options.layerTitle;
             var colorRgb = options.colorRgb;
             var iconCode = options.iconCode;
-            var locationTitle;
+            var customTitle = options.customTitle;
+            var googleTitle;
+            var finalTitle;
             var gmmLocationId;
             var coordinates;
 
@@ -703,13 +760,13 @@ var TTGmmAdapter = TTSiteAdapter.create({
                     return self.waitForElement( 'TITLE_DIV' );
                 })
                 .then( function( titleNode ) {
-                    locationTitle = titleNode.textContent;
-                    self.log( 'Location added: ' + locationTitle );
+                    googleTitle = titleNode.textContent;
+                    self.log( 'Location added with Google title: ' + googleTitle );
 
                     // Find the location ID from the layer
-                    var result = self.findLocationByTitle( locationTitle );
+                    var result = self.findLocationByTitle( googleTitle );
                     if ( !result ) {
-                        throw new Error( 'Could not find added location: ' + locationTitle );
+                        throw new Error( 'Could not find added location: ' + googleTitle );
                     }
                     gmmLocationId = result.location.id;
 
@@ -719,6 +776,23 @@ var TTGmmAdapter = TTSiteAdapter.create({
                         self.log( 'Coordinates: ' + coordinates.latitude + ', ' + coordinates.longitude );
                     }
 
+                    // Rename to custom title if provided and meaningfully different
+                    // Skip rename for trivial differences (case, whitespace)
+                    var needsRename = customTitle &&
+                        customTitle.trim().toLowerCase() !== googleTitle.trim().toLowerCase();
+
+                    if ( needsRename ) {
+                        self.log( 'Renaming to custom title: ' + customTitle );
+                        return self.renameCurrentLocation( customTitle )
+                            .then( function() {
+                                finalTitle = customTitle;
+                            });
+                    } else {
+                        finalTitle = googleTitle;
+                        return Promise.resolve();
+                    }
+                })
+                .then( function() {
                     // Now style it
                     return self.openStylePopup();
                 })
@@ -740,17 +814,31 @@ var TTGmmAdapter = TTSiteAdapter.create({
 
                     return {
                         gmmId: gmmLocationId,
-                        title: locationTitle,
+                        title: finalTitle,
+                        googleTitle: googleTitle,
                         coordinates: coordinates
                     };
                 });
         },
 
         /**
+         * Get the number of search results in the sidebar pane.
+         * @returns {number} Count of search result items.
+         */
+        getSearchResultCount: function() {
+            var items = document.querySelectorAll( this.selectors.SEARCH_RESULTS_ITEMS );
+            return items.length;
+        },
+
+        /**
          * Search for a location and add it to the map.
          * @param {string} searchText - Text to search for.
-         * @param {Object} options - Style options { layerTitle, colorRgb, iconCode }.
-         * @returns {Promise<Object>} Result with { gmmId, title, coordinates }.
+         * @param {Object} options - Style options { layerTitle, colorRgb, iconCode, customTitle }.
+         * @returns {Promise<Object>} Result with { gmmId, title, googleTitle, coordinates, resultCount, warning }.
+         *   - Returns { error: 'no_results' } if no search results found.
+         *   - Returns { error: 'no_dialog', resultCount } if results found but no info dialog opened.
+         *   - Returns { error: 'too_many_results', resultCount } if 3+ results (too ambiguous).
+         *   - Returns { ..., warning: 'multiple_results', resultCount } if 2 results but one was selected.
          */
         searchAndAddLocation: function( searchText, options ) {
             var self = this;
@@ -767,13 +855,62 @@ var TTGmmAdapter = TTSiteAdapter.create({
                 return Promise.reject( new Error( 'Search button not found' ) );
             }
 
+            var resultCount = 0;
+
             return TTDom.click( searchButton )
                 .then( function() {
-                    // Wait for add-to-map button to appear
-                    return self.waitForElement( 'ADD_TO_MAP_BUTTON' );
+                    // Wait for search results to load in sidebar
+                    return TTDom.wait( 1500 );
                 })
                 .then( function() {
-                    return self.addLocationToLayer( options );
+                    // Count results in sidebar
+                    resultCount = self.getSearchResultCount();
+                    self.log( 'Search results: ' + resultCount );
+
+                    if ( resultCount === 0 ) {
+                        // No results found
+                        return Promise.resolve( { error: 'no_results' } );
+                    }
+
+                    // Too many results - reject as ambiguous
+                    if ( resultCount >= 3 ) {
+                        self.log( 'Too many results (' + resultCount + '), rejecting as ambiguous' );
+                        return Promise.resolve( { error: 'too_many_results', resultCount: resultCount } );
+                    }
+
+                    // Try to find add-to-map button (indicates info dialog opened)
+                    // Use short timeout - if not there quickly, it's not coming
+                    return TTDom.waitForElement(
+                        self.selectors.ADD_TO_MAP_BUTTON,
+                        { timeout: 2000, retryMs: 200 }
+                    ).catch( function() {
+                        // Info dialog did not open
+                        return null;
+                    });
+                })
+                .then( function( buttonOrResult ) {
+                    // Check if we returned early with an error
+                    if ( buttonOrResult && buttonOrResult.error ) {
+                        return buttonOrResult;
+                    }
+
+                    // buttonOrResult is either the button element or null
+                    if ( !buttonOrResult ) {
+                        // Results exist but no dialog opened
+                        self.log( 'Results found but no info dialog opened' );
+                        return { error: 'no_dialog', resultCount: resultCount };
+                    }
+
+                    // Proceed with adding (1 or 2 results)
+                    return self.addLocationToLayer( options )
+                        .then( function( result ) {
+                            // If 2 results, flag as warning (Google picked one)
+                            if ( resultCount === 2 ) {
+                                result.warning = 'multiple_results';
+                                result.resultCount = resultCount;
+                            }
+                            return result;
+                        });
                 });
         }
     }

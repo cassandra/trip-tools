@@ -26,7 +26,12 @@ TT.CONFIG = {
     AUTH_VALIDATION_DEBOUNCE_POPUP_MS: 2000,
     AUTH_VALIDATION_TIMEOUT_MS: 5000,
     // Google My Maps default layer name (used for repurposing empty layers)
-    GMM_DEFAULT_LAYER_NAME: 'Untitled layer'
+    GMM_DEFAULT_LAYER_NAME: 'Untitled layer',
+    // "Other" layer for locations without valid category
+    GMM_OTHER_LAYER_NAME: 'Other',
+    // Grey color from GMM's palette (aria-label value)
+    GMM_OTHER_LAYER_COLOR: 'RGB (117, 117, 117)',
+    GMM_OTHER_LAYER_ICON: '1594'
 };
 
 TT.STORAGE = {

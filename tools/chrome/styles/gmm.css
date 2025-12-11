@@ -553,3 +553,219 @@
     font-weight: 500;
     color: #1e8e3e;
 }
+
+/* =============================================================================
+ * Three-Tier Sync Results
+ * ============================================================================= */
+
+/* Section headers with colored indicators */
+.tt-sync-header-success {
+    color: #1e8e3e;
+}
+
+.tt-sync-header-warning {
+    color: #ea8600;
+}
+
+.tt-sync-header-error {
+    color: #d93025;
+}
+
+/* Section styling with left border */
+.tt-sync-section-success {
+    border-left: 3px solid #1e8e3e;
+    padding-left: 12px;
+}
+
+.tt-sync-section-warning {
+    border-left: 3px solid #ea8600;
+    padding-left: 12px;
+}
+
+.tt-sync-section-error {
+    border-left: 3px solid #d93025;
+    padding-left: 12px;
+}
+
+/* Result row layout */
+.tt-sync-result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e8eaed;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-result-row:last-child {
+    border-bottom: none;
+}
+
+.tt-sync-result-title {
+    flex: 1;
+    font-size: 13px;
+    color: #202124;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.tt-sync-result-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+/* Status labels */
+.tt-sync-status {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tt-sync-status-matched {
+    color: #1e8e3e;
+}
+
+.tt-sync-status-added {
+    color: #1a73e8;
+}
+
+.tt-sync-status-removed {
+    color: #80868b;
+}
+
+/* Action buttons */
+.tt-sync-action-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tt-sync-action-btn:hover:not(:disabled) {
+    background: #f1f3f4;
+    border-color: #1a73e8;
+}
+
+.tt-sync-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Result item (for warning/failure with messages) */
+.tt-sync-result-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #e8eaed;
+}
+
+.tt-sync-result-item:last-child {
+    border-bottom: none;
+}
+
+.tt-sync-result-item .tt-sync-result-row {
+    padding: 0 12px 4px 12px;
+    border-bottom: none;
+}
+
+/* Warning/error messages below items */
+.tt-sync-item-message {
+    font-size: 11px;
+    padding: 2px 12px 2px 24px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-item-message-warning {
+    color: #ea8600;
+}
+
+.tt-sync-item-message-error {
+    color: #d93025;
+}
+
+.tt-sync-item-matched {
+    color: #5f6368;
+    font-style: italic;
+}
+
+/* Error text in error section */
+.tt-sync-result-error-text {
+    font-size: 11px;
+    color: #d93025;
+    margin-left: 8px;
+}
+
+/* =============================================================================
+ * Sync Mode Indicator
+ * ============================================================================= */
+
+/* Border around entire viewport when sync mode is active */
+.tt-sync-mode-active {
+    outline: 4px solid #ea8600 !important;
+    outline-offset: -4px;
+}
+
+/* Fixed banner at top of viewport */
+#tt-sync-mode-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: #ea8600;
+    color: #fff;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tt-sync-mode-message {
+    flex: 0 0 auto;
+}
+
+.tt-sync-mode-stop-btn {
+    padding: 6px 16px;
+    border: 2px solid #fff;
+    border-radius: 4px;
+    background: transparent;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tt-sync-mode-stop-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.tt-sync-mode-stop-btn:active {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Stopped notice in results dialog */
+.tt-sync-stopped-notice {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: #fef7e0;
+    border: 1px solid #f9ab00;
+    border-radius: 4px;
+    color: #5f6368;
+    font-size: 12px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}

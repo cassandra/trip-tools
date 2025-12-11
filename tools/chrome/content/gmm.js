@@ -334,6 +334,11 @@
      * @param {Element} dialogNode - The dialog element.
      */
     function handleAddToMapDialog( dialogNode ) {
+        // Skip decoration during sync mode
+        if ( TTSyncMode.isActive() ) {
+            return;
+        }
+
         // Check if already decorated
         if ( dialogNode.getAttribute( TT_DECORATED_ATTR ) ) {
             return;
@@ -544,6 +549,11 @@
      * @param {Element} dialogNode - The dialog element.
      */
     function handleLocationDetailsDialog( dialogNode ) {
+        // Skip decoration during sync mode
+        if ( TTSyncMode.isActive() ) {
+            return;
+        }
+
         // Check if already decorated
         if ( dialogNode.getAttribute( TT_DECORATED_ATTR ) ) {
             return;

@@ -42,6 +42,14 @@ var TTGmmSelectors = {
     SEARCH_BUTTON: '#mapsprosearch-button div',
 
     // =========================================================================
+    // Search Results Pane
+    // =========================================================================
+
+    // Search results appear in sidebar with fl_id attribute on each result
+    SEARCH_RESULTS_PANE: '#searchresults-pane',
+    SEARCH_RESULTS_ITEMS: '#searchresults-pane [fl_id]',
+
+    // =========================================================================
     // Location Info Window
     // =========================================================================
 

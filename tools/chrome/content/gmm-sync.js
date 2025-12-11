@@ -11,14 +11,38 @@
     // Distance threshold for coordinate validation (meters)
     var COORDINATE_DISTANCE_THRESHOLD_M = 1000;
 
-    // Issue types for post-sync reconciliation
-    var ISSUE_TYPE = {
-        NO_SUBCATEGORY: 'no_subcategory',
-        UNKNOWN_SUBCATEGORY: 'unknown_subcategory',
-        NO_RESULTS: 'no_results',
+    // Cancellation state for sync operations
+    var _syncCancelled = false;
+
+    // Warning types for post-sync review
+    var WARNING_TYPE = {
+        NO_CATEGORY: 'no_category',
+        UNKNOWN_CATEGORY: 'unknown_category',
         MULTIPLE_RESULTS: 'multiple_results',
-        COORDINATE_MISMATCH: 'coordinate_mismatch'
+        COORDINATE_MISMATCH: 'coordinate_mismatch',
+        LAYER_LIMIT: 'layer_limit'
     };
+
+    // Error types for sync failures
+    var ERROR_TYPE = {
+        NO_RESULTS: 'no_results',
+        NO_DIALOG: 'no_dialog',
+        TOO_MANY_RESULTS: 'too_many_results'
+    };
+
+    // Human-readable warning messages
+    var WARNING_MESSAGES = {};
+    WARNING_MESSAGES[WARNING_TYPE.NO_CATEGORY] = "Added to 'Other' layer - move to correct layer";
+    WARNING_MESSAGES[WARNING_TYPE.UNKNOWN_CATEGORY] = "Unknown category - added to 'Other' layer";
+    WARNING_MESSAGES[WARNING_TYPE.MULTIPLE_RESULTS] = "Multiple matches found - verify correct one";
+    WARNING_MESSAGES[WARNING_TYPE.COORDINATE_MISMATCH] = "Location may not match - verify correct one";
+    WARNING_MESSAGES[WARNING_TYPE.LAYER_LIMIT] = "Could not create 'Other' layer - added to first layer";
+
+    // Human-readable error messages
+    var ERROR_MESSAGES = {};
+    ERROR_MESSAGES[ERROR_TYPE.NO_RESULTS] = "No search results found";
+    ERROR_MESSAGES[ERROR_TYPE.NO_DIALOG] = "Multiple matches found, none selected";
+    ERROR_MESSAGES[ERROR_TYPE.TOO_MANY_RESULTS] = "Too many matches - search manually";
 
     /**
      * Calculate distance between two points using Haversine formula.
@@ -119,10 +143,20 @@
     }
 
     /**
+     * Check if sync was cancelled and throw if so.
+     * @private
+     */
+    function checkCancelled() {
+        if ( _syncCancelled ) {
+            throw new Error( 'Sync cancelled by user' );
+        }
+    }
+
+    /**
      * Execute sync decisions from the dialog.
      * @param {string} tripUuid - Trip UUID.
      * @param {Object} decisions - Map of itemId to { action, source, location }.
-     * @returns {Promise<Object>} Sync results.
+     * @returns {Promise<Object>} Sync results with three-tier structure.
      */
     function executeSyncDecisions( tripUuid, decisions ) {
         var gmmToServerKeep = [];
@@ -149,20 +183,43 @@
         console.log( '[TT GMM Sync] Server->GMM (keep):', serverToGmmKeep.length );
         console.log( '[TT GMM Sync] Server (discard):', serverToDiscard.length );
 
+        // Three-tier results structure
+        var results = {
+            // Successes: linked with no warnings
+            addedToServer: [],      // { gmm, server } - GMM -> Server
+            addedToGmm: [],         // { server, gmm } - Server -> GMM (no warnings)
+            deletedFromServer: [],  // Server locations discarded
+            deletedFromGmm: [],     // GMM locations discarded
+
+            // Warnings: linked but need review
+            warnings: [],           // { server, gmm, warnings: [] } - Server -> GMM with warnings
+
+            // Failures: could not link
+            failures: [],           // { server, error, resultCount? }
+
+            // Unexpected errors (catch-all)
+            errors: [],             // { location, error }
+
+            // Cancellation flag
+            stopped: false
+        };
+
+        // Reset cancellation state and enter sync mode
+        _syncCancelled = false;
+        TTSyncMode.enter({
+            onStop: function() {
+                console.log( '[TT GMM Sync] Stop requested' );
+                _syncCancelled = true;
+            }
+        });
+
         // Execute syncs sequentially (need to click each location)
         var syncPromise = Promise.resolve();
-        var results = {
-            addedToServer: [],
-            addedToGmm: [],
-            deletedFromServer: [],
-            deletedFromGmm: [],
-            errors: [],
-            issues: [] // Categorized issues for post-sync reconciliation
-        };
 
         // GMM -> Server (keep): add to server
         gmmToServerKeep.forEach( function( gmmLoc ) {
             syncPromise = syncPromise.then( function() {
+                checkCancelled();
                 return syncGmmLocationToServer( tripUuid, gmmLoc )
                     .then( function( serverLoc ) {
                         results.addedToServer.push( { gmm: gmmLoc, server: serverLoc } );
@@ -177,6 +234,7 @@
         // GMM (discard): delete from GMM
         gmmToDiscard.forEach( function( gmmLoc ) {
             syncPromise = syncPromise.then( function() {
+                checkCancelled();
                 return deleteGmmLocation( gmmLoc.fl_id )
                     .then( function() {
                         results.deletedFromGmm.push( gmmLoc );
@@ -191,12 +249,32 @@
         // Server -> GMM (keep): add to GMM
         serverToGmmKeep.forEach( function( serverLoc ) {
             syncPromise = syncPromise.then( function() {
-                return syncServerLocationToGmm( serverLoc, results.issues )
+                checkCancelled();
+                return syncServerLocationToGmm( serverLoc )
                     .then( function( syncResult ) {
                         if ( syncResult.success ) {
-                            results.addedToGmm.push( { server: serverLoc, gmm: syncResult.gmm } );
+                            if ( syncResult.warnings && syncResult.warnings.length > 0 ) {
+                                // Success with warnings - goes to warnings tier
+                                results.warnings.push({
+                                    server: serverLoc,
+                                    gmm: syncResult.gmm,
+                                    warnings: syncResult.warnings
+                                });
+                            } else {
+                                // Clean success - goes to success tier
+                                results.addedToGmm.push({
+                                    server: serverLoc,
+                                    gmm: syncResult.gmm
+                                });
+                            }
+                        } else {
+                            // Failure - goes to failures tier
+                            results.failures.push({
+                                server: serverLoc,
+                                error: syncResult.error,
+                                resultCount: syncResult.resultCount
+                            });
                         }
-                        // Issues are already added to results.issues by syncServerLocationToGmm
                     })
                     .catch( function( error ) {
                         console.error( '[TT GMM Sync] Error syncing to GMM:', serverLoc.title, error );
@@ -208,6 +286,7 @@
         // Server (discard): delete from server
         serverToDiscard.forEach( function( serverLoc ) {
             syncPromise = syncPromise.then( function() {
+                checkCancelled();
                 return deleteServerLocation( serverLoc.uuid )
                     .then( function() {
                         results.deletedFromServer.push( serverLoc );
@@ -219,10 +298,23 @@
             });
         });
 
-        return syncPromise.then( function() {
-            console.log( '[TT GMM Sync] Sync complete:', results );
-            return results;
-        });
+        return syncPromise
+            .then( function() {
+                console.log( '[TT GMM Sync] Sync complete:', results );
+                return results;
+            })
+            .catch( function( error ) {
+                if ( error.message === 'Sync cancelled by user' ) {
+                    console.log( '[TT GMM Sync] Sync stopped by user' );
+                    results.stopped = true;
+                    return results;
+                }
+                throw error;
+            })
+            .finally( function() {
+                // Always exit sync mode when done
+                TTSyncMode.exit();
+            });
     }
 
     /**
@@ -242,38 +334,36 @@
      * Sync a server location to GMM.
      * Searches for the location by title and adds it to the map.
      *
-     * Handles edge cases by adding issues to the issues array:
-     * - NO_SUBCATEGORY: Location has no subcategory_slug
-     * - UNKNOWN_SUBCATEGORY: Subcategory not found in config
-     * - NO_RESULTS: Search returned no results
-     * - MULTIPLE_RESULTS: Search returned multiple results
-     * - COORDINATE_MISMATCH: GMM location is too far from server coordinates
+     * Three-tier results:
+     * - Success: Location added and linked (may have no warnings)
+     * - Warning: Location added and linked, but needs user review
+     * - Failure: Location could not be added
      *
      * @param {Object} serverLoc - Server location object.
-     * @param {Array} issues - Array to push issues into.
-     * @returns {Promise<Object>} Result { success: boolean, gmm?: Object }.
+     * @returns {Promise<Object>} Result:
+     *   - Success: { success: true, gmm, warnings: [] }
+     *   - Failure: { success: false, error: ERROR_TYPE, resultCount? }
      */
-    function syncServerLocationToGmm( serverLoc, issues ) {
+    function syncServerLocationToGmm( serverLoc ) {
         console.log( '[TT GMM Sync] Syncing server location to GMM:', serverLoc.title );
 
-        // Check for subcategory
-        if ( !serverLoc.subcategory_slug ) {
-            console.log( '[TT GMM Sync] No subcategory for:', serverLoc.title );
-            issues.push({
-                type: ISSUE_TYPE.NO_SUBCATEGORY,
-                location: serverLoc,
-                message: 'Location has no subcategory assigned'
-            });
-            return Promise.resolve( { success: false } );
-        }
-
         var styleOptions;
+        var accumulatedWarnings = [];
 
-        // Get styling info from category
+        // Get styling info from category (may add warnings for Other layer fallback)
         return getStyleOptionsForLocation( serverLoc )
             .then( function( options ) {
                 styleOptions = options;
+
+                // Collect any warnings from style options (no category, unknown category)
+                if ( options.warnings && options.warnings.length > 0 ) {
+                    accumulatedWarnings = accumulatedWarnings.concat( options.warnings );
+                }
+
                 console.log( '[TT GMM Sync] Style options:', styleOptions );
+
+                // Add custom title to rename GMM location to server title
+                styleOptions.customTitle = serverLoc.title;
 
                 // Search and add to GMM
                 return TTGmmAdapter.searchAndAddLocation( serverLoc.title, styleOptions );
@@ -281,15 +371,48 @@
             .then( function( result ) {
                 console.log( '[TT GMM Sync] Search result:', result );
 
-                // Check for multiple results or no results
+                // Check for error results from searchAndAddLocation
+                if ( result.error ) {
+                    if ( result.error === 'no_results' ) {
+                        console.log( '[TT GMM Sync] No results for:', serverLoc.title );
+                        return { success: false, error: ERROR_TYPE.NO_RESULTS };
+                    }
+                    if ( result.error === 'no_dialog' ) {
+                        console.log( '[TT GMM Sync] No dialog opened for:', serverLoc.title,
+                            '- result count:', result.resultCount );
+                        return {
+                            success: false,
+                            error: ERROR_TYPE.NO_DIALOG,
+                            resultCount: result.resultCount
+                        };
+                    }
+                    // Handle too many results error
+                    if ( result.error === ERROR_TYPE.TOO_MANY_RESULTS ) {
+                        console.log( '[TT GMM Sync] Too many results for:', serverLoc.title,
+                            '- result count:', result.resultCount );
+                        return {
+                            success: false,
+                            error: result.error,
+                            resultCount: result.resultCount
+                        };
+                    }
+                }
+
+                // Check if we got a valid GMM result
                 if ( !result || !result.gmmId ) {
-                    console.log( '[TT GMM Sync] No results for:', serverLoc.title );
-                    issues.push({
-                        type: ISSUE_TYPE.NO_RESULTS,
-                        location: serverLoc,
-                        message: 'Search returned no results'
+                    console.log( '[TT GMM Sync] Unexpected: no gmmId for:', serverLoc.title );
+                    return { success: false, error: ERROR_TYPE.NO_RESULTS };
+                }
+
+                // Check for multiple results warning from adapter
+                if ( result.warning === 'multiple_results' ) {
+                    var multiMsg = 'Multiple matches found (' + result.resultCount +
+                        ' results) - verify correct one';
+                    accumulatedWarnings.push({
+                        type: WARNING_TYPE.MULTIPLE_RESULTS,
+                        message: multiMsg,
+                        resultCount: result.resultCount
                     });
-                    return { success: false };
                 }
 
                 // Validate coordinates if server location has them
@@ -309,17 +432,14 @@
                     });
 
                     if ( distance > COORDINATE_DISTANCE_THRESHOLD_M ) {
+                        var distanceKm = ( distance / 1000 ).toFixed( 1 );
                         console.log( '[TT GMM Sync] Coordinate mismatch for:', serverLoc.title,
-                            '- distance:', Math.round( distance ), 'm' );
-                        issues.push({
-                            type: ISSUE_TYPE.COORDINATE_MISMATCH,
-                            location: serverLoc,
-                            gmmResult: result,
-                            distance: Math.round( distance ),
-                            message: 'GMM result is ' + Math.round( distance ) + 'm away (threshold: ' +
-                                COORDINATE_DISTANCE_THRESHOLD_M + 'm)'
+                            '- distance:', distanceKm, 'km' );
+                        accumulatedWarnings.push({
+                            type: WARNING_TYPE.COORDINATE_MISMATCH,
+                            message: 'Location is ' + distanceKm + 'km away - verify correct match',
+                            distance: Math.round( distance )
                         });
-                        return { success: false };
                     }
                 }
 
@@ -329,43 +449,40 @@
                         return TTGmmAdapter.closeInfoWindow();
                     })
                     .then( function() {
-                        return { success: true, gmm: result };
+                        return {
+                            success: true,
+                            gmm: result,
+                            warnings: accumulatedWarnings
+                        };
                     });
-            })
-            .catch( function( error ) {
-                // Handle "Unknown subcategory" error specifically
-                if ( error.message && error.message.indexOf( 'Unknown subcategory' ) !== -1 ) {
-                    issues.push({
-                        type: ISSUE_TYPE.UNKNOWN_SUBCATEGORY,
-                        location: serverLoc,
-                        message: error.message
-                    });
-                    return { success: false };
-                }
-
-                // Handle "multiple results" error (from searchAndAddLocation)
-                if ( error.message && error.message.indexOf( 'multiple' ) !== -1 ) {
-                    issues.push({
-                        type: ISSUE_TYPE.MULTIPLE_RESULTS,
-                        location: serverLoc,
-                        message: 'Multiple search results found'
-                    });
-                    return { success: false };
-                }
-
-                // Re-throw unexpected errors
-                throw error;
             });
     }
 
     /**
      * Get GMM style options for a server location based on its category.
+     * Falls back to "Other" layer with warnings for missing/unknown categories.
      * @param {Object} serverLoc - Server location with subcategory_slug.
-     * @returns {Promise<Object>} Style options { layerTitle, colorRgb, iconCode }.
+     * @returns {Promise<Object>} Style options { layerTitle, colorRgb, iconCode, warnings }.
      */
     function getStyleOptionsForLocation( serverLoc ) {
         return getLocationCategories()
             .then( function( categories ) {
+                var warnings = [];
+
+                // Check for missing subcategory
+                if ( !serverLoc.subcategory_slug ) {
+                    warnings.push({
+                        type: WARNING_TYPE.NO_CATEGORY,
+                        message: WARNING_MESSAGES[WARNING_TYPE.NO_CATEGORY]
+                    });
+                    return {
+                        layerTitle: TT.CONFIG.GMM_OTHER_LAYER_NAME,
+                        colorRgb: TT.CONFIG.GMM_OTHER_LAYER_COLOR,
+                        iconCode: TT.CONFIG.GMM_OTHER_LAYER_ICON,
+                        warnings: warnings
+                    };
+                }
+
                 // Find the category and subcategory
                 for ( var i = 0; i < categories.length; i++ ) {
                     var category = categories[i];
@@ -377,13 +494,23 @@
                         return {
                             layerTitle: category.name,
                             colorRgb: subcategory.color_code || category.color_code,
-                            iconCode: subcategory.icon_code || category.icon_code
+                            iconCode: subcategory.icon_code || category.icon_code,
+                            warnings: warnings
                         };
                     }
                 }
 
-                // Subcategory not found in config
-                return Promise.reject( new Error( 'Unknown subcategory: ' + serverLoc.subcategory_slug ) );
+                // Unknown subcategory - use Other layer
+                warnings.push({
+                    type: WARNING_TYPE.UNKNOWN_CATEGORY,
+                    message: "Unknown category '" + serverLoc.subcategory_slug + "' - added to 'Other' layer"
+                });
+                return {
+                    layerTitle: TT.CONFIG.GMM_OTHER_LAYER_NAME,
+                    colorRgb: TT.CONFIG.GMM_OTHER_LAYER_COLOR,
+                    iconCode: TT.CONFIG.GMM_OTHER_LAYER_ICON,
+                    warnings: warnings
+                };
             });
     }
 
@@ -817,7 +944,7 @@
 
     /**
      * Show sync results dialog after sync completes.
-     * Displays successes, errors, and issues requiring user attention.
+     * Three-tier display: Synced (green), Needs Review (yellow), Failed (red).
      * @param {Object} results - Sync results object.
      * @returns {Promise<Object>} The results (passed through).
      */
@@ -835,96 +962,145 @@
             });
 
             // Header
+            var headerText = results.stopped ? 'Sync Stopped' : 'Sync Complete';
             var header = TTDom.createElement( 'div', {
                 className: 'tt-sync-header',
-                text: 'Sync Complete'
+                text: headerText
             });
             dialog.appendChild( header );
 
-            // Success counts section
-            var successSection = TTDom.createElement( 'div', {
-                className: 'tt-sync-section'
-            });
-
-            var hasSuccesses = results.addedToServer.length > 0 ||
-                               results.addedToGmm.length > 0 ||
-                               results.deletedFromServer.length > 0 ||
-                               results.deletedFromGmm.length > 0;
-
-            if ( hasSuccesses ) {
-                var successHeader = TTDom.createElement( 'div', {
-                    className: 'tt-sync-section-header',
-                    text: 'Completed'
+            // If stopped, show a notice
+            if ( results.stopped ) {
+                var stoppedNotice = TTDom.createElement( 'div', {
+                    className: 'tt-sync-stopped-notice',
+                    text: 'Sync was stopped before completion. Partial results shown below.'
                 });
-                successSection.appendChild( successHeader );
-
-                if ( results.addedToServer.length > 0 ) {
-                    var row = createResultRow( 'Added to server', results.addedToServer.length, 'success' );
-                    successSection.appendChild( row );
-                }
-                if ( results.addedToGmm.length > 0 ) {
-                    var row = createResultRow( 'Added to GMM', results.addedToGmm.length, 'success' );
-                    successSection.appendChild( row );
-                }
-                if ( results.deletedFromServer.length > 0 ) {
-                    var row = createResultRow( 'Removed from server', results.deletedFromServer.length, 'success' );
-                    successSection.appendChild( row );
-                }
-                if ( results.deletedFromGmm.length > 0 ) {
-                    var row = createResultRow( 'Removed from GMM', results.deletedFromGmm.length, 'success' );
-                    successSection.appendChild( row );
-                }
-
-                dialog.appendChild( successSection );
+                dialog.appendChild( stoppedNotice );
             }
 
-            // Issues section (things requiring user attention)
-            if ( results.issues && results.issues.length > 0 ) {
-                var issuesSection = TTDom.createElement( 'div', {
-                    className: 'tt-sync-section'
+            // Count clean successes (warnings shown separately)
+            var cleanSuccessCount = results.addedToServer.length + results.addedToGmm.length +
+                              results.deletedFromServer.length + results.deletedFromGmm.length;
+            var hasCleanSuccesses = cleanSuccessCount > 0;
+            var hasWarnings = results.warnings && results.warnings.length > 0;
+            var hasFailures = results.failures && results.failures.length > 0;
+            var hasErrors = results.errors && results.errors.length > 0;
+
+            // ========== SYNCED SECTION (green) ==========
+            if ( hasCleanSuccesses ) {
+                var syncedSection = TTDom.createElement( 'div', {
+                    className: 'tt-sync-section tt-sync-section-success'
                 });
 
-                var issuesHeader = TTDom.createElement( 'div', {
-                    className: 'tt-sync-section-header',
-                    text: 'Needs Attention (' + results.issues.length + ')'
+                var syncedHeader = TTDom.createElement( 'div', {
+                    className: 'tt-sync-section-header tt-sync-header-success',
+                    text: '\u2713 SYNCED (' + cleanSuccessCount + ')'
                 });
-                issuesSection.appendChild( issuesHeader );
+                syncedSection.appendChild( syncedHeader );
 
-                var issuesList = TTDom.createElement( 'div', {
+                var syncedList = TTDom.createElement( 'div', {
                     className: 'tt-sync-location-list'
                 });
 
-                results.issues.forEach( function( issue ) {
-                    var issueItem = createIssueItem( issue );
-                    issuesList.appendChild( issueItem );
+                // GMM -> Server (ADDED)
+                results.addedToServer.forEach( function( item ) {
+                    var row = createSyncedRow( item.gmm.title, 'ADDED', false );
+                    syncedList.appendChild( row );
                 });
 
-                issuesSection.appendChild( issuesList );
-                dialog.appendChild( issuesSection );
+                // Server -> GMM without warnings (MATCHED)
+                results.addedToGmm.forEach( function( item ) {
+                    var googleTitle = item.gmm ? item.gmm.googleTitle : null;
+                    var row = createSyncedRow( item.server.title, 'MATCHED', true, googleTitle );
+                    syncedList.appendChild( row );
+                });
+
+                // Deletions
+                results.deletedFromServer.forEach( function( loc ) {
+                    var row = createSyncedRow( loc.title, 'REMOVED', false );
+                    syncedList.appendChild( row );
+                });
+                results.deletedFromGmm.forEach( function( loc ) {
+                    var row = createSyncedRow( loc.title, 'REMOVED', false );
+                    syncedList.appendChild( row );
+                });
+
+                syncedSection.appendChild( syncedList );
+                dialog.appendChild( syncedSection );
             }
 
-            // Errors section
-            if ( results.errors && results.errors.length > 0 ) {
+            // ========== WARNINGS SECTION (yellow) ==========
+            if ( hasWarnings ) {
+                var warningsSection = TTDom.createElement( 'div', {
+                    className: 'tt-sync-section tt-sync-section-warning'
+                });
+
+                var warningsHeader = TTDom.createElement( 'div', {
+                    className: 'tt-sync-section-header tt-sync-header-warning',
+                    text: '\u26A0 NEEDS REVIEW (' + results.warnings.length + ')'
+                });
+                warningsSection.appendChild( warningsHeader );
+
+                var warningsList = TTDom.createElement( 'div', {
+                    className: 'tt-sync-location-list'
+                });
+
+                results.warnings.forEach( function( item ) {
+                    var row = createWarningRow( item.server.title, item.warnings, item.gmm );
+                    warningsList.appendChild( row );
+                });
+
+                warningsSection.appendChild( warningsList );
+                dialog.appendChild( warningsSection );
+            }
+
+            // ========== FAILURES SECTION (red) ==========
+            if ( hasFailures ) {
+                var failuresSection = TTDom.createElement( 'div', {
+                    className: 'tt-sync-section tt-sync-section-error'
+                });
+
+                var failuresHeader = TTDom.createElement( 'div', {
+                    className: 'tt-sync-section-header tt-sync-header-error',
+                    text: '\u2717 FAILED (' + results.failures.length + ')'
+                });
+                failuresSection.appendChild( failuresHeader );
+
+                var failuresList = TTDom.createElement( 'div', {
+                    className: 'tt-sync-location-list'
+                });
+
+                results.failures.forEach( function( item ) {
+                    var row = createFailureRow( item.server.title, item.error, item.resultCount );
+                    failuresList.appendChild( row );
+                });
+
+                failuresSection.appendChild( failuresList );
+                dialog.appendChild( failuresSection );
+            }
+
+            // ========== ERRORS SECTION (unexpected errors) ==========
+            if ( hasErrors ) {
                 var errorsSection = TTDom.createElement( 'div', {
-                    className: 'tt-sync-section'
+                    className: 'tt-sync-section tt-sync-section-error'
                 });
 
                 var errorsHeader = TTDom.createElement( 'div', {
-                    className: 'tt-sync-section-header',
-                    text: 'Errors (' + results.errors.length + ')'
+                    className: 'tt-sync-section-header tt-sync-header-error',
+                    text: '\u2717 ERRORS (' + results.errors.length + ')'
                 });
                 errorsSection.appendChild( errorsHeader );
 
                 results.errors.forEach( function( err ) {
                     var errorRow = TTDom.createElement( 'div', {
-                        className: 'tt-sync-diff-row'
+                        className: 'tt-sync-result-row'
                     });
                     var label = TTDom.createElement( 'span', {
-                        className: 'tt-sync-diff-label',
+                        className: 'tt-sync-result-title',
                         text: err.location ? err.location.title : 'Unknown'
                     });
                     var value = TTDom.createElement( 'span', {
-                        className: 'tt-error',
+                        className: 'tt-sync-result-error-text',
                         text: err.error
                     });
                     errorRow.appendChild( label );
@@ -936,8 +1112,7 @@
             }
 
             // No activity message
-            if ( !hasSuccesses && ( !results.issues || results.issues.length === 0 ) &&
-                 ( !results.errors || results.errors.length === 0 ) ) {
+            if ( !hasCleanSuccesses && !hasWarnings && !hasFailures && !hasErrors ) {
                 var noActivityMsg = TTDom.createElement( 'div', {
                     className: 'tt-sync-in-sync-message',
                     text: 'No changes were made.'
@@ -968,65 +1143,210 @@
     }
 
     /**
-     * Create a result row for the results dialog.
-     * @param {string} label - Row label.
-     * @param {number} count - Count value.
-     * @param {string} type - Row type ('success' or 'error').
+     * Create a synced row for the results dialog (success tier).
+     * @param {string} title - Location title (server title).
+     * @param {string} status - Status label (ADDED, MATCHED, REMOVED).
+     * @param {boolean} showUndoStub - Whether to show [Undo] stub button.
+     * @param {string} [googleTitle] - The Google title that was matched to.
      * @returns {Element} The row element.
      */
-    function createResultRow( label, count, type ) {
+    function createSyncedRow( title, status, showUndoStub, googleTitle ) {
+        // If we have a googleTitle, use result-item container for multi-line display
+        if ( googleTitle ) {
+            var item = TTDom.createElement( 'div', {
+                className: 'tt-sync-result-item'
+            });
+
+            var titleRow = TTDom.createElement( 'div', {
+                className: 'tt-sync-result-row'
+            });
+
+            var titleEl = TTDom.createElement( 'span', {
+                className: 'tt-sync-result-title',
+                text: title
+            });
+            titleRow.appendChild( titleEl );
+
+            var actionsEl = TTDom.createElement( 'div', {
+                className: 'tt-sync-result-actions'
+            });
+
+            var statusEl = TTDom.createElement( 'span', {
+                className: 'tt-sync-status tt-sync-status-' + status.toLowerCase(),
+                text: status
+            });
+            actionsEl.appendChild( statusEl );
+
+            if ( showUndoStub ) {
+                var undoBtn = TTDom.createElement( 'button', {
+                    className: 'tt-sync-action-btn',
+                    text: 'Undo'
+                });
+                undoBtn.disabled = true;
+                undoBtn.title = 'Coming soon';
+                actionsEl.appendChild( undoBtn );
+            }
+
+            titleRow.appendChild( actionsEl );
+            item.appendChild( titleRow );
+
+            // Add "Matched to" line
+            var matchedEl = TTDom.createElement( 'div', {
+                className: 'tt-sync-item-message tt-sync-item-matched',
+                text: "Matched to '" + googleTitle + "'"
+            });
+            item.appendChild( matchedEl );
+
+            return item;
+        }
+
+        // Simple single-line row for non-matched items
         var row = TTDom.createElement( 'div', {
-            className: 'tt-sync-diff-row' + ( type === 'success' ? ' tt-sync-row-success' : '' )
+            className: 'tt-sync-result-row'
         });
-        var labelEl = TTDom.createElement( 'span', {
-            className: 'tt-sync-diff-label',
-            text: label
+
+        var titleEl = TTDom.createElement( 'span', {
+            className: 'tt-sync-result-title',
+            text: title
         });
-        var valueEl = TTDom.createElement( 'span', {
-            className: 'tt-sync-diff-value',
-            text: String( count )
+        row.appendChild( titleEl );
+
+        var actionsEl = TTDom.createElement( 'div', {
+            className: 'tt-sync-result-actions'
         });
-        row.appendChild( labelEl );
-        row.appendChild( valueEl );
+
+        var statusEl = TTDom.createElement( 'span', {
+            className: 'tt-sync-status tt-sync-status-' + status.toLowerCase(),
+            text: status
+        });
+        actionsEl.appendChild( statusEl );
+
+        if ( showUndoStub ) {
+            var undoBtn = TTDom.createElement( 'button', {
+                className: 'tt-sync-action-btn',
+                text: 'Undo'
+            });
+            undoBtn.disabled = true;
+            undoBtn.title = 'Coming soon';
+            actionsEl.appendChild( undoBtn );
+        }
+
+        row.appendChild( actionsEl );
         return row;
     }
 
     /**
-     * Create an issue item for the results dialog.
-     * @param {Object} issue - Issue object with type, location, message.
-     * @returns {Element} The issue item element.
+     * Create a warning row for the results dialog (warning tier).
+     * @param {string} title - Location title (server title).
+     * @param {Array} warnings - Array of warning objects.
+     * @param {Object} gmm - GMM location info (for potential undo and googleTitle).
+     * @returns {Element} The row element.
      */
-    function createIssueItem( issue ) {
+    function createWarningRow( title, warnings, gmm ) {
         var item = TTDom.createElement( 'div', {
-            className: 'tt-sync-location-item'
+            className: 'tt-sync-result-item'
         });
 
-        var info = TTDom.createElement( 'div', {
-            className: 'tt-sync-location-info'
+        // Title row with Undo button
+        var titleRow = TTDom.createElement( 'div', {
+            className: 'tt-sync-result-row'
         });
 
-        var titleEl = TTDom.createElement( 'div', {
-            className: 'tt-sync-location-title',
-            text: issue.location ? issue.location.title : 'Unknown'
+        var titleEl = TTDom.createElement( 'span', {
+            className: 'tt-sync-result-title',
+            text: title
         });
-        info.appendChild( titleEl );
+        titleRow.appendChild( titleEl );
 
-        var issueTypeLabels = {};
-        issueTypeLabels[ISSUE_TYPE.NO_SUBCATEGORY] = 'No category';
-        issueTypeLabels[ISSUE_TYPE.UNKNOWN_SUBCATEGORY] = 'Unknown category';
-        issueTypeLabels[ISSUE_TYPE.NO_RESULTS] = 'Not found in search';
-        issueTypeLabels[ISSUE_TYPE.MULTIPLE_RESULTS] = 'Multiple matches';
-        issueTypeLabels[ISSUE_TYPE.COORDINATE_MISMATCH] = 'Location mismatch';
-
-        var typeLabel = issueTypeLabels[issue.type] || issue.type;
-
-        var sourceEl = TTDom.createElement( 'div', {
-            className: 'tt-sync-location-source',
-            text: typeLabel
+        var actionsEl = TTDom.createElement( 'div', {
+            className: 'tt-sync-result-actions'
         });
-        info.appendChild( sourceEl );
 
-        item.appendChild( info );
+        var undoBtn = TTDom.createElement( 'button', {
+            className: 'tt-sync-action-btn',
+            text: 'Undo'
+        });
+        undoBtn.disabled = true;
+        undoBtn.title = 'Coming soon';
+        actionsEl.appendChild( undoBtn );
+
+        titleRow.appendChild( actionsEl );
+        item.appendChild( titleRow );
+
+        // "Matched to" line (always show for warnings since they are matched)
+        if ( gmm && gmm.googleTitle ) {
+            var matchedEl = TTDom.createElement( 'div', {
+                className: 'tt-sync-item-message tt-sync-item-matched',
+                text: "Matched to '" + gmm.googleTitle + "'"
+            });
+            item.appendChild( matchedEl );
+        }
+
+        // Warning messages
+        warnings.forEach( function( warning ) {
+            var msgEl = TTDom.createElement( 'div', {
+                className: 'tt-sync-item-message tt-sync-item-message-warning',
+                text: warning.message
+            });
+            item.appendChild( msgEl );
+        });
+
+        return item;
+    }
+
+    /**
+     * Create a failure row for the results dialog (failure tier).
+     * @param {string} title - Location title.
+     * @param {string} error - Error type.
+     * @param {number} resultCount - Optional search result count.
+     * @returns {Element} The row element.
+     */
+    function createFailureRow( title, error, resultCount ) {
+        var item = TTDom.createElement( 'div', {
+            className: 'tt-sync-result-item'
+        });
+
+        // Title row with Fix button
+        var titleRow = TTDom.createElement( 'div', {
+            className: 'tt-sync-result-row'
+        });
+
+        var titleEl = TTDom.createElement( 'span', {
+            className: 'tt-sync-result-title',
+            text: title
+        });
+        titleRow.appendChild( titleEl );
+
+        var actionsEl = TTDom.createElement( 'div', {
+            className: 'tt-sync-result-actions'
+        });
+
+        var fixBtn = TTDom.createElement( 'button', {
+            className: 'tt-sync-action-btn',
+            text: 'Fix'
+        });
+        fixBtn.disabled = true;
+        fixBtn.title = 'Coming soon';
+        actionsEl.appendChild( fixBtn );
+
+        titleRow.appendChild( actionsEl );
+        item.appendChild( titleRow );
+
+        // Error message
+        var errorMsg = ERROR_MESSAGES[error] || error;
+        if ( resultCount ) {
+            if ( error === ERROR_TYPE.NO_DIALOG ) {
+                errorMsg = 'Multiple matches found (' + resultCount + ' results)';
+            } else if ( error === ERROR_TYPE.TOO_MANY_RESULTS ) {
+                errorMsg = 'Too many matches (' + resultCount + ' results) - search manually';
+            }
+        }
+
+        var msgEl = TTDom.createElement( 'div', {
+            className: 'tt-sync-item-message tt-sync-item-message-error',
+            text: errorMsg
+        });
+        item.appendChild( msgEl );
 
         return item;
     }
