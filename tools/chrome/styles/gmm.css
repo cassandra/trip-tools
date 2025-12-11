@@ -786,3 +786,43 @@
     font-size: 12px;
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
+
+/* =============================================================================
+ * Undo Action States
+ * ============================================================================= */
+
+/* Progress banner shown during undo operation */
+.tt-sync-undo-banner {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: #e8f0fe;
+    border: 1px solid #1a73e8;
+    border-radius: 4px;
+    color: #1a73e8;
+    font-size: 12px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tt-sync-undo-banner .tt-loading-spinner {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+    border-top-color: #1a73e8;
+}
+
+/* Row being removed - dimmed and non-interactive */
+.tt-sync-row-removing {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Undo error message shown on row */
+.tt-sync-undo-error {
+    font-size: 11px;
+    color: #d93025;
+    padding: 2px 12px 2px 24px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}

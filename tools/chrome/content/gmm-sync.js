@@ -374,6 +374,107 @@
     }
 
     /**
+     * Handle UNDO button click in results dialog.
+     * Deletes the GMM location and updates the row.
+     * @param {Element} dialog - The results dialog element.
+     * @param {Element} row - The row element containing the Undo button.
+     * @param {string} gmmId - The GMM location ID to delete.
+     * @param {string} title - The location title for display.
+     */
+    function handleUndoClick( dialog, row, gmmId, title ) {
+        console.log( '[TT Sync Execute] Undo clicked for:', title, 'gmmId:', gmmId );
+
+        // Find the undo button and disable it immediately to prevent double-clicks
+        var undoBtn = row.querySelector( '.tt-sync-action-btn' );
+        if ( undoBtn ) {
+            undoBtn.disabled = true;
+        }
+
+        // Show progress banner at top of dialog (before sections)
+        var banner = TTDom.createElement( 'div', {
+            className: 'tt-sync-undo-banner'
+        });
+        var spinner = TTDom.createElement( 'div', {
+            className: 'tt-loading-spinner'
+        });
+        banner.appendChild( spinner );
+        var bannerText = TTDom.createElement( 'span', {
+            text: "Removing '" + title + "'..."
+        });
+        banner.appendChild( bannerText );
+
+        // Insert banner after header
+        var header = dialog.querySelector( '.tt-sync-header' );
+        if ( header && header.nextSibling ) {
+            dialog.insertBefore( banner, header.nextSibling );
+        } else {
+            dialog.appendChild( banner );
+        }
+
+        // Dim the row
+        row.classList.add( 'tt-sync-row-removing' );
+
+        // Delete the GMM location
+        deleteGmmLocation( gmmId )
+            .then( function() {
+                console.log( '[TT Sync Execute] Undo successful for:', title );
+
+                // Remove banner
+                banner.remove();
+
+                // Update row to show REMOVED status
+                row.classList.remove( 'tt-sync-row-removing' );
+
+                // Clear the row and rebuild as a simple "removed" row
+                // Find the title element and actions element
+                var titleRow = row.querySelector( '.tt-sync-result-row' ) || row;
+                var actionsEl = titleRow.querySelector( '.tt-sync-result-actions' );
+                if ( actionsEl ) {
+                    // Replace actions with REMOVED status only (no undo button)
+                    actionsEl.innerHTML = '';
+                    var statusEl = TTDom.createElement( 'span', {
+                        className: 'tt-sync-status tt-sync-status-removed',
+                        text: 'REMOVED'
+                    });
+                    actionsEl.appendChild( statusEl );
+                }
+
+                // Remove any "Matched to" message since item is now removed
+                var matchedMsg = row.querySelector( '.tt-sync-item-matched' );
+                if ( matchedMsg ) {
+                    matchedMsg.remove();
+                }
+
+                // Remove any warning messages since item is now removed
+                var warningMsgs = row.querySelectorAll( '.tt-sync-item-message-warning' );
+                warningMsgs.forEach( function( msg ) {
+                    msg.remove();
+                });
+            })
+            .catch( function( error ) {
+                console.error( '[TT Sync Execute] Undo failed for:', title, error );
+
+                // Remove banner
+                banner.remove();
+
+                // Restore row
+                row.classList.remove( 'tt-sync-row-removing' );
+
+                // Re-enable undo button
+                if ( undoBtn ) {
+                    undoBtn.disabled = false;
+                }
+
+                // Show error message on the row
+                var errorMsg = TTDom.createElement( 'div', {
+                    className: 'tt-sync-undo-error',
+                    text: '\u26A0 Failed to remove: ' + ( error.message || error )
+                });
+                row.appendChild( errorMsg );
+            });
+    }
+
+    /**
      * Sync a server location to GMM.
      * Searches for the location by title and adds it to the map.
      *
@@ -1203,32 +1304,36 @@
 
                 // GMM -> Server (ADDED)
                 results.addedToServer.forEach( function( item ) {
-                    var row = createSyncedRow( item.gmm.title, 'ADDED', false );
+                    var row = createSyncedRow( item.gmm.title, 'ADDED', null );
                     syncedList.appendChild( row );
                 });
 
                 // Server -> GMM without warnings (MATCHED)
                 results.addedToGmm.forEach( function( item ) {
                     var googleTitle = item.gmm ? item.gmm.googleTitle : null;
-                    var row = createSyncedRow( item.server.title, 'MATCHED', true, googleTitle );
+                    var gmmId = item.gmm ? item.gmm.gmmId : null;
+                    var onUndo = gmmId ? function( row ) {
+                        handleUndoClick( dialog, row, gmmId, item.server.title );
+                    } : null;
+                    var row = createSyncedRow( item.server.title, 'MATCHED', onUndo, googleTitle );
                     syncedList.appendChild( row );
                 });
 
                 // Linked by title (LINKED)
                 if ( results.linkedByTitle ) {
                     results.linkedByTitle.forEach( function( item ) {
-                        var row = createSyncedRow( item.server.title, 'LINKED', false );
+                        var row = createSyncedRow( item.server.title, 'LINKED', null );
                         syncedList.appendChild( row );
                     });
                 }
 
                 // Deletions
                 results.deletedFromServer.forEach( function( loc ) {
-                    var row = createSyncedRow( loc.title, 'REMOVED', false );
+                    var row = createSyncedRow( loc.title, 'REMOVED', null );
                     syncedList.appendChild( row );
                 });
                 results.deletedFromGmm.forEach( function( loc ) {
-                    var row = createSyncedRow( loc.title, 'REMOVED', false );
+                    var row = createSyncedRow( loc.title, 'REMOVED', null );
                     syncedList.appendChild( row );
                 });
 
@@ -1253,7 +1358,11 @@
                 });
 
                 results.warnings.forEach( function( item ) {
-                    var row = createWarningRow( item.server.title, item.warnings, item.gmm );
+                    var gmmId = item.gmm ? item.gmm.gmmId : null;
+                    var onUndo = gmmId ? function( row ) {
+                        handleUndoClick( dialog, row, gmmId, item.server.title );
+                    } : null;
+                    var row = createWarningRow( item.server.title, item.warnings, item.gmm, onUndo );
                     warningsList.appendChild( row );
                 });
 
@@ -1353,11 +1462,11 @@
      * Create a synced row for the results dialog (success tier).
      * @param {string} title - Location title (server title).
      * @param {string} status - Status label (ADDED, MATCHED, REMOVED).
-     * @param {boolean} showUndoStub - Whether to show [Undo] stub button.
+     * @param {Function} [onUndo] - Callback when Undo is clicked (receives row element).
      * @param {string} [googleTitle] - The Google title that was matched to.
      * @returns {Element} The row element.
      */
-    function createSyncedRow( title, status, showUndoStub, googleTitle ) {
+    function createSyncedRow( title, status, onUndo, googleTitle ) {
         // If we have a googleTitle, use result-item container for multi-line display
         if ( googleTitle ) {
             var item = TTDom.createElement( 'div', {
@@ -1384,13 +1493,14 @@
             });
             actionsEl.appendChild( statusEl );
 
-            if ( showUndoStub ) {
+            if ( onUndo ) {
                 var undoBtn = TTDom.createElement( 'button', {
                     className: 'tt-sync-action-btn',
                     text: 'Undo'
                 });
-                undoBtn.disabled = true;
-                undoBtn.title = 'Coming soon';
+                undoBtn.addEventListener( 'click', function() {
+                    onUndo( item );
+                });
                 actionsEl.appendChild( undoBtn );
             }
 
@@ -1428,13 +1538,14 @@
         });
         actionsEl.appendChild( statusEl );
 
-        if ( showUndoStub ) {
+        if ( onUndo ) {
             var undoBtn = TTDom.createElement( 'button', {
                 className: 'tt-sync-action-btn',
                 text: 'Undo'
             });
-            undoBtn.disabled = true;
-            undoBtn.title = 'Coming soon';
+            undoBtn.addEventListener( 'click', function() {
+                onUndo( row );
+            });
             actionsEl.appendChild( undoBtn );
         }
 
@@ -1447,9 +1558,10 @@
      * @param {string} title - Location title (server title).
      * @param {Array} warnings - Array of warning objects.
      * @param {Object} gmm - GMM location info (for potential undo and googleTitle).
+     * @param {Function} [onUndo] - Callback when Undo is clicked (receives row element).
      * @returns {Element} The row element.
      */
-    function createWarningRow( title, warnings, gmm ) {
+    function createWarningRow( title, warnings, gmm, onUndo ) {
         var item = TTDom.createElement( 'div', {
             className: 'tt-sync-result-item'
         });
@@ -1469,13 +1581,16 @@
             className: 'tt-sync-result-actions'
         });
 
-        var undoBtn = TTDom.createElement( 'button', {
-            className: 'tt-sync-action-btn',
-            text: 'Undo'
-        });
-        undoBtn.disabled = true;
-        undoBtn.title = 'Coming soon';
-        actionsEl.appendChild( undoBtn );
+        if ( onUndo ) {
+            var undoBtn = TTDom.createElement( 'button', {
+                className: 'tt-sync-action-btn',
+                text: 'Undo'
+            });
+            undoBtn.addEventListener( 'click', function() {
+                onUndo( item );
+            });
+            actionsEl.appendChild( undoBtn );
+        }
 
         titleRow.appendChild( actionsEl );
         item.appendChild( titleRow );
