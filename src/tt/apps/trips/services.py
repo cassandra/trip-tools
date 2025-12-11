@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from django.contrib.auth.models import User as UserType
 from django.urls import reverse
 
+from tt.apps.api.constants import APIFields as F
 from tt.apps.journal.helpers import PublishingStatusHelper
 from tt.apps.journal.models import Journal
 from tt.apps.members.models import TripMember
@@ -34,10 +35,15 @@ class TripService:
         Returns:
             Updated Trip instance.
         """
-        simple_fields = [ 'title', 'description', 'gmm_map_id' ]
-        for field in simple_fields:
-            if field in validated_data:
-                setattr( trip, field, validated_data[field] )
+        # Explicit mapping: API field name -> model field name
+        api_to_model_fields = {
+            F.TITLE: 'title',
+            F.DESCRIPTION: 'description',
+            F.GMM_MAP_ID: 'gmm_map_id',
+        }
+        for api_field, model_field in api_to_model_fields.items():
+            if api_field in validated_data:
+                setattr( trip, model_field, validated_data[api_field] )
 
         trip.save()
         return trip

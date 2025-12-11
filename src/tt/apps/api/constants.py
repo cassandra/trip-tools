@@ -79,6 +79,12 @@ class APIFields:
     CONFIG_VERSION = 'config_version'
 
     # -------------------------------------------------------------------------
+    # Contact Info
+    # -------------------------------------------------------------------------
+    CONTACT_TYPE = 'contact_type'
+    IS_PRIMARY = 'is_primary'
+
+    # -------------------------------------------------------------------------
     # Enum type definitions (for client config)
     # -------------------------------------------------------------------------
     SERVER_VERSION = 'server_version'

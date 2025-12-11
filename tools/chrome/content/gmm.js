@@ -2,7 +2,7 @@
  * Trip Tools Chrome Extension - GMM Content Script
  * Injected into Google My Maps pages.
  * Uses TTGmmAdapter for DOM operations, service worker for categories.
- * Depends on: constants.js, storage.js, dom.js,
+ * Depends on: constants.js, storage.js, dom.js, text-utils.js,
  *             site-adapter.js, gmm-selectors.js, gmm-adapter.js
  */
 
@@ -17,6 +17,99 @@
     var TT_CATEGORY_BTN_CLASS = 'tt-category-btn';
     var TT_SUBCATEGORY_PICKER_CLASS = 'tt-subcategory-picker';
     var TT_DECORATED_ATTR = 'data-tt-decorated';
+
+    // =========================================================================
+    // Contact Info Extraction (from "Details from Google Maps")
+    // =========================================================================
+
+    /**
+     * Find a section container by looking for a div with exact header text.
+     * @param {Element} container - Parent container to search within.
+     * @param {string} headerText - Exact text of the header div.
+     * @returns {Element|null} - Parent element of the header div, or null.
+     */
+    function findSectionByHeaderText( container, headerText ) {
+        var allDivs = container.querySelectorAll( 'div' );
+        for ( var i = 0; i < allDivs.length; i++ ) {
+            if ( allDivs[i].textContent.trim() === headerText ) {
+                return allDivs[i].parentElement;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Extract contact information from GMM "Details from Google Maps" section.
+     * Uses TTText utilities for pattern matching.
+     * @param {Element} infoPanel - The GMM info panel element.
+     * @returns {Array} - Array of contact info objects.
+     */
+    function extractGoogleMapsDetails( infoPanel ) {
+        var contacts = [];
+
+        if ( !infoPanel ) {
+            return contacts;
+        }
+
+        // Find the "Details from Google Maps" section by header text
+        var detailsSection = findSectionByHeaderText( infoPanel, 'Details from Google Maps' );
+        if ( !detailsSection ) {
+            return contacts;
+        }
+
+        // Get all direct child divs
+        var children = detailsSection.querySelectorAll( ':scope > div' );
+
+        children.forEach( function( child ) {
+            var text = child.textContent.trim();
+
+            // Skip header div and Remove button
+            if ( text === 'Details from Google Maps' || text === 'Remove' ) {
+                return;
+            }
+
+            // Check for website (has anchor tag, exclude Google Maps links)
+            var anchor = child.querySelector( 'a[href]' );
+            if ( anchor ) {
+                var url = TTText.extractUrlFromAnchor( anchor, ['maps.google.com'] );
+                if ( url ) {
+                    contacts.push({
+                        contact_type: 'website',
+                        value: url,
+                        label: '',
+                        is_primary: false
+                    });
+                    return;
+                }
+            }
+
+            if ( !text ) return;
+
+            // Check for phone
+            if ( TTText.isPhoneNumber( text ) ) {
+                contacts.push({
+                    contact_type: 'phone',
+                    value: text,
+                    label: '',
+                    is_primary: false
+                });
+                return;
+            }
+
+            // Check for address
+            if ( TTText.isStreetAddress( text ) ) {
+                contacts.push({
+                    contact_type: 'address',
+                    value: text,
+                    label: '',
+                    is_primary: false
+                });
+                return;
+            }
+        });
+
+        return contacts;
+    }
 
     // =========================================================================
     // Initialization
@@ -381,6 +474,7 @@
 
     /**
      * Add location with category/subcategory styling.
+     * Extracts contact info from "Details from Google Maps" section before adding.
      * @param {Element} dialogNode - The dialog element.
      * @param {Object} category - Category from server.
      * @param {Object|null} subcategory - Subcategory or null.
@@ -388,6 +482,12 @@
     function addLocationWithCategory( dialogNode, category, subcategory ) {
         var colorRgb = subcategory ? subcategory.color_code : category.color_code;
         var iconCode = subcategory ? subcategory.icon_code : category.icon_code;
+
+        // Extract contact info before dialog closes (best effort)
+        var contactInfo = extractGoogleMapsDetails( dialogNode );
+        if ( contactInfo.length > 0 ) {
+            console.log( '[TT GMM] Extracted contact info:', contactInfo );
+        }
 
         console.log( '[TT GMM] Adding location - layer: ' + category.name +
                      ', color: ' + colorRgb + ', icon: ' + iconCode );
@@ -412,6 +512,11 @@
             if ( result.coordinates ) {
                 locationData.latitude = result.coordinates.latitude;
                 locationData.longitude = result.coordinates.longitude;
+            }
+
+            // Include contact info if extracted
+            if ( contactInfo.length > 0 ) {
+                locationData.contact_info = contactInfo;
             }
 
             // Save to server via background script

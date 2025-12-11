@@ -34,3 +34,4 @@ class ClientConfig:
     location_categories: List[LocationCategory]
     desirability_type: List[Dict[str, str]] = field(default_factory=list)
     advanced_booking_type: List[Dict[str, str]] = field(default_factory=list)
+    contact_type: List[Dict[str, str]] = field(default_factory=list)

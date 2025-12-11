@@ -14,6 +14,7 @@ from django.conf import settings
 
 from tt.apps.api.constants import APIFields as F
 from tt.apps.common.redis_client import get_redis_client
+from tt.apps.contacts.enums import ContactType
 from tt.apps.locations.enums import AdvancedBookingType, DesirabilityType
 from tt.apps.locations.models import LocationCategory
 
@@ -163,6 +164,7 @@ class ClientConfigService:
             location_categories=categories,
             desirability_type=cls._build_enum_type_list(DesirabilityType),
             advanced_booking_type=cls._build_enum_type_list(AdvancedBookingType),
+            contact_type=cls._build_enum_type_list(ContactType),
         )
 
         # Serialize using ClientConfigSerializer

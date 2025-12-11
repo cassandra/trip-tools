@@ -3,7 +3,29 @@ from typing import Any, Dict, List
 from rest_framework import serializers
 
 from tt.apps.api.constants import APIFields as F
+from tt.apps.contacts.models import ContactInfo
 from tt.apps.locations.models import Location, LocationNote
+
+
+class ContactInfoSerializer( serializers.Serializer ):
+    """
+    Serializer for ContactInfo model (nested in Location).
+
+    Input accepts lowercase contact_type values (e.g., 'phone', 'website').
+    Output provides the same format for consistency.
+    """
+    contact_type = serializers.CharField()
+    value = serializers.CharField()
+    label = serializers.CharField( required = False, allow_blank = True, default = '' )
+    is_primary = serializers.BooleanField( required = False, default = False )
+
+    def to_representation( self, instance: ContactInfo ) -> Dict[str, Any]:
+        return {
+            F.CONTACT_TYPE: str( instance.contact_type ),
+            F.VALUE: instance.value,
+            F.LABEL: instance.label,
+            F.IS_PRIMARY: instance.is_primary,
+        }
 
 
 class LocationNoteSerializer( serializers.Serializer ):
@@ -85,6 +107,10 @@ class LocationSerializer( serializers.Serializer ):
         many = True,
         required = False,
     )
+    contact_info = ContactInfoSerializer(
+        many = True,
+        required = False,
+    )
     version = serializers.IntegerField( read_only = True )
     created_datetime = serializers.DateTimeField( read_only = True )
     modified_datetime = serializers.DateTimeField( read_only = True )
@@ -95,6 +121,11 @@ class LocationSerializer( serializers.Serializer ):
         for note in instance.location_notes.all():
             location_notes.append( LocationNoteSerializer().to_representation( note ) )
 
+        # Serialize contact info
+        contact_info: List[Dict[str, Any]] = []
+        for info in instance.contact_info.all():
+            contact_info.append( ContactInfoSerializer().to_representation( info ) )
+
         return {
             F.UUID: str( instance.uuid ),
             F.TRIP_UUID: str( instance.trip.uuid ),
@@ -102,7 +133,7 @@ class LocationSerializer( serializers.Serializer ):
             F.VERSION: instance.version,
             F.TITLE: instance.title,
             F.SUBCATEGORY_SLUG: instance.subcategory.slug if instance.subcategory else None,
-            F.CONTACT_INFO: None,  # TODO: Serialize contact_info when needed
+            F.CONTACT_INFO: contact_info,
             F.RATING: float( instance.rating ) if instance.rating else None,
             F.DESIRABILITY: str( instance.desirability ) if instance.desirability else None,
             F.ADVANCED_BOOKING: str( instance.advanced_booking ) if instance.advanced_booking else None,

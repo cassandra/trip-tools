@@ -847,7 +847,7 @@ function handleGmmUnlinkMap( data ) {
 /**
  * Handle save location request from GMM content script.
  * Creates location on server and updates local sync metadata.
- * @param {Object} data - { gmm_id, title, latitude, longitude, category_slug, subcategory_slug }
+ * @param {Object} data - { gmm_id, title, latitude, longitude, category_slug, subcategory_slug, contact_info }
  */
 function handleSaveLocation( data ) {
     if ( !data || !data.gmm_id || !data.title ) {
@@ -876,6 +876,11 @@ function handleSaveLocation( data ) {
             if ( data.latitude !== undefined && data.longitude !== undefined ) {
                 locationData.latitude = data.latitude;
                 locationData.longitude = data.longitude;
+            }
+
+            // Include contact info if available
+            if ( data.contact_info && data.contact_info.length > 0 ) {
+                locationData.contact_info = data.contact_info;
             }
 
             return TTApi.createLocation( locationData );

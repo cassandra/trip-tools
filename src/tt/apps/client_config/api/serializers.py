@@ -68,4 +68,5 @@ class ClientConfigSerializer(serializers.Serializer):
             ).data,
             F.DESIRABILITY_TYPE: instance.desirability_type,
             F.ADVANCED_BOOKING_TYPE: instance.advanced_booking_type,
+            F.CONTACT_TYPE: instance.contact_type,
         }

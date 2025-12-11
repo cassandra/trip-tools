@@ -70,6 +70,7 @@
                 "shared/constants.js",
                 "shared/storage.js",
                 "shared/dom.js",
+                "shared/text-utils.js",
                 "shared/site-adapter.js",
                 "adapters/gmm-selectors.js",
                 "adapters/gmm-adapter.js",
