@@ -14,6 +14,12 @@
     // Cancellation state for sync execute phase
     var _executeStopRequested = false;
 
+    // Fix mode context - stores the server location being fixed
+    var _fixContext = null;
+
+    // Current trip data - stored for post-fix comparison
+    var _currentTripData = null;
+
     // Warning types for post-sync review
     var WARNING_TYPE = {
         NO_CATEGORY: 'no_category',
@@ -110,6 +116,7 @@
         }
 
         _syncInProgress = true;
+        _currentTripData = data;  // Store for fix mode
         console.log( '[TT Sync Compare] Fetching locations...' );
 
         return Promise.all( [
@@ -147,8 +154,9 @@
                 return results;
             }
 
-            // Show execute results dialog
-            return showSyncExecuteResultsDialog( results );
+            // Show execute results dialog (don't wait for it to close)
+            showSyncExecuteResultsDialog( results );
+            return results;
         })
         .finally( function() {
             _syncInProgress = false;
@@ -456,6 +464,394 @@
             });
     }
 
+    // =========================================================================
+    // FIX Mode Functions
+    // =========================================================================
+
+    /**
+     * Enter FIX mode for a failed server location.
+     * Pre-fills search box and sets up fix context.
+     * @param {Object} serverLocation - The server location to fix.
+     * @param {string} failureReason - The error type that caused the failure.
+     */
+    function enterFixMode( serverLocation, failureReason ) {
+        console.log( '[TT Sync Fix] Entering fix mode for:', serverLocation.title );
+
+        // Store context
+        _fixContext = {
+            serverLocation: serverLocation,
+            failureReason: failureReason
+        };
+
+        // Close the results dialog
+        var resultsDialog = document.querySelector( '.' + TT_SYNC_DIALOG_CLASS );
+        if ( resultsDialog ) {
+            resultsDialog.remove();
+        }
+
+        // Enter FIX mode with banner
+        TTOperationMode.enter( TTOperationMode.Mode.GMM_SYNC_FIX, {
+            message: "Fixing '" + serverLocation.title + "' \u2014 Find the location, then click Link",
+            onStop: exitFixMode
+        });
+
+        // Fill search box with server title and submit the search
+        var searchField = document.querySelector( TTGmmAdapter.selectors.SEARCH_FIELD );
+        if ( searchField ) {
+            var searchTitle = serverLocation.title;
+            TTDom.setInputValue( searchField, searchTitle );
+
+            // Submit the search so results appear
+            TTGmmAdapter.submitSearch()
+                .then( function() {
+                    // Wait for GMM to clear the field (indicates search is processed)
+                    return new Promise( function( resolve ) {
+                        var checkInterval = setInterval( function() {
+                            if ( searchField.value === '' ) {
+                                clearInterval( checkInterval );
+                                resolve();
+                            }
+                        }, 100 );
+                        // Timeout after 5 seconds
+                        setTimeout( function() {
+                            clearInterval( checkInterval );
+                            resolve();
+                        }, 5000 );
+                    });
+                })
+                .then( function() {
+                    // Re-populate the field so user sees what was searched
+                    TTDom.setInputValue( searchField, searchTitle );
+                    searchField.focus();
+                })
+                .catch( function( error ) {
+                    console.error( '[TT Sync Fix] Error submitting search:', error );
+                });
+        }
+    }
+
+    /**
+     * Exit FIX mode and clean up.
+     */
+    function exitFixMode() {
+        console.log( '[TT Sync Fix] Exiting fix mode' );
+        _fixContext = null;
+        TTOperationMode.exit();
+    }
+
+    /**
+     * Get current fix context (for gmm.js to access).
+     * @returns {Object|null} Fix context or null if not in fix mode.
+     */
+    function getFixContext() {
+        return _fixContext;
+    }
+
+    var TT_FIX_DECORATED_ATTR = 'data-tt-fix-decorated';
+
+    /**
+     * Decorate add-to-map dialog in FIX mode.
+     * Hides native button, shows "Link This Location" button instead.
+     * @param {Element} dialogNode - The dialog element.
+     */
+    function decorateFixModeDialog( dialogNode ) {
+        // Guard against multiple decoration
+        if ( dialogNode.getAttribute( TT_FIX_DECORATED_ATTR ) ) {
+            return;
+        }
+        dialogNode.setAttribute( TT_FIX_DECORATED_ATTR, 'true' );
+
+        var addButton = dialogNode.querySelector( TTGmmAdapter.selectors.ADD_TO_MAP_BUTTON );
+        if ( !addButton ) {
+            console.warn( '[TT Sync Fix] Add to map button not found in dialog' );
+            return;
+        }
+
+        // Hide native button
+        addButton.style.display = 'none';
+
+        var container = addButton.parentNode;
+
+        // Create Link button container
+        var buttonContainer = TTDom.createElement( 'div', {
+            className: 'tt-fix-mode-buttons'
+        });
+
+        // Create Link This Location button
+        var linkButton = TTDom.createElement( 'button', {
+            className: 'tt-gmm-btn tt-category-btn tt-fix-link-btn',
+            text: 'Link This Location'
+        });
+
+        linkButton.addEventListener( 'click', function( event ) {
+            event.stopPropagation();
+            handleFixLinkClick( dialogNode, linkButton );
+        });
+
+        buttonContainer.appendChild( linkButton );
+        container.appendChild( buttonContainer );
+
+        console.log( '[TT Sync Fix] Dialog decorated with Link button' );
+    }
+
+    /**
+     * Handle "Link This Location" button click in FIX mode.
+     * Adds the location with correct styling and updates server.
+     * @param {Element} dialogNode - The dialog element.
+     * @param {Element} linkButton - The Link button element.
+     */
+    function handleFixLinkClick( dialogNode, linkButton ) {
+        if ( !_fixContext ) {
+            console.error( '[TT Sync Fix] No fix context available' );
+            return;
+        }
+
+        var serverLoc = _fixContext.serverLocation;
+        console.log( '[TT Sync Fix] Linking location:', serverLoc.title );
+
+        // Disable button to prevent double-clicks
+        linkButton.disabled = true;
+        linkButton.textContent = 'Linking...';
+
+        var resultData = null;
+
+        // Get styling options from server location's subcategory
+        getStyleOptionsForLocation( serverLoc )
+            .then( function( styleOptions ) {
+                // Add custom title to rename if needed
+                styleOptions.customTitle = serverLoc.title;
+
+                console.log( '[TT Sync Fix] Adding with style options:', styleOptions );
+
+                // Add the location to GMM with proper layer/icon/color
+                return TTGmmAdapter.addLocationToLayer( styleOptions );
+            })
+            .then( function( result ) {
+                console.log( '[TT Sync Fix] Location added to GMM:', result );
+                resultData = result;
+
+                // Update server location with gmm_id
+                return updateServerLocationGmmId( serverLoc.uuid, result.gmmId );
+            })
+            .then( function() {
+                console.log( '[TT Sync Fix] Server updated with gmm_id' );
+
+                // Close info window
+                return TTGmmAdapter.closeInfoWindow();
+            })
+            .then( function() {
+                // Clear search results to leave map clean
+                return TTGmmAdapter.clearSearchResults();
+            })
+            .then( function() {
+                // Capture fixed location before clearing context
+                var fixedLoc = _fixContext.serverLocation;
+
+                // Exit fix mode
+                exitFixMode();
+
+                // Show fix complete dialog with fresh sync comparison
+                showFixCompleteDialog( fixedLoc, resultData );
+            })
+            .catch( function( error ) {
+                console.error( '[TT Sync Fix] Fix failed:', error );
+
+                // Re-enable button
+                linkButton.disabled = false;
+                linkButton.textContent = 'Link This Location';
+
+                // Show error (stay in FIX mode so user can try again)
+                showErrorNotification( 'Failed to link location: ' + error.message );
+            });
+    }
+
+    /**
+     * Show error notification banner.
+     * @param {string} message - Error message to display.
+     */
+    function showErrorNotification( message ) {
+        // Remove any existing notification
+        var existing = document.querySelector( '.tt-error-notification' );
+        if ( existing ) {
+            existing.remove();
+        }
+
+        var notification = TTDom.createElement( 'div', {
+            className: 'tt-error-notification',
+            text: message
+        });
+
+        // Style inline to ensure it displays correctly
+        notification.style.cssText = [
+            'position: fixed',
+            'top: 60px',
+            'left: 50%',
+            'transform: translateX(-50%)',
+            'background: #d93025',
+            'color: white',
+            'padding: 12px 24px',
+            'border-radius: 8px',
+            'font-family: "Google Sans", Roboto, Arial, sans-serif',
+            'font-size: 14px',
+            'box-shadow: 0 4px 12px rgba(0,0,0,0.3)',
+            'z-index: 100000',
+            'cursor: pointer'
+        ].join( ';' );
+
+        notification.addEventListener( 'click', function() {
+            notification.remove();
+        });
+
+        document.body.appendChild( notification );
+
+        // Auto-dismiss after 5 seconds
+        setTimeout( function() {
+            if ( notification.parentNode ) {
+                notification.remove();
+            }
+        }, 5000 );
+    }
+
+    /**
+     * Show fix complete dialog with fresh sync comparison.
+     * @param {Object} serverLoc - The server location that was fixed.
+     * @param {Object} resultData - The GMM result from addLocationToLayer.
+     */
+    function showFixCompleteDialog( serverLoc, resultData ) {
+        console.log( '[TT Sync Fix] Showing fix complete dialog' );
+
+        // Create dialog
+        var dialog = TTDom.createElement( 'div', {
+            className: TT_SYNC_DIALOG_CLASS
+        });
+
+        // Header
+        dialog.appendChild( TTDom.createElement( 'div', {
+            className: 'tt-sync-header',
+            text: 'Fix Complete'
+        }));
+
+        // Success message
+        dialog.appendChild( TTDom.createElement( 'div', {
+            className: 'tt-sync-in-sync-message',
+            text: "Successfully linked '" + serverLoc.title + "'"
+        }));
+
+        // Loading indicator for comparison
+        var loadingDiv = TTDom.createElement( 'div', {
+            className: 'tt-loading',
+            text: 'Checking sync status...'
+        });
+        dialog.appendChild( loadingDiv );
+
+        // Button container
+        var buttonContainer = TTDom.createElement( 'div', {
+            className: 'tt-sync-buttons'
+        });
+
+        var closeBtn = TTDom.createElement( 'button', {
+            className: 'tt-gmm-btn tt-cancel-btn',
+            text: 'Close'
+        });
+        closeBtn.addEventListener( 'click', function() {
+            dialog.remove();
+        });
+        buttonContainer.appendChild( closeBtn );
+
+        dialog.appendChild( buttonContainer );
+        document.body.appendChild( dialog );
+
+        // Fetch fresh comparison
+        fetchFreshComparison()
+            .then( function( diff ) {
+                loadingDiv.remove();
+
+                var hasRemaining = diff.serverOnly.length > 0 || diff.gmmOnly.length > 0 ||
+                                  diff.suggestedMatches.length > 0;
+
+                if ( hasRemaining ) {
+                    // Show comparison summary
+                    var summaryDiv = renderSyncComparisonSummary( diff );
+                    buttonContainer.parentNode.insertBefore( summaryDiv, buttonContainer );
+
+                    // Add "Sync Again" button
+                    var syncAgainBtn = TTDom.createElement( 'button', {
+                        className: 'tt-gmm-btn tt-category-btn',
+                        text: 'Sync Again'
+                    });
+                    syncAgainBtn.addEventListener( 'click', function() {
+                        dialog.remove();
+                        performSync( _currentTripData );
+                    });
+                    buttonContainer.insertBefore( syncAgainBtn, closeBtn );
+                } else {
+                    // All in sync!
+                    buttonContainer.parentNode.insertBefore( TTDom.createElement( 'div', {
+                        className: 'tt-sync-in-sync-message',
+                        text: 'All locations are now in sync!'
+                    }), buttonContainer );
+                }
+            })
+            .catch( function( error ) {
+                console.error( '[TT Sync Fix] Failed to get comparison:', error );
+                loadingDiv.textContent = 'Could not check sync status';
+            });
+    }
+
+    /**
+     * Fetch fresh sync comparison for current trip.
+     * @returns {Promise<Object>} Diff results.
+     */
+    function fetchFreshComparison() {
+        if ( !_currentTripData ) {
+            return Promise.reject( new Error( 'No trip data available' ) );
+        }
+
+        return Promise.all( [
+            fetchServerLocations( _currentTripData.tripUuid ),
+            getGmmLocations()
+        ])
+        .then( function( results ) {
+            var serverLocations = results[0];
+            var gmmLocations = results[1];
+            return compareLocations( serverLocations, gmmLocations );
+        });
+    }
+
+    /**
+     * Render sync comparison summary into a container.
+     * @param {Object} diff - Diff results from compareLocations.
+     * @returns {Element} The summary container element.
+     */
+    function renderSyncComparisonSummary( diff ) {
+        var container = TTDom.createElement( 'div', {
+            className: 'tt-sync-section'
+        });
+
+        container.appendChild( TTDom.createElement( 'div', {
+            className: 'tt-sync-section-header',
+            text: 'Remaining Issues'
+        }));
+
+        var parts = [];
+        if ( diff.serverOnly.length > 0 ) {
+            parts.push( diff.serverOnly.length + ' server-only' );
+        }
+        if ( diff.gmmOnly.length > 0 ) {
+            parts.push( diff.gmmOnly.length + ' GMM-only' );
+        }
+        if ( diff.suggestedMatches.length > 0 ) {
+            parts.push( diff.suggestedMatches.length + ' to link' );
+        }
+
+        container.appendChild( TTDom.createElement( 'div', {
+            className: 'tt-sync-summary',
+            text: parts.join( ', ' )
+        }));
+
+        return container;
+    }
+
     /**
      * Sync a server location to GMM.
      * Searches for the location by title and adds it to the map.
@@ -493,6 +889,16 @@
 
                 // Search and add to GMM
                 return TTGmmAdapter.searchAndAddLocation( serverLoc.title, styleOptions );
+            })
+            .then( function( result ) {
+                // Clear search results for error cases (success cases clear later)
+                if ( result.error ) {
+                    return TTGmmAdapter.clearSearchResults()
+                        .then( function() {
+                            return result;
+                        });
+                }
+                return result;
             })
             .then( function( result ) {
                 console.log( '[TT GMM Sync] Search result:', result );
@@ -573,6 +979,10 @@
                 return updateServerLocationGmmId( serverLoc.uuid, result.gmmId )
                     .then( function() {
                         return TTGmmAdapter.closeInfoWindow();
+                    })
+                    .then( function() {
+                        // Clear search results to leave map clean
+                        return TTGmmAdapter.clearSearchResults();
                     })
                     .then( function() {
                         return {
@@ -1369,7 +1779,7 @@
                 });
 
                 results.failures.forEach( function( item ) {
-                    var row = createFailureRow( item.server.title, item.error, item.resultCount );
+                    var row = createFailureRow( item );
                     failuresList.appendChild( row );
                 });
 
@@ -1601,12 +2011,15 @@
     /**
      * Create a failure row for the results dialog (failure tier).
      * @param {string} title - Location title.
-     * @param {string} error - Error type.
-     * @param {number} resultCount - Optional search result count.
+     * @param {Object} item - The failure item containing server location, error, and resultCount.
      * @returns {Element} The row element.
      */
-    function createFailureRow( title, error, resultCount ) {
-        var item = TTDom.createElement( 'div', {
+    function createFailureRow( item ) {
+        var title = item.server.title;
+        var error = item.error;
+        var resultCount = item.resultCount;
+
+        var rowEl = TTDom.createElement( 'div', {
             className: 'tt-sync-result-item'
         });
 
@@ -1629,12 +2042,14 @@
             className: 'tt-sync-action-btn',
             text: 'Fix'
         });
-        fixBtn.disabled = true;
-        fixBtn.title = 'Coming soon';
+        // Enable Fix button with click handler
+        fixBtn.addEventListener( 'click', function() {
+            enterFixMode( item.server, item.error );
+        });
         actionsEl.appendChild( fixBtn );
 
         titleRow.appendChild( actionsEl );
-        item.appendChild( titleRow );
+        rowEl.appendChild( titleRow );
 
         // Error message
         var errorMsg = ERROR_MESSAGES[error] || error;
@@ -1652,9 +2067,9 @@
             className: 'tt-sync-item-message tt-sync-item-message-error',
             text: errorMsg
         });
-        item.appendChild( msgEl );
+        rowEl.appendChild( msgEl );
 
-        return item;
+        return rowEl;
     }
 
     /**
@@ -1726,5 +2141,11 @@
 
     // Initialize on load
     initSync();
+
+    // Expose public API for FIX mode (used by gmm.js)
+    window.TTGmmSync = {
+        decorateFixModeDialog: decorateFixModeDialog,
+        getFixContext: getFixContext
+    };
 
 })();

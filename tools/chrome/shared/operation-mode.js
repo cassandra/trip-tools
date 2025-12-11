@@ -9,6 +9,13 @@ var TTOperationMode = ( function() {
 
     var BANNER_ID = 'tt-operation-banner';
     var BORDER_CLASS = 'tt-operation-active';
+    var BANNER_PARTIAL_CLASS = 'tt-operation-banner-partial';
+
+    // Banner styles
+    var BannerStyle = {
+        FULL: 'full',      // Full width, covers search bar (for full automation)
+        PARTIAL: 'partial' // Right 50%, leaves search bar accessible (for semi-automation)
+    };
 
     // Mode definitions with metadata
     // GMM-specific modes are prefixed with GMM_
@@ -18,28 +25,32 @@ var TTOperationMode = ( function() {
             title: null,
             description: null,
             cssClass: null,
-            suppressGmmIntercepts: false
+            suppressGmmIntercepts: false,
+            bannerStyle: null
         },
         GMM_SYNC_EXECUTE: {
             id: 'gmm_sync_execute',
             title: 'Sync in Progress',
             description: 'Please do not interact with the map',
             cssClass: 'tt-operation-gmm-sync-execute',
-            suppressGmmIntercepts: true
+            suppressGmmIntercepts: true,
+            bannerStyle: BannerStyle.FULL
         },
         GMM_SYNC_UNDO: {
             id: 'gmm_sync_undo',
             title: 'Removing Location',
             description: null,
             cssClass: 'tt-operation-gmm-sync-undo',
-            suppressGmmIntercepts: true
+            suppressGmmIntercepts: true,
+            bannerStyle: BannerStyle.FULL
         },
         GMM_SYNC_FIX: {
             id: 'gmm_sync_fix',
             title: 'Manual Fix Mode',
             description: 'Select the correct location',
             cssClass: 'tt-operation-gmm-sync-fix',
-            suppressGmmIntercepts: true
+            suppressGmmIntercepts: true,
+            bannerStyle: BannerStyle.PARTIAL
         }
     };
 
@@ -165,6 +176,11 @@ var TTOperationMode = ( function() {
         // Add mode-specific CSS class
         if ( modeDef.cssClass ) {
             banner.classList.add( modeDef.cssClass );
+        }
+
+        // Add partial banner class if mode uses partial style
+        if ( modeDef.bannerStyle === BannerStyle.PARTIAL ) {
+            banner.classList.add( BANNER_PARTIAL_CLASS );
         }
 
         // Title and message

@@ -330,11 +330,19 @@
 
     /**
      * Handle add-to-map dialog opening.
-     * Decorates with category buttons.
+     * Decorates with category buttons, or delegates to sync module for FIX mode.
      * @param {Element} dialogNode - The dialog element.
      */
     function handleAddToMapDialog( dialogNode ) {
-        // Skip decoration during operation modes that suppress intercepts
+        var currentMode = TTOperationMode.getMode();
+
+        // FIX mode: delegate to sync module
+        if ( currentMode === TTOperationMode.Mode.GMM_SYNC_FIX ) {
+            TTGmmSync.decorateFixModeDialog( dialogNode );
+            return;
+        }
+
+        // Other operation modes: skip decoration
         if ( TTOperationMode.suppressGmmIntercepts() ) {
             return;
         }

@@ -48,6 +48,7 @@ var TTGmmSelectors = {
     // Search results appear in sidebar with fl_id attribute on each result
     SEARCH_RESULTS_PANE: '#searchresults-pane',
     SEARCH_RESULTS_ITEMS: '#searchresults-pane [fl_id]',
+    SEARCH_RESULTS_CLOSE: '#sr-layer-status',
 
     // =========================================================================
     // Location Info Window

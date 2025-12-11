@@ -665,6 +665,35 @@ var TTGmmAdapter = TTSiteAdapter.create({
             return TTDom.clickRealistic( closeButton );
         },
 
+        /**
+         * Clear search results by clicking the close button in the search results pane.
+         * This dismisses the search results pane and clears map markers.
+         * @returns {Promise<void>}
+         */
+        clearSearchResults: function() {
+            var closeButton = this.getElement( 'SEARCH_RESULTS_CLOSE' );
+            if ( !closeButton ) {
+                // No search results pane visible
+                return Promise.resolve();
+            }
+
+            this.log( 'Clearing search results' );
+            return TTDom.click( closeButton );
+        },
+
+        /**
+         * Submit the current search query.
+         * @returns {Promise<void>}
+         */
+        submitSearch: function() {
+            var searchButton = document.querySelector( this.selectors.SEARCH_BUTTON );
+            if ( !searchButton ) {
+                return Promise.reject( new Error( 'Search button not found' ) );
+            }
+            this.log( 'Submitting search' );
+            return TTDom.click( searchButton );
+        },
+
         // =====================================================================
         // Map Title Operations
         // =====================================================================

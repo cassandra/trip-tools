@@ -775,6 +775,18 @@
     background: rgba(255, 255, 255, 0.3);
 }
 
+/* Partial banner - right 25% only (for semi-automated modes like FIX) */
+#tt-operation-banner.tt-operation-banner-partial {
+    left: auto;
+    right: 0;
+    width: 25%;
+    min-width: 280px;
+    flex-direction: column;
+    padding: 12px 16px;
+    gap: 8px;
+    text-align: center;
+}
+
 /* Mode-specific styling */
 #tt-operation-banner.tt-operation-gmm-sync-execute { }
 #tt-operation-banner.tt-operation-gmm-sync-undo { }
@@ -809,5 +821,53 @@
     font-size: 11px;
     color: #d93025;
     padding: 2px 12px 2px 24px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+/* =============================================================================
+ * FIX Mode Button
+ * ============================================================================= */
+
+.tt-fix-mode-buttons {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #dadce0;
+}
+
+.tt-fix-link-btn {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #fff;
+}
+
+.tt-fix-link-btn:hover {
+    background: #1557b0;
+    border-color: #1557b0;
+}
+
+.tt-fix-link-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+/* =============================================================================
+ * Fix Complete Dialog
+ * ============================================================================= */
+
+.tt-loading {
+    padding: 12px;
+    text-align: center;
+    color: #5f6368;
+    font-size: 13px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-summary {
+    font-size: 13px;
+    color: #5f6368;
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
