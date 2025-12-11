@@ -404,10 +404,14 @@
     function handleCategoryButtonClick( dialogNode, category ) {
         console.log( '[TT GMM] Category selected: ' + category.name );
 
-        // If category has subcategories, show picker
-        if ( category.subcategories && category.subcategories.length > 0 ) {
+        if ( category.subcategories && category.subcategories.length > 1 ) {
+            // Multiple subcategories - show picker
             showSubcategoryPicker( dialogNode, category );
+        } else if ( category.subcategories && category.subcategories.length === 1 ) {
+            // Singleton subcategory - auto-select
+            addLocationWithCategory( dialogNode, category, category.subcategories[0] );
         } else {
+            // No subcategories (shouldn't happen with proper seed data)
             addLocationWithCategory( dialogNode, category, null );
         }
     }

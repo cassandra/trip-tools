@@ -43,6 +43,7 @@ pip install -r src/tt/requirements/development.txt
 ./src/manage.py migrate
 ./src/manage.py tt_createsuperuser
 ./src/manage.py tt_creategroups
+./src/manage.py tt_createseeddata
 ./src/manage.py runserver
 ```
 
@@ -137,6 +138,7 @@ cd $PROJ_DIR
 ./src/manage.py migrate
 ./src/manage.py tt_createsuperuser
 ./src/manage.py tt_creategroups
+./src/manage.py tt_createseeddata
 ```
 
 It is a good idea to run the tests to validate that you can and that the installation seem fine.
@@ -182,6 +184,7 @@ cd $PROJ_DIR/src
 # User management
 ./src/manage.py tt_createsuperuser
 ./src/manage.py tt_creategroups
+./src/manage.py tt_createseeddata
 
 # Development server
 ./src/manage.py runserver              # Runs on http://127.0.0.1:6777

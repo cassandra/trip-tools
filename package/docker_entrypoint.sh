@@ -13,6 +13,9 @@ echo "Creating superuser and groups..."
 python manage.py tt_createsuperuser
 python manage.py tt_creategroups
 
+echo "Seeding application data..."
+python manage.py tt_createseeddata
+
 echo "Syncing settings..."
 python manage.py sync_settings
 
