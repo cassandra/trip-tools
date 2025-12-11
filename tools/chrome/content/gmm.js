@@ -334,8 +334,8 @@
      * @param {Element} dialogNode - The dialog element.
      */
     function handleAddToMapDialog( dialogNode ) {
-        // Skip decoration during sync mode
-        if ( TTSyncExecuteMode.isActive() ) {
+        // Skip decoration during operation modes that suppress intercepts
+        if ( TTOperationMode.suppressGmmIntercepts() ) {
             return;
         }
 
@@ -549,8 +549,8 @@
      * @param {Element} dialogNode - The dialog element.
      */
     function handleLocationDetailsDialog( dialogNode ) {
-        // Skip decoration during sync mode
-        if ( TTSyncExecuteMode.isActive() ) {
+        // Skip decoration during operation modes that suppress intercepts
+        if ( TTOperationMode.suppressGmmIntercepts() ) {
             return;
         }
 

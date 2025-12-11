@@ -231,9 +231,9 @@
             stopped: false
         };
 
-        // Reset cancellation state and enter sync mode
+        // Reset cancellation state and enter sync execute mode
         _executeStopRequested = false;
-        TTSyncExecuteMode.enter({
+        TTOperationMode.enter( TTOperationMode.Mode.GMM_SYNC_EXECUTE, {
             onStop: function() {
                 console.log( '[TT Sync Execute] Stop requested' );
                 _executeStopRequested = true;
@@ -355,8 +355,8 @@
                 throw error;
             })
             .finally( function() {
-                // Always exit sync mode when done
-                TTSyncExecuteMode.exit();
+                // Always exit operation mode when done
+                TTOperationMode.exit();
             });
     }
 
@@ -390,37 +390,18 @@
             undoBtn.disabled = true;
         }
 
-        // Show progress banner at top of dialog (before sections)
-        var banner = TTDom.createElement( 'div', {
-            className: 'tt-sync-undo-banner'
-        });
-        var spinner = TTDom.createElement( 'div', {
-            className: 'tt-loading-spinner'
-        });
-        banner.appendChild( spinner );
-        var bannerText = TTDom.createElement( 'span', {
-            text: "Removing '" + title + "'..."
-        });
-        banner.appendChild( bannerText );
-
-        // Insert banner after header
-        var header = dialog.querySelector( '.tt-sync-header' );
-        if ( header && header.nextSibling ) {
-            dialog.insertBefore( banner, header.nextSibling );
-        } else {
-            dialog.appendChild( banner );
-        }
-
         // Dim the row
         row.classList.add( 'tt-sync-row-removing' );
+
+        // Enter SYNC_UNDO mode - shows banner and prevents dialog decoration
+        TTOperationMode.enter( TTOperationMode.Mode.GMM_SYNC_UNDO, {
+            message: "'" + title + "'..."
+        });
 
         // Delete the GMM location
         deleteGmmLocation( gmmId )
             .then( function() {
                 console.log( '[TT Sync Execute] Undo successful for:', title );
-
-                // Remove banner
-                banner.remove();
 
                 // Update row to show REMOVED status
                 row.classList.remove( 'tt-sync-row-removing' );
@@ -454,9 +435,6 @@
             .catch( function( error ) {
                 console.error( '[TT Sync Execute] Undo failed for:', title, error );
 
-                // Remove banner
-                banner.remove();
-
                 // Restore row
                 row.classList.remove( 'tt-sync-row-removing' );
 
@@ -471,6 +449,10 @@
                     text: '\u26A0 Failed to remove: ' + ( error.message || error )
                 });
                 row.appendChild( errorMsg );
+            })
+            .finally( function() {
+                // Always exit operation mode
+                TTOperationMode.exit();
             });
     }
 

@@ -721,17 +721,17 @@
 }
 
 /* =============================================================================
- * Sync Execute Mode Indicator
+ * Operation Mode Indicator
  * ============================================================================= */
 
-/* Border around entire viewport when sync execute mode is active */
-.tt-sync-execute-active {
+/* Border around entire viewport when operation mode is active */
+.tt-operation-active {
     outline: 4px solid #ea8600 !important;
     outline-offset: -4px;
 }
 
 /* Fixed banner at top of viewport */
-#tt-sync-execute-banner {
+#tt-operation-banner {
     position: fixed;
     top: 0;
     left: 0;
@@ -750,11 +750,11 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.tt-sync-execute-message {
+.tt-operation-message {
     flex: 0 0 auto;
 }
 
-.tt-sync-execute-stop-btn {
+.tt-operation-stop-btn {
     padding: 6px 16px;
     border: 2px solid #fff;
     border-radius: 4px;
@@ -767,12 +767,19 @@
     transition: background-color 0.2s;
 }
 
-.tt-sync-execute-stop-btn:hover {
+.tt-operation-stop-btn:hover {
     background: rgba(255, 255, 255, 0.2);
 }
 
-.tt-sync-execute-stop-btn:active {
+.tt-operation-stop-btn:active {
     background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mode-specific styling */
+#tt-operation-banner.tt-operation-gmm-sync-execute { }
+#tt-operation-banner.tt-operation-gmm-sync-undo { }
+#tt-operation-banner.tt-operation-gmm-sync-fix {
+    background: #1a73e8;
 }
 
 /* Stopped notice in results dialog */
@@ -790,28 +797,6 @@
 /* =============================================================================
  * Undo Action States
  * ============================================================================= */
-
-/* Progress banner shown during undo operation */
-.tt-sync-undo-banner {
-    padding: 8px 12px;
-    margin-bottom: 12px;
-    background: #e8f0fe;
-    border: 1px solid #1a73e8;
-    border-radius: 4px;
-    color: #1a73e8;
-    font-size: 12px;
-    font-family: 'Google Sans', Roboto, Arial, sans-serif;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.tt-sync-undo-banner .tt-loading-spinner {
-    width: 14px;
-    height: 14px;
-    border-width: 2px;
-    border-top-color: #1a73e8;
-}
 
 /* Row being removed - dimmed and non-interactive */
 .tt-sync-row-removing {
