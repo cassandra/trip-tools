@@ -47,6 +47,7 @@ var TTGmmSelectors = {
 
     INFO_CONTAINER: '#map-infowindow-container',
     EDIT_BUTTON: '#map-infowindow-edit-button',
+    DELETE_BUTTON: '#map-infowindow-delete-button',
     STYLE_BUTTON: '#map-infowindow-style-button',
     TITLE_DIV: '#map-infowindow-attr-name-value',
     NOTES_DIV: '#map-infowindow-attr-description-value',

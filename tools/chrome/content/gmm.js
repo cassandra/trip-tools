@@ -583,6 +583,9 @@
 
                 renderUI();
 
+                // Intercept delete button (only needs to be done once)
+                interceptDeleteButton( dialogNode, location );
+
                 // Watch for edit mode changes via contenteditable attribute
                 var titleNode = dialogNode.querySelector( TTGmmAdapter.selectors.TITLE_DIV );
                 if ( titleNode ) {
@@ -1196,13 +1199,48 @@
         }, function( response ) {
             if ( chrome.runtime.lastError ) {
                 console.error( '[TT GMM] Update location failed:', chrome.runtime.lastError.message );
+                showErrorNotification( 'Changes not saved to server. Try editing again later.' );
                 return;
             }
             if ( response && response.success ) {
                 console.log( '[TT GMM] Location updated on server' );
             } else {
                 console.error( '[TT GMM] Update location failed:', response && response.error );
+                showErrorNotification( 'Changes not saved to server. Try editing again later.' );
             }
+        });
+    }
+
+    /**
+     * Send location delete to server via background.
+     * @param {string} locationUuid - Location UUID.
+     * @param {string} gmmId - GMM feature ID for metadata cleanup.
+     * @returns {Promise<boolean>} Resolves to true on success, false on failure.
+     */
+    function deleteLocationOnServer( locationUuid, gmmId ) {
+        return new Promise( function( resolve ) {
+            chrome.runtime.sendMessage({
+                type: TT.MESSAGE.TYPE_DELETE_LOCATION,
+                data: {
+                    uuid: locationUuid,
+                    gmmId: gmmId
+                }
+            }, function( response ) {
+                if ( chrome.runtime.lastError ) {
+                    console.error( '[TT GMM] Delete location failed:', chrome.runtime.lastError.message );
+                    showErrorNotification( 'Could not delete location. Try again later.' );
+                    resolve( false );
+                    return;
+                }
+                if ( response && response.success ) {
+                    console.log( '[TT GMM] Location deleted from server' );
+                    resolve( true );
+                } else {
+                    console.error( '[TT GMM] Delete location failed:', response && response.error );
+                    showErrorNotification( 'Could not delete location. Try again later.' );
+                    resolve( false );
+                }
+            });
         });
     }
 
@@ -1254,6 +1292,45 @@
             updateLocationOnServer( location.uuid, updates );
             // Don't prevent default - let GMM save proceed
         }, true ); // Capture phase to run before GMM's handler
+    }
+
+    /**
+     * Intercept GMM delete button to delete location from server.
+     * Clones the button so we can control when GMM's delete happens.
+     * @param {Element} dialogNode - The dialog element.
+     * @param {Object} location - Location object with uuid and gmm_id.
+     */
+    function interceptDeleteButton( dialogNode, location ) {
+        var originalButton = dialogNode.querySelector( TTGmmAdapter.selectors.DELETE_BUTTON );
+        if ( !originalButton || originalButton.hasAttribute( TT_INTERCEPTED_ATTR ) ) {
+            return;
+        }
+        originalButton.setAttribute( TT_INTERCEPTED_ATTR, 'true' );
+
+        // Clone the button (without our intercept attribute)
+        var clonedButton = originalButton.cloneNode( true );
+        clonedButton.removeAttribute( TT_INTERCEPTED_ATTR );
+
+        // Hide original, insert clone in its place
+        originalButton.style.display = 'none';
+        originalButton.parentNode.insertBefore( clonedButton, originalButton );
+
+        // Our clone handles the click
+        clonedButton.addEventListener( 'click', function( event ) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            console.log( '[TT GMM] Delete button clicked for:', location.uuid );
+
+            deleteLocationOnServer( location.uuid, location.gmm_id )
+                .then( function( success ) {
+                    if ( success ) {
+                        // Server delete succeeded - trigger GMM's delete
+                        originalButton.click();
+                    }
+                    // On failure: error notification already shown, GMM untouched
+                });
+        });
     }
 
     /**

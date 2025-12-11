@@ -70,6 +70,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleGetLocation( message.data );
         case TT.MESSAGE.TYPE_UPDATE_LOCATION:
             return handleUpdateLocation( message.data );
+        case TT.MESSAGE.TYPE_DELETE_LOCATION:
+            return handleDeleteLocation( message.data );
         case TT.MESSAGE.TYPE_GET_LOCATION_CATEGORIES:
             return handleGetLocationCategories();
         default:
@@ -980,6 +982,46 @@ function handleUpdateLocation( data ) {
             console.error( '[TT Background] Update location failed:', error );
             return TTMessaging.createResponse( false, {
                 error: error.message || 'Failed to update location'
+            });
+        });
+}
+
+/**
+ * Handle delete location request from content script.
+ * Deletes location on server and cleans up local sync metadata.
+ * @param {Object} data - { uuid, gmmId }
+ * @returns {Promise<Object>} Response indicating success/failure.
+ */
+function handleDeleteLocation( data ) {
+    if ( !data || !data.uuid ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'uuid is required'
+        }));
+    }
+
+    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
+        .then( function( tripUuid ) {
+            if ( !tripUuid ) {
+                throw new Error( 'No active trip selected' );
+            }
+
+            return TTApi.deleteLocation( data.uuid )
+                .then( function() {
+                    console.log( '[TT Background] Location deleted:', data.uuid );
+
+                    // Clean up local sync metadata
+                    if ( data.gmmId ) {
+                        return TTLocations.removeMetadataByGmmId( tripUuid, data.gmmId );
+                    }
+                })
+                .then( function() {
+                    return TTMessaging.createResponse( true, {} );
+                });
+        })
+        .catch( function( error ) {
+            console.error( '[TT Background] Delete location failed:', error );
+            return TTMessaging.createResponse( false, {
+                error: error.message || 'Failed to delete location'
             });
         });
 }
