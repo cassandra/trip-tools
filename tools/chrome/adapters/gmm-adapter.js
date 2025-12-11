@@ -896,9 +896,39 @@ var TTGmmAdapter = TTSiteAdapter.create({
 
                     // buttonOrResult is either the button element or null
                     if ( !buttonOrResult ) {
-                        // Results exist but no dialog opened
-                        self.log( 'Results found but no info dialog opened' );
-                        return { error: 'no_dialog', resultCount: resultCount };
+                        // Info dialog didn't auto-open - try clicking first search result
+                        self.log( 'Info dialog did not auto-open, clicking first search result' );
+                        var firstResult = document.querySelector( self.selectors.SEARCH_RESULTS_ITEMS );
+                        if ( !firstResult ) {
+                            self.log( 'No search result items found to click' );
+                            return { error: 'no_dialog', resultCount: resultCount };
+                        }
+
+                        return TTDom.clickRealistic( firstResult )
+                            .then( function() {
+                                // Wait for add-to-map button after clicking result
+                                return TTDom.waitForElement(
+                                    self.selectors.ADD_TO_MAP_BUTTON,
+                                    { timeout: 3000, retryMs: 200 }
+                                ).catch( function() {
+                                    return null;
+                                });
+                            })
+                            .then( function( button ) {
+                                if ( !button ) {
+                                    self.log( 'Info dialog still did not open after clicking result' );
+                                    return { error: 'no_dialog', resultCount: resultCount };
+                                }
+                                // Dialog opened after click - proceed with adding
+                                return self.addLocationToLayer( options )
+                                    .then( function( result ) {
+                                        if ( resultCount === 2 ) {
+                                            result.warning = 'multiple_results';
+                                            result.resultCount = resultCount;
+                                        }
+                                        return result;
+                                    });
+                            });
                     }
 
                     // Proceed with adding (1 or 2 results)

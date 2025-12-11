@@ -155,7 +155,7 @@
     /**
      * Execute sync decisions from the dialog.
      * @param {string} tripUuid - Trip UUID.
-     * @param {Object} decisions - Map of itemId to { action, source, location }.
+     * @param {Object} decisions - Map of itemId to { action, source, location/server/gmm }.
      * @returns {Promise<Object>} Sync results with three-tier structure.
      */
     function executeSyncDecisions( tripUuid, decisions ) {
@@ -163,6 +163,8 @@
         var gmmToDiscard = [];
         var serverToGmmKeep = [];
         var serverToDiscard = [];
+        var matchesToLink = [];      // { server, gmm } - title matches to link
+        var matchesToSeparate = [];  // { server, gmm } - title matches NOT to link
 
         // Categorize decisions
         Object.keys( decisions ).forEach( function( itemId ) {
@@ -175,19 +177,31 @@
                 serverToGmmKeep.push( decision.location );
             } else if ( decision.source === 'server' && decision.action === 'discard' ) {
                 serverToDiscard.push( decision.location );
+            } else if ( decision.source === 'match' && decision.action === 'link' ) {
+                matchesToLink.push( { server: decision.server, gmm: decision.gmm } );
+            } else if ( decision.source === 'match' && decision.action === 'dont_link' ) {
+                matchesToSeparate.push( { server: decision.server, gmm: decision.gmm } );
             }
+        });
+
+        // For "don't link" matches, add both locations to their respective queues
+        matchesToSeparate.forEach( function( match ) {
+            serverToGmmKeep.push( match.server );
+            gmmToServerKeep.push( match.gmm );
         });
 
         console.log( '[TT GMM Sync] GMM->Server (keep):', gmmToServerKeep.length );
         console.log( '[TT GMM Sync] GMM (discard):', gmmToDiscard.length );
         console.log( '[TT GMM Sync] Server->GMM (keep):', serverToGmmKeep.length );
         console.log( '[TT GMM Sync] Server (discard):', serverToDiscard.length );
+        console.log( '[TT GMM Sync] Title matches to link:', matchesToLink.length );
 
         // Three-tier results structure
         var results = {
             // Successes: linked with no warnings
             addedToServer: [],      // { gmm, server } - GMM -> Server
             addedToGmm: [],         // { server, gmm } - Server -> GMM (no warnings)
+            linkedByTitle: [],      // { server, gmm } - linked via title match (no GMM manipulation)
             deletedFromServer: [],  // Server locations discarded
             deletedFromGmm: [],     // GMM locations discarded
 
@@ -215,6 +229,22 @@
 
         // Execute syncs sequentially (need to click each location)
         var syncPromise = Promise.resolve();
+
+        // Title matches to link: just update gmm_id on server (no GMM manipulation)
+        matchesToLink.forEach( function( match ) {
+            syncPromise = syncPromise.then( function() {
+                checkCancelled();
+                console.log( '[TT GMM Sync] Linking by title:', match.server.title );
+                return updateServerLocationGmmId( match.server.uuid, match.gmm.fl_id )
+                    .then( function() {
+                        results.linkedByTitle.push( { server: match.server, gmm: match.gmm } );
+                    })
+                    .catch( function( error ) {
+                        console.error( '[TT GMM Sync] Error linking by title:', match.server.title, error );
+                        results.errors.push( { location: match.server, error: error.message } );
+                    });
+            });
+        });
 
         // GMM -> Server (keep): add to server
         gmmToServerKeep.forEach( function( gmmLoc ) {
@@ -749,11 +779,21 @@
     }
 
     /**
+     * Normalize a title for comparison (trim whitespace, lowercase).
+     * @param {string} title - The title to normalize.
+     * @returns {string} Normalized title.
+     */
+    function normalizeTitle( title ) {
+        return ( title || '' ).trim().toLowerCase();
+    }
+
+    /**
      * Compare server and GMM locations to find differences.
      * Uses gmm_id (server) and fl_id (GMM) for matching.
+     * Also detects title matches among unlinked locations.
      * @param {Array} serverLocations - Locations from server.
      * @param {Array} gmmLocations - Locations from GMM DOM.
-     * @returns {Object} Diff result with serverOnly, gmmOnly, inBoth arrays.
+     * @returns {Object} Diff result with serverOnly, gmmOnly, inBoth, suggestedMatches arrays.
      */
     function compareLocations( serverLocations, gmmLocations ) {
         // Build lookup of GMM fl_ids
@@ -772,7 +812,7 @@
             }
         });
 
-        var serverOnly = [];
+        var serverOnlyInitial = [];
         var inBoth = [];
 
         // Check each server location
@@ -785,28 +825,69 @@
                 });
             } else {
                 // Server only (no gmm_id or not found in GMM)
-                serverOnly.push( serverLoc );
+                serverOnlyInitial.push( serverLoc );
             }
         });
 
         // Check for GMM-only locations
-        var gmmOnly = [];
+        var gmmOnlyInitial = [];
         gmmLocations.forEach( function( gmmLoc ) {
             if ( gmmLoc.fl_id && !serverGmmIdSet[gmmLoc.fl_id] ) {
-                gmmOnly.push( gmmLoc );
+                gmmOnlyInitial.push( gmmLoc );
             }
+        });
+
+        // Find title matches among unlinked locations
+        var suggestedMatches = [];
+        var serverOnly = [];
+        var gmmOnly = [];
+
+        // Build normalized title lookup for GMM-only locations
+        var gmmByNormalizedTitle = {};
+        gmmOnlyInitial.forEach( function( gmmLoc ) {
+            var normalized = normalizeTitle( gmmLoc.title );
+            if ( !gmmByNormalizedTitle[normalized] ) {
+                gmmByNormalizedTitle[normalized] = [];
+            }
+            gmmByNormalizedTitle[normalized].push( gmmLoc );
+        });
+
+        // Check each server-only location for title match
+        serverOnlyInitial.forEach( function( serverLoc ) {
+            var normalized = normalizeTitle( serverLoc.title );
+            var gmmMatches = gmmByNormalizedTitle[normalized];
+
+            if ( gmmMatches && gmmMatches.length > 0 ) {
+                // Take first match, remove from available pool
+                var gmmMatch = gmmMatches.shift();
+                suggestedMatches.push( {
+                    server: serverLoc,
+                    gmm: gmmMatch
+                });
+            } else {
+                serverOnly.push( serverLoc );
+            }
+        });
+
+        // Remaining GMM locations (not matched by title)
+        Object.keys( gmmByNormalizedTitle ).forEach( function( key ) {
+            gmmByNormalizedTitle[key].forEach( function( gmmLoc ) {
+                gmmOnly.push( gmmLoc );
+            });
         });
 
         return {
             serverOnly: serverOnly,
             gmmOnly: gmmOnly,
-            inBoth: inBoth
+            inBoth: inBoth,
+            suggestedMatches: suggestedMatches
         };
     }
 
     /**
      * Show the sync dialog with diff results.
      * Shows per-location KEEP/DISCARD toggles for differences.
+     * Shows Link/Don't Link toggles for suggested title matches.
      * @param {Object} data - Sync request data (tripUuid, tripTitle, etc.).
      * @param {Object} diff - Diff results from compareLocations.
      * @returns {Promise<Object>} Result of sync operation.
@@ -819,7 +900,7 @@
                 existingDialog.remove();
             }
 
-            // Track sync decisions - all default to KEEP
+            // Track sync decisions - all default to KEEP/LINK
             var syncDecisions = {};
 
             // Create dialog container
@@ -841,10 +922,48 @@
             });
             dialog.appendChild( tripInfo );
 
+            var hasSuggestedMatches = diff.suggestedMatches && diff.suggestedMatches.length > 0;
             var hasDifferences = diff.serverOnly.length > 0 || diff.gmmOnly.length > 0;
+            var hasAnyAction = hasSuggestedMatches || hasDifferences;
 
+            // Suggested Matches section (shown first if present)
+            if ( hasSuggestedMatches ) {
+                var matchSection = TTDom.createElement( 'div', {
+                    className: 'tt-sync-section tt-sync-section-suggested'
+                });
+
+                var matchHeader = TTDom.createElement( 'div', {
+                    className: 'tt-sync-section-header',
+                    text: 'Suggested Matches (' + diff.suggestedMatches.length + ')'
+                });
+                matchSection.appendChild( matchHeader );
+
+                var matchList = TTDom.createElement( 'div', {
+                    className: 'tt-sync-location-list'
+                });
+
+                diff.suggestedMatches.forEach( function( match ) {
+                    var itemId = 'match_' + match.server.uuid;
+                    syncDecisions[itemId] = {
+                        action: 'link',
+                        source: 'match',
+                        server: match.server,
+                        gmm: match.gmm
+                    };
+                    var item = createSuggestedMatchItem(
+                        match.server.title,
+                        itemId,
+                        syncDecisions
+                    );
+                    matchList.appendChild( item );
+                });
+
+                matchSection.appendChild( matchList );
+                dialog.appendChild( matchSection );
+            }
+
+            // Differences section
             if ( hasDifferences ) {
-                // Differences section
                 var diffSection = TTDom.createElement( 'div', {
                     className: 'tt-sync-section'
                 });
@@ -885,7 +1004,7 @@
                 className: 'tt-sync-section'
             });
 
-            if ( hasDifferences ) {
+            if ( hasAnyAction ) {
                 var summaryText = TTDom.createElement( 'div', {
                     className: 'tt-sync-summary'
                 });
@@ -915,7 +1034,7 @@
 
             var closeBtn = TTDom.createElement( 'button', {
                 className: 'tt-gmm-btn tt-cancel-btn',
-                text: hasDifferences ? 'Cancel' : 'Close'
+                text: hasAnyAction ? 'Cancel' : 'Close'
             });
             closeBtn.addEventListener( 'click', function() {
                 dialog.remove();
@@ -923,7 +1042,7 @@
             });
             buttonContainer.appendChild( closeBtn );
 
-            if ( hasDifferences ) {
+            if ( hasAnyAction ) {
                 var syncBtn = TTDom.createElement( 'button', {
                     className: 'tt-gmm-btn tt-category-btn',
                     text: 'Apply Sync'
@@ -940,6 +1059,71 @@
             document.body.appendChild( dialog );
             console.log( '[TT GMM Sync] Sync dialog displayed' );
         });
+    }
+
+    /**
+     * Create a suggested match item row with Link/Don't Link toggle.
+     * @param {string} title - Location title (same in both places).
+     * @param {string} itemId - Unique identifier for this item.
+     * @param {Object} syncDecisions - Reference to decisions object.
+     * @returns {Element} The location item element.
+     */
+    function createSuggestedMatchItem( title, itemId, syncDecisions ) {
+        var item = TTDom.createElement( 'div', {
+            className: 'tt-sync-location-item tt-sync-suggested-match'
+        });
+
+        // Location info
+        var info = TTDom.createElement( 'div', {
+            className: 'tt-sync-location-info'
+        });
+
+        var titleEl = TTDom.createElement( 'div', {
+            className: 'tt-sync-location-title',
+            text: title
+        });
+        info.appendChild( titleEl );
+
+        var sourceEl = TTDom.createElement( 'div', {
+            className: 'tt-sync-location-source tt-sync-location-source-match',
+            text: 'Same name found in both places'
+        });
+        info.appendChild( sourceEl );
+
+        item.appendChild( info );
+
+        // Toggle buttons
+        var toggle = TTDom.createElement( 'div', {
+            className: 'tt-sync-toggle'
+        });
+
+        var linkBtn = TTDom.createElement( 'button', {
+            className: 'tt-sync-toggle-btn tt-toggle-link',
+            text: 'Link'
+        });
+
+        var dontLinkBtn = TTDom.createElement( 'button', {
+            className: 'tt-sync-toggle-btn',
+            text: "Don't Link"
+        });
+
+        linkBtn.addEventListener( 'click', function() {
+            syncDecisions[itemId].action = 'link';
+            linkBtn.classList.add( 'tt-toggle-link' );
+            dontLinkBtn.classList.remove( 'tt-toggle-dont-link' );
+        });
+
+        dontLinkBtn.addEventListener( 'click', function() {
+            syncDecisions[itemId].action = 'dont_link';
+            dontLinkBtn.classList.add( 'tt-toggle-dont-link' );
+            linkBtn.classList.remove( 'tt-toggle-link' );
+        });
+
+        toggle.appendChild( linkBtn );
+        toggle.appendChild( dontLinkBtn );
+        item.appendChild( toggle );
+
+        return item;
     }
 
     /**
@@ -979,7 +1163,9 @@
             }
 
             // Count clean successes (warnings shown separately)
+            var linkedByTitleCount = results.linkedByTitle ? results.linkedByTitle.length : 0;
             var cleanSuccessCount = results.addedToServer.length + results.addedToGmm.length +
+                              linkedByTitleCount +
                               results.deletedFromServer.length + results.deletedFromGmm.length;
             var hasCleanSuccesses = cleanSuccessCount > 0;
             var hasWarnings = results.warnings && results.warnings.length > 0;
@@ -1014,6 +1200,14 @@
                     var row = createSyncedRow( item.server.title, 'MATCHED', true, googleTitle );
                     syncedList.appendChild( row );
                 });
+
+                // Linked by title (LINKED)
+                if ( results.linkedByTitle ) {
+                    results.linkedByTitle.forEach( function( item ) {
+                        var row = createSyncedRow( item.server.title, 'LINKED', false );
+                        syncedList.appendChild( row );
+                    });
+                }
 
                 // Deletions
                 results.deletedFromServer.forEach( function( loc ) {
@@ -1334,12 +1528,14 @@
 
         // Error message
         var errorMsg = ERROR_MESSAGES[error] || error;
-        if ( resultCount ) {
+        if ( resultCount && resultCount > 1 ) {
             if ( error === ERROR_TYPE.NO_DIALOG ) {
                 errorMsg = 'Multiple matches found (' + resultCount + ' results)';
             } else if ( error === ERROR_TYPE.TOO_MANY_RESULTS ) {
                 errorMsg = 'Too many matches (' + resultCount + ' results) - search manually';
             }
+        } else if ( resultCount === 1 && error === ERROR_TYPE.NO_DIALOG ) {
+            errorMsg = 'Result found but could not add - try manually';
         }
 
         var msgEl = TTDom.createElement( 'div', {

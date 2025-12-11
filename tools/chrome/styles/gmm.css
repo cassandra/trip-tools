@@ -501,6 +501,17 @@
     color: #ea8600;
 }
 
+.tt-sync-location-source-match {
+    color: #9334e6;
+    font-style: italic;
+}
+
+/* Suggested matches section */
+.tt-sync-section-suggested {
+    border-left: 3px solid #9334e6;
+    padding-left: 12px;
+}
+
 .tt-sync-toggle {
     display: flex;
     gap: 4px;
@@ -526,19 +537,21 @@
     border-radius: 0 4px 4px 0;
 }
 
-.tt-sync-toggle-btn.tt-toggle-keep {
+.tt-sync-toggle-btn.tt-toggle-keep,
+.tt-sync-toggle-btn.tt-toggle-link {
     border-color: #1e8e3e;
     background: #e6f4ea;
     color: #1e8e3e;
 }
 
-.tt-sync-toggle-btn.tt-toggle-discard {
+.tt-sync-toggle-btn.tt-toggle-discard,
+.tt-sync-toggle-btn.tt-toggle-dont-link {
     border-color: #d93025;
     background: #fce8e6;
     color: #d93025;
 }
 
-.tt-sync-toggle-btn:not(.tt-toggle-keep):not(.tt-toggle-discard):hover {
+.tt-sync-toggle-btn:not(.tt-toggle-keep):not(.tt-toggle-discard):not(.tt-toggle-link):not(.tt-toggle-dont-link):hover {
     background: #f1f3f4;
 }
 
@@ -637,6 +650,10 @@
 
 .tt-sync-status-removed {
     color: #80868b;
+}
+
+.tt-sync-status-linked {
+    color: #1e8e3e;
 }
 
 /* Action buttons */
