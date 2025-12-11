@@ -84,7 +84,10 @@ TT.MESSAGE = {
     TYPE_GMM_OPEN_MAP: 'tt_gmmOpenMap',
     TYPE_GMM_RENAME_MAP: 'tt_gmmRenameMap',
     TYPE_GMM_LINK_MAP: 'tt_gmmLinkMap',
-    TYPE_GMM_UNLINK_MAP: 'tt_gmmUnlinkMap'
+    TYPE_GMM_UNLINK_MAP: 'tt_gmmUnlinkMap',
+    // Location sync
+    TYPE_GMM_SYNC_LOCATIONS: 'tt_gmmSyncLocations',
+    TYPE_GET_TRIP_LOCATIONS: 'tt_getTripLocations'
 };
 
 TT.DOM = {
@@ -190,6 +193,7 @@ TT.DOM = {
     ID_TRIP_DETAILS_GMM_ID: 'tt-trip-details-gmm-id',
     ID_TRIP_DETAILS_GMM_ROW: 'tt-trip-details-gmm-row',
     ID_TRIP_DETAILS_ACTIONS: 'tt-trip-details-actions',
+    ID_TRIP_DETAILS_SYNC_BTN: 'tt-trip-details-sync-btn',
     ID_TRIP_DETAILS_UNLINK_BTN: 'tt-trip-details-unlink-btn'
 };
 

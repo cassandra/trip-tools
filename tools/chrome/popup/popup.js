@@ -394,6 +394,11 @@ function setupTripEventListeners() {
         });
     }
 
+    var syncLocationsBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_SYNC_BTN );
+    if ( syncLocationsBtn ) {
+        syncLocationsBtn.addEventListener( 'click', handleSyncLocations );
+    }
+
     var unlinkMapBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_UNLINK_BTN );
     if ( unlinkMapBtn ) {
         unlinkMapBtn.addEventListener( 'click', handleUnlinkMap );
@@ -704,6 +709,49 @@ function populateTripDetails() {
         if ( gmmRow ) gmmRow.classList.add( TT.DOM.CLASS_HIDDEN );
         if ( actionsEl ) actionsEl.classList.add( TT.DOM.CLASS_HIDDEN );
     }
+}
+
+/**
+ * Handle Sync Locations button click.
+ * Sends sync message to GMM content script if map is open.
+ */
+function handleSyncLocations() {
+    if ( !currentActiveTrip ) {
+        addLocalDebugEntry( 'warning', 'Sync: No active trip' );
+        return;
+    }
+
+    if ( !currentActiveTrip.gmm_map_id ) {
+        addLocalDebugEntry( 'warning', 'Sync: Trip has no linked map' );
+        return;
+    }
+
+    addLocalDebugEntry( 'info', 'Sync Locations requested for trip: ' + currentActiveTrip.title );
+
+    TTMessaging.send( TT.MESSAGE.TYPE_GMM_SYNC_LOCATIONS, {
+        tripUuid: currentActiveTrip.uuid,
+        tripTitle: currentActiveTrip.title,
+        mapId: currentActiveTrip.gmm_map_id
+    })
+    .then( function( response ) {
+        if ( response && response.success ) {
+            addLocalDebugEntry( 'info', 'Sync dialog opened' );
+            window.close();
+        } else if ( response && response.data && response.data.code === 'MAP_NOT_OPEN' ) {
+            // Map tab not open - prompt user
+            // eslint-disable-next-line no-alert
+            if ( confirm( 'The map must be open to sync.\n\nOpen the map now?' ) ) {
+                openGmmMap( currentActiveTrip.gmm_map_id );
+            }
+        } else {
+            var errorMsg = response && response.data && response.data.error
+                ? response.data.error : 'Unknown error';
+            addLocalDebugEntry( 'error', 'Sync failed: ' + errorMsg );
+        }
+    })
+    .catch( function( error ) {
+        addLocalDebugEntry( 'error', 'Sync error: ' + error.message );
+    });
 }
 
 function handleUnlinkMap() {

@@ -314,6 +314,77 @@ var TTGmmAdapter = TTSiteAdapter.create({
         },
 
         /**
+         * Open a location's info dialog by clicking it in the layer list.
+         * @param {string} gmmId - GMM location ID (fl_id attribute).
+         * @returns {Promise<Object>} Location info with { id, title, layer, coordinates }.
+         */
+        openLocationById: function( gmmId ) {
+            var self = this;
+            var result = this.findLocationById( gmmId );
+
+            if ( !result ) {
+                return Promise.reject( new Error( 'Location not found: ' + gmmId ) );
+            }
+
+            var location = result.location;
+            var layer = result.layer;
+
+            this.log( 'Opening location: ' + location.title );
+
+            // Click the location node to open its info dialog
+            return TTDom.clickRealistic( location.node )
+                .then( function() {
+                    // Wait for info dialog to appear
+                    return self.waitForElement( 'INFO_CONTAINER' );
+                })
+                .then( function() {
+                    // Extract coordinates from the info dialog
+                    var coordinates = self.getCoordinates();
+
+                    return {
+                        id: location.id,
+                        title: location.title,
+                        iconCode: location.iconCode,
+                        layer: layer,
+                        coordinates: coordinates
+                    };
+                });
+        },
+
+        /**
+         * Delete a location from GMM by clicking it and pressing delete.
+         * @param {string} gmmId - GMM location ID (fl_id attribute).
+         * @returns {Promise<void>}
+         */
+        deleteLocationById: function( gmmId ) {
+            var self = this;
+            var result = this.findLocationById( gmmId );
+
+            if ( !result ) {
+                return Promise.reject( new Error( 'Location not found: ' + gmmId ) );
+            }
+
+            var location = result.location;
+
+            this.log( 'Deleting location: ' + location.title );
+
+            // Click the location node to open its info dialog
+            return TTDom.clickRealistic( location.node )
+                .then( function() {
+                    // Wait for info dialog and delete button
+                    return self.waitForElement( 'DELETE_BUTTON' );
+                })
+                .then( function( deleteButton ) {
+                    self.log( 'Clicking delete button' );
+                    return TTDom.clickRealistic( deleteButton );
+                })
+                .then( function() {
+                    // Brief wait for GMM to process the delete
+                    return TTDom.wait( 500 );
+                });
+        },
+
+        /**
          * Click the "Add to map" button in the current dialog.
          * @returns {Promise<void>}
          */
@@ -527,6 +598,19 @@ var TTGmmAdapter = TTSiteAdapter.create({
             return TTDom.clickRealistic( closeButton );
         },
 
+        /**
+         * Close the info window if it's open.
+         * @returns {Promise<void>}
+         */
+        closeInfoWindow: function() {
+            var closeButton = this.getElement( 'INFO_CLOSE_BUTTON' );
+            if ( !closeButton ) {
+                return Promise.resolve();
+            }
+            this.log( 'Closing info window' );
+            return TTDom.clickRealistic( closeButton );
+        },
+
         // =====================================================================
         // Map Title Operations
         // =====================================================================
@@ -666,7 +750,7 @@ var TTGmmAdapter = TTSiteAdapter.create({
          * Search for a location and add it to the map.
          * @param {string} searchText - Text to search for.
          * @param {Object} options - Style options { layerTitle, colorRgb, iconCode }.
-         * @returns {Promise<Object>} Result with { gmmId, title }.
+         * @returns {Promise<Object>} Result with { gmmId, title, coordinates }.
          */
         searchAndAddLocation: function( searchText, options ) {
             var self = this;

@@ -74,7 +74,8 @@
                 "shared/site-adapter.js",
                 "adapters/gmm-selectors.js",
                 "adapters/gmm-adapter.js",
-                "content/gmm.js"
+                "content/gmm.js",
+                "content/gmm-sync.js"
             ],
             "run_at": "document_idle"
         },

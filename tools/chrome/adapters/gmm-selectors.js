@@ -46,6 +46,7 @@ var TTGmmSelectors = {
     // =========================================================================
 
     INFO_CONTAINER: '#map-infowindow-container',
+    INFO_CLOSE_BUTTON: '#map-infowindow-container > [aria-label="Close"]',
     EDIT_BUTTON: '#map-infowindow-edit-button',
     DELETE_BUTTON: '#map-infowindow-delete-button',
     STYLE_BUTTON: '#map-infowindow-style-button',

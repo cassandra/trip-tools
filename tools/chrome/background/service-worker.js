@@ -74,6 +74,10 @@ TTMessaging.listen( function( message, sender ) {
             return handleDeleteLocation( message.data );
         case TT.MESSAGE.TYPE_GET_LOCATION_CATEGORIES:
             return handleGetLocationCategories();
+        case TT.MESSAGE.TYPE_GMM_SYNC_LOCATIONS:
+            return handleGmmSyncLocations( message.data );
+        case TT.MESSAGE.TYPE_GET_TRIP_LOCATIONS:
+            return handleGetTripLocations( message.data );
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -1022,6 +1026,91 @@ function handleDeleteLocation( data ) {
             console.error( '[TT Background] Delete location failed:', error );
             return TTMessaging.createResponse( false, {
                 error: error.message || 'Failed to delete location'
+            });
+        });
+}
+
+/**
+ * Handle get trip locations request from content script.
+ * Fetches all locations for a trip from the server.
+ * @param {Object} data - { tripUuid }
+ * @returns {Promise<Object>} Response with locations array.
+ */
+function handleGetTripLocations( data ) {
+    if ( !data || !data.tripUuid ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'tripUuid is required'
+        }));
+    }
+
+    return TTApi.getLocations( data.tripUuid )
+        .then( function( locations ) {
+            return TTMessaging.createResponse( true, { locations: locations } );
+        })
+        .catch( function( error ) {
+            console.error( '[TT Background] Get trip locations failed:', error );
+            return TTMessaging.createResponse( false, {
+                error: error.message || 'Failed to get locations'
+            });
+        });
+}
+
+/**
+ * Handle sync locations request from popup.
+ * Requires the GMM map tab to already be open - does not navigate.
+ * @param {Object} data - { tripUuid, tripTitle, mapId }
+ * @returns {Promise<Object>} Response indicating success/failure.
+ */
+function handleGmmSyncLocations( data ) {
+    if ( !data || !data.mapId ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'mapId is required'
+        }));
+    }
+
+    var mapId = data.mapId;
+    var editUrl = buildGmmEditUrl( mapId );
+
+    console.log( '[TT Background] Sync locations request for map:', mapId );
+
+    // Find the GMM map tab - do not create if not found
+    return findGmmTab( editUrl + '*' )
+        .then( function( existingTab ) {
+            if ( !existingTab ) {
+                return TTMessaging.createResponse( false, {
+                    error: 'Map not open',
+                    code: 'MAP_NOT_OPEN'
+                });
+            }
+
+            // Focus the GMM tab first so user sees the dialog
+            return chrome.tabs.update( existingTab.id, { active: true } )
+                .then( function() {
+                    return chrome.windows.update( existingTab.windowId, { focused: true } );
+                })
+                .then( function() {
+                    // Send sync message to content script
+                    return sendMessageToTab( existingTab.id, {
+                        type: TT.MESSAGE.TYPE_GMM_SYNC_LOCATIONS,
+                        data: {
+                            tripUuid: data.tripUuid,
+                            tripTitle: data.tripTitle,
+                            mapId: mapId
+                        }
+                    });
+                })
+                .then( function( response ) {
+                    if ( response && response.success ) {
+                        return TTMessaging.createResponse( true, response.data );
+                    } else {
+                        throw new Error( response && response.error || 'Sync failed' );
+                    }
+                });
+        })
+        .catch( function( error ) {
+            console.error( '[TT Background] Sync locations failed:', error );
+            return TTMessaging.createResponse( false, {
+                error: error.message
             });
         });
 }
