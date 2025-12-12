@@ -445,10 +445,10 @@ function broadcastAuthStateChange( authorized, email ) {
 // =============================================================================
 
 /**
- * Handle request to get trips.
+ * Handle request to get trips working set.
  * Returns the working set of trips and the active trip UUID.
  */
-function handleGetTrips() {
+function handleGetTripsWorkingSet() {
     var workingSet;
     var activeTripUuid;
 

@@ -547,7 +547,7 @@ function showTripEmpty() {
 function loadTrips() {
     showTripLoading();
 
-    TTMessaging.send( TT.MESSAGE.TYPE_GET_TRIPS, {} )
+    TTMessaging.send( TT.MESSAGE.TYPE_GET_TRIPS_WORKING_SET, {} )
         .then( function( response ) {
             if ( response && response.success ) {
                 renderTrips( response.data.workingSet, response.data.activeTripUuid );
