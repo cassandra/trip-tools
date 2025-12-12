@@ -340,6 +340,31 @@ TTApi.updateTrip = function( tripUuid, data ) {
 };
 
 /**
+ * Create a new trip.
+ * @param {string} title - The trip title (required).
+ * @param {string} description - The trip description (optional).
+ * @returns {Promise<Object>} Created trip data.
+ */
+TTApi.createTrip = function( title, description ) {
+    var data = { title: title };
+    if ( description ) {
+        data.description = description;
+    }
+    return TTApi.post( TT.CONFIG.API_TRIPS_ENDPOINT, data )
+        .then( function( response ) {
+            if ( response.status === 409 ) {
+                var error = new Error( 'A trip with this map ID already exists' );
+                error.status = 409;
+                throw error;
+            }
+            if ( !response.ok ) {
+                throw new Error( 'Failed to create trip: ' + response.status );
+            }
+            return TTApi.processResponse( response );
+        });
+};
+
+/**
  * Process API response from TtApiView or SyncableAPIView endpoints.
  *
  * Both view types wrap responses in {data: ...} envelope.

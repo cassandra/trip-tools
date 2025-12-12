@@ -56,6 +56,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleSetActiveTrip( message.data );
         case TT.MESSAGE.TYPE_GET_ALL_TRIPS:
             return handleGetAllTrips();
+        case TT.MESSAGE.TYPE_CREATE_AND_ACTIVATE_TRIP:
+            return handleCreateTrip( message.data );
         case TT.MESSAGE.TYPE_GMM_CREATE_MAP:
             return handleGmmCreateMap( message.data );
         case TT.MESSAGE.TYPE_GMM_OPEN_MAP:
@@ -529,6 +531,41 @@ function handleGetAllTrips() {
     return TTTrips.fetchTripsFromServer()
         .then( function( trips ) {
             return TTMessaging.createResponse( true, { trips: trips });
+        })
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, null, error.message );
+        });
+}
+
+/**
+ * Handle create trip request.
+ * Creates trip via API, adds to working set, sets as active.
+ * @param {Object} data - { title, description }
+ * @returns {Promise<Object>} Response with created trip data.
+ */
+function handleCreateTrip( data ) {
+    if ( !data || !data.title ) {
+        return Promise.resolve(
+            TTMessaging.createResponse( false, null, 'Title is required' )
+        );
+    }
+
+    return TTApi.createTrip( data.title, data.description )
+        .then( function( trip ) {
+            // Add to working set and set as active
+            return TTTrips.addToWorkingSet( trip )
+                .then( function() {
+                    return TTTrips.setActiveTripUuid( trip.uuid );
+                })
+                .then( function() {
+                    return TTTrips.getWorkingSet();
+                })
+                .then( function( workingSet ) {
+                    return TTMessaging.createResponse( true, {
+                        workingSet: workingSet,
+                        activeTripUuid: trip.uuid
+                    });
+                });
         })
         .catch( function( error ) {
             return TTMessaging.createResponse( false, null, error.message );

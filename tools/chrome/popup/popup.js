@@ -403,6 +403,26 @@ function setupTripEventListeners() {
     if ( unlinkMapBtn ) {
         unlinkMapBtn.addEventListener( 'click', handleUnlinkMap );
     }
+
+    // Create Trip panel listeners
+    var createTripBackBtn = document.getElementById( TT.DOM.ID_CREATE_TRIP_BACK );
+    if ( createTripBackBtn ) {
+        createTripBackBtn.addEventListener( 'click', function() {
+            hideCreateTripPanel();
+        });
+    }
+
+    var createTripCancelBtn = document.getElementById( TT.DOM.ID_CREATE_TRIP_CANCEL );
+    if ( createTripCancelBtn ) {
+        createTripCancelBtn.addEventListener( 'click', function() {
+            hideCreateTripPanel();
+        });
+    }
+
+    var createTripSubmitBtn = document.getElementById( TT.DOM.ID_CREATE_TRIP_SUBMIT );
+    if ( createTripSubmitBtn ) {
+        createTripSubmitBtn.addEventListener( 'click', handleCreateTripSubmit );
+    }
 }
 
 function openAuthorizePage() {
@@ -418,15 +438,8 @@ function openAuthorizePage() {
 }
 
 function openNewTripPage() {
-    var defaultUrl = TT.CONFIG.IS_DEVELOPMENT
-        ? TT.CONFIG.DEFAULT_SERVER_URL_DEV
-        : TT.CONFIG.DEFAULT_SERVER_URL_PROD;
-
-    TTStorage.get( TT.STORAGE.KEY_SERVER_URL, defaultUrl )
-        .then( function( serverUrl ) {
-            var createUrl = serverUrl + TT.CONFIG.TRIP_CREATE_PATH;
-            chrome.tabs.create( { url: createUrl } );
-        });
+    // Show create trip panel instead of opening web app
+    showCreateTripPanel();
 }
 
 function updateDebugAuthInfo( email ) {
@@ -778,6 +791,129 @@ function handleUnlinkMap() {
     })
     .catch( function( error ) {
         addLocalDebugEntry( 'error', 'Unlink map error: ' + error.message );
+    });
+}
+
+// =============================================================================
+// Create Trip Panel
+// =============================================================================
+
+function showCreateTripPanel() {
+    var panel = document.getElementById( TT.DOM.ID_CREATE_TRIP_PANEL );
+
+    // Reset form
+    if ( panel ) {
+        resetCreateTripForm();
+        panel.classList.remove( TT.DOM.CLASS_HIDDEN );
+        requestAnimationFrame( function() {
+            panel.classList.add( TT.DOM.CLASS_VISIBLE );
+        });
+    }
+
+    // Apply dev mode styling to panel header
+    var header = panel.querySelector( '.tt-panel-header' );
+    if ( header && TT.CONFIG.IS_DEVELOPMENT ) {
+        header.classList.add( TT.DOM.CLASS_DEV_MODE );
+    }
+}
+
+function hideCreateTripPanel() {
+    var panel = document.getElementById( TT.DOM.ID_CREATE_TRIP_PANEL );
+    if ( panel ) {
+        panel.classList.remove( TT.DOM.CLASS_VISIBLE );
+        panel.addEventListener( 'transitionend', function handler() {
+            panel.classList.add( TT.DOM.CLASS_HIDDEN );
+            panel.removeEventListener( 'transitionend', handler );
+        });
+    }
+}
+
+function resetCreateTripForm() {
+    var titleInput = document.getElementById( TT.DOM.ID_CREATE_TRIP_TITLE_INPUT );
+    var descInput = document.getElementById( TT.DOM.ID_CREATE_TRIP_DESC_INPUT );
+    var errorEl = document.getElementById( TT.DOM.ID_CREATE_TRIP_ERROR );
+    var submitBtn = document.getElementById( TT.DOM.ID_CREATE_TRIP_SUBMIT );
+
+    if ( titleInput ) titleInput.value = '';
+    if ( descInput ) descInput.value = '';
+    if ( errorEl ) {
+        errorEl.classList.add( TT.DOM.CLASS_HIDDEN );
+        errorEl.textContent = '';
+    }
+    if ( submitBtn ) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove( 'tt-btn-loading' );
+        submitBtn.textContent = 'Create Trip';
+    }
+}
+
+function showCreateTripError( message ) {
+    var errorEl = document.getElementById( TT.DOM.ID_CREATE_TRIP_ERROR );
+    if ( errorEl ) {
+        errorEl.textContent = message;
+        errorEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+function handleCreateTripSubmit() {
+    var titleInput = document.getElementById( TT.DOM.ID_CREATE_TRIP_TITLE_INPUT );
+    var descInput = document.getElementById( TT.DOM.ID_CREATE_TRIP_DESC_INPUT );
+    var submitBtn = document.getElementById( TT.DOM.ID_CREATE_TRIP_SUBMIT );
+    var errorEl = document.getElementById( TT.DOM.ID_CREATE_TRIP_ERROR );
+
+    // Hide previous error
+    if ( errorEl ) errorEl.classList.add( TT.DOM.CLASS_HIDDEN );
+
+    // Validate title
+    var title = titleInput ? titleInput.value.trim() : '';
+    if ( !title ) {
+        showCreateTripError( 'Title is required' );
+        if ( titleInput ) titleInput.focus();
+        return;
+    }
+
+    var description = descInput ? descInput.value.trim() : '';
+
+    // Show loading state
+    if ( submitBtn ) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add( 'tt-btn-loading' );
+        submitBtn.textContent = 'Creating';
+    }
+
+    addLocalDebugEntry( 'info', 'Creating trip: ' + title );
+
+    TTMessaging.send( TT.MESSAGE.TYPE_CREATE_AND_ACTIVATE_TRIP, {
+        title: title,
+        description: description
+    })
+    .then( function( response ) {
+        if ( response && response.success ) {
+            addLocalDebugEntry( 'info', 'Trip created: ' + response.data.activeTripUuid );
+            hideCreateTripPanel();
+            // Render updated trip list from response
+            renderTrips( response.data.workingSet, response.data.activeTripUuid );
+        } else {
+            var errorMsg = response && response.error ? response.error : 'Failed to create trip';
+            showCreateTripError( errorMsg );
+            addLocalDebugEntry( 'error', 'Create trip failed: ' + errorMsg );
+            // Reset button state
+            if ( submitBtn ) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove( 'tt-btn-loading' );
+                submitBtn.textContent = 'Create Trip';
+            }
+        }
+    })
+    .catch( function( error ) {
+        showCreateTripError( 'Unable to create trip. Please try again.' );
+        addLocalDebugEntry( 'error', 'Create trip error: ' + error.message );
+        // Reset button state
+        if ( submitBtn ) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove( 'tt-btn-loading' );
+            submitBtn.textContent = 'Create Trip';
+        }
     });
 }
 

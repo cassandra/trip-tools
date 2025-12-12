@@ -186,6 +186,33 @@
             </div>
         </div>
 
+        <!-- Create Trip Slide-in Panel -->
+        <div class="tt-create-trip-panel tt-hidden" id="tt-create-trip-panel">
+            <div class="tt-panel-header">
+                <button class="tt-back-btn" id="tt-create-trip-back-btn" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>New Trip</span>
+            </div>
+            <div class="tt-panel-content">
+                <div class="tt-form-group">
+                    <label for="tt-create-trip-title">Title <span class="tt-required">*</span></label>
+                    <input type="text" id="tt-create-trip-title" class="tt-input" placeholder="Trip title" maxlength="200">
+                </div>
+                <div class="tt-form-group">
+                    <label for="tt-create-trip-description">Description</label>
+                    <textarea id="tt-create-trip-description" class="tt-input tt-textarea" placeholder="Optional description" rows="3"></textarea>
+                </div>
+                <div class="tt-error-message tt-hidden" id="tt-create-trip-error"></div>
+                <div class="tt-form-actions">
+                    <button class="tt-btn tt-btn-secondary" id="tt-create-trip-cancel-btn">Cancel</button>
+                    <button class="tt-btn tt-btn-primary" id="tt-create-trip-submit-btn">Create Trip</button>
+                </div>
+            </div>
+        </div>
+        
         <!-- Create Map Dialog Overlay -->
         <div class="tt-dialog-overlay tt-hidden" id="tt-create-map-dialog">
             <div class="tt-dialog">

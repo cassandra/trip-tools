@@ -74,6 +74,7 @@ TT.MESSAGE = {
     TYPE_GET_TRIPS: 'tt_getTrips',
     TYPE_SET_ACTIVE_TRIP: 'tt_setActiveTrip',
     TYPE_GET_ALL_TRIPS: 'tt_getAllTrips',
+    TYPE_CREATE_AND_ACTIVATE_TRIP: 'tt_createAndActivateTrip',
     // Location management (GMM content script <-> background)
     TYPE_SAVE_LOCATION: 'tt_saveLocation',
     TYPE_GET_LOCATION: 'tt_getLocation',
@@ -201,7 +202,15 @@ TT.DOM = {
     ID_TRIP_DETAILS_GMM_ROW: 'tt-trip-details-gmm-row',
     ID_TRIP_DETAILS_ACTIONS: 'tt-trip-details-actions',
     ID_TRIP_DETAILS_SYNC_BTN: 'tt-trip-details-sync-btn',
-    ID_TRIP_DETAILS_UNLINK_BTN: 'tt-trip-details-unlink-btn'
+    ID_TRIP_DETAILS_UNLINK_BTN: 'tt-trip-details-unlink-btn',
+    // Create Trip Panel
+    ID_CREATE_TRIP_PANEL: 'tt-create-trip-panel',
+    ID_CREATE_TRIP_BACK: 'tt-create-trip-back-btn',
+    ID_CREATE_TRIP_TITLE_INPUT: 'tt-create-trip-title',
+    ID_CREATE_TRIP_DESC_INPUT: 'tt-create-trip-description',
+    ID_CREATE_TRIP_ERROR: 'tt-create-trip-error',
+    ID_CREATE_TRIP_CANCEL: 'tt-create-trip-cancel-btn',
+    ID_CREATE_TRIP_SUBMIT: 'tt-create-trip-submit-btn'
 };
 
 TT.URL = {
