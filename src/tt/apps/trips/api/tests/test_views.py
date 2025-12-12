@@ -169,6 +169,124 @@ class TripCollectionViewTestCase( TestCase ):
 
 
 # =============================================================================
+# TripCollectionView POST Tests
+# =============================================================================
+
+class TripCreateApiTestCase( TestCase ):
+    """Test POST /api/v1/trips/ endpoint."""
+
+    @classmethod
+    def setUpTestData( cls ):
+        cls.user = User.objects.create_user(
+            email = 'testuser@example.com',
+            password = 'testpass123'
+        )
+        cls.token_data = APITokenService.create_token(
+            cls.user,
+            'Test Token'
+        )
+
+    def setUp( self ):
+        self.client = APIClient()
+
+    def test_requires_authentication( self ):
+        """Test endpoint requires authentication."""
+        response = self.client.post(
+            '/api/v1/trips/',
+            data = { 'title': 'My New Trip' },
+            format = 'json'
+        )
+        self.assertEqual( response.status_code, 401 )
+
+    def test_create_trip_success( self ):
+        """Test creates trip with title and user becomes OWNER."""
+        from tt.apps.members.models import TripMember
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.post(
+            '/api/v1/trips/',
+            data = { 'title': 'My New Trip' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 201 )
+        self.assertIn( 'data', response.json() )
+        data = response.json()['data']
+        self.assertEqual( data['title'], 'My New Trip' )
+        self.assertEqual( data['trip_status'], 'upcoming' )
+        self.assertIn( 'uuid', data )
+        self.assertIn( 'version', data )
+        self.assertIn( 'created_datetime', data )
+
+        # Verify user is OWNER
+        trip_member = TripMember.objects.filter(
+            trip__uuid = data['uuid'],
+            user = self.user
+        ).first()
+        self.assertIsNotNone( trip_member )
+        self.assertEqual( trip_member.permission_level, TripPermissionLevel.OWNER )
+
+    def test_create_trip_with_all_fields( self ):
+        """Test creates trip with title, description, and gmm_map_id."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.post(
+            '/api/v1/trips/',
+            data = {
+                'title': 'Full Trip',
+                'description': 'A trip with all fields',
+                'gmm_map_id': 'abc123xyz'
+            },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 201 )
+        data = response.json()['data']
+        self.assertEqual( data['title'], 'Full Trip' )
+        self.assertEqual( data['description'], 'A trip with all fields' )
+        self.assertEqual( data['gmm_map_id'], 'abc123xyz' )
+
+    def test_create_trip_missing_title( self ):
+        """Test returns 400 when title is missing."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.post(
+            '/api/v1/trips/',
+            data = { 'description': 'No title' },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 400 )
+
+    def test_create_trip_duplicate_gmm_map_id( self ):
+        """Test returns 409 Conflict when gmm_map_id already exists."""
+        # Create trip with gmm_map_id
+        TripSyntheticData.create_test_trip(
+            user = self.user,
+            title = 'Existing Trip',
+            gmm_map_id = 'duplicate-id'
+        )
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.post(
+            '/api/v1/trips/',
+            data = {
+                'title': 'New Trip',
+                'gmm_map_id': 'duplicate-id'
+            },
+            format = 'json'
+        )
+
+        self.assertEqual( response.status_code, 409 )
+
+
+# =============================================================================
 # TripItemView Tests
 # =============================================================================
 

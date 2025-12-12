@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from django.db import IntegrityError
+from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -16,10 +18,13 @@ from .serializers import TripSerializer
 
 class TripCollectionView( TtApiView ):
     """
-    List all trips for the authenticated user.
+    List or create trips for the authenticated user.
 
     GET /api/v1/trips/
     Returns all trips where user is a member (any permission level).
+
+    POST /api/v1/trips/
+    Creates a new trip. User becomes OWNER.
     """
     permission_classes = [ IsAuthenticated ]
 
@@ -27,6 +32,24 @@ class TripCollectionView( TtApiView ):
         trips = Trip.objects.for_user( request.user ).order_by( '-created_datetime' )
         serializer = TripSerializer( trips, many = True )
         return Response( serializer.data )
+
+    def post( self, request: Request ) -> Response:
+        serializer = TripSerializer( data = request.data )
+        serializer.is_valid( raise_exception = True )
+
+        try:
+            trip = Trip.objects.create_with_owner(
+                owner = request.user,
+                **serializer.validated_data,
+            )
+        except IntegrityError:
+            return Response(
+                { 'error': 'A trip with this GMM map ID already exists' },
+                status = status.HTTP_409_CONFLICT
+            )
+
+        output_serializer = TripSerializer( trip )
+        return Response( output_serializer.data, status = status.HTTP_201_CREATED )
 
 
 class TripItemView( TripViewMixin, TtApiView ):
