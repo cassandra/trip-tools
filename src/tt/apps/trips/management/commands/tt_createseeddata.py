@@ -26,24 +26,22 @@ class Command( BaseCommand ):
 
         categories_data = [
             {
-                'name': 'Attractions',
-                'slug': 'attractions',
+                'name': 'Activities',
+                'slug': 'attractions',  # Keep old slug for compatibility
                 'color_code': 'RGB (245, 124, 0)',
                 'icon_code': '1535',
                 'subcategories': [
                     {'name': 'Hike/Trail', 'slug': 'hike', 'color_code': 'RGB (9, 113, 56)', 'icon_code': '1596'},
-                    {'name': 'Museum', 'slug': 'museum', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1636'},
+                    {'name': 'Museum/Library', 'slug': 'museum', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1636'},
                     {'name': 'Viewpoint/Photo Op', 'slug': 'view_photoop', 'color_code': 'RGB (57, 73, 171)', 'icon_code': '1535'},
-                    {'name': 'Neighborhood/Area', 'slug': 'neighborhood', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1604'},
-                    {'name': 'Town', 'slug': 'town', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1547'},
                     {'name': 'Church/Religious', 'slug': 'church_religious', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1671'},
                     {'name': 'Cemetery', 'slug': 'cemetery', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1542'},
-                    {'name': 'Store/Shop', 'slug': 'store_shop', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1686'},
                     {'name': 'Historic/Ruins', 'slug': 'historic_ruins', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1598'},
                     {'name': 'Park/Garden', 'slug': 'park_garden', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1582'},
                     {'name': 'Waterfall', 'slug': 'waterfall', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1892'},
                     {'name': 'Beach', 'slug': 'beach', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1521'},
                     {'name': 'Cinema/Play', 'slug': 'cinema_play', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1635'},
+                    {'name': 'Theme Park/Zoo', 'slug': 'theme_park_zoo', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1568'},
                     {'name': 'Monument', 'slug': 'monument', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1599'},
                     {'name': 'Fountain/Statue', 'slug': 'fountain', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1580'},
                     {'name': 'Artwork', 'slug': 'artwork', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1509'},
@@ -53,26 +51,31 @@ class Command( BaseCommand ):
                 ]
             },
             {
-                'name': 'Dining',
-                'slug': 'dining',
+                'name': 'Dining / Shopping',
+                'slug': 'dining',  # Keep old slug for compatibility
                 'color_code': 'RGB (251, 192, 45)',
                 'icon_code': '1577',
                 'subcategories': [
-                    {'name': 'Lunch/Dinner', 'slug': 'lunch_dinner', 'color_code': 'RGB (251, 192, 45)', 'icon_code': '1577'},
-                    {'name': 'Coffee/Breakfast', 'slug': 'coffee_breakfast', 'color_code': 'RGB (121, 85, 72)', 'icon_code': '1534'},
-                    {'name': 'Deserts/Snacks', 'slug': 'deserts', 'color_code': 'RGB (57, 73, 171)', 'icon_code': '1607'},
+                    {'name': 'Breakfast/Lunch', 'slug': 'coffee_breakfast', 'color_code': 'RGB (121, 85, 72)', 'icon_code': '1534'},  # Keep old slug
+                    {'name': 'Dinner/Restaurant', 'slug': 'lunch_dinner', 'color_code': 'RGB (251, 192, 45)', 'icon_code': '1577'},  # Keep old slug
+                    {'name': 'Cafe/Bakery', 'slug': 'cafe_bakery', 'color_code': 'RGB (121, 85, 72)', 'icon_code': '1534'},
+                    {'name': 'Desserts/Snacks', 'slug': 'deserts', 'color_code': 'RGB (57, 73, 171)', 'icon_code': '1607'},  # Keep old slug
                     {'name': 'Drinks/Bar', 'slug': 'drinks_bar', 'color_code': 'RGB (156, 39, 176)', 'icon_code': '1517'},
-                    {'name': 'Food Area', 'slug': 'food_area', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1611'},
+                    {'name': 'Food Hall/Market', 'slug': 'food_area', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1611'},  # Keep old slug
+                    {'name': 'Food Store', 'slug': 'food_store', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1578'},
+                    {'name': 'Store/Shop', 'slug': 'store_shop', 'color_code': 'RGB (245, 124, 0)', 'icon_code': '1686'},
                 ]
             },
             {
-                'name': 'Towns',
-                'slug': 'towns',
+                'name': 'Places',
+                'slug': 'towns',  # Keep old slug for compatibility
                 'color_code': 'RGB (165, 39, 20)',
                 'icon_code': '1603',
                 'subcategories': [
-                    # Singleton subcategory for Towns category
-                    {'name': 'Town', 'slug': 'towns_town', 'color_code': 'RGB (165, 39, 20)', 'icon_code': '1603'},
+                    {'name': 'City', 'slug': 'city', 'color_code': 'RGB (165, 39, 20)', 'icon_code': '1546'},
+                    {'name': 'Town', 'slug': 'towns_town', 'color_code': 'RGB (165, 39, 20)', 'icon_code': '1547'},  # Keep old slug
+                    {'name': 'Village', 'slug': 'village', 'color_code': 'RGB (165, 39, 20)', 'icon_code': '1547'},
+                    {'name': 'Neighborhood/Area', 'slug': 'neighborhood', 'color_code': 'RGB (165, 39, 20)', 'icon_code': '1604'},
                 ]
             },
             {
@@ -81,7 +84,10 @@ class Command( BaseCommand ):
                 'color_code': 'RGB (194, 24, 91)',
                 'icon_code': '1602',
                 'subcategories': [
-                    # Singleton subcategory for Lodging category
+                    {'name': 'Hotel', 'slug': 'hotel', 'color_code': 'RGB (194, 24, 91)', 'icon_code': '1602'},
+                    {'name': 'Hostel/Dormitory', 'slug': 'hostel', 'color_code': 'RGB (194, 24, 91)', 'icon_code': '1559'},
+                    {'name': 'Camping/Campground', 'slug': 'camping', 'color_code': 'RGB (194, 24, 91)', 'icon_code': '1765'},
+                    {'name': 'Vacation Rental', 'slug': 'vacation_rental', 'color_code': 'RGB (194, 24, 91)', 'icon_code': '1602'},
                     {'name': 'Accommodation', 'slug': 'accommodation', 'color_code': 'RGB (194, 24, 91)', 'icon_code': '1602'},
                 ]
             },
@@ -95,8 +101,9 @@ class Command( BaseCommand ):
                     {'name': 'Car/Auto', 'slug': 'car_auto', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1538'},
                     {'name': 'Boat', 'slug': 'boat', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1681'},
                     {'name': 'Train', 'slug': 'train', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1716'},
+                    {'name': 'Metro/Tram', 'slug': 'metro_tram', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1626'},
                     {'name': 'Cable Car/Funicular', 'slug': 'cable_car_funicular', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1533'},
-                    {'name': 'Walking', 'slug': 'walking', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1596'},
+                    {'name': 'Walking Tour', 'slug': 'walking', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1596'},  # Keep old slug
                     {'name': 'Ferry', 'slug': 'ferry', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1569'},
                     {'name': 'Bus', 'slug': 'bus', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1532'},
                     {'name': 'Bicycle', 'slug': 'bicycle', 'color_code': 'RGB (0, 151, 167)', 'icon_code': '1522'},
@@ -107,7 +114,9 @@ class Command( BaseCommand ):
         ]
 
         created_cats = 0
+        updated_cats = 0
         created_subcats = 0
+        updated_subcats = 0
 
         for cat_data in categories_data:
             subcategories_data = cat_data.pop( 'subcategories' )
@@ -117,9 +126,19 @@ class Command( BaseCommand ):
             )
             if created:
                 created_cats += 1
+            else:
+                # Update existing category if fields changed
+                updated_fields = []
+                for field in ['name', 'color_code', 'icon_code']:
+                    if getattr( category, field ) != cat_data[field]:
+                        setattr( category, field, cat_data[field] )
+                        updated_fields.append( field )
+                if updated_fields:
+                    category.save( update_fields = updated_fields )
+                    updated_cats += 1
 
             for subcat_data in subcategories_data:
-                _, created = LocationSubCategory.objects.get_or_create(
+                subcat, created = LocationSubCategory.objects.get_or_create(
                     slug = subcat_data['slug'],
                     defaults = {
                         'category': category,
@@ -128,11 +147,25 @@ class Command( BaseCommand ):
                 )
                 if created:
                     created_subcats += 1
+                else:
+                    # Update existing subcategory if fields changed
+                    updated_fields = []
+                    if subcat.category_id != category.id:
+                        subcat.category = category
+                        updated_fields.append( 'category' )
+                    for field in ['name', 'color_code', 'icon_code']:
+                        if getattr( subcat, field ) != subcat_data[field]:
+                            setattr( subcat, field, subcat_data[field] )
+                            updated_fields.append( field )
+                    if updated_fields:
+                        subcat.save( update_fields = updated_fields )
+                        updated_subcats += 1
 
         if not quiet:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f'Seed data complete: {created_cats} categories, '
-                    f'{created_subcats} subcategories created'
-                )
-            )
+            msg = f'Seed data complete: {created_cats} categories created'
+            if updated_cats:
+                msg += f', {updated_cats} updated'
+            msg += f'; {created_subcats} subcategories created'
+            if updated_subcats:
+                msg += f', {updated_subcats} updated'
+            self.stdout.write( self.style.SUCCESS( msg ) )

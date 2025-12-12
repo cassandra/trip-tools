@@ -1115,53 +1115,285 @@
     function syncGmmLocationToServer( tripUuid, gmmLoc ) {
         console.log( '[TT GMM Sync] Syncing GMM location to server:', gmmLoc.title );
 
-        // Open the location to get coordinates
-        return TTGmmAdapter.openLocationById( gmmLoc.fl_id )
-            .then( function( locationInfo ) {
-                // Build location data for server
-                var locationData = {
-                    gmm_id: gmmLoc.fl_id,
-                    title: locationInfo.title || gmmLoc.title
-                };
+        // Get categories for subcategory mapping
+        return getLocationCategories()
+            .then( function( categories ) {
+                // Open the location to get coordinates
+                return TTGmmAdapter.openLocationById( gmmLoc.fl_id )
+                    .then( function( locationInfo ) {
+                        // Build location data for server
+                        var locationData = {
+                            gmm_id: gmmLoc.fl_id,
+                            title: locationInfo.title || gmmLoc.title
+                        };
 
-                // Add coordinates if available
-                if ( locationInfo.coordinates ) {
-                    locationData.latitude = locationInfo.coordinates.latitude;
-                    locationData.longitude = locationInfo.coordinates.longitude;
-                }
+                        // Add coordinates if available
+                        if ( locationInfo.coordinates ) {
+                            locationData.latitude = locationInfo.coordinates.latitude;
+                            locationData.longitude = locationInfo.coordinates.longitude;
+                        }
 
-                // Map category from layer name and icon (stub for now)
-                var categoryMapping = mapToCategory( gmmLoc.layer_title, gmmLoc.icon_code );
-                if ( categoryMapping ) {
-                    locationData.category_slug = categoryMapping.category_slug;
-                    if ( categoryMapping.subcategory_slug ) {
-                        locationData.subcategory_slug = categoryMapping.subcategory_slug;
-                    }
-                }
+                        // Map subcategory from layer name and icon
+                        var mapping = mapToSubcategory( gmmLoc.layer_title, gmmLoc.icon_code, categories );
+                        if ( mapping ) {
+                            locationData.subcategory_slug = mapping.subcategory_slug;
+                        }
 
-                console.log( '[TT GMM Sync] Saving location to server:', locationData );
+                        console.log( '[TT GMM Sync] Saving location to server:', locationData );
 
-                return saveLocationToServer( tripUuid, locationData )
-                    .then( function( serverResult ) {
-                        return TTGmmAdapter.closeInfoWindow()
-                            .then( function() {
-                                return serverResult;
+                        return saveLocationToServer( tripUuid, locationData )
+                            .then( function( serverResult ) {
+                                return TTGmmAdapter.closeInfoWindow()
+                                    .then( function() {
+                                        return serverResult;
+                                    });
                             });
                     });
             });
     }
 
+    // GMM icon code to subcategory slug mapping
+    // Maps Google My Maps icon codes to Trip Tools subcategory slugs
+    var GMM_ICON_TO_SUBCATEGORY = {
+        // Activities - Hike/Trail
+        '1595': 'hike',         // Hiking (Group)
+        '1596': 'hike',         // Hiking
+        '1597': 'hike',         // Trailhead
+        '1837': 'hike',         // Nordic Walking
+
+        // Activities - Museum/Library
+        '1636': 'museum',       // Museum
+        '1834': 'museum',       // Museum (Japan)
+        '1664': 'museum',       // Library
+        '1726': 'museum',       // University
+
+        // Activities - Viewpoint/Photo Op
+        '1523': 'view_photoop', // Viewpoint
+        '1535': 'view_photoop', // Photo
+        '1728': 'view_photoop', // Vista (Partial)
+        '1729': 'view_photoop', // Vista
+
+        // Activities - Church/Religious
+        '1666': 'church_religious', // Bahá'í
+        '1668': 'church_religious', // Buddhist (Wheel)
+        '1669': 'church_religious', // Buddhist (Zen)
+        '1670': 'church_religious', // Christian
+        '1671': 'church_religious', // Place of Worship
+        '1672': 'church_religious', // Hindu
+        '1673': 'church_religious', // Islamic
+        '1674': 'church_religious', // Jain
+        '1675': 'church_religious', // Jewish
+        '1676': 'church_religious', // Prayer
+        '1677': 'church_religious', // Shinto
+        '1678': 'church_religious', // Sikh
+        '1706': 'church_religious', // Temple
+        '1830': 'church_religious', // Mormon
+
+        // Activities - Cemetery
+        '1542': 'cemetery',     // Cemetery
+        '1610': 'cemetery',     // Cemetery (Japan)
+
+        // Activities - Historic/Ruins
+        '1598': 'historic_ruins', // Historic Building
+        '1600': 'historic_ruins', // Plaque
+        '1804': 'historic_ruins', // Historic Building (China)
+
+        // Activities - Park/Garden
+        '1582': 'park_garden',  // Garden
+        '1720': 'park_garden',  // Park
+        '1652': 'park_garden',  // Playground
+
+        // Activities - Waterfall
+        '1892': 'waterfall',    // Waterfall
+
+        // Activities - Beach
+        '1521': 'beach',        // Beach
+        '1882': 'beach',        // Tidepool
+
+        // Activities - Cinema/Play
+        '1635': 'cinema_play',  // Movies
+        '1637': 'cinema_play',  // Music
+        '1649': 'cinema_play',  // Music Hall
+        '1698': 'cinema_play',  // Stadium
+        '1708': 'cinema_play',  // Amphitheatre
+        '1709': 'cinema_play',  // Theater
+
+        // Activities - Theme Park/Zoo
+        '1568': 'theme_park_zoo', // Amusement Park
+
+        // Activities - Monument
+        '1528': 'monument',     // Bridge
+        '1599': 'monument',     // Monument
+        '1618': 'monument',     // Lighthouse
+        '1715': 'monument',     // Tower
+
+        // Activities - Fountain/Statue
+        '1580': 'fountain',     // Fountain
+
+        // Activities - Artwork
+        '1509': 'artwork',      // Art
+
+        // Activities - Astronomy
+        '1878': 'astronomy',    // Stargazing
+
+        // Activities - Cave
+        '1767': 'cave',         // Cave
+        '1768': 'cave',         // Caving
+
+        // Activities - Geothermal/Hot Springs
+        '1730': 'geothermal',   // Volcano
+        '1811': 'geothermal',   // Hot Spring
+
+        // Dining/Shopping - Breakfast/Lunch
+        '1534': 'coffee_breakfast', // Cafe
+        '1705': 'coffee_breakfast', // Teahouse
+
+        // Dining/Shopping - Dinner/Restaurant
+        '1530': 'lunch_dinner', // Burger
+        '1545': 'lunch_dinner', // Chicken
+        '1567': 'lunch_dinner', // Fast Food
+        '1577': 'lunch_dinner', // Restaurant
+        '1640': 'lunch_dinner', // Noodles
+        '1651': 'lunch_dinner', // Pizza
+        '1810': 'lunch_dinner', // Hot Dog
+        '1835': 'lunch_dinner', // Sushi
+
+        // Dining/Shopping - Cafe/Bakery
+        // Note: 1534 (Cafe) already mapped to coffee_breakfast
+
+        // Dining/Shopping - Desserts/Snacks
+        '1607': 'deserts',      // Ice Cream
+
+        // Dining/Shopping - Drinks/Bar
+        '1517': 'drinks_bar',   // Cocktails
+        '1518': 'drinks_bar',   // Pub
+        '1879': 'drinks_bar',   // Beer
+
+        // Dining/Shopping - Food Hall/Market
+        '1611': 'food_area',    // Point of Interest (used for food halls)
+
+        // Dining/Shopping - Food Store
+        '1578': 'food_store',   // Groceries
+        '1587': 'food_store',   // Health Food
+        '1631': 'food_store',   // Convenience Store
+
+        // Dining/Shopping - Store/Shop
+        '1549': 'store_shop',   // Clothing
+        '1584': 'store_shop',   // Gifts
+        '1613': 'store_shop',   // Jewelry
+        '1683': 'store_shop',   // Shoes
+        '1684': 'store_shop',   // Shopping
+        '1685': 'store_shop',   // Shopping Cart
+        '1686': 'store_shop',   // Shop
+
+        // Places - City
+        '1546': 'city',         // City
+
+        // Places - Town
+        '1547': 'towns_town',   // Downtown
+
+        // Places - Neighborhood/Area
+        '1583': 'neighborhood', // Gated Community
+        '1604': 'neighborhood', // Neighborhood
+
+        // Lodging - Hotel
+        '1602': 'hotel',        // Hotel
+
+        // Lodging - Hostel/Dormitory
+        '1559': 'hostel',       // Dormitory
+
+        // Lodging - Camping/Campground
+        '1763': 'camping',      // Camper
+        '1764': 'camping',      // Campfire
+        '1765': 'camping',      // Camping
+        '1859': 'camping',      // RV
+
+        // Transportation - Plane
+        '1504': 'plane',        // Airport
+        '1750': 'plane',        // Airstrip
+
+        // Transportation - Car/Auto
+        '1538': 'car_auto',     // Car
+        '1581': 'car_auto',     // Gas Station
+        '1704': 'car_auto',     // Taxi
+        '1741': 'car_auto',     // Rental Car
+
+        // Transportation - Boat
+        '1525': 'boat',         // Boat Launch
+        '1622': 'boat',         // Yacht
+        '1623': 'boat',         // Marina
+        '1681': 'boat',         // Sailing
+
+        // Transportation - Train
+        '1662': 'train',        // Railway
+        '1716': 'train',        // Train
+        '1717': 'train',        // Train (Steam)
+
+        // Transportation - Metro/Tram
+        '1626': 'metro_tram',   // Metro
+        '1629': 'metro_tram',   // Monorail
+        '1718': 'metro_tram',   // Tram
+        '1719': 'metro_tram',   // Subway
+
+        // Transportation - Cable Car/Funicular
+        '1533': 'cable_car_funicular', // Cable Car
+        '1586': 'cable_car_funicular', // Gondola
+        '1689': 'cable_car_funicular', // Ski Lift
+
+        // Transportation - Walking Tour
+        '1731': 'walking',      // Walking
+
+        // Transportation - Ferry
+        '1537': 'ferry',        // Vehicle Ferry
+        '1569': 'ferry',        // Ferry
+
+        // Transportation - Bus
+        '1532': 'bus',          // Bus
+
+        // Transportation - Bicycle
+        '1522': 'bicycle',      // Cycling
+
+        // Transportation - Helicopter
+        '1593': 'helicopter',   // Helicopter
+
+        // Transportation - Parking
+        '1562': 'parking',      // Parking Space
+        '1644': 'parking'       // Parking
+    };
+
     /**
-     * Map layer name and icon code to category/subcategory.
+     * Map GMM layer name and icon code to subcategory slug.
+     * Uses GMM icon mapping as primary lookup, falls back to layer name.
      * @param {string} layerTitle - GMM layer title.
      * @param {string} iconCode - GMM icon code.
-     * @returns {Object|null} { category_slug, subcategory_slug } or null.
+     * @param {Array} categories - Categories from client config.
+     * @returns {Object|null} { subcategory_slug } or null.
      */
-    function mapToCategory( layerTitle, iconCode ) {
-        // TODO: Implement proper category mapping
-        // For now, try to match layer title to category name
-        // This is a stub that can be enhanced later
-        console.log( '[TT GMM Sync] Category mapping for layer:', layerTitle, 'icon:', iconCode );
+    function mapToSubcategory( layerTitle, iconCode, categories ) {
+        // Priority 1: Look up icon code in GMM mapping
+        if ( iconCode && GMM_ICON_TO_SUBCATEGORY[iconCode] ) {
+            var slug = GMM_ICON_TO_SUBCATEGORY[iconCode];
+            console.log( '[TT GMM Sync] Matched icon code', iconCode, 'to subcategory:', slug );
+            return { subcategory_slug: slug };
+        }
+
+        // Priority 2: Match layer name to category, use first subcategory
+        if ( layerTitle && categories && categories.length > 0 ) {
+            var normalizedLayer = layerTitle.toLowerCase().trim();
+            for ( var i = 0; i < categories.length; i++ ) {
+                var cat = categories[i];
+                if ( cat.name.toLowerCase().trim() === normalizedLayer ) {
+                    var subs = cat.subcategories || [];
+                    if ( subs.length > 0 ) {
+                        console.log( '[TT GMM Sync] Matched layer name', layerTitle,
+                                     'to category, using first subcategory:', subs[0].slug );
+                        return { subcategory_slug: subs[0].slug };
+                    }
+                }
+            }
+        }
+
+        console.log( '[TT GMM Sync] No subcategory match for layer:', layerTitle, 'icon:', iconCode );
         return null;
     }
 
