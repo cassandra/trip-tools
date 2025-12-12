@@ -237,10 +237,10 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         builder = SyncEnvelopeBuilder(self.user)
         envelope = builder.build()
 
-        trip_versions = envelope['trip']['versions']
-        self.assertEqual(len(trip_versions), 2)
-        self.assertIn(str(trip1.uuid), trip_versions)
-        self.assertIn(str(trip2.uuid), trip_versions)
+        trip_updates = envelope['trip']['updates']
+        self.assertEqual(len(trip_updates), 2)
+        self.assertIn(str(trip1.uuid), trip_updates)
+        self.assertIn(str(trip2.uuid), trip_updates)
 
     def test_build_returns_only_user_trips(self):
         """Test trip sync only returns trips accessible to the user."""
@@ -256,10 +256,10 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         builder = SyncEnvelopeBuilder(self.user)
         envelope = builder.build()
 
-        trip_versions = envelope['trip']['versions']
-        self.assertEqual(len(trip_versions), 1)
-        self.assertIn(str(user_trip.uuid), trip_versions)
-        self.assertNotIn(str(other_trip.uuid), trip_versions)
+        trip_updates = envelope['trip']['updates']
+        self.assertEqual(len(trip_updates), 1)
+        self.assertIn(str(user_trip.uuid), trip_updates)
+        self.assertNotIn(str(other_trip.uuid), trip_updates)
 
     def test_build_trips_filtered_by_since(self):
         """Test trip sync IS filtered by since timestamp (delta pattern)."""
@@ -286,10 +286,10 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         envelope = builder.build()
 
         # Only new trip should be returned (delta filtering)
-        trip_versions = envelope['trip']['versions']
-        self.assertEqual(len(trip_versions), 1)
-        self.assertNotIn(str(old_trip.uuid), trip_versions)
-        self.assertIn(str(new_trip.uuid), trip_versions)
+        trip_updates = envelope['trip']['updates']
+        self.assertEqual(len(trip_updates), 1)
+        self.assertNotIn(str(old_trip.uuid), trip_updates)
+        self.assertIn(str(new_trip.uuid), trip_updates)
 
     def test_build_includes_correct_metadata(self):
         """Test trip sync includes correct version, gmm_map_id, and title."""
@@ -304,8 +304,8 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         builder = SyncEnvelopeBuilder(self.user)
         envelope = builder.build()
 
-        trip_versions = envelope['trip']['versions']
-        trip_data = trip_versions[str(trip.uuid)]
+        trip_updates = envelope['trip']['updates']
+        trip_data = trip_updates[str(trip.uuid)]
         self.assertEqual(trip_data['version'], trip.version)
         self.assertEqual(trip_data['gmm_map_id'], 'test-map-123')
         self.assertEqual(trip_data['title'], 'Test Trip')
@@ -328,10 +328,10 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         builder = SyncEnvelopeBuilder(self.user)
         envelope = builder.build()
 
-        trip_versions = envelope['trip']['versions']
-        self.assertEqual(len(trip_versions), 2)
-        self.assertIn(str(active_trip.uuid), trip_versions)
-        self.assertIn(str(past_trip.uuid), trip_versions)
+        trip_updates = envelope['trip']['updates']
+        self.assertEqual(len(trip_updates), 2)
+        self.assertIn(str(active_trip.uuid), trip_updates)
+        self.assertIn(str(past_trip.uuid), trip_updates)
 
     def test_build_trips_includes_deleted_array(self):
         """Test trip sync includes deleted array structure."""
@@ -390,7 +390,7 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         builder = SyncEnvelopeBuilder(self.user)
         envelope = builder.build()
 
-        trip_data = envelope['trip']['versions'][str(trip.uuid)]
+        trip_data = envelope['trip']['updates'][str(trip.uuid)]
         self.assertIsNone(trip_data['gmm_map_id'])
 
 

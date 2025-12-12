@@ -8,8 +8,10 @@ from uuid import UUID
 from django.utils import timezone
 
 from tt.apps.locations.models import Location
+from tt.apps.trips.api.serializers import TripSerializer
 from tt.apps.trips.models import Trip
 
+from .constants import APIFields as F
 from .enums import SyncObjectType
 from .models import SyncDeletionLog
 
@@ -18,19 +20,20 @@ class SyncEnvelopeBuilder:
     """
     Builds the sync payload for API responses.
 
-    The sync envelope contains version information for trips and locations,
-    allowing the extension to detect changes and sync its local data.
+    The sync envelope contains full trip data and location versions,
+    allowing the extension to update its local data directly.
 
     Trip sync:
+    - Returns full trip objects (not just versions) for direct updates
     - Returns ALL accessible trips (including PAST) for GMM map index
     - Filtered by modified_datetime >= since for delta sync
-    - Includes metadata: gmm_map_id, title, status
     - Uses SyncDeletionLog for explicit deletion tracking
 
     Location sync:
     - Scoped to a specific trip via X-Sync-Trip header
     - Filtered by modified_datetime >= since
     - Includes deletion log for explicit deletion tracking
+    - Note: Locations still use version-only pattern (out of scope for now)
     """
 
     def __init__(
@@ -52,23 +55,23 @@ class SyncEnvelopeBuilder:
         """
         self.as_of = timezone.now()
         envelope = {
-            'as_of': self.as_of.isoformat(),
+            F.SYNC_AS_OF: self.as_of.isoformat(),
         }
 
         # Sync data requires authentication
         if not self.user.is_authenticated:
             return envelope
 
-        envelope['trip'] = self._build_trip_sync()
+        envelope[F.SYNC_TRIP] = self._build_trip_sync()
 
         if self.trip_uuid:
-            envelope['location'] = self._build_location_sync()
+            envelope[F.SYNC_LOCATION] = self._build_location_sync()
 
         return envelope
 
     def _build_trip_sync( self ) -> dict:
         """
-        Returns trip versions for delta sync.
+        Returns full trip data for delta sync.
 
         Includes ALL trips (including PAST) to support the GMM map index,
         which maps gmm_map_id to trip_uuid for routing GMM operations.
@@ -76,10 +79,8 @@ class SyncEnvelopeBuilder:
         Uses delta pattern: only returns trips modified since X-Sync-Since.
         Uses SyncDeletionLog for explicit deletion tracking.
 
-        Each trip version includes metadata:
-        - gmm_map_id: For building the GMM map index
-        - title: For display in the extension UI
-        - created: For working set ordering
+        Returns full trip objects using TripSerializer so the extension
+        can update its local data directly without additional API calls.
         """
         queryset = Trip.objects.for_user( self.user )
 
@@ -87,19 +88,12 @@ class SyncEnvelopeBuilder:
         if self.since:
             queryset = queryset.filter( modified_datetime__gte = self.since )
 
-        trips = queryset.values( 'uuid', 'version', 'gmm_map_id', 'title', 'created_datetime' )
+        serializer = TripSerializer( queryset, many = True )
+        updates = { trip[F.UUID]: trip for trip in serializer.data }
 
         result = {
-            'versions': {
-                str( t['uuid'] ): {
-                    'version': t['version'],
-                    'gmm_map_id': t['gmm_map_id'],
-                    'title': t['title'],
-                    'created': t['created_datetime'].isoformat(),
-                }
-                for t in trips
-            },
-            'deleted': [],
+            F.SYNC_UPDATES: updates,
+            F.SYNC_DELETED: [],
         }
 
         # Query deletions - filter by since if provided, otherwise return all
@@ -109,7 +103,9 @@ class SyncEnvelopeBuilder:
         if self.since:
             deletion_queryset = deletion_queryset.filter( deleted_at__gte = self.since )
 
-        result['deleted'] = [ str( u ) for u in deletion_queryset.values_list( 'uuid', flat = True ) ]
+        result[F.SYNC_DELETED] = [
+            str( u ) for u in deletion_queryset.values_list( 'uuid', flat = True )
+        ]
 
         return result
 
@@ -129,8 +125,8 @@ class SyncEnvelopeBuilder:
         locations = queryset.values( 'uuid', 'version' )
 
         result = {
-            'versions': { str( loc['uuid'] ): loc['version'] for loc in locations },
-            'deleted': [],
+            F.SYNC_VERSIONS: { str( loc['uuid'] ): loc['version'] for loc in locations },
+            F.SYNC_DELETED: [],
         }
 
         # Query deletions - filter by since if provided, otherwise return all
@@ -141,6 +137,8 @@ class SyncEnvelopeBuilder:
         if self.since:
             deletion_queryset = deletion_queryset.filter( deleted_at__gte = self.since )
 
-        result['deleted'] = [ str( u ) for u in deletion_queryset.values_list( 'uuid', flat = True ) ]
+        result[F.SYNC_DELETED] = [
+            str( u ) for u in deletion_queryset.values_list( 'uuid', flat = True )
+        ]
 
         return result

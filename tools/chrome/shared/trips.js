@@ -178,206 +178,89 @@ TTTrips.fetchTripByUuid = function( uuid ) {
         });
 };
 
+// =============================================================================
+// Trip Data Updates (Unified Update Structure)
+// =============================================================================
+//
+// TripDataUpdates is the unified structure for trip updates from any source
+// (server sync, internal operations like create/link/unlink).
+//
+// Structure:
+//   {
+//       updates: {
+//           'trip-uuid-1': { uuid: '...', title: '...', gmm_map_id: '...', ... },
+//           'trip-uuid-2': { uuid: '...', title: '...', gmm_map_id: null, ... }
+//       },
+//       deleted: ['trip-uuid-3', 'trip-uuid-4']
+//   }
+//
+// Field semantics within each trip object:
+//   - field: value → set to this value
+//   - field: null → explicitly cleared/deleted
+//   - field absent → no information, preserve existing value
+
 /**
- * Refresh stale trips in the working set.
- * Fetches details for any trip with stale=true flag.
- * Called by handleGetTrips() before returning data.
+ * @typedef {Object} TripDataUpdates
+ * @property {Object<string, Object>} updates - Map of trip UUID to trip data.
+ * @property {Array<string>} deleted - Array of deleted trip UUIDs.
+ */
+
+/**
+ * Apply trip updates to all internal data structures.
+ * Central dispatcher for both server sync and internal operations.
+ * Each internal structure handler understands the TripDataUpdates format
+ * and extracts the fields it cares about.
+ *
+ * @param {TripDataUpdates} tripDataUpdates - The updates to apply.
  * @returns {Promise<void>}
  */
-TTTrips.refreshStaleTrips = function() {
-    return TTTrips.getWorkingSet()
-        .then( function( workingSet ) {
-            // Find stale trips
-            var staleTrips = workingSet.filter( function( trip ) {
-                return trip.stale === true;
-            });
-
-            if ( staleTrips.length === 0 ) {
-                return Promise.resolve();
-            }
-
-            // Fetch details for all stale trips in parallel
-            var fetchPromises = staleTrips.map( function( trip ) {
-                return TTTrips.fetchTripByUuid( trip.uuid )
-                    .then( function( details ) {
-                        return {
-                            uuid: trip.uuid,
-                            details: details,
-                            originalTrip: trip
-                        };
-                    })
-                    .catch( function( error ) {
-                        console.log( '[TTTrips] Failed to refresh trip ' + trip.uuid + ':', error );
-                        return {
-                            uuid: trip.uuid,
-                            details: null,
-                            originalTrip: trip
-                        };
-                    });
-            });
-
-            return Promise.all( fetchPromises )
-                .then( function( results ) {
-                    return Promise.all([
-                        TTTrips.getWorkingSet(),
-                        TTTrips.getActiveTripUuid()
-                    ]).then( function( data ) {
-                        var currentSet = data[0];
-                        var activeUuid = data[1];
-
-                        // Update working set with fetched details
-                        var updatedSet = currentSet.map( function( trip ) {
-                            var result = results.find( function( r ) {
-                                return r.uuid === trip.uuid;
-                            });
-
-                            if ( !result || !result.details ) {
-                                // Not a stale trip or fetch failed - keep as-is
-                                return trip;
-                            }
-
-                            // Merge server data with local state:
-                            // - Start with all server fields
-                            // - Preserve local lastAccessedAt
-                            // - Remove stale flag (now fresh)
-                            var merged = Object.assign( {}, result.details, {
-                                lastAccessedAt: trip.lastAccessedAt
-                            });
-                            delete merged.stale;
-                            return merged;
-                        });
-
-                        // Re-sort by lastAccessedAt descending
-                        updatedSet.sort( function( a, b ) {
-                            return b.lastAccessedAt.localeCompare( a.lastAccessedAt );
-                        });
-
-                        // Enforce max size, but never evict active trip
-                        while ( updatedSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
-                            var removed = false;
-                            for ( var j = updatedSet.length - 1; j >= 0; j-- ) {
-                                if ( updatedSet[j].uuid !== activeUuid ) {
-                                    updatedSet.splice( j, 1 );
-                                    removed = true;
-                                    break;
-                                }
-                            }
-                            if ( !removed ) {
-                                updatedSet = updatedSet.slice( 0, TTTrips.MAX_WORKING_SET_SIZE );
-                                break;
-                            }
-                        }
-
-                        return TTTrips.setWorkingSet( updatedSet );
-                    });
-                });
-        });
+TTTrips.applyUpdates = function( tripDataUpdates ) {
+    return Promise.all([
+        TTTrips._applyUpdatesToWorkingSet( tripDataUpdates ),
+        TTTrips._applyUpdatesToGmmMapIndex( tripDataUpdates )
+    ]);
 };
 
 /**
- * Merge server trips into the working set.
- * For trips not already in the working set, adds them using their
- * created_datetime as lastAccessedAt. This allows LRU eviction to
- * naturally determine which trips belong in the working set.
- * @param {Array} serverTrips - Array of trips from server with created_datetime.
+ * Convenience function for updating a single trip.
+ * Wraps the trip data in a TripDataUpdates structure and applies it.
+ *
+ * @param {Object} tripData - Trip object with uuid and fields to update.
  * @returns {Promise<void>}
  */
-TTTrips.mergeServerTrips = function( serverTrips ) {
-    if ( !serverTrips || serverTrips.length === 0 ) {
-        return Promise.resolve();
+TTTrips.applyTripUpdate = function( tripData ) {
+    if ( !tripData || !tripData.uuid ) {
+        return Promise.reject( new Error( 'tripData must include uuid' ) );
     }
 
-    return TTTrips.getWorkingSet()
-        .then( function( workingSet ) {
-            // Build set of UUIDs already in working set
-            var existingUuids = {};
-            workingSet.forEach( function( trip ) {
-                existingUuids[trip.uuid] = true;
-            });
+    var tripDataUpdates = {
+        updates: {},
+        deleted: []
+    };
+    tripDataUpdates.updates[tripData.uuid] = tripData;
 
-            // Find trips not in working set
-            var newTrips = serverTrips.filter( function( trip ) {
-                return !existingUuids[trip.uuid];
-            });
-
-            if ( newTrips.length === 0 ) {
-                return Promise.resolve();
-            }
-
-            // Add each new trip using created_datetime as lastAccessedAt
-            // Process sequentially to maintain correct ordering
-            return newTrips.reduce( function( promise, trip ) {
-                return promise.then( function() {
-                    return TTTrips.addToWorkingSet( trip, {
-                        lastAccessedAt: trip.created_datetime
-                    });
-                });
-            }, Promise.resolve() );
-        });
+    return TTTrips.applyUpdates( tripDataUpdates );
 };
 
 /**
- * Seed the working set from server trips.
- * Only seeds if working set is empty.
- * Takes the most recent trips (by created_datetime, already sorted by server).
- * @param {Array} serverTrips - Array of trips from server.
- * @returns {Promise<void>}
- */
-TTTrips.seedWorkingSet = function( serverTrips ) {
-    return TTTrips.getWorkingSet()
-        .then( function( workingSet ) {
-            // Only seed if empty
-            if ( workingSet.length > 0 ) {
-                return;
-            }
-
-            if ( !serverTrips || serverTrips.length === 0 ) {
-                return;
-            }
-
-            // Take up to MAX_WORKING_SET_SIZE trips
-            var toSeed = serverTrips.slice( 0, TTTrips.MAX_WORKING_SET_SIZE );
-            var now = new Date().toISOString();
-
-            var newWorkingSet = toSeed.map( function( trip ) {
-                // Preserve all fields from server, set lastAccessedAt
-                return Object.assign( {}, trip, {
-                    lastAccessedAt: now
-                });
-            });
-
-            return TTTrips.setWorkingSet( newWorkingSet )
-                .then( function() {
-                    // Set first trip as active if no active trip
-                    return TTTrips.getActiveTripUuid();
-                })
-                .then( function( activeUuid ) {
-                    if ( !activeUuid && newWorkingSet.length > 0 ) {
-                        return TTTrips.setActiveTripUuid( newWorkingSet[0].uuid );
-                    }
-                });
-        });
-};
-
-/**
- * Sync working set with server trip versions.
- * Called by sync handler. Does NOT make API calls - only updates local state.
+ * Apply trip updates to the working set.
+ * Internal handler for applyUpdates().
  *
- * For each trip in sync envelope:
- * - Not in working set: Add as stale stub (needs detail fetch)
- * - In working set with different version: Mark as stale (needs refresh)
- * - In working set with same version: Keep as-is
- * - In deleted array: Remove from working set
+ * For trips in updates:
+ *   - If in working set: merge fields (respecting null = clear, absent = preserve)
+ *   - If not in working set: add with created_datetime as lastAccessedAt
  *
- * @param {Object} versions - Map of uuid -> {version, gmm_map_id, title, created} from sync envelope.
- * @param {Array} deleted - Array of deleted trip UUIDs.
+ * For trips in deleted:
+ *   - Remove from working set
+ *   - If active trip was deleted, select a new active trip
+ *
+ * @param {TripDataUpdates} tripDataUpdates - The updates to apply.
  * @returns {Promise<void>}
+ * @private
  */
-TTTrips.syncWorkingSet = function( versions, deleted ) {
-    if ( !versions ) {
-        versions = {};
-    }
-
+TTTrips._applyUpdatesToWorkingSet = function( tripDataUpdates ) {
+    var updates = tripDataUpdates.updates || {};
+    var deleted = tripDataUpdates.deleted || [];
     var activeUuidBeforeSync;
 
     return TTTrips.getActiveTripUuid()
@@ -392,54 +275,42 @@ TTTrips.syncWorkingSet = function( versions, deleted ) {
                 existingByUuid[trip.uuid] = trip;
             });
 
-            // Process existing trips: update if changed, keep otherwise
-            // Note: With delta sync, versions only contains *changed* trips.
-            // Trips not in versions are unchanged (not deleted).
-            // Deletions are handled via the deleted array below.
+            // Process existing trips: merge updates if present
             var updatedSet = [];
             workingSet.forEach( function( trip ) {
-                if ( !versions.hasOwnProperty( trip.uuid ) ) {
-                    // Trip not in delta - unchanged, keep as-is
-                    updatedSet.push( trip );
-                    return;
-                }
+                if ( updates.hasOwnProperty( trip.uuid ) ) {
+                    // Merge server data with existing trip
+                    // Field semantics: present value = set, null = clear, absent = preserve
+                    var serverData = updates[trip.uuid];
+                    var merged = Object.assign( {}, trip );
 
-                var serverData = versions[trip.uuid];
-                var serverVersion = serverData.version;
-                if ( trip.version !== serverVersion ) {
-                    // Version changed - update metadata and mark as stale
-                    var updated = Object.assign( {}, trip, {
-                        version: serverVersion,
-                        title: serverData.title,
-                        gmm_map_id: serverData.gmm_map_id,
-                        stale: true
-                    });
-                    updatedSet.push( updated );
+                    for ( var key in serverData ) {
+                        if ( serverData.hasOwnProperty( key ) ) {
+                            // Set the value (including null for explicit clear)
+                            merged[key] = serverData[key];
+                        }
+                    }
+
+                    updatedSet.push( merged );
                 } else {
-                    // Version matches - keep as-is (preserve stale flag if present)
+                    // Trip not in updates - keep as-is
                     updatedSet.push( trip );
                 }
             });
 
-            // Add stale stubs for new trips not in working set
-            var serverUuids = Object.keys( versions );
-            serverUuids.forEach( function( uuid ) {
+            // Add new trips not in working set
+            for ( var uuid in updates ) {
                 if ( !existingByUuid[uuid] ) {
-                    var serverData = versions[uuid];
-                    // New trip - add as stale stub with metadata from sync
-                    updatedSet.push({
-                        uuid: uuid,
-                        title: serverData.title,
-                        gmm_map_id: serverData.gmm_map_id,
-                        version: serverData.version,
-                        lastAccessedAt: serverData.created,
-                        stale: true
+                    var tripData = updates[uuid];
+                    // New trip - add with created_datetime as lastAccessedAt
+                    var newTrip = Object.assign( {}, tripData, {
+                        lastAccessedAt: tripData.created_datetime || new Date().toISOString()
                     });
+                    updatedSet.push( newTrip );
                 }
-            });
+            }
 
-            // Remove explicitly deleted trips
-            deleted = deleted || [];
+            // Remove deleted trips
             deleted.forEach( function( uuid ) {
                 updatedSet = updatedSet.filter( function( trip ) {
                     return trip.uuid !== uuid;
@@ -448,12 +319,11 @@ TTTrips.syncWorkingSet = function( versions, deleted ) {
 
             // Sort by lastAccessedAt descending (most recent first)
             updatedSet.sort( function( a, b ) {
-                return b.lastAccessedAt.localeCompare( a.lastAccessedAt );
+                return ( b.lastAccessedAt || '' ).localeCompare( a.lastAccessedAt || '' );
             });
 
             // Enforce max size, but never evict active trip
             while ( updatedSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
-                // Find last trip that isn't active
                 var removed = false;
                 for ( var j = updatedSet.length - 1; j >= 0; j-- ) {
                     if ( updatedSet[j].uuid !== activeUuidBeforeSync ) {
@@ -462,7 +332,6 @@ TTTrips.syncWorkingSet = function( versions, deleted ) {
                         break;
                     }
                 }
-                // Safety: if all trips are active (shouldn't happen), just slice
                 if ( !removed ) {
                     updatedSet = updatedSet.slice( 0, TTTrips.MAX_WORKING_SET_SIZE );
                     break;
@@ -475,20 +344,14 @@ TTTrips.syncWorkingSet = function( versions, deleted ) {
                 });
         })
         .then( function( updatedSet ) {
-            // Handle active trip if it was removed (deleted on server)
+            // Handle active trip if it was deleted
             if ( activeUuidBeforeSync ) {
                 var stillExists = updatedSet.some( function( trip ) {
                     return trip.uuid === activeUuidBeforeSync;
                 });
 
                 if ( !stillExists ) {
-                    // Active trip was deleted - set to first non-stale, or first available
-                    var firstNonStale = updatedSet.find( function( trip ) {
-                        return !trip.stale;
-                    });
-                    if ( firstNonStale ) {
-                        return TTTrips.setActiveTripUuid( firstNonStale.uuid );
-                    }
+                    // Active trip was deleted - select first available
                     if ( updatedSet.length > 0 ) {
                         return TTTrips.setActiveTripUuid( updatedSet[0].uuid );
                     }
@@ -498,27 +361,80 @@ TTTrips.syncWorkingSet = function( versions, deleted ) {
         });
 };
 
-// =============================================================================
-// Trip Updates
-// =============================================================================
-
 /**
- * Update a trip in the working set with new data.
- * Used when trip is updated (e.g., gmm_map_id is set).
- * @param {string} uuid - The trip UUID.
- * @param {Object} updates - Object with fields to update (e.g., { gmm_map_id: '...' }).
+ * Apply trip updates to the GMM map index.
+ * Internal handler for applyUpdates().
+ *
+ * Extracts gmm_map_id from each trip and updates the index.
+ * Field semantics:
+ *   - gmm_map_id: value → set mapping
+ *   - gmm_map_id: null → remove mapping
+ *   - gmm_map_id absent → preserve existing mapping
+ *
+ * @param {TripDataUpdates} tripDataUpdates - The updates to apply.
  * @returns {Promise<void>}
+ * @private
  */
-TTTrips.updateTripInWorkingSet = function( uuid, updates ) {
-    return TTTrips.getWorkingSet()
-        .then( function( workingSet ) {
-            var updatedSet = workingSet.map( function( trip ) {
-                if ( trip.uuid === uuid ) {
-                    return Object.assign( {}, trip, updates );
+TTTrips._applyUpdatesToGmmMapIndex = function( tripDataUpdates ) {
+    var updates = tripDataUpdates.updates || {};
+    var deleted = tripDataUpdates.deleted || [];
+
+    return TTTrips.getGmmMapIndex()
+        .then( function( index ) {
+            var changed = false;
+
+            // Handle deletions - scan by value since index keyed by gmm_map_id
+            if ( deleted.length > 0 ) {
+                var deletedSet = {};
+                deleted.forEach( function( uuid ) { deletedSet[uuid] = true; });
+
+                for ( var gmmMapId in index ) {
+                    if ( deletedSet[index[gmmMapId]] ) {
+                        delete index[gmmMapId];
+                        changed = true;
+                    }
                 }
-                return trip;
-            });
-            return TTTrips.setWorkingSet( updatedSet );
+            }
+
+            // Apply updates
+            for ( var uuid in updates ) {
+                var tripData = updates[uuid];
+
+                // Only process if gmm_map_id is present in the update
+                if ( !tripData.hasOwnProperty( 'gmm_map_id' ) ) {
+                    continue;
+                }
+
+                var newGmmMapId = tripData.gmm_map_id;
+
+                // Fast path: if mapping already correct, skip
+                if ( newGmmMapId && index[newGmmMapId] === uuid ) {
+                    continue;
+                }
+
+                // Remove any existing mapping for this trip UUID
+                for ( var existingMapId in index ) {
+                    if ( index[existingMapId] === uuid ) {
+                        delete index[existingMapId];
+                        changed = true;
+                        break;
+                    }
+                }
+
+                // Add new mapping if gmm_map_id has a value (not null)
+                if ( newGmmMapId ) {
+                    index[newGmmMapId] = uuid;
+                    changed = true;
+                }
+            }
+
+            // Persist to storage only if something changed
+            if ( changed ) {
+                return TTStorage.set( TT.STORAGE.KEY_GMM_MAP_INDEX, {
+                    fetchedAt: new Date().toISOString(),
+                    index: index
+                });
+            }
         });
 };
 
@@ -627,76 +543,6 @@ TTTrips.getTripUuidByGmmMapId = function( gmmMapId ) {
 TTTrips.clearGmmMapIndex = function() {
     _gmmMapIndex = null;
     return TTStorage.remove( TT.STORAGE.KEY_GMM_MAP_INDEX );
-};
-
-/**
- * Apply trip deltas to GMM map index.
- * Called by sync handler after working set sync.
- * Updates L1 (memory) and L2 (storage) with delta information.
- *
- * Optimized for the common case where gmm_map_id hasn't changed:
- * - Check if index[gmm_map_id] === uuid before doing any work
- * - Only scan for old entries when there's an actual change
- * - Only persist to storage if something changed
- *
- * @param {Object} versions - Map of uuid -> {version, gmm_map_id, title, created}
- * @param {Array} deleted - Array of deleted trip UUIDs
- * @returns {Promise<void>}
- */
-TTTrips.applyGmmMapIndexDeltas = function( versions, deleted ) {
-    // Get current index (will lazy-build if needed)
-    return TTTrips.getGmmMapIndex()
-        .then( function( index ) {
-            var updated = false;
-
-            // Handle deletions - must scan by value since index keyed by gmm_map_id
-            if ( deleted && deleted.length > 0 ) {
-                var deletedSet = {};
-                deleted.forEach( function( uuid ) { deletedSet[uuid] = true; } );
-
-                for ( var gmmMapId in index ) {
-                    if ( deletedSet[index[gmmMapId]] ) {
-                        delete index[gmmMapId];
-                        updated = true;
-                    }
-                }
-            }
-
-            // Apply version updates
-            for ( var uuid in versions ) {
-                var tripData = versions[uuid];
-                var gmmMapId = tripData.gmm_map_id;
-
-                // Fast path: if mapping already correct, skip this trip entirely
-                if ( gmmMapId && index[gmmMapId] === uuid ) {
-                    continue;
-                }
-
-                // Slow path: mapping changed or was removed
-                // Find and remove any existing entry for this trip UUID
-                for ( var existingMapId in index ) {
-                    if ( index[existingMapId] === uuid ) {
-                        delete index[existingMapId];
-                        updated = true;
-                        break;
-                    }
-                }
-
-                // Add new entry if trip has gmm_map_id
-                if ( gmmMapId ) {
-                    index[gmmMapId] = uuid;
-                    updated = true;
-                }
-            }
-
-            // Persist to L2 only if something changed
-            if ( updated ) {
-                return TTStorage.set( TT.STORAGE.KEY_GMM_MAP_INDEX, {
-                    fetchedAt: new Date().toISOString(),
-                    index: index
-                } );
-            }
-        } );
 };
 
 // =============================================================================

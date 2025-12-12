@@ -92,3 +92,13 @@ class APIFields:
     ADVANCED_BOOKING_TYPE = 'advanced_booking_type'
     VALUE = 'value'
     LABEL = 'label'
+
+    # -------------------------------------------------------------------------
+    # Sync envelope
+    # -------------------------------------------------------------------------
+    SYNC_AS_OF = 'as_of'
+    SYNC_UPDATES = 'updates'
+    SYNC_DELETED = 'deleted'
+    SYNC_VERSIONS = 'versions'  # Location sync uses version-only pattern
+    SYNC_TRIP = 'trip'
+    SYNC_LOCATION = 'location'

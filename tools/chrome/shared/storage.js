@@ -1,6 +1,18 @@
 /*
  * Trip Tools Chrome Extension - Storage Utilities
  * Promise-based wrapper around chrome.storage.local.
+ *
+ * Storage Access Patterns:
+ *
+ * For shared state (trips, auth, sync metadata, etc.):
+ *   - Access through service worker via message passing
+ *   - Centralizes validation, coordination, and business logic
+ *   - Easier to test and maintain
+ *
+ * For module-local state (e.g., UI preferences, dismissed dialogs):
+ *   - Direct chrome.storage access from the owning module is acceptable
+ *   - Only when the data is used exclusively by that one module
+ *   - No coordination with other modules needed
  */
 
 var TTStorage = TTStorage || {};

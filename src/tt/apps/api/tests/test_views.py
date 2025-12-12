@@ -105,8 +105,8 @@ class SyncableAPIViewResponseWrappingTestCase(TestCase):
         # Should be valid ISO format
         datetime.fromisoformat(sync['as_of'].replace('Z', '+00:00'))
 
-    def test_sync_envelope_includes_trip_versions(self):
-        """Test sync envelope includes trip versions."""
+    def test_sync_envelope_includes_trip_updates(self):
+        """Test sync envelope includes trip updates with full data."""
         trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip'
@@ -120,8 +120,8 @@ class SyncableAPIViewResponseWrappingTestCase(TestCase):
 
         sync = response.data['sync']
         self.assertIn('trip', sync)
-        self.assertIn('versions', sync['trip'])
-        self.assertIn(str(trip.uuid), sync['trip']['versions'])
+        self.assertIn('updates', sync['trip'])
+        self.assertIn(str(trip.uuid), sync['trip']['updates'])
 
     def test_sync_envelope_includes_past_trips(self):
         """Test sync envelope includes trips with PAST status for GMM map index."""
@@ -145,9 +145,9 @@ class SyncableAPIViewResponseWrappingTestCase(TestCase):
         response = view(request)
 
         sync = response.data['sync']
-        versions = sync['trip']['versions']
-        self.assertIn(str(upcoming_trip.uuid), versions)
-        self.assertIn(str(past_trip.uuid), versions)
+        updates = sync['trip']['updates']
+        self.assertIn(str(upcoming_trip.uuid), updates)
+        self.assertIn(str(past_trip.uuid), updates)
 
 
 # =============================================================================
@@ -374,4 +374,4 @@ class ExtensionStatusViewTestCase( TestCase ):
 
         self.assertEqual( response.status_code, 200 )
         sync = response.json()['sync']
-        self.assertIn( str( trip.uuid ), sync['trip']['versions'] )
+        self.assertIn( str( trip.uuid ), sync['trip']['updates'] )

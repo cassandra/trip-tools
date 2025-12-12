@@ -59,7 +59,9 @@ TT.STORAGE = {
     // Location sync metadata (per-trip)
     KEY_LOCATION_SYNC_PREFIX: 'tt_locationSync_',
     // GMM map index (gmm_map_id -> trip_uuid mapping)
-    KEY_GMM_MAP_INDEX: 'tt_gmmMapIndex'
+    KEY_GMM_MAP_INDEX: 'tt_gmmMapIndex',
+    // Dismissed unlinked GMM map dialogs (user chose "Dismiss")
+    KEY_DISMISSED_UNLINKED_GMM_MAPS: 'tt_dismissedUnlinkedGmmMaps'
 };
 
 TT.MESSAGE = {
@@ -75,7 +77,7 @@ TT.MESSAGE = {
     TYPE_AUTH_STATE_CHANGED: 'tt_authStateChanged',
     TYPE_DISCONNECT: 'tt_disconnect',
     // Trip management
-    TYPE_GET_TRIPS: 'tt_getTrips',
+    TYPE_GET_TRIPS_WORKING_SET: 'tt_getTripsWorkingSet',
     TYPE_SET_ACTIVE_TRIP: 'tt_setActiveTrip',
     TYPE_GET_ALL_TRIPS: 'tt_getAllTrips',
     TYPE_CREATE_AND_ACTIVATE_TRIP: 'tt_createAndActivateTrip',
@@ -272,7 +274,8 @@ TT.SYNC = {
     FIELD_DATA: 'data',
     FIELD_SYNC: 'sync',
     FIELD_AS_OF: 'as_of',
-    FIELD_VERSIONS: 'versions',
+    FIELD_UPDATES: 'updates',   // Trip sync: full trip data keyed by UUID
+    FIELD_VERSIONS: 'versions', // Location sync: version-only pattern
     FIELD_DELETED: 'deleted',
     // Object types (must match server SyncObjectType enum)
     OBJECT_TYPE_TRIP: 'trip',

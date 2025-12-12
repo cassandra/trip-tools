@@ -110,23 +110,143 @@
 
     /**
      * Dispatch page load actions.
-     * Triggers sync check which is self-contained (determines linkage internally).
+     * Shows unlinked dialog if map not linked, otherwise triggers sync.
      */
     function dispatchPageLoad() {
         waitForGmmReady()
             .then( function() {
-                console.log( '[TT GMM] Page load - triggering sync check' );
-                // TTGmmSync.onPageLoad() is self-contained:
-                // - Gets map ID from URL
-                // - Checks linkage via service worker
-                // - Runs sync if linked, skips if not
-                if ( typeof TTGmmSync !== 'undefined' && TTGmmSync.onPageLoad ) {
-                    TTGmmSync.onPageLoad();
+                return TTGmmAdapter.isGmmMapLinkedToTrip();
+            } )
+            .then( function( linkResult ) {
+                if ( linkResult.isLinked ) {
+                    // Map is linked - trigger sync check
+                    console.log( '[TT GMM] Map linked to trip:', linkResult.tripUuid );
+                    if ( typeof TTGmmSync !== 'undefined' && TTGmmSync.onPageLoad ) {
+                        TTGmmSync.onPageLoad();
+                    }
+                } else {
+                    // Map not linked - check if dismissed, then show dialog
+                    var gmmMapId = TTGmmAdapter.getMapInfo().mapId;
+                    console.log( '[TT GMM] Map not linked:', gmmMapId );
+                    return handleUnlinkedGmmMap( gmmMapId );
                 }
             } )
             .catch( function( error ) {
                 console.error( '[TT GMM] Page load dispatch failed:', error );
             } );
+    }
+
+    // =========================================================================
+    // Unlinked Map Dialog
+    // =========================================================================
+
+    var TT_UNLINKED_DIALOG_CLASS = 'tt-unlinked-dialog';
+
+    /**
+     * Check if this GMM map ID was dismissed by the user.
+     * @param {string} gmmMapId - GMM map ID.
+     * @returns {Promise<boolean>}
+     */
+    function wasGmmMapDismissed( gmmMapId ) {
+        return new Promise( function( resolve ) {
+            chrome.storage.local.get( TT.STORAGE.KEY_DISMISSED_UNLINKED_GMM_MAPS, function( result ) {
+                var dismissed = result[TT.STORAGE.KEY_DISMISSED_UNLINKED_GMM_MAPS] || [];
+                resolve( dismissed.indexOf( gmmMapId ) !== -1 );
+            });
+        });
+    }
+
+    /**
+     * Add GMM map ID to dismissed list.
+     * @param {string} gmmMapId - GMM map ID.
+     * @returns {Promise<void>}
+     */
+    function addToGmmDismissedMaps( gmmMapId ) {
+        return new Promise( function( resolve ) {
+            chrome.storage.local.get( TT.STORAGE.KEY_DISMISSED_UNLINKED_GMM_MAPS, function( result ) {
+                var dismissed = result[TT.STORAGE.KEY_DISMISSED_UNLINKED_GMM_MAPS] || [];
+                if ( dismissed.indexOf( gmmMapId ) === -1 ) {
+                    dismissed.push( gmmMapId );
+                    var update = {};
+                    update[TT.STORAGE.KEY_DISMISSED_UNLINKED_GMM_MAPS] = dismissed;
+                    chrome.storage.local.set( update, resolve );
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    /**
+     * Handle unlinked GMM map page load.
+     * Shows dialog if not dismissed.
+     * @param {string} gmmMapId - GMM map ID.
+     */
+    function handleUnlinkedGmmMap( gmmMapId ) {
+        return wasGmmMapDismissed( gmmMapId )
+            .then( function( dismissed ) {
+                if ( dismissed ) {
+                    console.log( '[TT GMM] Map dismissed - showing native GMM' );
+                    return;
+                }
+
+                console.log( '[TT GMM] Map not linked - showing unlinked dialog' );
+                return showUnlinkedGmmMapDialog( gmmMapId );
+            });
+    }
+
+    /**
+     * Show the unlinked GMM map dialog.
+     * Informational only - directs user to extension popup for actions.
+     * @param {string} gmmMapId - GMM map ID.
+     * @returns {Promise<void>}
+     */
+    function showUnlinkedGmmMapDialog( gmmMapId ) {
+        return new Promise( function( resolve ) {
+            // Remove any existing dialog
+            var existing = document.querySelector( '.' + TT_UNLINKED_DIALOG_CLASS );
+            if ( existing ) {
+                existing.remove();
+            }
+
+            // Create dialog container (reuse sync dialog styling)
+            var dialog = TTDom.createElement( 'div', {
+                className: 'tt-sync-dialog ' + TT_UNLINKED_DIALOG_CLASS
+            });
+
+            // Header
+            var header = TTDom.createElement( 'div', {
+                className: 'tt-sync-header',
+                text: 'Map Not Linked'
+            });
+            dialog.appendChild( header );
+
+            // Message
+            var message = TTDom.createElement( 'div', {
+                className: 'tt-unlinked-message'
+            });
+            message.innerHTML = "This map isn't linked to any trip.<br><br>" +
+                'To create a new trip for this map or link it to an existing trip, ' +
+                'click the Trip Tools icon in your browser toolbar.';
+            dialog.appendChild( message );
+
+            // Dismiss button
+            var dismissBtn = TTDom.createElement( 'button', {
+                className: TT_BUTTON_CLASS + ' tt-dismiss-btn',
+                text: 'Dismiss'
+            });
+            dismissBtn.addEventListener( 'click', function() {
+                addToGmmDismissedMaps( gmmMapId )
+                    .then( function() {
+                        dialog.remove();
+                        console.log( '[TT GMM] Dialog dismissed' );
+                        resolve();
+                    });
+            });
+            dialog.appendChild( dismissBtn );
+
+            document.body.appendChild( dialog );
+        });
     }
 
     // =========================================================================

@@ -20,6 +20,10 @@ TTSync.registerHandler = function( objectType, handler ) {
  * Process sync envelope from API response.
  * Called AFTER main response processing is complete.
  *
+ * Sync envelope structure varies by object type:
+ * - Trips: { updates: {...}, deleted: [...] } - full trip data
+ * - Locations: { versions: {...}, deleted: [...] } - version-only pattern
+ *
  * @param {Object} sync - The sync envelope from response
  * @returns {Promise} Resolves when sync processing complete
  */
@@ -37,21 +41,20 @@ TTSync.processEnvelope = function( sync ) {
         var handler = TTSync.handlers[objectType];
         var data = sync[objectType];
 
-        // Skip if no handler or if data has no versions field
-        // (empty object means sync not applicable for this context)
         if ( !handler ) {
             console.log( 'TTSync: no handler registered for ' + objectType );
             continue;
         }
 
-        if ( !data.hasOwnProperty( TT.SYNC.FIELD_VERSIONS ) ) {
+        // Check for presence of sync data (updates for trips, versions for locations)
+        var hasUpdates = data.hasOwnProperty( TT.SYNC.FIELD_UPDATES );
+        var hasVersions = data.hasOwnProperty( TT.SYNC.FIELD_VERSIONS );
+        if ( !hasUpdates && !hasVersions ) {
             // Sync data not applicable (e.g., anonymous user)
             continue;
         }
 
-        var versions = data[TT.SYNC.FIELD_VERSIONS];
-        var deleted = data[TT.SYNC.FIELD_DELETED] || [];
-        promises.push( handler( versions, deleted ) );
+        promises.push( handler( data ) );
     }
 
     return Promise.all( promises )
@@ -79,16 +82,18 @@ TTSync.clearState = function() {
 
 /*
  * Trip sync handler.
- * Validates working set against current trip versions.
- * Trips use presence-based deletion detection (not in versions = no access).
- * Marks trips as stale when version changes or new trips detected.
- * Actual detail fetching happens in handleGetTrips().
+ * Receives full trip data from server and applies via unified update system.
+ * The TripDataUpdates structure routes to all internal data structures.
+ *
+ * @param {Object} data - Sync data with { updates: {...}, deleted: [...] }
  */
-TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_TRIP, function( versions, deleted ) {
-    return TTTrips.syncWorkingSet( versions, deleted )
-        .then( function() {
-            return TTTrips.applyGmmMapIndexDeltas( versions, deleted );
-        } );
+TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_TRIP, function( data ) {
+    // Build TripDataUpdates structure from sync envelope
+    var tripDataUpdates = {
+        updates: data[TT.SYNC.FIELD_UPDATES] || {},
+        deleted: data[TT.SYNC.FIELD_DELETED] || []
+    };
+    return TTTrips.applyUpdates( tripDataUpdates );
 } );
 
 /*
@@ -96,8 +101,13 @@ TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_TRIP, function( versions, deleted ) 
  * Updates location sync metadata for the active trip.
  * Locations are scoped to trips - only syncs if an active trip is set.
  * Marks locations as stale when version changes or new locations detected.
+ *
+ * @param {Object} data - Sync data with { versions: {...}, deleted: [...] }
  */
-TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_LOCATION, function( versions, deleted ) {
+TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_LOCATION, function( data ) {
+    var versions = data[TT.SYNC.FIELD_VERSIONS] || {};
+    var deleted = data[TT.SYNC.FIELD_DELETED] || [];
+
     return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
         .then( function( activeTripUuid ) {
             if ( !activeTripUuid ) {

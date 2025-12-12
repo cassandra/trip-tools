@@ -50,8 +50,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleAuthStatusRequest( sender );
         case TT.MESSAGE.TYPE_DISCONNECT:
             return handleDisconnect();
-        case TT.MESSAGE.TYPE_GET_TRIPS:
-            return handleGetTrips();
+        case TT.MESSAGE.TYPE_GET_TRIPS_WORKING_SET:
+            return handleGetTripsWorkingSet();
         case TT.MESSAGE.TYPE_SET_ACTIVE_TRIP:
             return handleSetActiveTrip( message.data );
         case TT.MESSAGE.TYPE_GET_ALL_TRIPS:
@@ -446,18 +446,13 @@ function broadcastAuthStateChange( authorized, email ) {
 
 /**
  * Handle request to get trips.
- * Refreshes any stale trips, then returns the working set.
- * Sync happens during auth validation; this handles the deferred fetching.
+ * Returns the working set of trips and the active trip UUID.
  */
 function handleGetTrips() {
     var workingSet;
     var activeTripUuid;
 
-    // First refresh any stale trips (fetches details from server)
-    return TTTrips.refreshStaleTrips()
-        .then( function() {
-            return TTTrips.getWorkingSet();
-        })
+    return TTTrips.getWorkingSet()
         .then( function( trips ) {
             workingSet = trips;
             return TTTrips.getActiveTripUuid();
@@ -569,7 +564,7 @@ function handleGetAllTrips() {
 /**
  * Handle create trip request.
  * Creates trip via API, adds to working set, sets as active.
- * @param {Object} data - { title, description }
+ * @param {Object} data - { title, description, gmm_map_id (optional) }
  * @returns {Promise<Object>} Response with created trip data.
  */
 function handleCreateTrip( data ) {
@@ -579,10 +574,10 @@ function handleCreateTrip( data ) {
         );
     }
 
-    return TTApi.createTrip( data.title, data.description )
+    return TTApi.createTrip( data.title, data.description, data.gmm_map_id )
         .then( function( trip ) {
-            // Add to working set and set as active
-            return TTTrips.addToWorkingSet( trip )
+            // Apply trip to all internal data structures
+            return TTTrips.applyTripUpdate( trip )
                 .then( function() {
                     return TTTrips.setActiveTripUuid( trip.uuid );
                 })
@@ -805,8 +800,8 @@ function handleGmmCreateMap( data ) {
         .then( function( updatedTrip ) {
             console.log( '[TT Background] Trip linked to map:', mapId );
 
-            // Update local trip cache
-            return TTTrips.updateTripInWorkingSet( tripUuid, { gmm_map_id: mapId } )
+            // Apply trip update to all internal data structures
+            return TTTrips.applyTripUpdate( { uuid: tripUuid, gmm_map_id: mapId } )
                 .then( function() {
                     return TTMessaging.createResponse( true, {
                         mapId: mapId,
@@ -873,22 +868,22 @@ function handleGmmOpenMap( data ) {
 /**
  * Handle link GMM map request.
  * PATCHes trip with gmm_map_id.
- * @param {Object} data - { tripUuid, mapId }
+ * @param {Object} data - { tripUuid, gmmMapId }
  */
 function handleGmmLinkMap( data ) {
-    if ( !data || !data.tripUuid || !data.mapId ) {
+    if ( !data || !data.tripUuid || !data.gmmMapId ) {
         return Promise.resolve( TTMessaging.createResponse( false, {
-            error: 'tripUuid and mapId are required'
+            error: 'tripUuid and gmmMapId are required'
         }));
     }
 
     var tripUuid = data.tripUuid;
-    var mapId = data.mapId;
+    var mapId = data.gmmMapId;
 
     return TTApi.updateTrip( tripUuid, { gmm_map_id: mapId } )
         .then( function( updatedTrip ) {
-            // Update local trip cache
-            return TTTrips.updateTripInWorkingSet( tripUuid, { gmm_map_id: mapId } )
+            // Apply trip update to all internal data structures
+            return TTTrips.applyTripUpdate( { uuid: tripUuid, gmm_map_id: mapId } )
                 .then( function() {
                     return TTMessaging.createResponse( true, {
                         trip: updatedTrip
@@ -918,8 +913,9 @@ function handleGmmUnlinkMap( data ) {
 
     return TTApi.updateTrip( tripUuid, { gmm_map_id: null } )
         .then( function() {
-            // Update local trip cache
-            return TTTrips.updateTripInWorkingSet( tripUuid, { gmm_map_id: null } );
+            // Apply trip update to all internal data structures
+            // gmm_map_id: null explicitly clears the mapping
+            return TTTrips.applyTripUpdate( { uuid: tripUuid, gmm_map_id: null } );
         })
         .then( function() {
             console.log( '[TT Background] Unlinked map from trip:', tripUuid );

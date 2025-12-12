@@ -881,3 +881,202 @@
     color: #5f6368;
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
+
+/* =============================================================================
+ * Unlinked Map Dialog
+ * ============================================================================= */
+
+.tt-unlinked-message {
+    font-size: 15px;
+    color: #202124;
+    margin-bottom: 16px;
+    text-align: center;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-unlinked-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tt-unlinked-buttons .tt-gmm-btn {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+.tt-unlinked-btn-primary {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #fff;
+}
+
+.tt-unlinked-btn-primary:hover {
+    background: #1557b0;
+    border-color: #1557b0;
+}
+
+.tt-dismiss-btn {
+    background: transparent;
+    border-color: transparent;
+    color: #5f6368;
+    font-size: 13px;
+}
+
+.tt-dismiss-btn:hover {
+    background: #f1f3f4;
+    color: #202124;
+}
+
+/* =============================================================================
+ * Create Trip Form (Inline)
+ * ============================================================================= */
+
+.tt-create-trip-form {
+    margin: 16px 0;
+}
+
+.tt-form-group {
+    margin-bottom: 12px;
+}
+
+.tt-form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.tt-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #5f6368;
+    margin-bottom: 4px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-form-required {
+    color: #d93025;
+}
+
+.tt-form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.tt-form-input:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.tt-form-input.tt-form-input-error {
+    border-color: #d93025;
+}
+
+.tt-form-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.tt-form-error {
+    color: #d93025;
+    font-size: 12px;
+    margin-top: 4px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8eaed;
+}
+
+/* =============================================================================
+ * Trip Picker
+ * ============================================================================= */
+
+.tt-trip-picker-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 12px 0;
+    border: 1px solid #e8eaed;
+    border-radius: 6px;
+}
+
+.tt-trip-picker-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e8eaed;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.tt-trip-picker-item:last-child {
+    border-bottom: none;
+}
+
+.tt-trip-picker-item:hover {
+    background: #f8f9fa;
+}
+
+.tt-trip-picker-item.tt-selected {
+    background: #e8f0fe;
+}
+
+.tt-trip-picker-radio {
+    margin-right: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tt-trip-picker-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.tt-trip-picker-title {
+    font-size: 14px;
+    color: #202124;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tt-trip-picker-description {
+    font-size: 12px;
+    color: #5f6368;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tt-trip-picker-empty {
+    padding: 24px;
+    text-align: center;
+    color: #5f6368;
+    font-size: 14px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-trip-picker-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    color: #5f6368;
+    font-size: 13px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}

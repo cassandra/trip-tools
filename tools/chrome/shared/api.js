@@ -343,12 +343,16 @@ TTApi.updateTrip = function( tripUuid, data ) {
  * Create a new trip.
  * @param {string} title - The trip title (required).
  * @param {string} description - The trip description (optional).
+ * @param {string} gmmMapId - GMM map ID to link (optional).
  * @returns {Promise<Object>} Created trip data.
  */
-TTApi.createTrip = function( title, description ) {
+TTApi.createTrip = function( title, description, gmmMapId ) {
     var data = { title: title };
     if ( description ) {
         data.description = description;
+    }
+    if ( gmmMapId ) {
+        data.gmm_map_id = gmmMapId;
     }
     return TTApi.post( TT.CONFIG.API_TRIPS_ENDPOINT, data )
         .then( function( response ) {
