@@ -164,6 +164,74 @@
     }
 
     /**
+     * Handle page load when map matches active trip.
+     * Performs auto-sync check - shows dialog only if differences exist.
+     * Called by gmm.js page load dispatcher.
+     * @param {Object} activeTrip - The active trip object.
+     * @param {string} mapId - The GMM map ID.
+     */
+    function onActiveTripMapLoad( activeTrip, mapId ) {
+        console.log( '[TT GMM Sync] Active trip map loaded:', activeTrip.title );
+
+        // Guard against duplicate sync
+        if ( _syncInProgress ) {
+            console.log( '[TT GMM Sync] Sync already in progress, skipping auto-check' );
+            return;
+        }
+
+        // Perform comparison
+        Promise.all([
+            fetchServerLocations( activeTrip.uuid ),
+            getGmmLocations()
+        ])
+        .then( function( results ) {
+            var serverLocations = results[0];
+            var gmmLocations = results[1];
+            var diff = compareLocations( serverLocations, gmmLocations );
+
+            var hasDifferences = diff.serverOnly.length > 0 ||
+                                 diff.gmmOnly.length > 0 ||
+                                 diff.suggestedMatches.length > 0;
+
+            if ( !hasDifferences ) {
+                console.log( '[TT GMM Sync] All in sync, no dialog needed' );
+                return;
+            }
+
+            console.log( '[TT GMM Sync] Differences found, showing dialog' );
+
+            // Store trip data for sync execution
+            _currentTripData = {
+                tripUuid: activeTrip.uuid,
+                tripTitle: activeTrip.title,
+                mapId: mapId
+            };
+
+            _syncInProgress = true;
+
+            // Show dialog with auto-check context
+            return showSyncCompareDialog( _currentTripData, diff, { autoCheck: true } );
+        })
+        .then( function( dialogResult ) {
+            if ( !dialogResult || dialogResult.cancelled ) {
+                return { cancelled: true };
+            }
+            return executeSyncDecisions( _currentTripData.tripUuid, dialogResult.decisions );
+        })
+        .then( function( results ) {
+            if ( results && !results.cancelled ) {
+                showSyncExecuteResultsDialog( results );
+            }
+        })
+        .catch( function( error ) {
+            console.error( '[TT GMM Sync] Auto-sync check failed:', error );
+        })
+        .finally( function() {
+            _syncInProgress = false;
+        });
+    }
+
+    /**
      * Check if sync execute was stopped and throw if so.
      * @private
      */
@@ -1637,7 +1705,10 @@
      * @param {Object} diff - Diff results from compareLocations.
      * @returns {Promise<Object>} Result of sync operation.
      */
-    function showSyncCompareDialog( data, diff ) {
+    function showSyncCompareDialog( data, diff, options ) {
+        options = options || {};
+        var isAutoCheck = options.autoCheck || false;
+
         return new Promise( function( resolve ) {
             // Remove any existing dialog
             var existingDialog = document.querySelector( '.' + TT_SYNC_DIALOG_CLASS );
@@ -1653,10 +1724,11 @@
                 className: TT_SYNC_DIALOG_CLASS
             });
 
-            // Header
+            // Header - adjust text for auto-check
+            var headerText = isAutoCheck ? 'Sync Check' : 'Sync Map';
             var header = TTDom.createElement( 'div', {
                 className: 'tt-sync-header',
-                text: 'Sync Map'
+                text: headerText
             });
             dialog.appendChild( header );
 
@@ -1666,6 +1738,15 @@
                 text: 'Trip: ' + ( data.tripTitle || 'Unknown' )
             });
             dialog.appendChild( tripInfo );
+
+            // Add explanatory message for auto-check
+            if ( isAutoCheck ) {
+                var autoCheckMsg = TTDom.createElement( 'div', {
+                    className: 'tt-sync-auto-check-message',
+                    text: 'Differences detected between this map and the server.'
+                });
+                dialog.appendChild( autoCheckMsg );
+            }
 
             var hasSuggestedMatches = diff.suggestedMatches && diff.suggestedMatches.length > 0;
             var hasDifferences = diff.serverOnly.length > 0 || diff.gmmOnly.length > 0;
@@ -2381,10 +2462,11 @@
     // Initialize on load
     initSync();
 
-    // Expose public API for FIX mode (used by gmm.js)
+    // Expose public API (used by gmm.js)
     window.TTGmmSync = {
         decorateFixModeDialog: decorateFixModeDialog,
-        getFixContext: getFixContext
+        getFixContext: getFixContext,
+        onActiveTripMapLoad: onActiveTripMapLoad
     };
 
 })();

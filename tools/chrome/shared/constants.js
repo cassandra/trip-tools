@@ -92,7 +92,9 @@ TT.MESSAGE = {
     TYPE_GMM_UNLINK_MAP: 'tt_gmmUnlinkMap',
     // Location sync
     TYPE_GMM_SYNC_LOCATIONS: 'tt_gmmSyncLocations',
-    TYPE_GET_TRIP_LOCATIONS: 'tt_getTripLocations'
+    TYPE_GET_TRIP_LOCATIONS: 'tt_getTripLocations',
+    // Trip context
+    TYPE_GET_ACTIVE_TRIP: 'tt_getActiveTrip'
 };
 
 TT.DOM = {

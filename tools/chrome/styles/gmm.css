@@ -391,6 +391,16 @@
     font-family: 'Google Sans', Roboto, Arial, sans-serif;
 }
 
+.tt-sync-auto-check-message {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: #fef7e0;
+    border-left: 3px solid #f9ab00;
+    font-size: 13px;
+    color: #5f6368;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
 .tt-sync-section {
     margin-bottom: 16px;
 }

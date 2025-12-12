@@ -78,6 +78,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleGmmSyncLocations( message.data );
         case TT.MESSAGE.TYPE_GET_TRIP_LOCATIONS:
             return handleGetTripLocations( message.data );
+        case TT.MESSAGE.TYPE_GET_ACTIVE_TRIP:
+            return handleGetActiveTrip();
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -461,6 +463,24 @@ function handleGetTrips() {
             return TTMessaging.createResponse( true, {
                 workingSet: workingSet,
                 activeTripUuid: activeTripUuid
+            });
+        })
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            });
+        });
+}
+
+/**
+ * Get the currently active trip.
+ * @returns {Promise<Object>} Response with trip object or null.
+ */
+function handleGetActiveTrip() {
+    return TTTrips.getActiveTrip()
+        .then( function( trip ) {
+            return TTMessaging.createResponse( true, {
+                trip: trip
             });
         })
         .catch( function( error ) {

@@ -35,6 +35,9 @@
         });
 
         console.log( '[TT GMM] Adapter initialized, waiting for dialogs' );
+
+        // Dispatch page load actions (auto-sync check, etc.)
+        dispatchPageLoad();
     }
 
     // =========================================================================
@@ -86,6 +89,130 @@
                 return categories.find( function( c ) {
                     return c.slug === slug;
                 }) || null;
+            });
+    }
+
+    /**
+     * Get the active trip from background.
+     * @returns {Promise<Object|null>} Active trip or null.
+     */
+    function getActiveTrip() {
+        return new Promise( function( resolve, reject ) {
+            chrome.runtime.sendMessage({
+                type: TT.MESSAGE.TYPE_GET_ACTIVE_TRIP
+            }, function( response ) {
+                if ( chrome.runtime.lastError ) {
+                    reject( new Error( chrome.runtime.lastError.message ) );
+                    return;
+                }
+                if ( response && response.success ) {
+                    resolve( response.data.trip );
+                } else {
+                    reject( new Error( response ? response.error : 'No response' ) );
+                }
+            });
+        });
+    }
+
+    // =========================================================================
+    // Page Load Dispatcher
+    // =========================================================================
+
+    /**
+     * Map context types for page load dispatch.
+     */
+    var MapContext = {
+        ACTIVE_TRIP_MAP: 'active_trip_map',    // Map matches active trip
+        OTHER_TRIP_MAP: 'other_trip_map',      // Map matches different trip
+        UNLINKED_MAP: 'unlinked_map',          // Map not linked to any trip
+        NO_ACTIVE_TRIP: 'no_active_trip'       // No active trip set
+    };
+
+    /**
+     * Determine the context of the current GMM map.
+     * @returns {Promise<Object>} { context, activeTrip, mapId }
+     */
+    function determineMapContext() {
+        var url = new URL( window.location.href );
+        var mapId = url.searchParams.get( 'mid' );
+
+        return getActiveTrip()
+            .then( function( activeTrip ) {
+                if ( !activeTrip ) {
+                    return {
+                        context: MapContext.NO_ACTIVE_TRIP,
+                        activeTrip: null,
+                        mapId: mapId
+                    };
+                }
+
+                if ( activeTrip.gmm_map_id === mapId ) {
+                    return {
+                        context: MapContext.ACTIVE_TRIP_MAP,
+                        activeTrip: activeTrip,
+                        mapId: mapId
+                    };
+                }
+
+                // Map doesn't match active trip - treat as unlinked for now
+                // Future: could check working set to see if it matches another trip
+                return {
+                    context: MapContext.UNLINKED_MAP,
+                    activeTrip: activeTrip,
+                    mapId: mapId
+                };
+            });
+    }
+
+    /**
+     * Wait for GMM to be ready (layer pane populated).
+     * @returns {Promise<void>}
+     */
+    function waitForGmmReady() {
+        return TTDom.waitForElement( TTGmmAdapter.selectors.LAYER_PANE, { timeout: 10000 } )
+            .then( function() {
+                // Additional wait for layers to populate
+                return TTDom.wait( 1000 );
+            });
+    }
+
+    /**
+     * Dispatch page load actions based on map context.
+     */
+    function dispatchPageLoad() {
+        waitForGmmReady()
+            .then( function() {
+                return determineMapContext();
+            })
+            .then( function( result ) {
+                console.log( '[TT GMM] Page load context:', result.context );
+
+                switch ( result.context ) {
+                    case MapContext.ACTIVE_TRIP_MAP:
+                        // Map matches active trip - run auto-sync check
+                        if ( typeof TTGmmSync !== 'undefined' && TTGmmSync.onActiveTripMapLoad ) {
+                            TTGmmSync.onActiveTripMapLoad( result.activeTrip, result.mapId );
+                        }
+                        break;
+
+                    case MapContext.OTHER_TRIP_MAP:
+                        // Map matches a different trip (stub for Issue #123)
+                        console.log( '[TT GMM] Map belongs to different trip (not implemented)' );
+                        break;
+
+                    case MapContext.UNLINKED_MAP:
+                        // Map not linked to any trip (stub for Issue #123)
+                        console.log( '[TT GMM] Map not linked to any trip (not implemented)' );
+                        break;
+
+                    case MapContext.NO_ACTIVE_TRIP:
+                        // No active trip set
+                        console.log( '[TT GMM] No active trip set' );
+                        break;
+                }
+            })
+            .catch( function( error ) {
+                console.error( '[TT GMM] Page load dispatch failed:', error );
             });
     }
 
