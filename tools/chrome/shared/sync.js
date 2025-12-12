@@ -85,8 +85,11 @@ TTSync.clearState = function() {
  * Actual detail fetching happens in handleGetTrips().
  */
 TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_TRIP, function( versions, deleted ) {
-    return TTTrips.syncWorkingSet( versions );
-});
+    return TTTrips.syncWorkingSet( versions, deleted )
+        .then( function() {
+            return TTTrips.applyGmmMapIndexDeltas( versions, deleted );
+        } );
+} );
 
 /*
  * Location sync handler.

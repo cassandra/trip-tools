@@ -31,7 +31,9 @@ TT.CONFIG = {
     GMM_OTHER_LAYER_NAME: 'Other',
     // Grey color from GMM's palette (aria-label value)
     GMM_OTHER_LAYER_COLOR: 'RGB (117, 117, 117)',
-    GMM_OTHER_LAYER_ICON: '1594'
+    GMM_OTHER_LAYER_ICON: '1594',
+    // GMM map index cache TTL (1 hour)
+    GMM_MAP_INDEX_TTL_MS: 60 * 60 * 1000
 };
 
 TT.STORAGE = {
@@ -55,7 +57,9 @@ TT.STORAGE = {
     KEY_CLIENT_CONFIG_VERSION: 'tt_clientConfigVersion',
     KEY_CLIENT_CONFIG_STALE: 'tt_clientConfigStale',
     // Location sync metadata (per-trip)
-    KEY_LOCATION_SYNC_PREFIX: 'tt_locationSync_'
+    KEY_LOCATION_SYNC_PREFIX: 'tt_locationSync_',
+    // GMM map index (gmm_map_id -> trip_uuid mapping)
+    KEY_GMM_MAP_INDEX: 'tt_gmmMapIndex'
 };
 
 TT.MESSAGE = {
@@ -95,7 +99,9 @@ TT.MESSAGE = {
     TYPE_GMM_SYNC_LOCATIONS: 'tt_gmmSyncLocations',
     TYPE_GET_TRIP_LOCATIONS: 'tt_getTripLocations',
     // Trip context
-    TYPE_GET_ACTIVE_TRIP: 'tt_getActiveTrip'
+    TYPE_GET_ACTIVE_TRIP: 'tt_getActiveTrip',
+    // GMM map linkage check
+    TYPE_IS_GMM_MAP_LINKED: 'tt_isGmmMapLinked'
 };
 
 TT.DOM = {

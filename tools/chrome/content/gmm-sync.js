@@ -164,14 +164,13 @@
     }
 
     /**
-     * Handle page load when map matches active trip.
-     * Performs auto-sync check - shows dialog only if differences exist.
+     * Handle page load - check if map is linked and perform auto-sync check.
+     * Self-contained: gets map ID from URL and checks linkage via service worker.
      * Called by gmm.js page load dispatcher.
-     * @param {Object} activeTrip - The active trip object.
-     * @param {string} mapId - The GMM map ID.
      */
-    function onActiveTripMapLoad( activeTrip, mapId ) {
-        console.log( '[TT GMM Sync] Active trip map loaded:', activeTrip.title );
+    function onPageLoad() {
+        var mapId = TTGmmAdapter.getMapInfo().mapId;
+        console.log( '[TT GMM Sync] Page load, map:', mapId );
 
         // Guard against duplicate sync
         if ( _syncInProgress ) {
@@ -179,38 +178,53 @@
             return;
         }
 
-        // Perform comparison
-        Promise.all([
-            fetchServerLocations( activeTrip.uuid ),
-            getGmmLocations()
-        ])
-        .then( function( results ) {
-            var serverLocations = results[0];
-            var gmmLocations = results[1];
-            var diff = compareLocations( serverLocations, gmmLocations );
+        // Check if map is linked to a trip
+        TTGmmAdapter.isGmmMapLinkedToTrip()
+            .then( function( linkResult ) {
+                if ( !linkResult.isLinked ) {
+                    console.log( '[TT GMM Sync] Map not linked to any trip, skipping sync' );
+                    return null;
+                }
 
-            var hasDifferences = diff.serverOnly.length > 0 ||
-                                 diff.gmmOnly.length > 0 ||
-                                 diff.suggestedMatches.length > 0;
+                var tripUuid = linkResult.tripUuid;
+                console.log( '[TT GMM Sync] Map linked to trip:', tripUuid );
 
-            if ( !hasDifferences ) {
-                console.log( '[TT GMM Sync] All in sync, no dialog needed' );
-                return;
-            }
+                // Store trip data for sync execution
+                _currentTripData = {
+                    tripUuid: tripUuid,
+                    tripTitle: null,  // Title not available; UI shows 'Unknown' fallback
+                    mapId: mapId
+                };
 
-            console.log( '[TT GMM Sync] Differences found, showing dialog' );
+                // Perform comparison
+                return Promise.all([
+                    fetchServerLocations( tripUuid ),
+                    getGmmLocations()
+                ]);
+            })
+            .then( function( results ) {
+                if ( !results ) {
+                    return null;  // Map not linked, skip
+                }
 
-            // Store trip data for sync execution
-            _currentTripData = {
-                tripUuid: activeTrip.uuid,
-                tripTitle: activeTrip.title,
-                mapId: mapId
-            };
+                var serverLocations = results[0];
+                var gmmLocations = results[1];
+                var diff = compareLocations( serverLocations, gmmLocations );
 
-            _syncInProgress = true;
+                var hasDifferences = diff.serverOnly.length > 0 ||
+                                     diff.gmmOnly.length > 0 ||
+                                     diff.suggestedMatches.length > 0;
 
-            // Show dialog with auto-check context
-            return showSyncCompareDialog( _currentTripData, diff, { autoCheck: true } );
+                if ( !hasDifferences ) {
+                    console.log( '[TT GMM Sync] All in sync, no dialog needed' );
+                    return null;
+                }
+
+                console.log( '[TT GMM Sync] Differences found, showing dialog' );
+                _syncInProgress = true;
+
+                // Show dialog with auto-check context
+                return showSyncCompareDialog( _currentTripData, diff, { autoCheck: true } );
         })
         .then( function( dialogResult ) {
             if ( !dialogResult || dialogResult.cancelled ) {
@@ -1154,7 +1168,8 @@
                     uuid: locationUuid,
                     updates: {
                         gmm_id: gmmId
-                    }
+                    },
+                    gmm_map_id: _currentTripData.mapId
                 }
             }, function( response ) {
                 if ( chrome.runtime.lastError ) {
@@ -1480,6 +1495,7 @@
      */
     function saveLocationToServer( tripUuid, locationData ) {
         return new Promise( function( resolve, reject ) {
+            locationData.gmm_map_id = _currentTripData.mapId;
             chrome.runtime.sendMessage({
                 type: TT.MESSAGE.TYPE_SAVE_LOCATION,
                 data: locationData
@@ -1509,7 +1525,10 @@
         return new Promise( function( resolve, reject ) {
             chrome.runtime.sendMessage({
                 type: TT.MESSAGE.TYPE_DELETE_LOCATION,
-                data: { uuid: locationUuid }
+                data: {
+                    uuid: locationUuid,
+                    gmm_map_id: _currentTripData.mapId
+                }
             }, function( response ) {
                 if ( chrome.runtime.lastError ) {
                     reject( new Error( chrome.runtime.lastError.message ) );
@@ -2466,7 +2485,7 @@
     window.TTGmmSync = {
         decorateFixModeDialog: decorateFixModeDialog,
         getFixContext: getFixContext,
-        onActiveTripMapLoad: onActiveTripMapLoad
+        onPageLoad: onPageLoad
     };
 
 })();

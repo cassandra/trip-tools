@@ -92,77 +92,9 @@
             });
     }
 
-    /**
-     * Get the active trip from background.
-     * @returns {Promise<Object|null>} Active trip or null.
-     */
-    function getActiveTrip() {
-        return new Promise( function( resolve, reject ) {
-            chrome.runtime.sendMessage({
-                type: TT.MESSAGE.TYPE_GET_ACTIVE_TRIP
-            }, function( response ) {
-                if ( chrome.runtime.lastError ) {
-                    reject( new Error( chrome.runtime.lastError.message ) );
-                    return;
-                }
-                if ( response && response.success ) {
-                    resolve( response.data.trip );
-                } else {
-                    reject( new Error( response ? response.error : 'No response' ) );
-                }
-            });
-        });
-    }
-
     // =========================================================================
     // Page Load Dispatcher
     // =========================================================================
-
-    /**
-     * Map context types for page load dispatch.
-     */
-    var MapContext = {
-        ACTIVE_TRIP_MAP: 'active_trip_map',    // Map matches active trip
-        OTHER_TRIP_MAP: 'other_trip_map',      // Map matches different trip
-        UNLINKED_MAP: 'unlinked_map',          // Map not linked to any trip
-        NO_ACTIVE_TRIP: 'no_active_trip'       // No active trip set
-    };
-
-    /**
-     * Determine the context of the current GMM map.
-     * @returns {Promise<Object>} { context, activeTrip, mapId }
-     */
-    function determineMapContext() {
-        var url = new URL( window.location.href );
-        var mapId = url.searchParams.get( 'mid' );
-
-        return getActiveTrip()
-            .then( function( activeTrip ) {
-                if ( !activeTrip ) {
-                    return {
-                        context: MapContext.NO_ACTIVE_TRIP,
-                        activeTrip: null,
-                        mapId: mapId
-                    };
-                }
-
-                if ( activeTrip.gmm_map_id === mapId ) {
-                    return {
-                        context: MapContext.ACTIVE_TRIP_MAP,
-                        activeTrip: activeTrip,
-                        mapId: mapId
-                    };
-                }
-
-                // Map doesn't match active trip - treat as unlinked for now
-                // Future: could check working set to see if it matches another trip
-                return {
-                    context: MapContext.UNLINKED_MAP,
-                    activeTrip: activeTrip,
-                    mapId: mapId
-                };
-            });
-    }
 
     /**
      * Wait for GMM to be ready (layer pane populated).
@@ -177,43 +109,24 @@
     }
 
     /**
-     * Dispatch page load actions based on map context.
+     * Dispatch page load actions.
+     * Triggers sync check which is self-contained (determines linkage internally).
      */
     function dispatchPageLoad() {
         waitForGmmReady()
             .then( function() {
-                return determineMapContext();
-            })
-            .then( function( result ) {
-                console.log( '[TT GMM] Page load context:', result.context );
-
-                switch ( result.context ) {
-                    case MapContext.ACTIVE_TRIP_MAP:
-                        // Map matches active trip - run auto-sync check
-                        if ( typeof TTGmmSync !== 'undefined' && TTGmmSync.onActiveTripMapLoad ) {
-                            TTGmmSync.onActiveTripMapLoad( result.activeTrip, result.mapId );
-                        }
-                        break;
-
-                    case MapContext.OTHER_TRIP_MAP:
-                        // Map matches a different trip (stub for Issue #123)
-                        console.log( '[TT GMM] Map belongs to different trip (not implemented)' );
-                        break;
-
-                    case MapContext.UNLINKED_MAP:
-                        // Map not linked to any trip (stub for Issue #123)
-                        console.log( '[TT GMM] Map not linked to any trip (not implemented)' );
-                        break;
-
-                    case MapContext.NO_ACTIVE_TRIP:
-                        // No active trip set
-                        console.log( '[TT GMM] No active trip set' );
-                        break;
+                console.log( '[TT GMM] Page load - triggering sync check' );
+                // TTGmmSync.onPageLoad() is self-contained:
+                // - Gets map ID from URL
+                // - Checks linkage via service worker
+                // - Runs sync if linked, skips if not
+                if ( typeof TTGmmSync !== 'undefined' && TTGmmSync.onPageLoad ) {
+                    TTGmmSync.onPageLoad();
                 }
-            })
+            } )
             .catch( function( error ) {
                 console.error( '[TT GMM] Page load dispatch failed:', error );
-            });
+            } );
     }
 
     // =========================================================================
@@ -244,7 +157,7 @@
             case TT.MESSAGE.TYPE_GMM_GET_MAP_INFO:
                 sendResponse({
                     success: true,
-                    data: getMapInfo()
+                    data: TTGmmAdapter.getMapInfo()
                 });
                 return false;
 
@@ -323,20 +236,6 @@
     }
 
     /**
-     * Get current map info from URL.
-     * @returns {Object} { mapId, url, tabId }
-     */
-    function getMapInfo() {
-        var url = new URL( window.location.href );
-        var mapId = url.searchParams.get( 'mid' );
-
-        return {
-            mapId: mapId,
-            url: window.location.href
-        };
-    }
-
-    /**
      * Handle rename map request.
      * @param {Object} data - { title, description }
      * @returns {Promise<Object>}
@@ -365,12 +264,13 @@
     /**
      * Handle add-to-map dialog opening.
      * Decorates with category buttons, or delegates to sync module for FIX mode.
+     * Only decorates if map is linked to a trip.
      * @param {Element} dialogNode - The dialog element.
      */
     function handleAddToMapDialog( dialogNode ) {
         var currentMode = TTOperationMode.getMode();
 
-        // FIX mode: delegate to sync module
+        // FIX mode: delegate to sync module (still requires linkage, handled in sync module)
         if ( currentMode === TTOperationMode.Mode.GMM_SYNC_FIX ) {
             TTGmmSync.decorateFixModeDialog( dialogNode );
             return;
@@ -387,18 +287,27 @@
         }
         dialogNode.setAttribute( TT_DECORATED_ATTR, 'true' );
 
-        // Get categories from service worker
-        getLocationCategories()
-            .then( function( categories ) {
-                if ( categories && categories.length > 0 ) {
-                    decorateAddToMapDialog( dialogNode, categories );
-                } else {
-                    console.log( '[TT GMM] No categories available' );
+        // Check if map is linked to a trip before decorating
+        TTGmmAdapter.isGmmMapLinkedToTrip()
+            .then( function( result ) {
+                if ( !result.isLinked ) {
+                    console.log( '[TT GMM] Map not linked - skipping add-to-map decoration' );
+                    return;
                 }
-            })
+
+                // Get categories from service worker
+                return getLocationCategories()
+                    .then( function( categories ) {
+                        if ( categories && categories.length > 0 ) {
+                            decorateAddToMapDialog( dialogNode, categories );
+                        } else {
+                            console.log( '[TT GMM] No categories available' );
+                        }
+                    } );
+            } )
             .catch( function( error ) {
-                console.error( '[TT GMM] Failed to get categories:', error );
-            });
+                console.error( '[TT GMM] Failed to decorate add-to-map:', error );
+            } );
     }
 
     /**
@@ -597,6 +506,7 @@
 
     /**
      * Handle location details dialog opening.
+     * Only decorates if map is linked to a trip.
      * @param {Element} dialogNode - The dialog element.
      */
     function handleLocationDetailsDialog( dialogNode ) {
@@ -619,12 +529,21 @@
         var gmmId = TTGmmAdapter.getCurrentLocationId();
         console.log( '[TT GMM] Location details opened: ' + title + ' (id: ' + gmmId + ')' );
 
-        // Look up location from server
-        getLocationFromServer( gmmId )
-            .then( function( location ) {
-                if ( location ) {
-                    decorateLocationDetails( dialogNode, location );
+        // Only decorate if map is linked to a trip
+        TTGmmAdapter.isGmmMapLinkedToTrip()
+            .then( function( result ) {
+                if ( !result.isLinked ) {
+                    console.log( '[TT GMM] Skipping location details decoration - map not linked' );
+                    return;
                 }
+
+                // Look up location from server
+                return getLocationFromServer( gmmId )
+                    .then( function( location ) {
+                        if ( location ) {
+                            decorateLocationDetails( dialogNode, location );
+                        }
+                    });
             })
             .catch( function( error ) {
                 console.error( '[TT GMM] Failed to get location details:', error );
@@ -1259,7 +1178,8 @@
             type: TT.MESSAGE.TYPE_UPDATE_LOCATION,
             data: {
                 uuid: locationUuid,
-                updates: updates
+                updates: updates,
+                gmm_map_id: TTGmmAdapter.getMapInfo().mapId
             }
         }, function( response ) {
             if ( chrome.runtime.lastError ) {
@@ -1288,7 +1208,8 @@
                 type: TT.MESSAGE.TYPE_DELETE_LOCATION,
                 data: {
                     uuid: locationUuid,
-                    gmmId: gmmId
+                    gmmId: gmmId,
+                    gmm_map_id: TTGmmAdapter.getMapInfo().mapId
                 }
             }, function( response ) {
                 if ( chrome.runtime.lastError ) {
@@ -1602,6 +1523,7 @@
      */
     function saveLocationToServer( locationData ) {
         return new Promise( function( resolve, reject ) {
+            locationData.gmm_map_id = TTGmmAdapter.getMapInfo().mapId;
             chrome.runtime.sendMessage({
                 type: TT.MESSAGE.TYPE_SAVE_LOCATION,
                 data: locationData

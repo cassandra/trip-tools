@@ -261,12 +261,18 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         self.assertIn(str(user_trip.uuid), trip_versions)
         self.assertNotIn(str(other_trip.uuid), trip_versions)
 
-    def test_build_trips_not_filtered_by_since(self):
-        """Test trip sync is NOT filtered by since timestamp."""
+    def test_build_trips_filtered_by_since(self):
+        """Test trip sync IS filtered by since timestamp (delta pattern)."""
+        # Create old trip
         old_trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Old Trip'
         )
+
+        # Artificially set modified_datetime in past
+        old_time = timezone.now() - timedelta(days=5)
+        from tt.apps.trips.models import Trip
+        Trip.objects.filter(pk=old_trip.pk).update(modified_datetime=old_time)
 
         # Create new trip
         new_trip = TripSyntheticData.create_test_trip(
@@ -274,25 +280,24 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
             title='New Trip'
         )
 
-        # Build with since timestamp in the future (relative to old trip)
+        # Build with since after old trip
         since = timezone.now() - timedelta(days=1)
         builder = SyncEnvelopeBuilder(self.user, since=since)
         envelope = builder.build()
 
-        # Both trips should be returned (trips not filtered by since)
+        # Only new trip should be returned (delta filtering)
         trip_versions = envelope['trip']['versions']
-        self.assertEqual(len(trip_versions), 2)
-        self.assertIn(str(old_trip.uuid), trip_versions)
+        self.assertEqual(len(trip_versions), 1)
+        self.assertNotIn(str(old_trip.uuid), trip_versions)
         self.assertIn(str(new_trip.uuid), trip_versions)
 
-    def test_build_includes_correct_versions(self):
-        """Test trip sync includes correct version numbers and created dates."""
+    def test_build_includes_correct_metadata(self):
+        """Test trip sync includes correct version, gmm_map_id, and title."""
         trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip'
         )
-        # Increment version
-        trip.title = 'Updated'
+        trip.gmm_map_id = 'test-map-123'
         trip.save()
         trip.refresh_from_db()
 
@@ -302,7 +307,91 @@ class SyncEnvelopeBuilderTripSyncTestCase(TestCase):
         trip_versions = envelope['trip']['versions']
         trip_data = trip_versions[str(trip.uuid)]
         self.assertEqual(trip_data['version'], trip.version)
-        self.assertEqual(trip_data['created'], trip.created_datetime.isoformat())
+        self.assertEqual(trip_data['gmm_map_id'], 'test-map-123')
+        self.assertEqual(trip_data['title'], 'Test Trip')
+
+    def test_build_trips_includes_past_trips(self):
+        """Test trip sync includes PAST trips for GMM map index."""
+        from tt.apps.trips.enums import TripStatus
+
+        active_trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Active Trip'
+        )
+        past_trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Past Trip'
+        )
+        past_trip.trip_status = TripStatus.PAST
+        past_trip.save()
+
+        builder = SyncEnvelopeBuilder(self.user)
+        envelope = builder.build()
+
+        trip_versions = envelope['trip']['versions']
+        self.assertEqual(len(trip_versions), 2)
+        self.assertIn(str(active_trip.uuid), trip_versions)
+        self.assertIn(str(past_trip.uuid), trip_versions)
+
+    def test_build_trips_includes_deleted_array(self):
+        """Test trip sync includes deleted array structure."""
+        TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Test Trip'
+        )
+
+        builder = SyncEnvelopeBuilder(self.user)
+        envelope = builder.build()
+
+        self.assertIn('deleted', envelope['trip'])
+        self.assertIsInstance(envelope['trip']['deleted'], list)
+
+    def test_build_trips_includes_deleted_uuids_with_since(self):
+        """Test trip sync includes deleted trip UUIDs when since provided."""
+        trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Test Trip'
+        )
+        trip_uuid = trip.uuid
+
+        trip.delete()
+
+        since = timezone.now() - timedelta(minutes=5)
+        builder = SyncEnvelopeBuilder(self.user, since=since)
+        envelope = builder.build()
+
+        deleted_uuids = envelope['trip']['deleted']
+        self.assertIn(str(trip_uuid), deleted_uuids)
+
+    def test_build_trips_includes_deleted_uuids_without_since(self):
+        """Test trip sync includes deleted trip UUIDs for full sync (no since)."""
+        trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Test Trip'
+        )
+        trip_uuid = trip.uuid
+
+        trip.delete()
+
+        # Full sync - no since timestamp
+        builder = SyncEnvelopeBuilder(self.user, since=None)
+        envelope = builder.build()
+
+        deleted_uuids = envelope['trip']['deleted']
+        self.assertIn(str(trip_uuid), deleted_uuids)
+
+    def test_build_trips_gmm_map_id_none_when_unlinked(self):
+        """Test trip sync returns None for gmm_map_id when trip not linked."""
+        trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Unlinked Trip'
+        )
+
+        builder = SyncEnvelopeBuilder(self.user)
+        envelope = builder.build()
+
+        trip_data = envelope['trip']['versions'][str(trip.uuid)]
+        self.assertIsNone(trip_data['gmm_map_id'])
 
 
 class SyncEnvelopeBuilderLocationSyncTestCase(TestCase):
@@ -371,8 +460,8 @@ class SyncEnvelopeBuilderLocationSyncTestCase(TestCase):
         self.assertNotIn(str(old_location.uuid), location_versions)
         self.assertIn(str(new_location.uuid), location_versions)
 
-    def test_build_location_includes_deletions(self):
-        """Test location sync includes deleted location UUIDs."""
+    def test_build_location_includes_deletions_with_since(self):
+        """Test location sync includes deleted location UUIDs when since provided."""
         trip = TripSyntheticData.create_test_trip(
             user=self.user,
             title='Test Trip'
@@ -384,6 +473,24 @@ class SyncEnvelopeBuilderLocationSyncTestCase(TestCase):
 
         since = timezone.now() - timedelta(minutes=5)
         builder = SyncEnvelopeBuilder(self.user, since=since, trip_uuid=trip.uuid)
+        envelope = builder.build()
+
+        deleted_uuids = envelope['location']['deleted']
+        self.assertIn(str(location_uuid), deleted_uuids)
+
+    def test_build_location_includes_deletions_without_since(self):
+        """Test location sync includes deleted location UUIDs for full sync (no since)."""
+        trip = TripSyntheticData.create_test_trip(
+            user=self.user,
+            title='Test Trip'
+        )
+        location = Location.objects.create(trip=trip, title='Test Location')
+        location_uuid = location.uuid
+
+        location.delete()
+
+        # Full sync - no since timestamp
+        builder = SyncEnvelopeBuilder(self.user, since=None, trip_uuid=trip.uuid)
         envelope = builder.build()
 
         deleted_uuids = envelope['location']['deleted']

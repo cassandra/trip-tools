@@ -82,6 +82,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleGetTripLocations( message.data );
         case TT.MESSAGE.TYPE_GET_ACTIVE_TRIP:
             return handleGetActiveTrip();
+        case TT.MESSAGE.TYPE_IS_GMM_MAP_LINKED:
+            return handleIsGmmMapLinked( message.data );
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -490,6 +492,33 @@ function handleGetActiveTrip() {
                 error: error.message
             });
         });
+}
+
+/**
+ * Check if a GMM map is linked to any trip.
+ * Used by content scripts to decide whether to decorate/intercept.
+ * @param {Object} data - { gmm_map_id }
+ * @returns {Promise<Object>} Response with isLinked and tripUuid.
+ */
+function handleIsGmmMapLinked( data ) {
+    if ( !data || !data.gmm_map_id ) {
+        return Promise.resolve( TTMessaging.createResponse( false, {
+            error: 'gmm_map_id is required'
+        } ) );
+    }
+
+    return TTTrips.getTripUuidByGmmMapId( data.gmm_map_id )
+        .then( function( tripUuid ) {
+            return TTMessaging.createResponse( true, {
+                isLinked: !!tripUuid,
+                tripUuid: tripUuid || null
+            } );
+        } )
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            } );
+        } );
 }
 
 /**
@@ -921,12 +950,13 @@ function handleSaveLocation( data ) {
 
     var tripUuid;
 
-    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
-        .then( function( activeTripUuid ) {
-            if ( !activeTripUuid ) {
-                throw new Error( 'No active trip selected' );
+    // Route to trip by GMM map ID (not active trip)
+    return TTTrips.getTripUuidByGmmMapId( data.gmm_map_id )
+        .then( function( resolvedTripUuid ) {
+            if ( !resolvedTripUuid ) {
+                throw new Error( 'Map not linked to any trip' );
             }
-            tripUuid = activeTripUuid;
+            tripUuid = resolvedTripUuid;
 
             var locationData = {
                 trip_uuid: tripUuid,
@@ -1022,11 +1052,15 @@ function handleUpdateLocation( data ) {
         }));
     }
 
-    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
-        .then( function( tripUuid ) {
-            if ( !tripUuid ) {
-                throw new Error( 'No active trip selected' );
+    var tripUuid;
+
+    // Route to trip by GMM map ID (not active trip)
+    return TTTrips.getTripUuidByGmmMapId( data.gmm_map_id )
+        .then( function( resolvedTripUuid ) {
+            if ( !resolvedTripUuid ) {
+                throw new Error( 'Map not linked to any trip' );
             }
+            tripUuid = resolvedTripUuid;
 
             return TTApi.updateLocation( data.uuid, data.updates )
                 .then( function( location ) {
@@ -1038,7 +1072,7 @@ function handleUpdateLocation( data ) {
                             return TTMessaging.createResponse( true, location );
                         });
                 });
-        })
+        } )
         .catch( function( error ) {
             console.error( '[TT Background] Update location failed:', error );
             return TTMessaging.createResponse( false, {
@@ -1060,11 +1094,15 @@ function handleDeleteLocation( data ) {
         }));
     }
 
-    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
-        .then( function( tripUuid ) {
-            if ( !tripUuid ) {
-                throw new Error( 'No active trip selected' );
+    var tripUuid;
+
+    // Route to trip by GMM map ID (not active trip)
+    return TTTrips.getTripUuidByGmmMapId( data.gmm_map_id )
+        .then( function( resolvedTripUuid ) {
+            if ( !resolvedTripUuid ) {
+                throw new Error( 'Map not linked to any trip' );
             }
+            tripUuid = resolvedTripUuid;
 
             return TTApi.deleteLocation( data.uuid )
                 .then( function() {
@@ -1074,11 +1112,11 @@ function handleDeleteLocation( data ) {
                     if ( data.gmmId ) {
                         return TTLocations.removeMetadataByGmmId( tripUuid, data.gmmId );
                     }
-                })
+                } )
                 .then( function() {
                     return TTMessaging.createResponse( true, {} );
-                });
-        })
+                } );
+        } )
         .catch( function( error ) {
             console.error( '[TT Background] Delete location failed:', error );
             return TTMessaging.createResponse( false, {

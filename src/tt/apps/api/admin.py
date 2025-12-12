@@ -36,3 +36,20 @@ class APITokenAdmin( admin.ModelAdmin ):
         if user:
             return user.email
         return '(No user)'
+
+
+@admin.register( models.SyncDeletionLog )
+class SyncDeletionLogAdmin( admin.ModelAdmin ):
+    show_full_result_count = False
+
+    list_display = (
+        'uuid',
+        'object_type',
+        'trip_uuid',
+        'deleted_by',
+        'deleted_at',
+    )
+
+    list_filter = ( 'object_type', 'deleted_at' )
+    search_fields = [ 'uuid', 'trip_uuid' ]
+    readonly_fields = ( 'uuid', 'object_type', 'trip_uuid', 'deleted_by', 'deleted_at' )

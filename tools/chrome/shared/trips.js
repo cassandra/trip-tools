@@ -367,12 +367,13 @@ TTTrips.seedWorkingSet = function( serverTrips ) {
  * - Not in working set: Add as stale stub (needs detail fetch)
  * - In working set with different version: Mark as stale (needs refresh)
  * - In working set with same version: Keep as-is
- * - In working set but not in sync: Remove (deleted/access revoked)
+ * - In deleted array: Remove from working set
  *
- * @param {Object} versions - Map of uuid -> {version, created} from sync envelope.
+ * @param {Object} versions - Map of uuid -> {version, gmm_map_id, title, created} from sync envelope.
+ * @param {Array} deleted - Array of deleted trip UUIDs.
  * @returns {Promise<void>}
  */
-TTTrips.syncWorkingSet = function( versions ) {
+TTTrips.syncWorkingSet = function( versions, deleted ) {
     if ( !versions ) {
         versions = {};
     }
@@ -391,20 +392,26 @@ TTTrips.syncWorkingSet = function( versions ) {
                 existingByUuid[trip.uuid] = trip;
             });
 
-            // Process existing trips: keep, mark stale, or remove
+            // Process existing trips: update if changed, keep otherwise
+            // Note: With delta sync, versions only contains *changed* trips.
+            // Trips not in versions are unchanged (not deleted).
+            // Deletions are handled via the deleted array below.
             var updatedSet = [];
             workingSet.forEach( function( trip ) {
                 if ( !versions.hasOwnProperty( trip.uuid ) ) {
-                    // Trip no longer accessible - remove it
+                    // Trip not in delta - unchanged, keep as-is
+                    updatedSet.push( trip );
                     return;
                 }
 
                 var serverData = versions[trip.uuid];
                 var serverVersion = serverData.version;
                 if ( trip.version !== serverVersion ) {
-                    // Version changed - mark as stale, preserve all existing fields
+                    // Version changed - update metadata and mark as stale
                     var updated = Object.assign( {}, trip, {
                         version: serverVersion,
+                        title: serverData.title,
+                        gmm_map_id: serverData.gmm_map_id,
                         stale: true
                     });
                     updatedSet.push( updated );
@@ -419,15 +426,24 @@ TTTrips.syncWorkingSet = function( versions ) {
             serverUuids.forEach( function( uuid ) {
                 if ( !existingByUuid[uuid] ) {
                     var serverData = versions[uuid];
-                    // New trip - add as stale stub with created time for ordering
+                    // New trip - add as stale stub with metadata from sync
                     updatedSet.push({
                         uuid: uuid,
-                        title: null,  // Unknown until fetched
+                        title: serverData.title,
+                        gmm_map_id: serverData.gmm_map_id,
                         version: serverData.version,
                         lastAccessedAt: serverData.created,
                         stale: true
                     });
                 }
+            });
+
+            // Remove explicitly deleted trips
+            deleted = deleted || [];
+            deleted.forEach( function( uuid ) {
+                updatedSet = updatedSet.filter( function( trip ) {
+                    return trip.uuid !== uuid;
+                });
             });
 
             // Sort by lastAccessedAt descending (most recent first)
@@ -504,6 +520,183 @@ TTTrips.updateTripInWorkingSet = function( uuid, updates ) {
             });
             return TTTrips.setWorkingSet( updatedSet );
         });
+};
+
+// =============================================================================
+// GMM Map Index (3-Layer Cache)
+// =============================================================================
+//
+// Maps gmm_map_id -> trip_uuid for routing GMM operations to the correct trip.
+//
+// Uses lazy initialization: the index is built on first lookup rather than at
+// service worker startup. This avoids potential timing issues with network
+// calls during SW initialization and ensures we only fetch when actually needed.
+//
+// 3-Layer cache hierarchy:
+//   L1: Memory (_gmmMapIndex) - Fast, lost on SW restart
+//   L2: Storage (tt_gmmMapIndex) - Persists across restarts, 1-hour TTL
+//   L3: API (TripCollectionView) - Source of truth, fetched when L2 stale/missing
+
+// L1: In-memory cache (fast, lost on SW restart)
+var _gmmMapIndex = null;
+
+/**
+ * Get GMM map index, using 3-layer cache: Memory → Storage → API.
+ * Populates higher layers on cache miss.
+ * @returns {Promise<Object>} The index mapping gmm_map_id -> trip_uuid.
+ */
+TTTrips.getGmmMapIndex = function() {
+    // L1: Check memory
+    if ( _gmmMapIndex ) {
+        return Promise.resolve( _gmmMapIndex );
+    }
+
+    // L2: Check storage
+    return TTStorage.get( TT.STORAGE.KEY_GMM_MAP_INDEX, null )
+        .then( function( data ) {
+            if ( data && data.index && !TTTrips._isGmmMapIndexStale( data ) ) {
+                // Populate L1 from L2
+                _gmmMapIndex = data.index;
+                return _gmmMapIndex;
+            }
+
+            // L3: Fetch from API
+            return TTTrips._fetchAndCacheGmmMapIndex();
+        });
+};
+
+/**
+ * Check if stored index is stale (older than TTL).
+ * @param {Object} data - Stored index data with fetchedAt.
+ * @returns {boolean} True if stale.
+ */
+TTTrips._isGmmMapIndexStale = function( data ) {
+    if ( !data || !data.fetchedAt ) {
+        return true;
+    }
+    var fetchedAt = new Date( data.fetchedAt ).getTime();
+    var age = Date.now() - fetchedAt;
+    return age > TT.CONFIG.GMM_MAP_INDEX_TTL_MS;
+};
+
+/**
+ * Fetch trips from API and build/cache the GMM map index.
+ * Populates both L1 (memory) and L2 (storage).
+ * @returns {Promise<Object>} The index.
+ */
+TTTrips._fetchAndCacheGmmMapIndex = function() {
+    return TTTrips.fetchTripsFromServer()
+        .then( function( trips ) {
+            var index = {};
+            trips.forEach( function( trip ) {
+                if ( trip.gmm_map_id ) {
+                    index[trip.gmm_map_id] = trip.uuid;
+                }
+            });
+
+            // Populate L1
+            _gmmMapIndex = index;
+
+            // Populate L2
+            return TTStorage.set( TT.STORAGE.KEY_GMM_MAP_INDEX, {
+                fetchedAt: new Date().toISOString(),
+                index: index
+            }).then( function() {
+                return index;
+            });
+        });
+};
+
+/**
+ * Look up trip UUID by GMM map ID.
+ * Uses 3-layer cache for fast lookup.
+ * @param {string} gmmMapId - The Google My Maps map ID.
+ * @returns {Promise<string|null>} Trip UUID or null if not found.
+ */
+TTTrips.getTripUuidByGmmMapId = function( gmmMapId ) {
+    return TTTrips.getGmmMapIndex()
+        .then( function( index ) {
+            return index[gmmMapId] || null;
+        });
+};
+
+/**
+ * Clear the GMM map index from all cache layers.
+ * @returns {Promise<void>}
+ */
+TTTrips.clearGmmMapIndex = function() {
+    _gmmMapIndex = null;
+    return TTStorage.remove( TT.STORAGE.KEY_GMM_MAP_INDEX );
+};
+
+/**
+ * Apply trip deltas to GMM map index.
+ * Called by sync handler after working set sync.
+ * Updates L1 (memory) and L2 (storage) with delta information.
+ *
+ * Optimized for the common case where gmm_map_id hasn't changed:
+ * - Check if index[gmm_map_id] === uuid before doing any work
+ * - Only scan for old entries when there's an actual change
+ * - Only persist to storage if something changed
+ *
+ * @param {Object} versions - Map of uuid -> {version, gmm_map_id, title, created}
+ * @param {Array} deleted - Array of deleted trip UUIDs
+ * @returns {Promise<void>}
+ */
+TTTrips.applyGmmMapIndexDeltas = function( versions, deleted ) {
+    // Get current index (will lazy-build if needed)
+    return TTTrips.getGmmMapIndex()
+        .then( function( index ) {
+            var updated = false;
+
+            // Handle deletions - must scan by value since index keyed by gmm_map_id
+            if ( deleted && deleted.length > 0 ) {
+                var deletedSet = {};
+                deleted.forEach( function( uuid ) { deletedSet[uuid] = true; } );
+
+                for ( var gmmMapId in index ) {
+                    if ( deletedSet[index[gmmMapId]] ) {
+                        delete index[gmmMapId];
+                        updated = true;
+                    }
+                }
+            }
+
+            // Apply version updates
+            for ( var uuid in versions ) {
+                var tripData = versions[uuid];
+                var gmmMapId = tripData.gmm_map_id;
+
+                // Fast path: if mapping already correct, skip this trip entirely
+                if ( gmmMapId && index[gmmMapId] === uuid ) {
+                    continue;
+                }
+
+                // Slow path: mapping changed or was removed
+                // Find and remove any existing entry for this trip UUID
+                for ( var existingMapId in index ) {
+                    if ( index[existingMapId] === uuid ) {
+                        delete index[existingMapId];
+                        updated = true;
+                        break;
+                    }
+                }
+
+                // Add new entry if trip has gmm_map_id
+                if ( gmmMapId ) {
+                    index[gmmMapId] = uuid;
+                    updated = true;
+                }
+            }
+
+            // Persist to L2 only if something changed
+            if ( updated ) {
+                return TTStorage.set( TT.STORAGE.KEY_GMM_MAP_INDEX, {
+                    fetchedAt: new Date().toISOString(),
+                    index: index
+                } );
+            }
+        } );
 };
 
 // =============================================================================

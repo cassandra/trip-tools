@@ -11,8 +11,7 @@ class SyncObjectType( LabeledEnum ):
     """
     Types of objects tracked in the sync deletion log.
 
-    Trip deletions are not tracked here - the extension detects Trip
-    deletions/revocations by their absence from the sync envelope's
-    trip versions list.
+    Used by SyncDeletionLog to track deletions for delta sync.
     """
     LOCATION = ( 'Location', 'A location within a trip' )
+    TRIP     = ( 'Trip', 'A trip' )

@@ -123,8 +123,8 @@ class SyncableAPIViewResponseWrappingTestCase(TestCase):
         self.assertIn('versions', sync['trip'])
         self.assertIn(str(trip.uuid), sync['trip']['versions'])
 
-    def test_sync_envelope_excludes_past_trips(self):
-        """Test sync envelope excludes trips with PAST status."""
+    def test_sync_envelope_includes_past_trips(self):
+        """Test sync envelope includes trips with PAST status for GMM map index."""
         from tt.apps.trips.enums import TripStatus
 
         upcoming_trip = TripSyntheticData.create_test_trip(
@@ -147,7 +147,7 @@ class SyncableAPIViewResponseWrappingTestCase(TestCase):
         sync = response.data['sync']
         versions = sync['trip']['versions']
         self.assertIn(str(upcoming_trip.uuid), versions)
-        self.assertNotIn(str(past_trip.uuid), versions)
+        self.assertIn(str(past_trip.uuid), versions)
 
 
 # =============================================================================

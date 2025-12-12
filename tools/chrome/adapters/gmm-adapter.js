@@ -74,6 +74,52 @@ var TTGmmAdapter = TTSiteAdapter.create({
         },
 
         // =====================================================================
+        // Map Context
+        // =====================================================================
+
+        /**
+         * Get map info from current page URL.
+         * @returns {Object} { mapId, url }
+         */
+        getMapInfo: function() {
+            var url = new URL( window.location.href );
+            var mapId = url.searchParams.get( 'mid' );
+
+            return {
+                mapId: mapId,
+                url: window.location.href
+            };
+        },
+
+        /**
+         * Check if current GMM map is linked to any trip.
+         * Uses GMM map index in service worker (3-layer cache).
+         * @returns {Promise<{isLinked: boolean, tripUuid: string|null}>}
+         */
+        isGmmMapLinkedToTrip: function() {
+            var mapId = this.getMapInfo().mapId;
+            if ( !mapId ) {
+                return Promise.resolve( { isLinked: false, tripUuid: null } );
+            }
+
+            return new Promise( function( resolve ) {
+                chrome.runtime.sendMessage( {
+                    type: TT.MESSAGE.TYPE_IS_GMM_MAP_LINKED,
+                    data: { gmm_map_id: mapId }
+                }, function( response ) {
+                    if ( chrome.runtime.lastError || !response || !response.success ) {
+                        resolve( { isLinked: false, tripUuid: null } );
+                        return;
+                    }
+                    resolve( {
+                        isLinked: response.data.isLinked,
+                        tripUuid: response.data.tripUuid
+                    } );
+                } );
+            } );
+        },
+
+        // =====================================================================
         // Layer Operations
         // =====================================================================
 

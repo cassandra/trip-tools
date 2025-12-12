@@ -8,7 +8,6 @@ from uuid import UUID
 from django.utils import timezone
 
 from tt.apps.locations.models import Location
-from tt.apps.trips.enums import TripStatus
 from tt.apps.trips.models import Trip
 
 from .enums import SyncObjectType
@@ -23,8 +22,10 @@ class SyncEnvelopeBuilder:
     allowing the extension to detect changes and sync its local data.
 
     Trip sync:
-    - Returns ALL accessible trips (not filtered by since)
-    - Absence from versions means deleted/revoked
+    - Returns ALL accessible trips (including PAST) for GMM map index
+    - Filtered by modified_datetime >= since for delta sync
+    - Includes metadata: gmm_map_id, title, status
+    - Uses SyncDeletionLog for explicit deletion tracking
 
     Location sync:
     - Scoped to a specific trip via X-Sync-Trip header
@@ -67,32 +68,50 @@ class SyncEnvelopeBuilder:
 
     def _build_trip_sync( self ) -> dict:
         """
-        Returns accessible trips excluding PAST status.
+        Returns trip versions for delta sync.
 
-        Always returns all non-past trips (not filtered by since) to enable
-        presence-based deletion detection.
+        Includes ALL trips (including PAST) to support the GMM map index,
+        which maps gmm_map_id to trip_uuid for routing GMM operations.
 
-        PAST trips are excluded because marking a trip as "past" is a
-        deliberate user action indicating they're done working on it.
-        Users can still access past trips via the trip chooser.
+        Uses delta pattern: only returns trips modified since X-Sync-Since.
+        Uses SyncDeletionLog for explicit deletion tracking.
 
-        Each trip includes version and created_datetime for proper
-        ordering when adding new trips to the extension's working set.
+        Each trip version includes metadata:
+        - gmm_map_id: For building the GMM map index
+        - title: For display in the extension UI
+        - created: For working set ordering
         """
-        trips = Trip.objects.for_user( self.user ).exclude(
-            trip_status = TripStatus.PAST
-        ).values(
-            'uuid', 'version', 'created_datetime'
-        )
-        return {
+        queryset = Trip.objects.for_user( self.user )
+
+        # If since provided, only return trips modified since then
+        if self.since:
+            queryset = queryset.filter( modified_datetime__gte = self.since )
+
+        trips = queryset.values( 'uuid', 'version', 'gmm_map_id', 'title', 'created_datetime' )
+
+        result = {
             'versions': {
                 str( t['uuid'] ): {
                     'version': t['version'],
+                    'gmm_map_id': t['gmm_map_id'],
+                    'title': t['title'],
                     'created': t['created_datetime'].isoformat(),
                 }
                 for t in trips
             },
+            'deleted': [],
         }
+
+        # Query deletions - filter by since if provided, otherwise return all
+        deletion_queryset = SyncDeletionLog.objects.filter(
+            object_type = SyncObjectType.TRIP,
+        )
+        if self.since:
+            deletion_queryset = deletion_queryset.filter( deleted_at__gte = self.since )
+
+        result['deleted'] = [ str( u ) for u in deletion_queryset.values_list( 'uuid', flat = True ) ]
+
+        return result
 
     def _build_location_sync( self ) -> dict:
         """
@@ -114,13 +133,14 @@ class SyncEnvelopeBuilder:
             'deleted': [],
         }
 
-        # Only query deletions if we have a since timestamp
+        # Query deletions - filter by since if provided, otherwise return all
+        deletion_queryset = SyncDeletionLog.objects.filter(
+            trip_uuid = self.trip_uuid,
+            object_type = SyncObjectType.LOCATION,
+        )
         if self.since:
-            deleted = SyncDeletionLog.objects.filter(
-                trip_uuid = self.trip_uuid,
-                object_type = SyncObjectType.LOCATION,
-                deleted_at__gte = self.since,
-            ).values_list( 'uuid', flat = True )
-            result['deleted'] = [ str( u ) for u in deleted ]
+            deletion_queryset = deletion_queryset.filter( deleted_at__gte = self.since )
+
+        result['deleted'] = [ str( u ) for u in deletion_queryset.values_list( 'uuid', flat = True ) ]
 
         return result
