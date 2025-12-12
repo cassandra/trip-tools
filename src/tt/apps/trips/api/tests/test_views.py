@@ -470,3 +470,119 @@ class TripItemViewPatchTestCase( TestCase ):
         )
 
         self.assertEqual( response.status_code, 404 )
+
+
+# =============================================================================
+# TripByGmmMapView Tests
+# =============================================================================
+
+class TripByGmmMapViewTestCase( TestCase ):
+    """Test GET /api/v1/trips/by-gmm-map/{gmm_map_id}/ endpoint."""
+
+    @classmethod
+    def setUpTestData( cls ):
+        cls.user = User.objects.create_user(
+            email = 'testuser@example.com',
+            password = 'testpass123'
+        )
+        cls.other_user = User.objects.create_user(
+            email = 'otheruser@example.com',
+            password = 'testpass123'
+        )
+        cls.token_data = APITokenService.create_token(
+            cls.user,
+            'Test Token'
+        )
+        cls.other_token_data = APITokenService.create_token(
+            cls.other_user,
+            'Other Token'
+        )
+
+    def setUp( self ):
+        self.client = APIClient()
+        self.trip = TripSyntheticData.create_test_trip(
+            user = self.user,
+            title = 'Test Trip',
+            trip_status = TripStatus.CURRENT
+        )
+        self.trip.gmm_map_id = '1ABCxyz123'
+        self.trip.save()
+
+    def test_requires_authentication( self ):
+        """Test endpoint requires authentication."""
+        response = self.client.get( '/api/v1/trips/by-gmm-map/1ABCxyz123/' )
+        self.assertEqual( response.status_code, 401 )
+
+    def test_returns_trip_when_found_and_user_is_member( self ):
+        """Test returns trip when found and user is a member."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/trips/by-gmm-map/1ABCxyz123/' )
+
+        self.assertEqual( response.status_code, 200 )
+        self.assertIn( 'data', response.json() )
+        data = response.json()['data']
+        self.assertEqual( data['uuid'], str( self.trip.uuid ) )
+        self.assertEqual( data['title'], 'Test Trip' )
+        self.assertEqual( data['gmm_map_id'], '1ABCxyz123' )
+
+    def test_returns_404_when_gmm_map_id_not_found( self ):
+        """Test returns 404 when no trip has the given GMM map ID."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/trips/by-gmm-map/nonexistent-id/' )
+
+        self.assertEqual( response.status_code, 404 )
+
+    def test_returns_404_when_user_not_member( self ):
+        """Test returns 404 (not 403) when user is not a member of the trip."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.other_token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/trips/by-gmm-map/1ABCxyz123/' )
+
+        # Returns 404 to avoid leaking existence of trips
+        self.assertEqual( response.status_code, 404 )
+
+    def test_viewer_can_access_shared_trip( self ):
+        """Test viewer permission allows access via GMM map ID."""
+        shared_trip = TripSyntheticData.create_test_trip(
+            user = self.other_user,
+            title = 'Shared Trip'
+        )
+        shared_trip.gmm_map_id = '2DEFxyz456'
+        shared_trip.save()
+
+        TripSyntheticData.add_trip_member(
+            trip = shared_trip,
+            user = self.user,
+            permission_level = TripPermissionLevel.VIEWER,
+            added_by = self.other_user
+        )
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/trips/by-gmm-map/2DEFxyz456/' )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertEqual( data['title'], 'Shared Trip' )
+
+    def test_response_includes_required_fields( self ):
+        """Test response includes all required fields."""
+        self.client.credentials(
+            HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
+        )
+        response = self.client.get( '/api/v1/trips/by-gmm-map/1ABCxyz123/' )
+
+        self.assertEqual( response.status_code, 200 )
+        data = response.json()['data']
+        self.assertIn( 'uuid', data )
+        self.assertIn( 'title', data )
+        self.assertIn( 'trip_status', data )
+        self.assertIn( 'version', data )
+        self.assertIn( 'created_datetime', data )
+        self.assertIn( 'gmm_map_id', data )

@@ -1,10 +1,12 @@
 from uuid import UUID
 
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from tt.apps.api.views import TtApiView
+from tt.apps.members.models import TripMember
 from tt.apps.trips.mixins import TripViewMixin
 from tt.apps.trips.models import Trip
 from tt.apps.trips.services import TripService
@@ -61,3 +63,32 @@ class TripItemView( TripViewMixin, TtApiView ):
         # Re-serialize with updated data
         output_serializer = TripSerializer( trip )
         return Response( output_serializer.data )
+
+
+class TripByGmmMapView( TtApiView ):
+    """
+    Get a trip by its GMM map ID.
+
+    GET /api/v1/trips/by-gmm-map/{gmm_map_id}/
+    Returns trip if found and user is a member, 404 otherwise.
+    """
+    permission_classes = [ IsAuthenticated ]
+
+    def get( self, request: Request, gmm_map_id: str ) -> Response:
+        trip = Trip.objects.filter( gmm_map_id = gmm_map_id ).first()
+
+        if not trip:
+            raise NotFound( 'No trip found with this GMM map ID' )
+
+        # Check user has access to this trip
+        # Returns 404 (not 403) to avoid leaking existence of trips
+        trip_member = TripMember.objects.filter(
+            trip = trip,
+            user = request.user
+        ).first()
+
+        if not trip_member:
+            raise NotFound( 'No trip found with this GMM map ID' )
+
+        serializer = TripSerializer( trip )
+        return Response( serializer.data )

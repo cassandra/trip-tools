@@ -41,6 +41,7 @@ class Trip( SyncableModel ):
         max_length = 255,
         blank = True,
         null = True,
+        unique = True,
         help_text = 'Google My Maps map identifier (from URL mid parameter)',
     )
 

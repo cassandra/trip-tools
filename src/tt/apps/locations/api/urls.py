@@ -1,9 +1,9 @@
 from django.urls import path
 
-from .views import LocationCollectionView, LocationItemView
+from . import views
 
 
 urlpatterns = [
-    path( '', LocationCollectionView.as_view(), name = 'api_location_collection' ),
-    path( '<uuid:location_uuid>/', LocationItemView.as_view(), name = 'api_location_item' ),
+    path( '', views.LocationCollectionView.as_view(), name = 'api_location_collection' ),
+    path( '<uuid:location_uuid>/', views.LocationItemView.as_view(), name = 'api_location_item' ),
 ]
