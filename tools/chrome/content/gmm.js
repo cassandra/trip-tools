@@ -533,6 +533,12 @@
     function addLocationWithCategory( dialogNode, category, subcategory ) {
         var colorRgb = subcategory ? subcategory.color_code : category.color_code;
         var iconCode = subcategory ? subcategory.icon_code : category.icon_code;
+        var locationName = subcategory ? subcategory.name : category.name;
+
+        // Enter operating mode to prevent user interaction during DOM manipulation
+        TTOperationMode.enter( TTOperationMode.Mode.GMM_USER_ADD, {
+            message: "Adding as '" + locationName + "'..."
+        });
 
         // Extract contact info before dialog closes (best effort)
         var contactInfo = TTGmmAdapter.getContactInfo( dialogNode );
@@ -579,6 +585,9 @@
         .catch( function( error ) {
             console.error( '[TT GMM] Failed to add location:', error );
             showErrorNotification( 'Location not saved to server. Try syncing later.' );
+        })
+        .finally( function() {
+            TTOperationMode.exit();
         });
     }
 

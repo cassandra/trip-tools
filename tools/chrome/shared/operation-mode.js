@@ -51,6 +51,14 @@ var TTOperationMode = ( function() {
             cssClass: 'tt-operation-gmm-sync-fix',
             suppressGmmIntercepts: true,
             bannerStyle: BannerStyle.PARTIAL
+        },
+        GMM_USER_ADD: {
+            id: 'gmm_user_add',
+            title: 'Adding Location',
+            description: null,
+            cssClass: 'tt-operation-gmm-user-add',
+            suppressGmmIntercepts: true,
+            bannerStyle: BannerStyle.FULL
         }
     };
 
@@ -59,7 +67,8 @@ var TTOperationMode = ( function() {
         NORMAL: 'NORMAL',
         GMM_SYNC_EXECUTE: 'GMM_SYNC_EXECUTE',
         GMM_SYNC_UNDO: 'GMM_SYNC_UNDO',
-        GMM_SYNC_FIX: 'GMM_SYNC_FIX'
+        GMM_SYNC_FIX: 'GMM_SYNC_FIX',
+        GMM_USER_ADD: 'GMM_USER_ADD'
     };
 
     var _currentMode = Mode.NORMAL;
