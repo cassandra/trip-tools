@@ -520,6 +520,103 @@ var TTGmmAdapter = TTSiteAdapter.create({
             };
         },
 
+        /**
+         * Find a section container by looking for a div with exact header text.
+         * @private
+         * @param {Element} container - Parent container to search within.
+         * @param {string} headerText - Exact text of the header div.
+         * @returns {Element|null} - Parent element of the header div, or null.
+         */
+        _findSectionByHeaderText: function( container, headerText ) {
+            var allDivs = container.querySelectorAll( 'div' );
+            for ( var i = 0; i < allDivs.length; i++ ) {
+                if ( allDivs[i].textContent.trim() === headerText ) {
+                    return allDivs[i].parentElement;
+                }
+            }
+            return null;
+        },
+
+        /**
+         * Extract contact information from GMM "Details from Google Maps" section.
+         * Uses TTText utilities for pattern matching.
+         * @param {Element} [infoPanel] - The GMM info panel element. If not provided,
+         *                                uses the current INFO_CONTAINER.
+         * @returns {Array} - Array of contact info objects with contact_type, value, label, is_primary.
+         */
+        getContactInfo: function( infoPanel ) {
+            var self = this;
+            var contacts = [];
+
+            // Use provided panel or find current info container
+            if ( !infoPanel ) {
+                infoPanel = this.getElement( 'INFO_CONTAINER' );
+            }
+
+            if ( !infoPanel ) {
+                return contacts;
+            }
+
+            // Find the "Details from Google Maps" section by header text
+            var detailsSection = this._findSectionByHeaderText( infoPanel, 'Details from Google Maps' );
+            if ( !detailsSection ) {
+                return contacts;
+            }
+
+            // Get all direct child divs
+            var children = detailsSection.querySelectorAll( ':scope > div' );
+
+            children.forEach( function( child ) {
+                var text = child.textContent.trim();
+
+                // Skip header div and Remove button
+                if ( text === 'Details from Google Maps' || text === 'Remove' ) {
+                    return;
+                }
+
+                // Check for website (has anchor tag, exclude Google Maps links)
+                var anchor = child.querySelector( 'a[href]' );
+                if ( anchor ) {
+                    var url = TTText.extractUrlFromAnchor( anchor, ['maps.google.com'] );
+                    if ( url ) {
+                        contacts.push({
+                            contact_type: 'website',
+                            value: url,
+                            label: '',
+                            is_primary: false
+                        });
+                        return;
+                    }
+                }
+
+                if ( !text ) return;
+
+                // Check for phone
+                if ( TTText.isPhoneNumber( text ) ) {
+                    contacts.push({
+                        contact_type: 'phone',
+                        value: text,
+                        label: '',
+                        is_primary: false
+                    });
+                    return;
+                }
+
+                // Check for address
+                if ( TTText.isStreetAddress( text ) ) {
+                    contacts.push({
+                        contact_type: 'address',
+                        value: text,
+                        label: '',
+                        is_primary: false
+                    });
+                    return;
+                }
+            });
+
+            return contacts;
+        },
+
         // =====================================================================
         // Style Operations
         // =====================================================================

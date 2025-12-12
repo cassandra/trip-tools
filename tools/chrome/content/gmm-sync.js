@@ -1107,7 +1107,7 @@
 
     /**
      * Sync a GMM location to the server.
-     * Opens the location to get full details, then saves to server.
+     * Opens the location to get full details (coordinates, contact info), then saves to server.
      * @param {string} tripUuid - Trip UUID.
      * @param {Object} gmmLoc - GMM location { fl_id, title, icon_code, layer_title }.
      * @returns {Promise<Object>} Created server location.
@@ -1118,7 +1118,7 @@
         // Get categories for subcategory mapping
         return getLocationCategories()
             .then( function( categories ) {
-                // Open the location to get coordinates
+                // Open the location to get coordinates and contact info
                 return TTGmmAdapter.openLocationById( gmmLoc.fl_id )
                     .then( function( locationInfo ) {
                         // Build location data for server
@@ -1131,6 +1131,13 @@
                         if ( locationInfo.coordinates ) {
                             locationData.latitude = locationInfo.coordinates.latitude;
                             locationData.longitude = locationInfo.coordinates.longitude;
+                        }
+
+                        // Extract contact info from the open info dialog
+                        var contactInfo = TTGmmAdapter.getContactInfo();
+                        if ( contactInfo.length > 0 ) {
+                            console.log( '[TT GMM Sync] Extracted contact info:', contactInfo );
+                            locationData.contact_info = contactInfo;
                         }
 
                         // Map subcategory from layer name and icon
@@ -1649,7 +1656,7 @@
             // Header
             var header = TTDom.createElement( 'div', {
                 className: 'tt-sync-header',
-                text: 'Sync Locations'
+                text: 'Sync Map'
             });
             dialog.appendChild( header );
 

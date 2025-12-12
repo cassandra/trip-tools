@@ -712,7 +712,7 @@ function populateTripDetails() {
 }
 
 /**
- * Handle Sync Locations button click.
+ * Handle Sync Map button click.
  * Sends sync message to GMM content script if map is open.
  */
 function handleSyncLocations() {
@@ -726,7 +726,7 @@ function handleSyncLocations() {
         return;
     }
 
-    addLocalDebugEntry( 'info', 'Sync Locations requested for trip: ' + currentActiveTrip.title );
+    addLocalDebugEntry( 'info', 'Sync Map requested for trip: ' + currentActiveTrip.title );
 
     TTMessaging.send( TT.MESSAGE.TYPE_GMM_SYNC_LOCATIONS, {
         tripUuid: currentActiveTrip.uuid,
