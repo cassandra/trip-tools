@@ -20,6 +20,11 @@
             </button>
         </div>
 
+        <!-- Dev Version Banner (shown only in development builds) -->
+        <div class="tt-dev-banner tt-hidden" id="tt-dev-banner">
+            Development Version
+        </div>
+
         <!-- Status Bar -->
         <div class="tt-status-bar">
             <div class="tt-status-indicator" id="tt-status-indicator"></div>
@@ -67,14 +72,18 @@
                 </div>
 
                 <div class="tt-trip-empty tt-hidden" id="tt-trip-empty">No trips available.</div>
+
+                <!-- Link Map Action (shown only on unlinked GMM pages) -->
+                <div class="tt-link-map-action tt-hidden" id="tt-link-map-action">
+                    <button class="tt-btn tt-btn-secondary" id="tt-link-map-btn">
+                        Link This Map to a Trip
+                    </button>
+                </div>
+
+                <!-- Trip Actions Row -->
                 <div class="tt-trip-actions">
-                    <button class="tt-btn tt-btn-secondary tt-btn-new-trip" id="tt-new-trip-btn">
-                        + New Trip
-                    </button>
-                    <button class="tt-btn tt-btn-secondary tt-hidden" id="tt-link-map-btn">
-                        Link Map
-                    </button>
-                    <button class="tt-btn tt-btn-link" id="tt-more-trips-btn">More trips...</button>
+                    <button class="tt-btn tt-btn-link" id="tt-new-trip-btn">+ New Trip</button>
+                    <button class="tt-btn tt-btn-link" id="tt-more-trips-btn">More Trips →</button>
                 </div>
             </div>
         </div>

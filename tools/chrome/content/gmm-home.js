@@ -219,7 +219,7 @@
         badge.title = 'Linked to: ' + trip.title;
 
         var icon = document.createElement( 'img' );
-        icon.src = chrome.runtime.getURL( 'images/icon-on-primary-48.png' );
+        icon.src = chrome.runtime.getURL( 'images/icon-on-primary-16.png' );
         icon.className = BADGE_ICON_CLASS;
         icon.alt = '';
 

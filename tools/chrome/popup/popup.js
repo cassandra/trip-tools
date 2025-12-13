@@ -33,14 +33,9 @@ function listenForAuthStateChanges() {
 
 function applyDevModeStyles() {
     if ( TT.CONFIG.IS_DEVELOPMENT ) {
-        var header = document.querySelector( '.' + TT.DOM.CLASS_POPUP_HEADER );
-        if ( header ) {
-            header.classList.add( TT.DOM.CLASS_DEV_MODE );
-        }
-
-        var headerIcon = document.getElementById( TT.DOM.ID_HEADER_ICON );
-        if ( headerIcon ) {
-            headerIcon.src = TT.CONFIG.ICON_DEV_48;
+        var devBanner = document.getElementById( TT.DOM.ID_DEV_BANNER );
+        if ( devBanner ) {
+            devBanner.classList.remove( TT.DOM.CLASS_HIDDEN );
         }
     }
 }
@@ -179,11 +174,6 @@ function showQuickSettings() {
         requestAnimationFrame( function() {
             panel.classList.add( TT.DOM.CLASS_VISIBLE );
         });
-    }
-
-    var header = document.getElementById( TT.DOM.ID_QUICK_SETTINGS_HEADER );
-    if ( header && TT.CONFIG.IS_DEVELOPMENT ) {
-        header.classList.add( TT.DOM.CLASS_DEV_MODE );
     }
 }
 
@@ -795,12 +785,6 @@ function showMoreTripsPanel() {
         });
     }
 
-    // Apply dev mode styling to panel header
-    var header = panel.querySelector( '.tt-panel-header' );
-    if ( header && TT.CONFIG.IS_DEVELOPMENT ) {
-        header.classList.add( TT.DOM.CLASS_DEV_MODE );
-    }
-
     loadAllTrips();
 }
 
@@ -837,11 +821,6 @@ function showTripDetailsPanel( trip ) {
         });
     }
 
-    // Apply dev mode styling to panel header
-    var header = panel.querySelector( '.tt-panel-header' );
-    if ( header && TT.CONFIG.IS_DEVELOPMENT ) {
-        header.classList.add( TT.DOM.CLASS_DEV_MODE );
-    }
 }
 
 function hideTripDetailsPanel() {
@@ -1102,11 +1081,6 @@ function showCreateTripPanel() {
         });
     }
 
-    // Apply dev mode styling to panel header
-    var header = panel.querySelector( '.tt-panel-header' );
-    if ( header && TT.CONFIG.IS_DEVELOPMENT ) {
-        header.classList.add( TT.DOM.CLASS_DEV_MODE );
-    }
 }
 
 function hideCreateTripPanel() {
@@ -1412,14 +1386,14 @@ function checkGmmMapLinkStatus( mapId ) {
  * Shows/hides GMM-specific elements.
  */
 function updateUIForCurrentPage() {
-    // Show/hide "Link Map" button based on unlinked GMM page
-    var linkMapBtn = document.getElementById( TT.DOM.ID_LINK_MAP_BTN );
-    if ( linkMapBtn ) {
+    // Show/hide "Link Map" action container based on unlinked GMM page
+    var linkMapAction = document.getElementById( TT.DOM.ID_LINK_MAP_ACTION );
+    if ( linkMapAction ) {
         var showLinkMap = currentPageInfo &&
                           currentPageInfo.site === 'gmm' &&
                           currentGmmLinkStatus &&
                           !currentGmmLinkStatus.isLinked;
-        linkMapBtn.classList.toggle( TT.DOM.CLASS_HIDDEN, !showLinkMap );
+        linkMapAction.classList.toggle( TT.DOM.CLASS_HIDDEN, !showLinkMap );
     }
 
     // Show/hide link choice in create trip form
@@ -1586,12 +1560,6 @@ function showLinkMapPanel() {
         requestAnimationFrame( function() {
             panel.classList.add( TT.DOM.CLASS_VISIBLE );
         });
-    }
-
-    // Apply dev mode styling to panel header
-    var header = panel.querySelector( '.tt-panel-header' );
-    if ( header && TT.CONFIG.IS_DEVELOPMENT ) {
-        header.classList.add( TT.DOM.CLASS_DEV_MODE );
     }
 
     loadUnlinkedTrips();
