@@ -53,7 +53,10 @@
       "Bash(ls:*)",
       "Bash(. ~/.nvm/nvm.sh)",
       "WebFetch(domain:issuetracker.google.com)",
-      "WebFetch(domain:www.google.com)"
+      "WebFetch(domain:www.google.com)",
+      "Bash(npm run lint)",
+      "Bash(npx eslint:*)",
+      "Bash(nvm ls:*)"
     ],
     "deny": [],
     "ask": []

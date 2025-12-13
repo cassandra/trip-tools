@@ -405,6 +405,17 @@ function setupTripEventListeners() {
         unlinkMapBtn.addEventListener( 'click', handleUnlinkMap );
     }
 
+    // Unlinked trip action buttons
+    var createMapBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_CREATE_MAP_BTN );
+    if ( createMapBtn ) {
+        createMapBtn.addEventListener( 'click', handleCreateMapFromDetails );
+    }
+
+    var linkCurrentBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_LINK_CURRENT_BTN );
+    if ( linkCurrentBtn ) {
+        linkCurrentBtn.addEventListener( 'click', handleLinkCurrentMapFromDetails );
+    }
+
     // Create Trip panel listeners
     var createTripBackBtn = document.getElementById( TT.DOM.ID_CREATE_TRIP_BACK );
     if ( createTripBackBtn ) {
@@ -529,7 +540,6 @@ function loadTrips() {
     TTMessaging.send( TT.MESSAGE.TYPE_GET_TRIPS_WORKING_SET, {} )
         .then( function( response ) {
             if ( response && response.success ) {
-                addLocalDebugEntry( 'info', 'Pin data: uuid=' + response.data.pinnedTripUuid + ', timestamp=' + response.data.pinTimestamp );
                 renderTrips(
                     response.data.workingSet,
                     response.data.pinnedTripUuid,
@@ -697,8 +707,8 @@ function handleTripRowClick( trip ) {
         // Has map - open it
         openGmmMap( trip.gmm_map_id );
     } else {
-        // No map - show create dialog
-        showCreateMapDialog( trip );
+        // No map - show trip details with map options
+        showTripDetailsPanel( trip );
     }
 }
 
@@ -756,8 +766,7 @@ function switchToTrip( trip ) {
         .then( function( response ) {
             if ( response && response.success ) {
                 addLocalDebugEntry( 'info', 'Switched to trip: ' + trip.title );
-                // Re-render to show the switch
-                renderTrips( response.data.workingSet, response.data.activeTripUuid );
+                loadTrips();
                 // If trip has a linked GMM map, navigate to it
                 if ( trip.gmm_map_id ) {
                     openGmmMap( trip.gmm_map_id );
@@ -857,19 +866,51 @@ function populateTripDetails( trip ) {
     var uuidEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_UUID );
     var gmmIdEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_GMM_ID );
     var gmmRow = document.getElementById( TT.DOM.ID_TRIP_DETAILS_GMM_ROW );
-    var actionsEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_ACTIONS );
+    var linkedActionsEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_ACTIONS );
+    var unlinkedActionsEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_ACTIONS_UNLINKED );
+    var linkCurrentBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_LINK_CURRENT_BTN );
+    var linkHint = document.getElementById( TT.DOM.ID_TRIP_DETAILS_LINK_HINT );
 
     if ( titleEl ) titleEl.textContent = trip.title;
     if ( descEl ) descEl.textContent = trip.description || '';
     if ( uuidEl ) uuidEl.textContent = trip.uuid;
 
     if ( trip.gmm_map_id ) {
+        // LINKED: Show sync/unlink actions
         if ( gmmIdEl ) gmmIdEl.textContent = trip.gmm_map_id;
         if ( gmmRow ) gmmRow.classList.remove( TT.DOM.CLASS_HIDDEN );
-        if ( actionsEl ) actionsEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+        if ( linkedActionsEl ) linkedActionsEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+        if ( unlinkedActionsEl ) unlinkedActionsEl.classList.add( TT.DOM.CLASS_HIDDEN );
     } else {
+        // UNLINKED: Show create/link actions
         if ( gmmRow ) gmmRow.classList.add( TT.DOM.CLASS_HIDDEN );
-        if ( actionsEl ) actionsEl.classList.add( TT.DOM.CLASS_HIDDEN );
+        if ( linkedActionsEl ) linkedActionsEl.classList.add( TT.DOM.CLASS_HIDDEN );
+        if ( unlinkedActionsEl ) unlinkedActionsEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+
+        // Show "Link to Current Map" only if on unlinked GMM page
+        var canLinkCurrent = currentPageInfo &&
+                             currentPageInfo.site === 'gmm' &&
+                             currentPageInfo.mapId &&
+                             currentGmmLinkStatus &&
+                             !currentGmmLinkStatus.isLinked;
+
+        if ( linkCurrentBtn ) {
+            if ( canLinkCurrent ) {
+                linkCurrentBtn.classList.remove( TT.DOM.CLASS_HIDDEN );
+                linkCurrentBtn.textContent = 'Link to ' + ( currentPageInfo.mapTitle || 'Current Map' );
+            } else {
+                linkCurrentBtn.classList.add( TT.DOM.CLASS_HIDDEN );
+            }
+        }
+
+        // Show hint when not on linkable GMM page
+        if ( linkHint ) {
+            if ( canLinkCurrent ) {
+                linkHint.classList.add( TT.DOM.CLASS_HIDDEN );
+            } else {
+                linkHint.classList.remove( TT.DOM.CLASS_HIDDEN );
+            }
+        }
     }
 }
 
@@ -949,6 +990,98 @@ function handleUnlinkMap() {
     })
     .catch( function( error ) {
         addLocalDebugEntry( 'error', 'Unlink map error: ' + error.message );
+    });
+}
+
+/**
+ * Handle "Create Map" button click from trip details panel.
+ * Uses currentViewedTrip (the trip shown in details panel).
+ */
+function handleCreateMapFromDetails() {
+    var trip = currentViewedTrip;
+    if ( !trip ) return;
+
+    // Set currentActiveTrip for confirmCreateMap to use
+    currentActiveTrip = trip;
+
+    hideTripDetailsPanel();
+    showCreatingMapDialog( 'Creating map in Google My Maps...' );
+
+    TTMessaging.send( TT.MESSAGE.TYPE_GMM_CREATE_MAP, {
+        tripUuid: trip.uuid,
+        tripTitle: trip.title
+    })
+    .then( function( response ) {
+        hideCreatingMapDialog();
+
+        if ( response && response.success ) {
+            addLocalDebugEntry( 'info', 'Created GMM map: ' + response.data.mapId );
+
+            // Update local trip data
+            trip.gmm_map_id = response.data.mapId;
+            currentActiveTrip = trip;
+
+            // Refresh trip list to show new link status
+            loadTrips();
+
+            // Close popup - user is now on the new map
+            window.close();
+        } else {
+            var errorMsg = response && response.error ? response.error : 'Unknown error';
+            addLocalDebugEntry( 'error', 'Create map failed: ' + errorMsg );
+            // eslint-disable-next-line no-alert
+            alert( 'Failed to create map: ' + errorMsg );
+        }
+    })
+    .catch( function( error ) {
+        hideCreatingMapDialog();
+        addLocalDebugEntry( 'error', 'Create map error: ' + error.message );
+        // eslint-disable-next-line no-alert
+        alert( 'Failed to create map: ' + error.message );
+    });
+}
+
+/**
+ * Handle "Link to Current Map" button click from trip details panel.
+ * Links the currently viewed trip to the current GMM page.
+ * Uses currentViewedTrip (the trip shown in details panel).
+ */
+function handleLinkCurrentMapFromDetails() {
+    var trip = currentViewedTrip;
+    if ( !trip ) return;
+    if ( !currentPageInfo || !currentPageInfo.mapId ) return;
+
+    addLocalDebugEntry( 'info', 'Linking current map to trip: ' + trip.title );
+
+    TTMessaging.send( TT.MESSAGE.TYPE_GMM_LINK_MAP, {
+        tripUuid: trip.uuid,
+        gmmMapId: currentPageInfo.mapId
+    })
+    .then( function( response ) {
+        if ( response && response.success ) {
+            addLocalDebugEntry( 'info', 'Map linked to trip: ' + trip.title );
+            hideTripDetailsPanel();
+
+            // Update local state
+            currentGmmLinkStatus = { isLinked: true, tripUuid: trip.uuid };
+            updateUIForCurrentPage();
+
+            // Refresh trip list to show new link status
+            loadTrips();
+
+            // Show success panel with reload prompt
+            showLinkSuccessPanel( 'Trip Linked to Map' );
+        } else {
+            var errorMsg = response && response.error ? response.error : 'Unknown error';
+            addLocalDebugEntry( 'error', 'Link map failed: ' + errorMsg );
+            // eslint-disable-next-line no-alert
+            alert( 'Failed to link map: ' + errorMsg );
+        }
+    })
+    .catch( function( error ) {
+        addLocalDebugEntry( 'error', 'Link map error: ' + error.message );
+        // eslint-disable-next-line no-alert
+        alert( 'Failed to link map: ' + error.message );
     });
 }
 
@@ -1076,8 +1209,7 @@ function handleCreateTripSubmit() {
                 showLinkSuccessPanel( 'Trip Created for Map' );
             }
 
-            // Render updated trip list from response
-            renderTrips( response.data.workingSet, response.data.activeTripUuid );
+            loadTrips();
         } else {
             var errorMsg = response && response.error ? response.error : 'Failed to create trip';
             showCreateTripError( errorMsg );
@@ -1177,8 +1309,7 @@ function selectTripFromList( trip ) {
             if ( response && response.success ) {
                 addLocalDebugEntry( 'info', 'Selected trip from list: ' + trip.title );
                 hideMoreTripsPanel();
-                // Refresh main trip display
-                renderTrips( response.data.workingSet, response.data.activeTripUuid );
+                loadTrips();
                 // If trip has a linked GMM map, navigate to it
                 if ( trip.gmm_map_id ) {
                     openGmmMap( trip.gmm_map_id );
@@ -1214,7 +1345,13 @@ function detectCurrentPage() {
             currentPageInfo = pageInfo;
             if ( pageInfo && pageInfo.site === 'gmm' ) {
                 addLocalDebugEntry( 'info', 'On GMM page: ' + pageInfo.mapId );
-                return checkGmmMapLinkStatus( pageInfo.mapId );
+                // Fetch map info from content script to get map title
+                return fetchGmmMapInfo().then( function( mapInfo ) {
+                    if ( mapInfo && mapInfo.mapTitle ) {
+                        currentPageInfo.mapTitle = mapInfo.mapTitle;
+                    }
+                    return checkGmmMapLinkStatus( pageInfo.mapId );
+                });
             }
             return null;
         })
@@ -1228,6 +1365,23 @@ function detectCurrentPage() {
         })
         .catch( function( error ) {
             addLocalDebugEntry( 'error', 'Page detection error: ' + error.message );
+        });
+}
+
+/**
+ * Fetch GMM map info from content script.
+ * @returns {Promise<Object|null>} { mapId, url, mapTitle } or null on error.
+ */
+function fetchGmmMapInfo() {
+    return TTMessaging.send( TT.MESSAGE.TYPE_GMM_GET_MAP_INFO, {} )
+        .then( function( response ) {
+            if ( response && response.success ) {
+                return response.data;
+            }
+            return null;
+        })
+        .catch( function() {
+            return null;
         });
 }
 
@@ -1286,16 +1440,8 @@ function isOnUnlinkedGmmPage() {
  * Set up event listeners for GMM features.
  */
 function setupGmmEventListeners() {
-    // Create map dialog buttons
-    var cancelBtn = document.getElementById( TT.DOM.ID_CREATE_MAP_CANCEL );
-    if ( cancelBtn ) {
-        cancelBtn.addEventListener( 'click', hideCreateMapDialog );
-    }
-
-    var confirmBtn = document.getElementById( TT.DOM.ID_CREATE_MAP_CONFIRM );
-    if ( confirmBtn ) {
-        confirmBtn.addEventListener( 'click', confirmCreateMap );
-    }
+    // Currently no event listeners needed here
+    // (create map dialog was removed - now handled via trip details panel)
 }
 
 /**
@@ -1317,33 +1463,6 @@ function openGmmMap( mapId ) {
         .catch( function( error ) {
             addLocalDebugEntry( 'error', 'Open map error: ' + error.message );
         });
-}
-
-/**
- * Show the create map confirmation dialog.
- * @param {Object} trip - The trip to create a map for.
- */
-function showCreateMapDialog( trip ) {
-    var dialog = document.getElementById( TT.DOM.ID_CREATE_MAP_DIALOG );
-    var titleEl = document.getElementById( TT.DOM.ID_CREATE_MAP_TRIP_TITLE );
-
-    if ( titleEl ) {
-        titleEl.textContent = trip.title || 'Untitled Trip';
-    }
-
-    if ( dialog ) {
-        dialog.classList.remove( TT.DOM.CLASS_HIDDEN );
-    }
-}
-
-/**
- * Hide the create map confirmation dialog.
- */
-function hideCreateMapDialog() {
-    var dialog = document.getElementById( TT.DOM.ID_CREATE_MAP_DIALOG );
-    if ( dialog ) {
-        dialog.classList.add( TT.DOM.CLASS_HIDDEN );
-    }
 }
 
 /**
@@ -1371,46 +1490,6 @@ function hideCreatingMapDialog() {
     if ( dialog ) {
         dialog.classList.add( TT.DOM.CLASS_HIDDEN );
     }
-}
-
-/**
- * Confirm and start creating a new map.
- */
-function confirmCreateMap() {
-    if ( !currentActiveTrip ) {
-        return;
-    }
-
-    hideCreateMapDialog();
-    showCreatingMapDialog( 'Creating map in Google My Maps...' );
-
-    TTMessaging.send( TT.MESSAGE.TYPE_GMM_CREATE_MAP, {
-        tripUuid: currentActiveTrip.uuid,
-        tripTitle: currentActiveTrip.title
-    })
-    .then( function( response ) {
-        hideCreatingMapDialog();
-
-        if ( response && response.success ) {
-            addLocalDebugEntry( 'info', 'Created GMM map: ' + response.data.mapId );
-
-            // Update local trip data and UI
-            currentActiveTrip.gmm_map_id = response.data.mapId;
-            updateGmmStatus( currentActiveTrip );
-
-            // Close popup - user is now on the new map
-            window.close();
-        } else {
-            var errorMsg = response && response.error ? response.error : 'Unknown error';
-            addLocalDebugEntry( 'error', 'Create map failed: ' + errorMsg );
-            alert( 'Failed to create map: ' + errorMsg );
-        }
-    })
-    .catch( function( error ) {
-        hideCreatingMapDialog();
-        addLocalDebugEntry( 'error', 'Create map error: ' + error.message );
-        alert( 'Failed to create map: ' + error.message );
-    });
 }
 
 // =============================================================================
@@ -1642,7 +1721,7 @@ function handleLinkMapToTrip( trip ) {
             TTMessaging.send( TT.MESSAGE.TYPE_SET_ACTIVE_TRIP, { trip: updatedTrip } )
                 .then( function( setResponse ) {
                     if ( setResponse && setResponse.success ) {
-                        renderTrips( setResponse.data.workingSet, setResponse.data.activeTripUuid );
+                        loadTrips();
                     }
                 });
 

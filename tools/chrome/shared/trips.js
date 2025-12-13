@@ -252,6 +252,32 @@ TTTrips.setActiveTrip = function( trip ) {
 };
 
 /**
+ * Touch a trip to update its lastAccessedAt timestamp.
+ * Used when user takes an explicit action on a trip (create map, link map, etc.)
+ * to move it to top of working set.
+ * @param {string} tripUuid - The trip UUID.
+ * @returns {Promise<void>}
+ */
+TTTrips.touchTrip = function( tripUuid ) {
+    if ( !tripUuid ) {
+        return Promise.resolve();
+    }
+
+    return TTTrips.getWorkingSet()
+        .then( function( workingSet ) {
+            var trip = workingSet.find( function( t ) {
+                return t.uuid === tripUuid;
+            });
+
+            if ( trip ) {
+                // Trip is in working set - re-add to update timestamp
+                return TTTrips.addToWorkingSet( trip );
+            }
+            // Trip not in working set - nothing to touch
+        });
+};
+
+/**
  * Get the active trip object from working set.
  * @returns {Promise<Object|null>} The active trip or null.
  */

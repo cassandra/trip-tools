@@ -999,6 +999,41 @@ input:checked + .tt-toggle-slider:before {
     border-top: 1px solid var(--tt-line-color);
 }
 
+.tt-detail-actions.tt-hidden {
+    display: none;
+}
+
+/* Unlinked Trip Actions in Details Panel */
+.tt-detail-actions-unlinked {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--tt-line-color);
+}
+
+.tt-detail-actions-unlinked .tt-btn {
+    width: 100%;
+}
+
+.tt-detail-actions-unlinked.tt-hidden {
+    display: none;
+}
+
+/* Hint text for linking in details panel */
+.tt-detail-hint {
+    font-size: 12px;
+    color: var(--tt-muted-color);
+    margin: 4px 0 0 0;
+    font-style: italic;
+    text-align: center;
+}
+
+.tt-detail-hint.tt-hidden {
+    display: none;
+}
+
 /* =============================================================================
  * Create Trip Slide-in Panel
  * ============================================================================= */

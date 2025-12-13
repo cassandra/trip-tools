@@ -853,6 +853,10 @@ function handleGmmCreateMap( data ) {
             // Apply trip update to all internal data structures
             return TTTrips.applyTripUpdate( { uuid: tripUuid, gmm_map_id: mapId } )
                 .then( function() {
+                    // Touch trip to update lastAccessedAt (move to top of working set)
+                    return TTTrips.touchTrip( tripUuid );
+                })
+                .then( function() {
                     return TTMessaging.createResponse( true, {
                         mapId: mapId,
                         trip: updatedTrip
@@ -935,6 +939,10 @@ function handleGmmLinkMap( data ) {
             // Apply trip update to all internal data structures
             return TTTrips.applyTripUpdate( { uuid: tripUuid, gmm_map_id: mapId } )
                 .then( function() {
+                    // Touch trip to update lastAccessedAt (move to top of working set)
+                    return TTTrips.touchTrip( tripUuid );
+                })
+                .then( function() {
                     return TTMessaging.createResponse( true, {
                         trip: updatedTrip
                     });
@@ -966,6 +974,10 @@ function handleGmmUnlinkMap( data ) {
             // Apply trip update to all internal data structures
             // gmm_map_id: null explicitly clears the mapping
             return TTTrips.applyTripUpdate( { uuid: tripUuid, gmm_map_id: null } );
+        })
+        .then( function() {
+            // Touch trip to update lastAccessedAt (move to top of working set)
+            return TTTrips.touchTrip( tripUuid );
         })
         .then( function() {
             console.log( '[TT Background] Unlinked map from trip:', tripUuid );

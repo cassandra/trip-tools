@@ -172,6 +172,18 @@
                         Unlink Map
                     </button>
                 </div>
+                <!-- Actions for UNLINKED trips -->
+                <div class="tt-detail-actions-unlinked tt-hidden" id="tt-trip-details-actions-unlinked">
+                    <button class="tt-btn tt-btn-primary" id="tt-trip-details-create-map-btn">
+                        Create Map
+                    </button>
+                    <button class="tt-btn tt-btn-secondary tt-hidden" id="tt-trip-details-link-current-btn">
+                        Link to Current Map
+                    </button>
+                    <p class="tt-detail-hint tt-hidden" id="tt-trip-details-link-hint">
+                        Navigate to a map to link an existing map
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -248,21 +260,6 @@
                 <div class="tt-link-success-actions">
                     <button class="tt-btn tt-btn-primary" id="tt-link-success-reload">Reload Page</button>
                     <button class="tt-btn tt-btn-link" id="tt-link-success-dismiss">Dismiss</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Create Map Dialog Overlay -->
-        <div class="tt-dialog-overlay tt-hidden" id="tt-create-map-dialog">
-            <div class="tt-dialog">
-                <div class="tt-dialog-header">Create Map</div>
-                <div class="tt-dialog-content">
-                    <p>Create a Google My Maps map for <strong id="tt-create-map-trip-title"></strong>?</p>
-                    <p class="tt-dialog-hint">This will open Google My Maps and create a new map linked to this trip.</p>
-                </div>
-                <div class="tt-dialog-actions">
-                    <button class="tt-btn tt-btn-secondary" id="tt-create-map-cancel">Cancel</button>
-                    <button class="tt-btn tt-btn-primary" id="tt-create-map-confirm">Create Map</button>
                 </div>
             </div>
         </div>

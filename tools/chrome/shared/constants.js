@@ -207,11 +207,7 @@ TT.DOM = {
     ID_GMM_STATUS: 'tt-gmm-status',
     CLASS_GMM_LINKED: 'tt-gmm-linked',
     CLASS_GMM_UNLINKED: 'tt-gmm-unlinked',
-    // Create Map Dialog
-    ID_CREATE_MAP_DIALOG: 'tt-create-map-dialog',
-    ID_CREATE_MAP_TRIP_TITLE: 'tt-create-map-trip-title',
-    ID_CREATE_MAP_CANCEL: 'tt-create-map-cancel',
-    ID_CREATE_MAP_CONFIRM: 'tt-create-map-confirm',
+    // Creating Map Progress Dialog
     ID_CREATING_MAP_DIALOG: 'tt-creating-map-dialog',
     ID_CREATING_MAP_STATUS: 'tt-creating-map-status',
     // Trip Details Panel
@@ -226,6 +222,11 @@ TT.DOM = {
     ID_TRIP_DETAILS_ACTIONS: 'tt-trip-details-actions',
     ID_TRIP_DETAILS_SYNC_BTN: 'tt-trip-details-sync-btn',
     ID_TRIP_DETAILS_UNLINK_BTN: 'tt-trip-details-unlink-btn',
+    // Trip Details Panel - Unlinked Trip Actions
+    ID_TRIP_DETAILS_ACTIONS_UNLINKED: 'tt-trip-details-actions-unlinked',
+    ID_TRIP_DETAILS_CREATE_MAP_BTN: 'tt-trip-details-create-map-btn',
+    ID_TRIP_DETAILS_LINK_CURRENT_BTN: 'tt-trip-details-link-current-btn',
+    ID_TRIP_DETAILS_LINK_HINT: 'tt-trip-details-link-hint',
     // Create Trip Panel
     ID_CREATE_TRIP_PANEL: 'tt-create-trip-panel',
     ID_CREATE_TRIP_BACK: 'tt-create-trip-back-btn',

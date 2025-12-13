@@ -80,14 +80,18 @@ var TTGmmAdapter = TTSiteAdapter.create({
         /**
          * Get map info from current page URL.
          * Uses shared TTPageInfo parser for consistency.
-         * @returns {Object} { mapId, url }
+         * @returns {Object} { mapId, url, mapTitle }
          */
         getMapInfo: function() {
             var pageInfo = TTPageInfo.parseUrl( window.location.href );
             if ( pageInfo && pageInfo.site === 'gmm' ) {
-                return { mapId: pageInfo.mapId, url: window.location.href };
+                return {
+                    mapId: pageInfo.mapId,
+                    url: window.location.href,
+                    mapTitle: this.getMapTitle()
+                };
             }
-            return { mapId: null, url: window.location.href };
+            return { mapId: null, url: window.location.href, mapTitle: null };
         },
 
         /**
