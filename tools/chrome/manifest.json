@@ -73,6 +73,7 @@
                 "shared/text-utils.js",
                 "shared/site-adapter.js",
                 "shared/operation-mode.js",
+                "shared/page-info.js",
                 "adapters/gmm-selectors.js",
                 "adapters/gmm-adapter.js",
                 "content/gmm.js",

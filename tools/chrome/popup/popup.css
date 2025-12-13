@@ -913,3 +913,113 @@ input:checked + .tt-toggle-slider:before {
 .tt-btn-loading::after {
     content: '...';
 }
+
+/* =============================================================================
+ * Link Map Choice Buttons (Create Trip Form)
+ * ============================================================================= */
+
+.tt-link-map-choice {
+    background-color: var(--tt-primary-bg-light);
+    border: 1px solid var(--tt-line-color);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.tt-link-map-choice .tt-form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tt-text-color);
+    margin-bottom: 8px;
+}
+
+.tt-choice-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.tt-choice-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: 2px solid var(--tt-line-color);
+    background-color: var(--tt-white);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: var(--tt-font-family);
+    color: var(--tt-text-color);
+    text-align: center;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.tt-choice-btn:hover {
+    border-color: var(--tt-primary-color);
+    background-color: #f0f7f1;
+}
+
+.tt-choice-btn[data-selected="true"] {
+    border-color: var(--tt-primary-color);
+    background-color: #e8f4ea;
+    font-weight: 600;
+    color: var(--tt-primary-color);
+}
+
+.tt-form-hint {
+    font-size: 11px;
+    color: var(--tt-muted-color);
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+/* =============================================================================
+ * Link Map Slide-in Panel
+ * ============================================================================= */
+
+.tt-link-map-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--tt-white);
+    transform: translateX(100%);
+    transition: transform 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.tt-link-map-panel.tt-visible {
+    transform: translateX(0);
+}
+
+.tt-link-map-panel.tt-hidden {
+    display: flex;
+    transform: translateX(100%);
+}
+
+.tt-link-map-loading {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+.tt-link-map-error {
+    color: var(--tt-error-color);
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+.tt-link-map-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tt-link-map-empty {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+    text-align: center;
+}

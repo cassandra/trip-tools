@@ -75,6 +75,9 @@
                     <button class="tt-btn tt-btn-secondary tt-btn-new-trip" id="tt-new-trip-btn">
                         + New Trip
                     </button>
+                    <button class="tt-btn tt-btn-secondary tt-hidden" id="tt-link-map-btn">
+                        Link Map
+                    </button>
                     <button class="tt-btn tt-btn-link" id="tt-more-trips-btn">More trips...</button>
                 </div>
             </div>
@@ -205,6 +208,18 @@
                     <label for="tt-create-trip-description">Description</label>
                     <textarea id="tt-create-trip-description" class="tt-input tt-textarea" placeholder="Optional description" rows="3"></textarea>
                 </div>
+                <div class="tt-form-group tt-link-map-choice tt-hidden" id="tt-create-trip-link-choice">
+                    <label class="tt-form-label">Link to current map?</label>
+                    <div class="tt-choice-buttons">
+                        <button type="button" class="tt-choice-btn" id="tt-create-trip-link-no" data-selected="true">
+                            No, create trip only
+                        </button>
+                        <button type="button" class="tt-choice-btn" id="tt-create-trip-link-yes">
+                            Yes, link this map
+                        </button>
+                    </div>
+                    <p class="tt-form-hint">Linking will sync locations from the map to your trip.</p>
+                </div>
                 <div class="tt-error-message tt-hidden" id="tt-create-trip-error"></div>
                 <div class="tt-form-actions">
                     <button class="tt-btn tt-btn-secondary" id="tt-create-trip-cancel-btn">Cancel</button>
@@ -212,7 +227,27 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- Link Map Slide-in Panel -->
+        <div class="tt-link-map-panel tt-hidden" id="tt-link-map-panel">
+            <div class="tt-panel-header">
+                <button class="tt-back-btn" id="tt-link-map-back" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>Link Map to Trip</span>
+            </div>
+            <div class="tt-panel-content">
+                <div class="tt-link-map-loading tt-hidden" id="tt-link-map-loading">Loading trips...</div>
+                <div class="tt-link-map-error tt-error tt-hidden" id="tt-link-map-error"></div>
+                <div class="tt-link-map-list" id="tt-link-map-list"></div>
+                <div class="tt-link-map-empty tt-hidden" id="tt-link-map-empty">
+                    All your trips already have maps linked.
+                </div>
+            </div>
+        </div>
+
         <!-- Create Map Dialog Overlay -->
         <div class="tt-dialog-overlay tt-hidden" id="tt-create-map-dialog">
             <div class="tt-dialog">
@@ -245,6 +280,7 @@
     <script src="../shared/constants.js"></script>
     <script src="../shared/storage.js"></script>
     <script src="../shared/messaging.js"></script>
+    <script src="../shared/page-info.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

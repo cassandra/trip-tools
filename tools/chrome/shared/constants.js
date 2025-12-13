@@ -218,7 +218,19 @@ TT.DOM = {
     ID_CREATE_TRIP_DESC_INPUT: 'tt-create-trip-description',
     ID_CREATE_TRIP_ERROR: 'tt-create-trip-error',
     ID_CREATE_TRIP_CANCEL: 'tt-create-trip-cancel-btn',
-    ID_CREATE_TRIP_SUBMIT: 'tt-create-trip-submit-btn'
+    ID_CREATE_TRIP_SUBMIT: 'tt-create-trip-submit-btn',
+    // Create Trip - Link Map Choice
+    ID_CREATE_TRIP_LINK_CHOICE: 'tt-create-trip-link-choice',
+    ID_CREATE_TRIP_LINK_NO: 'tt-create-trip-link-no',
+    ID_CREATE_TRIP_LINK_YES: 'tt-create-trip-link-yes',
+    // Link Map Button and Panel
+    ID_LINK_MAP_BTN: 'tt-link-map-btn',
+    ID_LINK_MAP_PANEL: 'tt-link-map-panel',
+    ID_LINK_MAP_BACK: 'tt-link-map-back',
+    ID_LINK_MAP_LOADING: 'tt-link-map-loading',
+    ID_LINK_MAP_ERROR: 'tt-link-map-error',
+    ID_LINK_MAP_LIST: 'tt-link-map-list',
+    ID_LINK_MAP_EMPTY: 'tt-link-map-empty'
 };
 
 TT.URL = {

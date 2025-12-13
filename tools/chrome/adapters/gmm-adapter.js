@@ -79,16 +79,15 @@ var TTGmmAdapter = TTSiteAdapter.create({
 
         /**
          * Get map info from current page URL.
+         * Uses shared TTPageInfo parser for consistency.
          * @returns {Object} { mapId, url }
          */
         getMapInfo: function() {
-            var url = new URL( window.location.href );
-            var mapId = url.searchParams.get( 'mid' );
-
-            return {
-                mapId: mapId,
-                url: window.location.href
-            };
+            var pageInfo = TTPageInfo.parseUrl( window.location.href );
+            if ( pageInfo && pageInfo.site === 'gmm' ) {
+                return { mapId: pageInfo.mapId, url: window.location.href };
+            }
+            return { mapId: null, url: window.location.href };
         },
 
         /**
