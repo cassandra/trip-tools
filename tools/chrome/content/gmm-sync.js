@@ -1862,90 +1862,6 @@
     }
 
     /**
-     * Show simple sync dialog for one-side-empty case (initial sync).
-     * One side is completely empty, so this is clearly a first-time sync.
-     * Only offers Sync/Cancel since there are no decisions to make.
-     * @param {Object} data - Sync request data (tripUuid, tripTitle, etc.).
-     * @param {Object} diff - Diff results from compareLocations.
-     * @param {Object} category - Result from categorizeSyncResults().
-     * @returns {Promise<Object|null>} Sync decisions or null if cancelled.
-     */
-    function showOneSideEmptySyncDialog( data, diff, category ) {
-        return new Promise( function( resolve ) {
-            // Remove any existing dialog
-            var existingDialog = document.querySelector( '.' + TT_SYNC_DIALOG_CLASS );
-            if ( existingDialog ) {
-                existingDialog.remove();
-            }
-
-            var dialog = TTDom.createElement( 'div', {
-                className: TT_SYNC_DIALOG_CLASS
-            });
-
-            // Header
-            var header = TTDom.createElement( 'div', {
-                className: 'tt-sync-header',
-                text: 'Sync Locations'
-            });
-            dialog.appendChild( header );
-
-            // Trip info
-            var tripInfo = TTDom.createElement( 'div', {
-                className: 'tt-sync-trip-info',
-                text: 'Trip: ' + ( data.tripTitle || 'Unknown' )
-            });
-            dialog.appendChild( tripInfo );
-
-            // Summary message
-            var summarySection = TTDom.createElement( 'div', {
-                className: 'tt-sync-summary-section'
-            });
-
-            var summaryText = TTDom.createElement( 'div', {
-                className: 'tt-sync-summary-text',
-                text: category.summary
-            });
-            summarySection.appendChild( summaryText );
-
-            var hintText = TTDom.createElement( 'div', {
-                className: 'tt-sync-summary-hint',
-                text: 'These locations will be synced to your trip.'
-            });
-            summarySection.appendChild( hintText );
-
-            dialog.appendChild( summarySection );
-
-            // Action buttons
-            var buttonRow = TTDom.createElement( 'div', {
-                className: 'tt-sync-button-row'
-            });
-
-            var cancelBtn = TTDom.createElement( 'button', {
-                className: 'tt-sync-btn tt-sync-btn-secondary',
-                text: 'Cancel'
-            });
-            cancelBtn.addEventListener( 'click', function() {
-                dialog.remove();
-                resolve( null );
-            });
-            buttonRow.appendChild( cancelBtn );
-
-            var syncBtn = TTDom.createElement( 'button', {
-                className: 'tt-sync-btn tt-sync-btn-primary',
-                text: 'Sync'
-            });
-            syncBtn.addEventListener( 'click', function() {
-                dialog.remove();
-                resolve( buildAcceptMatchesDecisions( diff ) );
-            });
-            buttonRow.appendChild( syncBtn );
-
-            dialog.appendChild( buttonRow );
-            document.body.appendChild( dialog );
-        });
-    }
-
-    /**
      * Route to appropriate sync dialog based on sync result category.
      * Unified entry point for sync UI that handles all branching logic.
      * @param {Object} data - Sync request data (tripUuid, tripTitle, etc.).
@@ -1961,24 +1877,13 @@
             return Promise.resolve( { cancelled: true, reason: 'no_changes' } );
         }
 
-        // One side empty - initial sync, simple Sync/Cancel dialog
-        if ( category.type === 'one_side_empty' ) {
-            return showOneSideEmptySyncDialog( data, diff, category )
-                .then( function( decisions ) {
-                    if ( decisions === null ) {
-                        return { cancelled: true };
-                    }
-                    return { decisions: decisions };
-                });
-        }
-
-        // Both no_conflicts and potential_conflicts show choice dialog
+        // All non-zero cases show choice dialog with Review Line-by-Line option
         return showThreeChoiceSyncDialog( data, diff, category )
             .then( function( choice ) {
                 if ( choice === 'cancel' ) {
                     return { cancelled: true };
                 }
-                if ( choice === 'full_sync' ) {
+                if ( choice === 'reject_matches' ) {
                     // Reject all suggested matches - treat as distinct items
                     return { decisions: buildFullSyncDecisions( diff ) };
                 }
@@ -1992,16 +1897,16 @@
     }
 
     /**
-     * Show sync choice dialog for no_conflicts and potential_conflicts cases.
-     * Both sides have locations, so user may want to review individual items.
+     * Show sync choice dialog for all non-zero sync cases.
+     * Always offers Review Line-by-Line option.
      *
-     * When no suggested matches: Sync All / Review / Cancel
-     * When suggested matches exist: Full Sync / Accept Matches / Review / Cancel
+     * When no suggested matches: Sync All / Review Line-by-Line / Cancel
+     * When suggested matches exist: Accept Matches / Reject Matches / Review Line-by-Line / Cancel
      *
      * @param {Object} data - Sync request data (tripUuid, tripTitle, etc.).
      * @param {Object} diff - Diff results from compareLocations.
      * @param {Object} category - Result from categorizeSyncResults().
-     * @returns {Promise<string>} 'full_sync', 'accept_matches', 'review', or 'cancel'.
+     * @returns {Promise<string>} 'accept_matches', 'reject_matches', 'review', or 'cancel'.
      */
     function showThreeChoiceSyncDialog( data, diff, category ) {
         return new Promise( function( resolve ) {
@@ -2050,26 +1955,26 @@
             });
 
             if ( hasMatches ) {
-                // When there are suggested matches, offer two sync options
-                var fullSyncBtn = TTDom.createElement( 'button', {
-                    className: 'tt-sync-btn tt-sync-btn-primary',
-                    text: 'Full Sync'
-                });
-                fullSyncBtn.addEventListener( 'click', function() {
-                    dialog.remove();
-                    resolve( 'full_sync' );
-                });
-                buttonColumn.appendChild( fullSyncBtn );
-
+                // When there are suggested matches, offer Accept/Reject pair
                 var acceptMatchesBtn = TTDom.createElement( 'button', {
                     className: 'tt-sync-btn tt-sync-btn-primary',
-                    text: 'Accept Matches'
+                    text: 'Accept Matches and Sync'
                 });
                 acceptMatchesBtn.addEventListener( 'click', function() {
                     dialog.remove();
                     resolve( 'accept_matches' );
                 });
                 buttonColumn.appendChild( acceptMatchesBtn );
+
+                var rejectMatchesBtn = TTDom.createElement( 'button', {
+                    className: 'tt-sync-btn tt-sync-btn-primary',
+                    text: 'Sync All without Matching'
+                });
+                rejectMatchesBtn.addEventListener( 'click', function() {
+                    dialog.remove();
+                    resolve( 'reject_matches' );
+                });
+                buttonColumn.appendChild( rejectMatchesBtn );
             } else {
                 // No matches - simple Sync All
                 var syncAllBtn = TTDom.createElement( 'button', {
@@ -2085,7 +1990,7 @@
 
             var reviewBtn = TTDom.createElement( 'button', {
                 className: 'tt-sync-btn tt-sync-btn-secondary',
-                text: 'Review Line-by-Line'
+                text: 'Review Before Sync'
             });
             reviewBtn.addEventListener( 'click', function() {
                 dialog.remove();
