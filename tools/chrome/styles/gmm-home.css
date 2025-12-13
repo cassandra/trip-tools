@@ -1,0 +1,34 @@
+/*
+ * Trip Tools Chrome Extension - GMM Home Page Styles
+ * Badge for maps linked to Trip Tools.
+ */
+
+.tt-linked-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    background-color: #177072;
+    color: #fff;
+
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+
+    padding: 4px 8px;
+    border-radius: 4px;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    pointer-events: none;
+}
+
+.tt-linked-badge-icon {
+    width: 14px;
+    height: 14px;
+}

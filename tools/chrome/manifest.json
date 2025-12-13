@@ -84,11 +84,18 @@
         {
             "matches": [
                 "https://www.google.com/maps/d/",
-                "https://www.google.com/maps/d/u/*/"
+                "https://www.google.com/maps/d/?*",
+                "https://www.google.com/maps/d/u/*/",
+                "https://www.google.com/maps/d/u/*/?*"
             ],
             "exclude_matches": [
                 "https://www.google.com/maps/d/edit*",
-                "https://www.google.com/maps/d/u/*/edit*"
+                "https://www.google.com/maps/d/u/*/edit*",
+                "https://www.google.com/maps/d/viewer*",
+                "https://www.google.com/maps/d/u/*/viewer*"
+            ],
+            "css": [
+                "styles/gmm-home.css"
             ],
             "js": [
                 "shared/constants.js",
