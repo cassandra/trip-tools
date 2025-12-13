@@ -23,3 +23,16 @@ else
     echo "Please create it first: make env-build-dev"
     return 1
 fi
+
+# Set up Node.js via nvm (for E2E testing)
+if [ -f "$HOME/.nvm/nvm.sh" ]; then
+    . "$HOME/.nvm/nvm.sh"
+    if [ -f "testing/e2e/.nvmrc" ]; then
+        nvm use --silent > /dev/null 2>&1
+        echo "✓ Node.js $(node --version) activated via nvm"
+    fi
+elif command -v node > /dev/null 2>&1; then
+    echo "✓ Node.js $(node --version) available (not using nvm)"
+else
+    echo "⚠ Node.js not found (optional, needed for E2E testing)"
+fi

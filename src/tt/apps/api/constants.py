@@ -32,12 +32,73 @@ class APIFields:
     # -------------------------------------------------------------------------
     LOOKUP_KEY = 'lookup_key'
     TOKEN = 'token'
+    TOKEN_TYPE = 'token_type'
     LAST_USED_AT = 'last_used_at'
+
+    # -------------------------------------------------------------------------
+    # Trips
+    # -------------------------------------------------------------------------
+    DESCRIPTION = 'description'
+    TRIP_STATUS = 'trip_status'
+    VERSION = 'version'
+    GMM_MAP_ID = 'gmm_map_id'
 
     # -------------------------------------------------------------------------
     # Locations
     # -------------------------------------------------------------------------
     LATITUDE = 'latitude'
     LONGITUDE = 'longitude'
+    ELEVATION_FT = 'elevation_ft'
     SUBCATEGORY_SLUG = 'subcategory_slug'
     TRIP_UUID = 'trip_uuid'
+    GMM_ID = 'gmm_id'
+    MODIFIED_DATETIME = 'modified_datetime'
+    CONTACT_INFO = 'contact_info'
+    RATING = 'rating'
+    DESIRABILITY = 'desirability'
+    ADVANCED_BOOKING = 'advanced_booking'
+    OPEN_DAYS_TIMES = 'open_days_times'
+    LOCATION_NOTES = 'location_notes'
+
+    # -------------------------------------------------------------------------
+    # Location Notes
+    # -------------------------------------------------------------------------
+    TEXT = 'text'
+    SOURCE_LABEL = 'source_label'
+    SOURCE_URL = 'source_url'
+
+    # -------------------------------------------------------------------------
+    # Client Config / Location Categories
+    # -------------------------------------------------------------------------
+    ID = 'id'
+    SLUG = 'slug'
+    ICON_CODE = 'icon_code'
+    COLOR_CODE = 'color_code'
+    SUBCATEGORIES = 'subcategories'
+    LOCATION_CATEGORIES = 'location_categories'
+    CONFIG_VERSION = 'config_version'
+
+    # -------------------------------------------------------------------------
+    # Contact Info
+    # -------------------------------------------------------------------------
+    CONTACT_TYPE = 'contact_type'
+    IS_PRIMARY = 'is_primary'
+
+    # -------------------------------------------------------------------------
+    # Enum type definitions (for client config)
+    # -------------------------------------------------------------------------
+    SERVER_VERSION = 'server_version'
+    DESIRABILITY_TYPE = 'desirability_type'
+    ADVANCED_BOOKING_TYPE = 'advanced_booking_type'
+    VALUE = 'value'
+    LABEL = 'label'
+
+    # -------------------------------------------------------------------------
+    # Sync envelope
+    # -------------------------------------------------------------------------
+    SYNC_AS_OF = 'as_of'
+    SYNC_UPDATES = 'updates'
+    SYNC_DELETED = 'deleted'
+    SYNC_VERSIONS = 'versions'  # Location sync uses version-only pattern
+    SYNC_TRIP = 'trip'
+    SYNC_LOCATION = 'location'

@@ -1,0 +1,36 @@
+{% extends "modals/action_2_with_cancel.html" %}
+{% load icons %}
+
+{% block title_text %}Create New API Key{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'user_api_token_create' %}" data-async="modal">
+  {% csrf_token %}
+{% endblock %}
+
+{% block body %}
+{% if form.non_field_errors %}
+<div class="alert alert-danger" role="alert">
+  {{ form.non_field_errors }}
+</div>
+{% endif %}
+
+<div class="form-group">
+  <label for="{{ form.name.id_for_label }}" class="font-weight-bold">Name <span class="text-danger">*</span></label>
+  {{ form.name }}
+  {% if form.name.errors %}
+  <div class="text-danger small mt-1">
+    {{ form.name.errors }}
+  </div>
+  {% endif %}
+  <small class="form-text text-muted">{{ form.name.help_text }}</small>
+</div>
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-primary">{% icon "plus" size="lg" %} Create Key</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

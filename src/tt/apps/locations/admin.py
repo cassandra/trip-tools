@@ -1,8 +1,16 @@
 from django.contrib import admin
+from django.contrib.contenttypes.admin import GenericTabularInline
 
 from tt.apps.common.admin_utils import admin_link
+from tt.apps.contacts.models import ContactInfo
 
 from . import models
+
+
+class ContactInfoInline(GenericTabularInline):
+    model = ContactInfo
+    extra = 0
+    fields = ('contact_type', 'value', 'label', 'is_primary')
 
 
 class LocationNoteInline(admin.TabularInline):
@@ -64,8 +72,9 @@ class LocationAdmin(admin.ModelAdmin):
 
     list_display = (
         'title',
-        'user_link',
         'trip_link',
+        'gmm_id',
+        'version',
         'subcategory_link',
         'rating',
         'desirability',
@@ -75,12 +84,8 @@ class LocationAdmin(admin.ModelAdmin):
 
     list_filter = ('desirability', 'advanced_booking', 'subcategory__category')
     search_fields = ['title', 'user__email', 'trip__title']
-    readonly_fields = ('created_datetime', 'modified_datetime')
-    inlines = [LocationNoteInline]
-
-    @admin_link('user', 'User')
-    def user_link(self, user):
-        return user.email
+    readonly_fields = ( 'trip', 'created_datetime', 'modified_datetime')
+    inlines = [LocationNoteInline, ContactInfoInline]
 
     @admin_link('trip', 'Trip')
     def trip_link(self, trip):

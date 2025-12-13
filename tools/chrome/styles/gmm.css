@@ -1,0 +1,1168 @@
+/*
+ * Trip Tools Chrome Extension - Google My Maps Styles
+ * Styles for GMM content script UI elements.
+ */
+
+/* =============================================================================
+ * Category Buttons
+ * ============================================================================= */
+
+.tt-category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #dadce0;
+}
+
+.tt-gmm-btn {
+    padding: 6px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    background: #fff;
+    color: #1a73e8;
+    font-size: 13px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.tt-gmm-btn:hover {
+    background: #f1f3f4;
+    border-color: #1a73e8;
+}
+
+.tt-gmm-btn:active {
+    background: #e8f0fe;
+}
+
+.tt-category-btn {
+    background: #e8f0fe;
+    border-color: #1a73e8;
+}
+
+.tt-category-btn:hover {
+    background: #d2e3fc;
+}
+
+/* =============================================================================
+ * Subcategory Picker
+ * ============================================================================= */
+
+.tt-subcategory-picker {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 16px;
+    z-index: 10000;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.tt-picker-header {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 12px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-picker-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tt-picker-buttons .tt-gmm-btn {
+    flex: 0 0 calc(50% - 4px);
+    text-align: center;
+}
+
+.tt-cancel-btn {
+    width: 100%;
+    background: #f1f3f4;
+    color: #5f6368;
+    border-color: #dadce0;
+}
+
+.tt-cancel-btn:hover {
+    background: #e8eaed;
+    border-color: #dadce0;
+}
+
+/* =============================================================================
+ * Custom Attributes UI
+ * ============================================================================= */
+
+/* Container for custom attributes in info dialog */
+.tt-custom-attrs {
+    margin: 12px 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e8eaed;
+}
+
+.tt-attributes-container {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #dadce0;
+}
+
+.tt-attribute-group {
+    margin-bottom: 12px;
+}
+
+.tt-attribute-group:last-child {
+    margin-bottom: 0;
+}
+
+.tt-attribute-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: #5f6368;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-attribute-value {
+    display: block;
+    font-size: 13px;
+    color: #202124;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-attribute-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    background: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.tt-attribute-select:hover {
+    border-color: #1a73e8;
+}
+
+.tt-attribute-textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: Roboto, Arial, sans-serif;
+    resize: vertical;
+    min-height: 60px;
+    box-sizing: border-box;
+}
+
+.tt-attribute-select:focus,
+.tt-attribute-textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* =============================================================================
+ * Loading/Status Indicators
+ * ============================================================================= */
+
+.tt-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #5f6368;
+    font-size: 13px;
+}
+
+.tt-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #dadce0;
+    border-top-color: #1a73e8;
+    border-radius: 50%;
+    animation: tt-spin 0.8s linear infinite;
+}
+
+@keyframes tt-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.tt-error {
+    color: #d93025;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.tt-success {
+    color: #1e8e3e;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* =============================================================================
+ * Location Notes UI
+ * ============================================================================= */
+
+.tt-notes-container {
+    margin-top: 12px;
+}
+
+/* Note card for displaying notes */
+.tt-note-card {
+    position: relative;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+.tt-note-card:last-of-type {
+    margin-bottom: 0;
+}
+
+/* View mode: note text */
+.tt-note-text-display {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #202124;
+    font-family: Roboto, Arial, sans-serif;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* View mode: source line */
+.tt-note-source-display {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #5f6368;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-note-source-display a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.tt-note-source-display a:hover {
+    text-decoration: underline;
+}
+
+/* =============================================================================
+ * Note Selector UI (Edit Mode)
+ * ============================================================================= */
+
+/* Note Selector Container */
+.tt-note-selector {
+    margin: 8px 0;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+}
+
+/* Radio Item Row */
+.tt-note-radio-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e8eaed;
+    background: #fff;
+    cursor: pointer;
+}
+
+.tt-note-radio-item:last-child {
+    border-bottom: none;
+}
+
+.tt-note-radio-item:hover {
+    background: #f8f9fa;
+}
+
+/* Label wrapper (contains radio + label text, clickable) */
+.tt-note-radio-wrapper {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+/* Radio Input */
+.tt-note-radio {
+    margin: 0 10px 0 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Label text */
+.tt-note-radio-label {
+    flex: 1;
+    font-size: 13px;
+    color: #202124;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+/* New Note styling */
+.tt-note-new .tt-note-radio-label {
+    color: #1a73e8;
+    font-style: italic;
+}
+
+/* Delete Button in radio item */
+.tt-note-radio-item .tt-note-delete {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin-left: 8px;
+    border: none;
+    background: transparent;
+    color: #5f6368;
+    font-size: 16px;
+    line-height: 24px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tt-note-radio-item .tt-note-delete:hover {
+    background: #fce8e6;
+    color: #d93025;
+}
+
+/* =============================================================================
+ * Sync Dialog
+ * ============================================================================= */
+
+.tt-sync-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    z-index: 10000;
+    min-width: 320px;
+    max-width: 450px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.tt-sync-header {
+    font-size: 18px;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 8px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-trip-info {
+    font-size: 13px;
+    color: #5f6368;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e8eaed;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-auto-check-message {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: #fef7e0;
+    border-left: 3px solid #f9ab00;
+    font-size: 13px;
+    color: #5f6368;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-section {
+    margin-bottom: 16px;
+}
+
+.tt-sync-section-header {
+    font-size: 12px;
+    font-weight: 500;
+    color: #5f6368;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-diff-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-diff-label {
+    color: #5f6368;
+}
+
+.tt-sync-diff-value {
+    color: #202124;
+    font-weight: 500;
+}
+
+.tt-sync-row-success .tt-sync-diff-value {
+    color: #1e8e3e;
+}
+
+.tt-sync-placeholder {
+    font-size: 13px;
+    color: #80868b;
+    font-style: italic;
+    padding: 8px 0;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8eaed;
+}
+
+.tt-sync-in-sync-message {
+    font-size: 13px;
+    color: #1e8e3e;
+    padding: 8px 0;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+/* =============================================================================
+ * Sync Location List
+ * ============================================================================= */
+
+.tt-sync-location-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 8px 0;
+    border: 1px solid #e8eaed;
+    border-radius: 6px;
+}
+
+.tt-sync-location-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e8eaed;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-location-item:last-child {
+    border-bottom: none;
+}
+
+.tt-sync-location-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.tt-sync-location-title {
+    font-size: 13px;
+    color: #202124;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tt-sync-location-source {
+    font-size: 11px;
+    color: #80868b;
+    margin-top: 2px;
+}
+
+.tt-sync-location-source-server {
+    color: #1a73e8;
+}
+
+.tt-sync-location-source-gmm {
+    color: #ea8600;
+}
+
+.tt-sync-location-source-match {
+    color: #9334e6;
+    font-style: italic;
+}
+
+/* Suggested matches section */
+.tt-sync-section-suggested {
+    border-left: 3px solid #9334e6;
+    padding-left: 12px;
+}
+
+.tt-sync-toggle {
+    display: flex;
+    gap: 4px;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.tt-sync-toggle-btn {
+    padding: 4px 10px;
+    border: 1px solid #dadce0;
+    background: #fff;
+    font-size: 11px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tt-sync-toggle-btn:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.tt-sync-toggle-btn:last-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.tt-sync-toggle-btn.tt-toggle-keep,
+.tt-sync-toggle-btn.tt-toggle-link {
+    border-color: #1e8e3e;
+    background: #e6f4ea;
+    color: #1e8e3e;
+}
+
+.tt-sync-toggle-btn.tt-toggle-discard,
+.tt-sync-toggle-btn.tt-toggle-dont-link {
+    border-color: #d93025;
+    background: #fce8e6;
+    color: #d93025;
+}
+
+.tt-sync-toggle-btn:not(.tt-toggle-keep):not(.tt-toggle-discard):not(.tt-toggle-link):not(.tt-toggle-dont-link):hover {
+    background: #f1f3f4;
+}
+
+.tt-sync-summary {
+    font-size: 12px;
+    color: #5f6368;
+    padding: 8px 0;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-summary-count {
+    font-weight: 500;
+    color: #1e8e3e;
+}
+
+/* =============================================================================
+ * Three-Tier Sync Results
+ * ============================================================================= */
+
+/* Section headers with colored indicators */
+.tt-sync-header-success {
+    color: #1e8e3e;
+}
+
+.tt-sync-header-warning {
+    color: #ea8600;
+}
+
+.tt-sync-header-error {
+    color: #d93025;
+}
+
+/* Section styling with left border */
+.tt-sync-section-success {
+    border-left: 3px solid #1e8e3e;
+    padding-left: 12px;
+}
+
+.tt-sync-section-warning {
+    border-left: 3px solid #ea8600;
+    padding-left: 12px;
+}
+
+.tt-sync-section-error {
+    border-left: 3px solid #d93025;
+    padding-left: 12px;
+}
+
+/* Result row layout */
+.tt-sync-result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e8eaed;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-result-row:last-child {
+    border-bottom: none;
+}
+
+.tt-sync-result-title {
+    flex: 1;
+    font-size: 13px;
+    color: #202124;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.tt-sync-result-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+/* Status labels */
+.tt-sync-status {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tt-sync-status-matched {
+    color: #1e8e3e;
+}
+
+.tt-sync-status-added {
+    color: #1a73e8;
+}
+
+.tt-sync-status-removed {
+    color: #80868b;
+}
+
+.tt-sync-status-linked {
+    color: #1e8e3e;
+}
+
+/* Action buttons */
+.tt-sync-action-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tt-sync-action-btn:hover:not(:disabled) {
+    background: #f1f3f4;
+    border-color: #1a73e8;
+}
+
+.tt-sync-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Result item (for warning/failure with messages) */
+.tt-sync-result-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #e8eaed;
+}
+
+.tt-sync-result-item:last-child {
+    border-bottom: none;
+}
+
+.tt-sync-result-item .tt-sync-result-row {
+    padding: 0 12px 4px 12px;
+    border-bottom: none;
+}
+
+/* Warning/error messages below items */
+.tt-sync-item-message {
+    font-size: 11px;
+    padding: 2px 12px 2px 24px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-item-message-warning {
+    color: #ea8600;
+}
+
+.tt-sync-item-message-error {
+    color: #d93025;
+}
+
+.tt-sync-item-matched {
+    color: #5f6368;
+    font-style: italic;
+}
+
+/* Error text in error section */
+.tt-sync-result-error-text {
+    font-size: 11px;
+    color: #d93025;
+    margin-left: 8px;
+}
+
+/* =============================================================================
+ * One-Sided and High-Volume Sync Dialog
+ * ============================================================================= */
+
+.tt-sync-summary-section {
+    padding: 16px 0;
+    text-align: center;
+}
+
+.tt-sync-summary-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 8px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-summary-hint {
+    font-size: 13px;
+    color: #5f6368;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+/* Button row (horizontal) for two buttons */
+.tt-sync-button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8eaed;
+}
+
+/* Button column (vertical) for three buttons */
+.tt-sync-button-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8eaed;
+}
+
+/* Sync dialog buttons */
+.tt-sync-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tt-sync-btn-primary {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+}
+
+.tt-sync-btn-primary:hover {
+    background: #1765cc;
+}
+
+.tt-sync-btn-secondary {
+    background: #fff;
+    color: #1a73e8;
+    border: 1px solid #dadce0;
+}
+
+.tt-sync-btn-secondary:hover {
+    background: #f1f3f4;
+    border-color: #1a73e8;
+}
+
+.tt-sync-btn-link {
+    background: none;
+    border: none;
+    color: #5f6368;
+    padding: 8px;
+}
+
+.tt-sync-btn-link:hover {
+    color: #202124;
+    text-decoration: underline;
+}
+
+/* =============================================================================
+ * Operation Mode Indicator
+ * ============================================================================= */
+
+/* Border around entire viewport when operation mode is active */
+.tt-operation-active {
+    outline: 4px solid #ea8600 !important;
+    outline-offset: -4px;
+}
+
+/* Fixed banner at top of viewport */
+#tt-operation-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: #ea8600;
+    color: #fff;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tt-operation-message {
+    flex: 0 0 auto;
+}
+
+.tt-operation-stop-btn {
+    padding: 6px 16px;
+    border: 2px solid #fff;
+    border-radius: 4px;
+    background: transparent;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tt-operation-stop-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.tt-operation-stop-btn:active {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Partial banner - right 25% only (for semi-automated modes like FIX) */
+#tt-operation-banner.tt-operation-banner-partial {
+    left: auto;
+    right: 0;
+    width: 25%;
+    min-width: 280px;
+    flex-direction: column;
+    padding: 12px 16px;
+    gap: 8px;
+    text-align: center;
+}
+
+/* Mode-specific styling */
+#tt-operation-banner.tt-operation-gmm-sync-execute { }
+#tt-operation-banner.tt-operation-gmm-sync-undo { }
+#tt-operation-banner.tt-operation-gmm-sync-fix {
+    background: #1a73e8;
+}
+
+/* Stopped notice in results dialog */
+.tt-sync-stopped-notice {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: #fef7e0;
+    border: 1px solid #f9ab00;
+    border-radius: 4px;
+    color: #5f6368;
+    font-size: 12px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+/* =============================================================================
+ * Undo Action States
+ * ============================================================================= */
+
+/* Row being removed - dimmed and non-interactive */
+.tt-sync-row-removing {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Undo error message shown on row */
+.tt-sync-undo-error {
+    font-size: 11px;
+    color: #d93025;
+    padding: 2px 12px 2px 24px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+/* =============================================================================
+ * FIX Mode Button
+ * ============================================================================= */
+
+.tt-fix-mode-buttons {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #dadce0;
+}
+
+.tt-fix-link-btn {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #fff;
+}
+
+.tt-fix-link-btn:hover {
+    background: #1557b0;
+    border-color: #1557b0;
+}
+
+.tt-fix-link-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+/* =============================================================================
+ * Fix Complete Dialog
+ * ============================================================================= */
+
+.tt-loading {
+    padding: 12px;
+    text-align: center;
+    color: #5f6368;
+    font-size: 13px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-summary {
+    font-size: 13px;
+    color: #5f6368;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+/* =============================================================================
+ * Unlinked Map Dialog
+ * ============================================================================= */
+
+.tt-unlinked-message {
+    font-size: 15px;
+    color: #202124;
+    margin-bottom: 16px;
+    text-align: center;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-unlinked-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tt-unlinked-buttons .tt-gmm-btn {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+.tt-unlinked-btn-primary {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #fff;
+}
+
+.tt-unlinked-btn-primary:hover {
+    background: #1557b0;
+    border-color: #1557b0;
+}
+
+.tt-dismiss-btn {
+    background: transparent;
+    border-color: transparent;
+    color: #5f6368;
+    font-size: 13px;
+}
+
+.tt-dismiss-btn:hover {
+    background: #f1f3f4;
+    color: #202124;
+}
+
+/* =============================================================================
+ * Create Trip Form (Inline)
+ * ============================================================================= */
+
+.tt-create-trip-form {
+    margin: 16px 0;
+}
+
+.tt-form-group {
+    margin-bottom: 12px;
+}
+
+.tt-form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.tt-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #5f6368;
+    margin-bottom: 4px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-form-required {
+    color: #d93025;
+}
+
+.tt-form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.tt-form-input:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.tt-form-input.tt-form-input-error {
+    border-color: #d93025;
+}
+
+.tt-form-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.tt-form-error {
+    color: #d93025;
+    font-size: 12px;
+    margin-top: 4px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8eaed;
+}
+
+/* =============================================================================
+ * Trip Picker
+ * ============================================================================= */
+
+.tt-trip-picker-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 12px 0;
+    border: 1px solid #e8eaed;
+    border-radius: 6px;
+}
+
+.tt-trip-picker-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e8eaed;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.tt-trip-picker-item:last-child {
+    border-bottom: none;
+}
+
+.tt-trip-picker-item:hover {
+    background: #f8f9fa;
+}
+
+.tt-trip-picker-item.tt-selected {
+    background: #e8f0fe;
+}
+
+.tt-trip-picker-radio {
+    margin-right: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tt-trip-picker-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.tt-trip-picker-title {
+    font-size: 14px;
+    color: #202124;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tt-trip-picker-description {
+    font-size: 12px;
+    color: #5f6368;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tt-trip-picker-empty {
+    padding: 24px;
+    text-align: center;
+    color: #5f6368;
+    font-size: 14px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-trip-picker-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    color: #5f6368;
+    font-size: 13px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}

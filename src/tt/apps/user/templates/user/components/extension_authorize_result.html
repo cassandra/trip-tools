@@ -1,0 +1,29 @@
+{% load icons %}
+<div>
+  <!-- Hidden element with token data for JavaScript -->
+  <div id="{{ TtConst.EXT_TOKEN_DATA_ELEMENT_ID }}" data-token="{{ token_str }}" class="d-none"></div>
+
+  <!-- Result area (updated by extension ack) -->
+  <div id="{{ TtConst.EXT_AUTH_PENDING_ID }}" class="alert alert-info">
+    Sending token to extension...
+  </div>
+
+  <div id="{{ TtConst.EXT_AUTH_SUCCESS_ID }}" class="d-none">
+    {% include "user/components/extension_authorized.html" %}
+  </div>
+  
+  <div id="{{ TtConst.EXT_AUTH_FAILURE_ID }}" class="d-none">
+    <div class="alert alert-warning">
+      Extension authorization problem. Copy this token to the extension's Options page:
+    </div>
+    <div class="input-group mt-2">
+      <input type="text" class="form-control" value="{{ token_str }}" readonly id="fallback-token">
+      <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('fallback-token').select(); document.execCommand('copy');">
+        {% icon "copy" size="sm" %} Copy
+      </button>
+    </div>
+    <p class="small text-muted mt-2">
+      Token name: <strong>{{ token_name }}</strong>
+    </p>
+  </div>
+</div>

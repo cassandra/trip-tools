@@ -1,0 +1,33 @@
+{% extends "user/pages/account_subpage.html" %}
+{% load icons %}
+
+{% block subpage_header %}
+<h1 class="h2 m-4 text-primary">{% icon "plug" size="lg" %} Browser Extensions</h1>
+{% endblock %}
+
+{% block subpage_content %}
+<div class="container-fluid">
+  
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      {% include "user/components/extension_solicit.html" %}
+      {% include "user/components/chrome_extension_status.html" %}
+    </div>
+  </div>
+
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">All Connected Extensions</h5>
+        </div>
+        <div class="card-body">
+          <div id="{{ TtConst.EXT_API_TOKEN_TABLE_ID }}"
+          {% include "user/components/api_token_table_extension.html" with api_token_list=api_token_list %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

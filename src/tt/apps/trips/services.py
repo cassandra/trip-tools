@@ -1,9 +1,10 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User as UserType
 from django.urls import reverse
 
+from tt.apps.api.constants import APIFields as F
 from tt.apps.journal.helpers import PublishingStatusHelper
 from tt.apps.journal.models import Journal
 from tt.apps.members.models import TripMember
@@ -11,6 +12,41 @@ from tt.apps.members.models import TripMember
 from .enums import TripStatus
 from .models import Trip
 from .schemas import JournalOverviewSection, TripCategorizedDisplayData, TripOverviewData
+
+
+class TripService:
+    """
+    Service class for Trip CRUD operations.
+    """
+
+    @classmethod
+    def update(
+        cls,
+        trip: Trip,
+        validated_data: Dict[str, Any],
+    ) -> Trip:
+        """
+        Update a Trip with validated data.
+
+        Args:
+            trip: The Trip instance to update.
+            validated_data: Validated data from serializer (only fields present will be updated).
+
+        Returns:
+            Updated Trip instance.
+        """
+        # Explicit mapping: API field name -> model field name
+        api_to_model_fields = {
+            F.TITLE: 'title',
+            F.DESCRIPTION: 'description',
+            F.GMM_MAP_ID: 'gmm_map_id',
+        }
+        for api_field, model_field in api_to_model_fields.items():
+            if api_field in validated_data:
+                setattr( trip, model_field, validated_data[api_field] )
+
+        trip.save()
+        return trip
 
 
 class TripOverviewBuilder:

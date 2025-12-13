@@ -33,17 +33,27 @@ urlpatterns = [
     ),
     path(
         'api-keys',
-        views.APIKeyManagementView.as_view(),
-        name='user_api_keys'
+        views.APITokenManagementView.as_view(),
+        name='user_api_tokens'
     ),
     path(
         'api-keys/create',
-        views.APIKeyCreateModalView.as_view(),
-        name='user_api_key_create'
+        views.APITokenCreateModalView.as_view(),
+        name='user_api_token_create'
     ),
     path(
-        'api-keys/<int:api_key_id>/delete',
-        views.APIKeyDeleteModalView.as_view(),
-        name='user_api_key_delete'
+        'api-keys/<str:lookup_key>/delete',
+        views.APITokenDeleteModalView.as_view(),
+        name='user_api_token_delete'
+    ),
+    path(
+        'api-keys/<str:lookup_key>/extension-disconnect',
+        views.APITokenExtensionDisconnectModalView.as_view(),
+        name='user_api_token_extension_disconnect'
+    ),
+    path(
+        'extensions/',
+        views.ExtensionsHomeView.as_view(),
+        name='user_extensions'
     ),
 ]

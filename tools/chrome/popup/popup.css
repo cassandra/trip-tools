@@ -1,0 +1,1264 @@
+/*
+ * Trip Tools Chrome Extension - Popup Styles
+ */
+
+html, body {
+    width: 380px;
+    max-height: 75vh;
+    margin: 0;
+    padding: 0;
+    font-family: var(--tt-font-family);
+    font-size: 14px;
+    color: var(--tt-black);
+    background-color: var(--tt-white);
+}
+
+.tt-popup-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--tt-primary-color);
+    color: var(--tt-on-primary-color);
+}
+
+/* Dev Mode Banner */
+.tt-dev-banner {
+    background-color: #dc3545;
+    color: #fff;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tt-popup-header img {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
+.tt-popup-header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.tt-settings-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    margin-left: auto;
+    cursor: pointer;
+    color: var(--tt-on-primary-color);
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.tt-settings-btn:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tt-settings-btn:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+.tt-status-bar {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: var(--tt-primary-bg-light);
+    font-size: 12px;
+}
+
+.tt-status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.tt-status-indicator.tt-connected {
+    background-color: var(--tt-success-color);
+}
+
+.tt-status-indicator.tt-disconnected {
+    background-color: var(--tt-error-color);
+}
+
+.tt-status-indicator.tt-offline {
+    background-color: var(--tt-warning-color);
+}
+
+.tt-status-indicator.tt-server-error {
+    background-color: #fd7e14;
+}
+
+.tt-status-indicator.tt-rate-limited {
+    background-color: #6f42c1;
+}
+
+/* Auth Section */
+.tt-auth-section {
+    text-align: center;
+    padding: 16px 12px;
+    background-color: var(--tt-primary-bg-light);
+}
+
+.tt-auth-status {
+    font-size: 13px;
+    color: var(--tt-muted-color);
+    margin-bottom: 12px;
+}
+
+.tt-popup-content {
+    padding: 12px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.tt-maps-list {
+    max-height: 120px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+}
+
+.tt-maps-list-empty {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    padding: 8px 0;
+    font-size: 13px;
+}
+
+.tt-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.tt-toggle-label {
+    font-size: 13px;
+}
+
+.tt-toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 20px;
+}
+
+.tt-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tt-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--tt-muted-color);
+    transition: 0.3s;
+    border-radius: 20px;
+}
+
+.tt-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--tt-white);
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .tt-toggle-slider {
+    background-color: var(--tt-primary-color);
+}
+
+input:checked + .tt-toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.tt-debug-panel {
+    background-color: #f5f5f5;
+    border-top: 1px solid var(--tt-line-color);
+    font-size: 11px;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+}
+
+.tt-debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    user-select: none;
+}
+
+.tt-debug-header:hover {
+    background-color: #ddd;
+}
+
+.tt-debug-content {
+    padding: 8px 12px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.tt-debug-auth-info {
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #ccc;
+}
+
+.tt-debug-auth-info:empty {
+    display: none;
+}
+
+.tt-debug-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.tt-debug-entry:last-child {
+    border-bottom: none;
+}
+
+.tt-debug-timestamp {
+    color: var(--tt-muted-color);
+    margin-right: 8px;
+}
+
+.tt-debug-level-error {
+    color: var(--tt-error-color);
+}
+
+.tt-debug-level-info {
+    color: var(--tt-primary-color);
+}
+
+.tt-debug-level-warn {
+    color: var(--tt-warning-color);
+}
+
+/* Quick Settings Slide-in Panel */
+.tt-quick-settings {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--tt-white);
+    transform: translateX(100%);
+    transition: transform 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.tt-quick-settings.tt-visible {
+    transform: translateX(0);
+}
+
+.tt-quick-settings.tt-hidden {
+    display: flex;
+    transform: translateX(100%);
+}
+
+.tt-quick-settings-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--tt-primary-color);
+    color: var(--tt-on-primary-color);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+
+.tt-back-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    margin-right: 12px;
+    cursor: pointer;
+    color: var(--tt-on-primary-color);
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.tt-back-btn:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tt-back-btn:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+.tt-quick-settings-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.tt-quick-settings-placeholder {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    text-align: center;
+    margin: 24px 0;
+}
+
+.tt-quick-settings-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--tt-line-color);
+    text-align: center;
+}
+
+.tt-all-options-link {
+    color: var(--tt-primary-color);
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.tt-all-options-link:hover {
+    text-decoration: underline;
+}
+
+/* Container needs relative positioning for absolute slide-in */
+#tt-popup-container {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =============================================================================
+ * Trip Section
+ * ============================================================================= */
+
+.tt-trip-loading,
+.tt-trip-empty {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+/* =============================================================================
+ * Working Set (Unified Trip List)
+ * ============================================================================= */
+
+.tt-working-set {
+    margin-bottom: 12px;
+}
+
+.tt-working-set-header {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.tt-working-set-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--tt-muted-color);
+    font-weight: 500;
+}
+
+/* Stale Pin Warning */
+.tt-stale-pin-warning {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: #fff8e1;
+    border: 1px solid var(--tt-warning-color);
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.tt-stale-pin-text {
+    color: #7c5e1d;
+}
+
+.tt-stale-pin-dismiss {
+    background: none;
+    border: 1px solid var(--tt-warning-color);
+    color: #7c5e1d;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--tt-font-family);
+}
+
+.tt-stale-pin-dismiss:hover {
+    background: rgba(255, 152, 0, 0.1);
+}
+
+.tt-stale-pin-warning.tt-hidden {
+    display: none;
+}
+
+/* Trip List Container */
+.tt-trip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Trip Row */
+.tt-trip-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--tt-primary-bg-light);
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.tt-trip-row:hover {
+    background: #f0f7f1;
+}
+
+.tt-trip-row.tt-current {
+    border-color: var(--tt-primary-color);
+    background: #e8f4ea;
+}
+
+/* Pin Control Button */
+.tt-pin-control {
+    width: 32px;
+    height: 32px;
+    margin-right: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+}
+
+.tt-pin-control:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.tt-pin-control svg {
+    color: var(--tt-muted-color);
+}
+
+.tt-pin-control[data-pinned="true"] svg {
+    color: var(--tt-primary-color);
+}
+
+/* Trip Content (title + GMM status) */
+.tt-trip-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.tt-trip-title {
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--tt-black);
+}
+
+.tt-trip-row.tt-current .tt-trip-title {
+    font-weight: 500;
+}
+
+/* Trip Info Button */
+.tt-trip-info-btn {
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    padding: 6px;
+    margin-left: 4px;
+    cursor: pointer;
+    color: var(--tt-muted-color);
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.15s, opacity 0.15s;
+}
+
+.tt-trip-info-btn:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* GMM Status in Trip Row (smaller than old version) */
+.tt-trip-row .tt-gmm-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+
+.tt-trip-row .tt-gmm-status svg {
+    color: var(--tt-muted-color);
+}
+
+.tt-trip-row .tt-gmm-status.tt-gmm-linked svg {
+    color: var(--tt-primary-color);
+}
+
+.tt-trip-row .tt-gmm-status.tt-gmm-unlinked svg {
+    color: var(--tt-warning-color);
+}
+
+/* GMM Status Indicator */
+.tt-gmm-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-left: 8px;
+    position: relative;
+}
+
+.tt-gmm-status svg {
+    color: var(--tt-muted-color);
+}
+
+.tt-gmm-status.tt-gmm-linked svg {
+    color: var(--tt-primary-color);
+}
+
+.tt-gmm-status.tt-gmm-unlinked svg {
+    color: var(--tt-warning-color);
+}
+
+.tt-gmm-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--tt-muted-color);
+}
+
+.tt-gmm-status.tt-gmm-linked .tt-gmm-indicator {
+    background-color: var(--tt-success-color);
+}
+
+.tt-gmm-status.tt-gmm-unlinked .tt-gmm-indicator {
+    background-color: var(--tt-warning-color);
+}
+
+/* Other Trips Section */
+.tt-other-trips {
+    margin-bottom: 12px;
+}
+
+.tt-other-trips-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--tt-muted-color);
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.tt-other-trips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Switch Trip Buttons */
+.tt-switch-trip-btn {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    background-color: var(--tt-primary-bg-light);
+    border: 1px solid var(--tt-line-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--tt-black);
+    text-align: left;
+    transition: background-color 0.15s, border-color 0.15s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tt-switch-trip-btn:hover {
+    background-color: #f0f7f1;
+    border-color: var(--tt-primary-color);
+}
+
+.tt-switch-trip-btn:focus {
+    outline: 2px solid var(--tt-primary-color);
+    outline-offset: 1px;
+}
+
+.tt-btn-new-trip {
+    margin-top: 8px;
+}
+
+/* Link Map Action (shown on unlinked GMM pages) */
+.tt-link-map-action {
+    margin-bottom: 12px;
+}
+
+.tt-link-map-action .tt-btn {
+    width: 100%;
+}
+
+.tt-link-map-action.tt-hidden {
+    display: none;
+}
+
+/* Trip Actions Row */
+.tt-trip-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Link-style buttons for trip actions */
+.tt-btn-link {
+    background: none;
+    border: none;
+    color: var(--tt-primary-color);
+    font-size: 12px;
+    padding: 4px 0;
+    cursor: pointer;
+    font-family: var(--tt-font-family);
+}
+
+.tt-btn-link:hover {
+    color: var(--tt-primary-dark, #1a5528);
+    text-decoration: underline;
+}
+
+/* =============================================================================
+ * More Trips Slide-in Panel
+ * ============================================================================= */
+
+.tt-more-trips-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--tt-white);
+    transform: translateX(100%);
+    transition: transform 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.tt-more-trips-panel.tt-visible {
+    transform: translateX(0);
+}
+
+.tt-more-trips-panel.tt-hidden {
+    display: flex;
+    transform: translateX(100%);
+}
+
+.tt-panel-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--tt-primary-color);
+    color: var(--tt-on-primary-color);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+
+.tt-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.tt-more-trips-loading {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+.tt-more-trips-error {
+    color: var(--tt-error-color);
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+.tt-more-trips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Trip item in list */
+.tt-trip-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background-color: var(--tt-primary-bg-light);
+    border: 1px solid var(--tt-line-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.tt-trip-item:hover {
+    background-color: #f0f7f1;
+    border-color: var(--tt-primary-color);
+}
+
+.tt-trip-item-title {
+    flex: 1;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tt-empty-message {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+    text-align: center;
+}
+
+/* =============================================================================
+ * Dialog Overlay
+ * ============================================================================= */
+
+.tt-dialog-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 16px;
+}
+
+.tt-dialog-overlay.tt-hidden {
+    display: none;
+}
+
+.tt-dialog {
+    background-color: var(--tt-white);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    max-width: 320px;
+    width: 100%;
+}
+
+.tt-dialog-header {
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--tt-line-color);
+}
+
+.tt-dialog-content {
+    padding: 16px;
+}
+
+.tt-dialog-content p {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.tt-dialog-content p:last-child {
+    margin-bottom: 0;
+}
+
+.tt-dialog-hint {
+    color: var(--tt-muted-color);
+    font-size: 12px !important;
+}
+
+.tt-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--tt-line-color);
+}
+
+/* Progress Indicator */
+.tt-progress-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.tt-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--tt-line-color);
+    border-top-color: var(--tt-primary-color);
+    border-radius: 50%;
+    animation: tt-spin 0.8s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes tt-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =============================================================================
+ * Trip Details Button
+ * ============================================================================= */
+
+.tt-trip-details-btn {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: var(--tt-primary-color);
+    opacity: 0.5;
+    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tt-trip-details-btn:hover {
+    opacity: 1;
+}
+
+.tt-trip-details-btn:focus {
+    outline: 2px solid var(--tt-primary-color);
+    outline-offset: 1px;
+    border-radius: 2px;
+}
+
+/* =============================================================================
+ * Trip Details Slide-in Panel
+ * ============================================================================= */
+
+.tt-trip-details-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--tt-white);
+    transform: translateX(100%);
+    transition: transform 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.tt-trip-details-panel.tt-visible {
+    transform: translateX(0);
+}
+
+.tt-trip-details-panel.tt-hidden {
+    display: flex;
+    transform: translateX(100%);
+}
+
+/* Detail rows */
+.tt-detail-row {
+    margin-bottom: 16px;
+}
+
+.tt-detail-row label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--tt-muted-color);
+    margin-bottom: 4px;
+}
+
+.tt-detail-value {
+    font-size: 14px;
+    color: var(--tt-text-color);
+    word-break: break-word;
+}
+
+.tt-detail-value.tt-detail-mono {
+    font-family: monospace;
+    font-size: 12px;
+    background: var(--tt-primary-bg-light);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.tt-detail-value.tt-detail-description {
+    white-space: pre-wrap;
+    color: var(--tt-muted-color);
+    font-style: italic;
+}
+
+.tt-detail-description:empty::before {
+    content: 'No description';
+    color: var(--tt-muted-color);
+    opacity: 0.6;
+}
+
+/* Actions section */
+.tt-detail-actions {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--tt-line-color);
+}
+
+.tt-detail-actions.tt-hidden {
+    display: none;
+}
+
+/* Unlinked Trip Actions in Details Panel */
+.tt-detail-actions-unlinked {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--tt-line-color);
+}
+
+.tt-detail-actions-unlinked .tt-btn {
+    width: 100%;
+}
+
+.tt-detail-actions-unlinked.tt-hidden {
+    display: none;
+}
+
+/* Hint text for linking in details panel */
+.tt-detail-hint {
+    font-size: 12px;
+    color: var(--tt-muted-color);
+    margin: 4px 0 0 0;
+    font-style: italic;
+    text-align: center;
+}
+
+.tt-detail-hint.tt-hidden {
+    display: none;
+}
+
+/* =============================================================================
+ * Create Trip Slide-in Panel
+ * ============================================================================= */
+
+.tt-create-trip-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--tt-white);
+    transform: translateX(100%);
+    transition: transform 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.tt-create-trip-panel.tt-visible {
+    transform: translateX(0);
+}
+
+.tt-create-trip-panel.tt-hidden {
+    display: flex;
+    transform: translateX(100%);
+}
+
+/* Form Styles */
+.tt-form-group {
+    margin-bottom: 16px;
+}
+
+.tt-form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tt-text-color);
+    margin-bottom: 6px;
+}
+
+.tt-required {
+    color: var(--tt-error-color);
+}
+
+.tt-input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: var(--tt-font-family);
+    border: 1px solid var(--tt-line-color);
+    border-radius: 4px;
+    background-color: var(--tt-white);
+    color: var(--tt-text-color);
+    box-sizing: border-box;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.tt-input:focus {
+    outline: none;
+    border-color: var(--tt-primary-color);
+    box-shadow: 0 0 0 3px rgba(34, 139, 34, 0.1);
+}
+
+.tt-input::placeholder {
+    color: var(--tt-muted-color);
+}
+
+.tt-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.tt-error-message {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: var(--tt-error-color);
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+.tt-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* Loading state for submit button */
+.tt-btn-loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.tt-btn-loading::after {
+    content: '...';
+}
+
+/* =============================================================================
+ * Link Map Choice Buttons (Create Trip Form)
+ * ============================================================================= */
+
+.tt-link-map-choice {
+    background-color: var(--tt-primary-bg-light);
+    border: 1px solid var(--tt-line-color);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.tt-link-map-choice .tt-form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tt-text-color);
+    margin-bottom: 8px;
+}
+
+.tt-choice-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.tt-choice-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: 2px solid var(--tt-line-color);
+    background-color: var(--tt-white);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: var(--tt-font-family);
+    color: var(--tt-text-color);
+    text-align: center;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.tt-choice-btn:hover {
+    border-color: var(--tt-primary-color);
+    background-color: #f0f7f1;
+}
+
+.tt-choice-btn[data-selected="true"] {
+    border-color: var(--tt-primary-color);
+    background-color: #e8f4ea;
+    font-weight: 600;
+    color: var(--tt-primary-color);
+}
+
+.tt-form-hint {
+    font-size: 11px;
+    color: var(--tt-muted-color);
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+/* =============================================================================
+ * Link Map Slide-in Panel
+ * ============================================================================= */
+
+.tt-link-map-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--tt-white);
+    transform: translateX(100%);
+    transition: transform 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.tt-link-map-panel.tt-visible {
+    transform: translateX(0);
+}
+
+.tt-link-map-panel.tt-hidden {
+    display: flex;
+    transform: translateX(100%);
+}
+
+.tt-link-map-loading {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+.tt-link-map-error {
+    color: var(--tt-error-color);
+    font-size: 13px;
+    padding: 8px 0;
+}
+
+.tt-link-map-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tt-link-map-empty {
+    color: var(--tt-muted-color);
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
+    text-align: center;
+}
+
+/* =============================================================================
+ * Link Success Panel
+ * ============================================================================= */
+
+.tt-link-success-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--tt-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+}
+
+.tt-link-success-panel.tt-hidden {
+    display: none;
+}
+
+.tt-link-success-content {
+    text-align: center;
+    padding: 32px 24px;
+}
+
+.tt-link-success-icon {
+    margin-bottom: 16px;
+    color: var(--tt-success-color);
+}
+
+.tt-link-success-icon svg {
+    stroke: currentColor;
+}
+
+.tt-link-success-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--tt-text-color);
+    margin-bottom: 8px;
+}
+
+.tt-link-success-hint {
+    font-size: 14px;
+    color: var(--tt-muted-color);
+    margin: 0 0 24px 0;
+}
+
+.tt-link-success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+.tt-link-success-actions .tt-btn-primary {
+    min-width: 160px;
+}
+
+.tt-link-success-actions .tt-btn-link {
+    font-size: 13px;
+}

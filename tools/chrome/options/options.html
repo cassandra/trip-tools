@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trip Tools Extension - Options</title>
+    <link rel="stylesheet" href="../styles/shared.css">
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+    <div class="tt-options-container">
+        <!-- Header -->
+        <div class="tt-options-header">
+            <img src="../images/icon-on-primary-48.png" alt="Trip Tools Extension">
+            <h1>Trip Tools Extension - Options</h1>
+        </div>
+
+        <!-- Main Settings -->
+        <div class="tt-options-content">
+            <!-- Authorization Section -->
+            <div class="tt-section" id="tt-options-auth-section">
+                <div class="tt-section-header">Authorization</div>
+
+                <!-- Authorized State -->
+                <div class="tt-hidden" id="tt-options-auth-authorized">
+                    <p class="tt-options-auth-status">
+                        <span class="tt-auth-status-label">Authorized as</span>
+                        <strong id="tt-options-auth-email"></strong>
+                    </p>
+                    <button class="tt-btn tt-btn-secondary" id="tt-options-disconnect-btn">
+                        Disconnect
+                    </button>
+                </div>
+
+                <!-- Not Authorized State -->
+                <div id="tt-options-auth-not-authorized">
+                    <p class="tt-options-auth-hint">Connect to your Trip Tools account for full functionality.</p>
+                    <button class="tt-btn tt-btn-primary" id="tt-options-authorize-btn">
+                        Authorize Extension
+                    </button>
+
+                    <div class="tt-manual-token-section">
+                        <p class="tt-options-hint">Or enter your API token manually:</p>
+                        <div class="tt-manual-token-row">
+                            <input type="text" id="tt-options-manual-token-input" class="tt-text-input" placeholder="tt_...">
+                            <button class="tt-btn tt-btn-secondary" id="tt-options-validate-token-btn">
+                                Validate
+                            </button>
+                        </div>
+                        <div class="tt-token-validation-status" id="tt-options-token-validation-status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Developer Mode Toggle -->
+            <div class="tt-section">
+                <div class="tt-toggle-row">
+                    <span class="tt-toggle-label">Developer Mode</span>
+                    <label class="tt-toggle-switch">
+                        <input type="checkbox" id="tt-options-developer-mode-toggle">
+                        <span class="tt-toggle-slider"></span>
+                    </label>
+                </div>
+                <p class="tt-options-hint">Enable developer tools and settings.</p>
+            </div>
+
+            <!-- Developer Settings Section (hidden by default) -->
+            <div class="tt-section tt-hidden" id="tt-options-developer-section">
+                <div class="tt-section-header">Developer Settings</div>
+
+                <!-- Version -->
+                <div class="tt-options-field">
+                    <label>Version</label>
+                    <span id="tt-options-version" class="tt-options-value"></span>
+                </div>
+
+                <!-- Server URL -->
+                <div class="tt-options-field">
+                    <label for="tt-options-server-url">Server URL</label>
+                    <input type="text" id="tt-options-server-url" class="tt-text-input">
+                    <p class="tt-options-hint">API server for Trip Tools backend.</p>
+                </div>
+
+                <!-- Debug Panel Toggle -->
+                <div class="tt-toggle-row">
+                    <span class="tt-toggle-label">Debug Panel</span>
+                    <label class="tt-toggle-switch">
+                        <input type="checkbox" id="tt-options-debug-panel-toggle">
+                        <span class="tt-toggle-slider"></span>
+                    </label>
+                </div>
+                <p class="tt-options-hint">Show debug panel in popup.</p>
+            </div>
+
+            <!-- Save Status -->
+            <div class="tt-options-status" id="tt-options-save-status"></div>
+        </div>
+    </div>
+
+    <script src="../shared/constants.js"></script>
+    <script src="../shared/storage.js"></script>
+    <script src="../shared/messaging.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="../shared/api.js"></script>
+    <script src="../shared/client-config.js"></script>
+    <script src="options.js"></script>
+</body>
+</html>

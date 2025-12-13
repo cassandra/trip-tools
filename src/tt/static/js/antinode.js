@@ -574,7 +574,12 @@ function asyncUpdateData( $target, $mode, data, xhr ) {
      }
      
        asyncUpdateDataFromJson( $target, $mode, json );
-    } 
+    }
+    
+    if ( typeof handlePostAsyncUpdate === "function") {
+        handlePostAsyncUpdate();
+    }
+    
 };
 
 //====================
@@ -704,10 +709,6 @@ function asyncUpdateDataFromJson( $target, $mode, json ) {
         } else {
             console.warn('AntiNode scrollTo: Target element not found:', targetId);
         }
-    }
-    
-    if ( typeof handlePostAsyncUpdate === "function") {
-        handlePostAsyncUpdate();
     }
 };
         

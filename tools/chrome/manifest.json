@@ -1,0 +1,122 @@
+{
+    "manifest_version": 3,
+    "name": "Trip Tools Extension",
+    "description": "Browser companion for Trip Tools trip planning.",
+    "version": "0.1.0",
+    "permissions": [
+        "storage",
+        "tabs",
+        "activeTab"
+    ],
+    "host_permissions": [
+        "https://triptools.net/*",
+        "http://localhost:6777/*",
+        "http://localhost:6778/*",
+        "http://localhost:6779/*"
+    ],
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_icon": {
+            "16": "images/icon-16.png",
+            "48": "images/icon-48.png",
+            "128": "images/icon-128.png"
+        }
+    },
+    "icons": {
+        "16": "images/icon-16.png",
+        "48": "images/icon-48.png",
+        "128": "images/icon-128.png"
+    },
+    "background": {
+        "service_worker": "background/service-worker.js"
+    },
+    "options_page": "options/options.html",
+    "content_scripts": [
+        {
+            "matches": [
+                "https://triptools.net/*",
+                "http://localhost:6777/*",
+                "http://localhost:6778/*",
+                "http://localhost:6779/*"
+            ],
+            "js": [
+                "shared/constants.js",
+                "content/triptools-state.js"
+            ],
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "https://triptools.net/user/extensions/*",
+                "http://localhost:6777/user/extensions/*",
+                "http://localhost:6778/user/extensions/*",
+                "http://localhost:6779/user/extensions/*"
+            ],
+            "js": [
+                "shared/constants.js",
+                "content/triptools-auth.js"
+            ],
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "https://www.google.com/maps/d/edit*",
+                "https://www.google.com/maps/d/u/*/edit*"
+            ],
+            "css": [
+                "styles/gmm.css"
+            ],
+            "js": [
+                "shared/constants.js",
+                "shared/storage.js",
+                "shared/dom.js",
+                "shared/text-utils.js",
+                "shared/site-adapter.js",
+                "shared/operation-mode.js",
+                "shared/page-info.js",
+                "adapters/gmm-selectors.js",
+                "adapters/gmm-adapter.js",
+                "content/gmm.js",
+                "content/gmm-sync.js"
+            ],
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "https://www.google.com/maps/d/",
+                "https://www.google.com/maps/d/?*",
+                "https://www.google.com/maps/d/u/*/",
+                "https://www.google.com/maps/d/u/*/?*"
+            ],
+            "exclude_matches": [
+                "https://www.google.com/maps/d/edit*",
+                "https://www.google.com/maps/d/u/*/edit*",
+                "https://www.google.com/maps/d/viewer*",
+                "https://www.google.com/maps/d/u/*/viewer*"
+            ],
+            "css": [
+                "styles/gmm-home.css"
+            ],
+            "js": [
+                "shared/constants.js",
+                "shared/dom.js",
+                "shared/site-adapter.js",
+                "adapters/gmm-home-selectors.js",
+                "adapters/gmm-home-adapter.js",
+                "content/gmm-home.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "images/*",
+                "styles/*"
+            ],
+            "matches": [
+                "https://www.google.com/*"
+            ]
+        }
+    ]
+}

@@ -119,3 +119,48 @@ mkdir ~/.redis
 touch ~/.redis/redis.conf
 ```
 Then run with `redis-server`.
+
+### Node.js
+
+_Required for E2E testing. Optional for other development._
+
+#### Version
+
+Node.js 20.x (LTS) is required. The specific version is specified in `.nvmrc` files within directories that use Node.js (e.g., `testing/e2e/.nvmrc`).
+
+#### Installing nvm
+
+nvm (Node Version Manager) is the standard tool for managing Node.js versions. It allows per-project version control via `.nvmrc` files.
+
+#### MacOS and Ubuntu (GNU/Linux)
+
+``` shell
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+```
+
+Close and reopen your terminal, or run:
+``` shell
+source ~/.bashrc   # or ~/.zshrc for zsh
+```
+
+#### Installing Node.js
+
+After installing nvm:
+``` shell
+nvm install 20
+```
+
+#### Usage
+
+When working in a directory with a `.nvmrc` file:
+``` shell
+cd testing/e2e
+nvm use          # Reads version from .nvmrc and switches to it
+```
+
+#### Verify Installation
+
+``` shell
+node --version   # Should show v20.x.x
+npm --version    # Should show 10.x.x
+```

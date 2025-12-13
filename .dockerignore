@@ -19,6 +19,7 @@ __pycache__
 /docs/
 /design/
 /src/venv/
+/testing/
 /tools/
 /.flake8
 

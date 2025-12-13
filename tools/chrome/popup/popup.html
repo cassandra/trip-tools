@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trip Tools Extension</title>
+    <link rel="stylesheet" href="../styles/shared.css">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div id="tt-popup-container">
+        <!-- Header -->
+        <div class="tt-popup-header">
+            <img src="../images/icon-48.png" alt="Trip Tools Extension" id="tt-header-icon">
+            <h1>Trip Tools Extension</h1>
+            <button class="tt-settings-btn" id="tt-settings-btn" title="Options">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Dev Version Banner (shown only in development builds) -->
+        <div class="tt-dev-banner tt-hidden" id="tt-dev-banner">
+            Development Version
+        </div>
+
+        <!-- Status Bar -->
+        <div class="tt-status-bar">
+            <div class="tt-status-indicator" id="tt-status-indicator"></div>
+            <span id="tt-status-text">Checking connection...</span>
+        </div>
+
+        <!-- Auth Section (shown when not authorized) -->
+        <div class="tt-section tt-auth-section tt-hidden" id="tt-auth-section">
+            <div class="tt-auth-status" id="tt-auth-status"></div>
+            <button class="tt-btn tt-btn-primary" id="tt-authorize-btn">
+                Authorize Extension
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="tt-popup-content">
+            <div class="tt-section" id="tt-settings-section">
+                <div class="tt-toggle-row">
+                    <span class="tt-toggle-label">Text Selection Decoration</span>
+                    <label class="tt-toggle-switch">
+                        <input type="checkbox" id="tt-decorate-toggle">
+                        <span class="tt-toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Trip Section -->
+            <div class="tt-section" id="tt-trip-section">
+                <div class="tt-trip-loading" id="tt-trip-loading">Loading trips...</div>
+
+                <!-- Working Set (unified trip list) -->
+                <div class="tt-working-set tt-hidden" id="tt-working-set">
+                    <div class="tt-working-set-header">
+                        <span class="tt-working-set-label">Your Trips</span>
+                    </div>
+
+                    <!-- Stale anchor warning (hidden by default) -->
+                    <div class="tt-stale-pin-warning tt-hidden" id="tt-stale-pin-warning">
+                        <span class="tt-stale-pin-text">Your anchored trip is over 30 days old</span>
+                        <button class="tt-stale-pin-dismiss" id="tt-stale-pin-dismiss">Dismiss</button>
+                    </div>
+
+                    <!-- Unified trip list (populated by JS) -->
+                    <div class="tt-trip-list" id="tt-trip-list"></div>
+                </div>
+
+                <div class="tt-trip-empty tt-hidden" id="tt-trip-empty">No trips available.</div>
+
+                <!-- Link Map Action (shown only on unlinked GMM pages) -->
+                <div class="tt-link-map-action tt-hidden" id="tt-link-map-action">
+                    <button class="tt-btn tt-btn-secondary" id="tt-link-map-btn">
+                        Link This Map to a Trip
+                    </button>
+                </div>
+
+                <!-- Trip Actions Row -->
+                <div class="tt-trip-actions">
+                    <button class="tt-btn tt-btn-link" id="tt-new-trip-btn">+ New Trip</button>
+                    <button class="tt-btn tt-btn-link" id="tt-more-trips-btn">More Trips →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Panel -->
+        <div class="tt-debug-panel tt-hidden" id="tt-debug-panel">
+            <div class="tt-debug-header" id="tt-debug-header">
+                <span>Debug Panel</span>
+                <span id="tt-debug-arrow">&#9660;</span>
+            </div>
+            <div class="tt-debug-content" id="tt-debug-content">
+                <div class="tt-debug-auth-info" id="tt-debug-auth-info"></div>
+                <div id="tt-debug-log"></div>
+            </div>
+        </div>
+
+        <!-- Quick Settings Slide-in Panel -->
+        <div class="tt-quick-settings tt-hidden" id="tt-quick-settings">
+            <div class="tt-quick-settings-header" id="tt-quick-settings-header">
+                <button class="tt-back-btn" id="tt-quick-settings-back" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>Options</span>
+            </div>
+            <div class="tt-quick-settings-content">
+                <p class="tt-quick-settings-placeholder">No quick options yet.</p>
+            </div>
+            <div class="tt-quick-settings-footer">
+                <a href="#" id="tt-all-options-link" class="tt-all-options-link">All Options</a>
+            </div>
+        </div>
+
+        <!-- More Trips Slide-in Panel -->
+        <div class="tt-more-trips-panel tt-hidden" id="tt-more-trips-panel">
+            <div class="tt-panel-header">
+                <button class="tt-back-btn" id="tt-more-trips-back" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>All Trips</span>
+            </div>
+            <div class="tt-panel-content">
+                <div class="tt-more-trips-loading tt-hidden" id="tt-more-trips-loading">Loading trips...</div>
+                <div class="tt-more-trips-error tt-hidden" id="tt-more-trips-error"></div>
+                <div class="tt-more-trips-list" id="tt-more-trips-list"></div>
+            </div>
+        </div>
+
+        <!-- Trip Details Slide-in Panel -->
+        <div class="tt-trip-details-panel tt-hidden" id="tt-trip-details-panel">
+            <div class="tt-panel-header">
+                <button class="tt-back-btn" id="tt-trip-details-back" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>Trip Details</span>
+            </div>
+            <div class="tt-panel-content">
+                <div class="tt-detail-row">
+                    <label>Title</label>
+                    <div id="tt-trip-details-title" class="tt-detail-value"></div>
+                </div>
+                <div class="tt-detail-row">
+                    <label>Description</label>
+                    <div id="tt-trip-details-description" class="tt-detail-value tt-detail-description"></div>
+                </div>
+                <div class="tt-detail-row">
+                    <label>Trip ID</label>
+                    <div id="tt-trip-details-uuid" class="tt-detail-value tt-detail-mono"></div>
+                </div>
+                <div class="tt-detail-row tt-hidden" id="tt-trip-details-gmm-row">
+                    <label>Map ID</label>
+                    <div id="tt-trip-details-gmm-id" class="tt-detail-value tt-detail-mono"></div>
+                </div>
+                <div class="tt-detail-actions tt-hidden" id="tt-trip-details-actions">
+                    <button class="tt-btn tt-btn-primary" id="tt-trip-details-sync-btn">
+                        Sync Locations
+                    </button>
+                    <button class="tt-btn tt-btn-secondary" id="tt-trip-details-unlink-btn">
+                        Unlink Map
+                    </button>
+                </div>
+                <!-- Actions for UNLINKED trips -->
+                <div class="tt-detail-actions-unlinked tt-hidden" id="tt-trip-details-actions-unlinked">
+                    <button class="tt-btn tt-btn-primary" id="tt-trip-details-create-map-btn">
+                        Create Map
+                    </button>
+                    <button class="tt-btn tt-btn-secondary tt-hidden" id="tt-trip-details-link-current-btn">
+                        Link to Current Map
+                    </button>
+                    <p class="tt-detail-hint tt-hidden" id="tt-trip-details-link-hint">
+                        Navigate to a map to link an existing map
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Trip Slide-in Panel -->
+        <div class="tt-create-trip-panel tt-hidden" id="tt-create-trip-panel">
+            <div class="tt-panel-header">
+                <button class="tt-back-btn" id="tt-create-trip-back-btn" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>New Trip</span>
+            </div>
+            <div class="tt-panel-content">
+                <div class="tt-form-group">
+                    <label for="tt-create-trip-title">Title <span class="tt-required">*</span></label>
+                    <input type="text" id="tt-create-trip-title" class="tt-input" placeholder="Trip title" maxlength="200">
+                </div>
+                <div class="tt-form-group">
+                    <label for="tt-create-trip-description">Description</label>
+                    <textarea id="tt-create-trip-description" class="tt-input tt-textarea" placeholder="Optional description" rows="3"></textarea>
+                </div>
+                <div class="tt-form-group tt-link-map-choice tt-hidden" id="tt-create-trip-link-choice">
+                    <label class="tt-form-label">Link to current map?</label>
+                    <div class="tt-choice-buttons">
+                        <button type="button" class="tt-choice-btn" id="tt-create-trip-link-no" data-selected="true">
+                            No, create trip only
+                        </button>
+                        <button type="button" class="tt-choice-btn" id="tt-create-trip-link-yes">
+                            Yes, link this map
+                        </button>
+                    </div>
+                    <p class="tt-form-hint">Linking will sync locations from the map to your trip.</p>
+                </div>
+                <div class="tt-error-message tt-hidden" id="tt-create-trip-error"></div>
+                <div class="tt-form-actions">
+                    <button class="tt-btn tt-btn-secondary" id="tt-create-trip-cancel-btn">Cancel</button>
+                    <button class="tt-btn tt-btn-primary" id="tt-create-trip-submit-btn">Create Trip</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Link Map Slide-in Panel -->
+        <div class="tt-link-map-panel tt-hidden" id="tt-link-map-panel">
+            <div class="tt-panel-header">
+                <button class="tt-back-btn" id="tt-link-map-back" title="Back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <span>Link Map to Trip</span>
+            </div>
+            <div class="tt-panel-content">
+                <div class="tt-link-map-loading tt-hidden" id="tt-link-map-loading">Loading trips...</div>
+                <div class="tt-link-map-error tt-error tt-hidden" id="tt-link-map-error"></div>
+                <div class="tt-link-map-list" id="tt-link-map-list"></div>
+                <div class="tt-link-map-empty tt-hidden" id="tt-link-map-empty">
+                    All your trips already have maps linked.
+                </div>
+            </div>
+        </div>
+
+        <!-- Link Success Panel -->
+        <div class="tt-link-success-panel tt-hidden" id="tt-link-success-panel">
+            <div class="tt-link-success-content">
+                <div class="tt-link-success-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <div class="tt-link-success-title" id="tt-link-success-title">Trip Linked to Map</div>
+                <p class="tt-link-success-hint">Reload the page to sync your data</p>
+                <div class="tt-link-success-actions">
+                    <button class="tt-btn tt-btn-primary" id="tt-link-success-reload">Reload Page</button>
+                    <button class="tt-btn tt-btn-link" id="tt-link-success-dismiss">Dismiss</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Creating Map Progress Overlay -->
+        <div class="tt-dialog-overlay tt-hidden" id="tt-creating-map-dialog">
+            <div class="tt-dialog">
+                <div class="tt-dialog-header">Creating Map</div>
+                <div class="tt-dialog-content">
+                    <div class="tt-progress-indicator">
+                        <div class="tt-spinner"></div>
+                        <p id="tt-creating-map-status">Creating map in Google My Maps...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../shared/constants.js"></script>
+    <script src="../shared/storage.js"></script>
+    <script src="../shared/messaging.js"></script>
+    <script src="../shared/page-info.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

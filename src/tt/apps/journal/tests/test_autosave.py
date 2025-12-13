@@ -26,38 +26,42 @@ User = get_user_model()
 class JournalEntryAutosaveBasicTests(TestCase):
     """Basic tests for journal entry autosave functionality."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        """Set up test fixtures once for all tests."""
+        cls.user = User.objects.create_user(
             email='test@example.com',
             password='testpass123',
             first_name='Test',
             last_name='User'
         )
-        self.trip = Trip.objects.create(
+        cls.trip = Trip.objects.create(
             title='Test Trip',
             description='A test trip'
         )
-        self.trip_member = TripMember.objects.create(
-            trip=self.trip,
-            user=self.user,
+        cls.trip_member = TripMember.objects.create(
+            trip=cls.trip,
+            user=cls.user,
             permission_level=TripPermissionLevel.OWNER
         )
-        self.journal = Journal.objects.create(
-            trip=self.trip,
+        cls.journal = Journal.objects.create(
+            trip=cls.trip,
             title='Test Journal',
             timezone='America/New_York',
             visibility='private',
-            modified_by=self.user
+            modified_by=cls.user
         )
-        self.entry = JournalEntry.objects.create(
-            journal=self.journal,
+        cls.entry = JournalEntry.objects.create(
+            journal=cls.journal,
             date=date(2024, 1, 1),
             timezone='America/New_York',
             title='Day 1',
             text='<p>Initial content</p>',
-            modified_by=self.user
+            modified_by=cls.user
         )
+
+    def setUp(self):
+        """Set up per-test state."""
         self.client.login(email='test@example.com', password='testpass123')
 
     def test_autosave_basic_text_update(self):

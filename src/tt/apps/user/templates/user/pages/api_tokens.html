@@ -1,0 +1,59 @@
+{% extends "user/pages/account_subpage.html" %}
+{% load icons %}
+
+{% block subpage_header %}
+<h1 class="h2 m-4">API Keys</h1>
+{% endblock %}
+
+{% block subpage_content %}
+<div class="container-fluid">
+
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Your API Keys</h5>
+          {% if api_token_list %}
+          <a class="btn btn-primary btn-sm" href="{% url 'user_api_token_create' %}" data-async="modal">
+            {% icon "plus" size="sm" %} Create New Key
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          {% if api_token_list %}
+          {% include "user/components/api_token_table_standard.html" with api_token_list=api_token_list %}
+          {% else %}
+          <div class="text-center py-5">
+            {% icon "key" size="xxxl" css_class="text-muted mb-3" %}
+            <h5 class="text-muted">No API keys yet</h5>
+            <p class="text-muted mb-4">Create your first API key to start integrating with the Trip Tools API.</p>
+            <a href="{% url 'user_api_token_create' %}" class="btn btn-primary" data-async="modal">
+              {% icon "plus" size="sm" %} Create Your First Key
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row m-4">
+    <div class="col-xl-10 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Security Best Practices</h5>
+        </div>
+        <div class="card-body">
+          <ul class="small mb-0">
+            <li>API keys are only shown once at creation</li>
+            <li>Store keys securely and never share them</li>
+            <li>Delete unused keys to minimize security risks</li>
+            <li>Use descriptive names to identify key purposes</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

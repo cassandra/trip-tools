@@ -17,62 +17,72 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    set_default_port_if_needed()  # TT Customization
+    set_runserver_defaults_if_needed()  # TT Customization
     execute_from_command_line( sys.argv )
 
     
-def set_default_port_if_needed():
-    if ( len(sys.argv) < 2 ) or ( sys.argv[1] != "runserver" ):
+def set_runserver_defaults_if_needed():
+    """
+    Set default hostname and port for runserver command.
+
+    Defaults:
+    - Hostname: 'localhost' (ensures cookie sharing with chrome extension)
+    - Port: from DJANGO_SERVER_PORT env var if set
+
+    These defaults are applied only when not explicitly specified by the user.
+    """
+    if len( sys.argv ) < 2 or sys.argv[1] != 'runserver':
         return
 
-    default_port_override = os.environ.get( 'DJANGO_SERVER_PORT' )
-    if not default_port_override:
-        return
+    default_hostname = 'localhost'
+    default_port = os.environ.get( 'DJANGO_SERVER_PORT' )
 
-    if runserver_has_hostname_only_arg():
-        last_arg = sys.argv[-1]
-        new_last_arg = f'{last_arg}:{default_port_override}'
-        sys.argv[-1] = new_last_arg
-        return
-    
-    if not runserver_has_port_specified():
-        sys.argv.append( default_port_override )
-        return
+    # Check what the user has already specified
+    has_address = runserver_has_address_specified()
 
-    return
+    if has_address:
+        # User specified something - only add port if they gave hostname only
+        if runserver_has_hostname_only_arg() and default_port:
+            last_arg = sys.argv[-1]
+            sys.argv[-1] = f'{last_arg}:{default_port}'
+    else:
+        # User specified nothing - add our defaults
+        if default_port:
+            sys.argv.append( f'{default_hostname}:{default_port}' )
+        else:
+            sys.argv.append( default_hostname )
 
 
-def runserver_has_hostname_only_arg():
-    if len(sys.argv) < 2 or sys.argv[1] != "runserver":
+def runserver_has_address_specified() -> bool:
+    """Check if any address (hostname, port, or both) is specified."""
+    if len( sys.argv ) < 3:
         return False
-    if len(sys.argv) == 2:
+
+    for arg in sys.argv[2:]:
+        if arg.startswith( '--' ):
+            continue
+        # Any non-flag argument is an address specification
+        return True
+
+    return False
+
+
+def runserver_has_hostname_only_arg() -> bool:
+    """Check if the last positional arg is a hostname without port."""
+    if len( sys.argv ) < 3:
         return False
 
     last_arg = sys.argv[-1]
     if last_arg.startswith( '--' ):
         return False
+    # Port only (e.g., "8000")
     if re.fullmatch( r'\d+', last_arg ):
         return False
-    if re.fullmatch( r'\d+\.\d+\.\d+\.\d+', last_arg ):
-        return True
-    if re.fullmatch( r'[a-zA-Z0-9_][a-zA-Z0-9\-_\.]+', last_arg ):
-        return True
-    return False
-    
-
-def runserver_has_port_specified() -> bool:
-    """Checks if a port is provided in the runserver command arguments."""
-    if len(sys.argv) < 2 or sys.argv[1] != "runserver":
+    # Has port (e.g., "localhost:8000" or "127.0.0.1:8000")
+    if ':' in last_arg:
         return False
-
-    for arg in sys.argv[2:]:
-        if arg.startswith("--"):
-            continue
-        if re.fullmatch( r'\d{4,5}', arg ) or re.fullmatch( r'[\d\.]+:\d{4,5}', arg ):
-            return True
-        continue
-    
-    return False
+    # IP address or hostname without port
+    return True
 
 
 if __name__ == '__main__':

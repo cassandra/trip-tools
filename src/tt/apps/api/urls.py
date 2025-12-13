@@ -1,14 +1,22 @@
 from django.urls import path, include
 
-from .views import TokenListView, TokenDetailView, CurrentUserView
+from .views import (
+    CurrentUserView,
+    ExtensionStatusView,
+    TokenCollectionView,
+    TokenItemView,
+)
 
 
 urlpatterns = [
     # Routes handled by API module directly
-    path('v1/tokens/', TokenListView.as_view(), name='api-token-list'),
-    path('v1/tokens/<str:lookup_key>/', TokenDetailView.as_view(), name='api-token-detail'),
+    path('v1/tokens/', TokenCollectionView.as_view(), name='api-token-collection'),
+    path('v1/tokens/<str:lookup_key>/', TokenItemView.as_view(), name='api-token-item'),
     path('v1/me/', CurrentUserView.as_view(), name='api-current-user'),
+    path('v1/extension/status/', ExtensionStatusView.as_view(), name='api-extension-status'),
 
     # Feature-specific delegated API routes
+    path('v1/client-config/', include('tt.apps.client_config.api.urls')),
     path('v1/locations/', include('tt.apps.locations.api.urls')),
+    path('v1/trips/', include('tt.apps.trips.api.urls')),
 ]

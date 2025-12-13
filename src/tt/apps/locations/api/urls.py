@@ -1,8 +1,9 @@
 from django.urls import path
 
-from .views import LocationListView
+from . import views
 
 
 urlpatterns = [
-    path('location/trip/<uuid:trip_uuid>/', LocationListView.as_view(), name='api-location-list'),
+    path( '', views.LocationCollectionView.as_view(), name = 'api_location_collection' ),
+    path( '<uuid:location_uuid>/', views.LocationItemView.as_view(), name = 'api_location_item' ),
 ]

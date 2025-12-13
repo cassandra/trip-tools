@@ -10,6 +10,7 @@ For a streamlined setup experience, we provide an automated setup script that ha
 1. Fork the repository on GitHub (see manual steps below for details)
 2. Clone your fork locally
 3. Ensure Python 3.11 is installed
+4. Node.js 20.x (for E2E testing) - see [Dependencies](Dependencies.md#nodejs)
 
 ### Automated Setup
 After cloning your fork, run the setup script from the project root:
@@ -42,6 +43,7 @@ pip install -r src/tt/requirements/development.txt
 ./src/manage.py migrate
 ./src/manage.py tt_createsuperuser
 ./src/manage.py tt_creategroups
+./src/manage.py tt_createseeddata
 ./src/manage.py runserver
 ```
 
@@ -136,6 +138,7 @@ cd $PROJ_DIR
 ./src/manage.py migrate
 ./src/manage.py tt_createsuperuser
 ./src/manage.py tt_creategroups
+./src/manage.py tt_createseeddata
 ```
 
 It is a good idea to run the tests to validate that you can and that the installation seem fine.
@@ -181,6 +184,7 @@ cd $PROJ_DIR/src
 # User management
 ./src/manage.py tt_createsuperuser
 ./src/manage.py tt_creategroups
+./src/manage.py tt_createseeddata
 
 # Development server
 ./src/manage.py runserver              # Runs on http://127.0.0.1:6777
@@ -201,6 +205,24 @@ make docker-build
 make docker-run-fg                 # Foreground
 make docker-run                    # Background
 make docker-stop
+```
+
+### E2E Testing (Playwright)
+```bash
+# First-time setup (installs npm packages and Playwright browsers)
+make test-e2e-install
+
+# Seed test data (creates test user for authentication)
+make test-e2e-seed
+
+# Run all E2E tests
+make test-e2e
+
+# Run specific test categories
+make test-e2e-webapp-extension-none   # Web application UI tests (no Chrome extension)
+make test-e2e-webapp-extension-sim    # Web app tests with simulated Chrome extension
+make test-e2e-webapp-extension-real   # Web app tests with real Chrome extension
+make test-e2e-extension-isolated      # Chrome extension tests with mocked API server
 ```
 
 ### Documentation

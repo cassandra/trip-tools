@@ -29,9 +29,10 @@ User = get_user_model()
 class TripImageManagerForUserTestCase(TestCase):
     """Test for_user filtering - images uploaded by user."""
 
-    def setUp(self):
-        self.user1 = User.objects.create_user(email='user1@test.com', password='pass')
-        self.user2 = User.objects.create_user(email='user2@test.com', password='pass')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = User.objects.create_user(email='user1@test.com', password='pass')
+        cls.user2 = User.objects.create_user(email='user2@test.com', password='pass')
 
     def test_for_user_returns_uploaded_images(self):
         """for_user should return images uploaded by the user."""
@@ -83,12 +84,13 @@ class TripImageManagerForUserTestCase(TestCase):
 class TripImageManagerAccessibleToUserInTripTestCase(TestCase):
     """Test accessible_to_user_in_trip - trip member-based access."""
 
-    def setUp(self):
-        self.user1 = User.objects.create_user(email='user1@test.com', password='pass')
-        self.user2 = User.objects.create_user(email='user2@test.com', password='pass')
-        self.user3 = User.objects.create_user(email='user3@test.com', password='pass')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = User.objects.create_user(email='user1@test.com', password='pass')
+        cls.user2 = User.objects.create_user(email='user2@test.com', password='pass')
+        cls.user3 = User.objects.create_user(email='user3@test.com', password='pass')
 
-        self.trip = TripSyntheticData.create_test_trip(user=self.user1, title='Test Trip')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user1, title='Test Trip')
 
     def test_accessible_to_owner_includes_all_member_images(self):
         """Trip owner should see images from all trip members."""
@@ -192,9 +194,10 @@ class TripImageManagerAccessibleToUserInTripTestCase(TestCase):
 class TripImageManagerDateRangeFilteringTestCase(TestCase):
     """Test accessible_to_user_in_trip_for_date_range - date filtering for journal entries."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='user@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='user@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
 
     def test_date_range_includes_images_within_range(self):
         """Should return images within the date range."""
@@ -403,12 +406,13 @@ class TripImageManagerDateRangeFilteringTestCase(TestCase):
 class TripImageManagerForTripTestCase(TestCase):
     """Test for_trip filtering - all images from trip members."""
 
-    def setUp(self):
-        self.user1 = User.objects.create_user(email='user1@test.com', password='pass')
-        self.user2 = User.objects.create_user(email='user2@test.com', password='pass')
-        self.user3 = User.objects.create_user(email='user3@test.com', password='pass')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = User.objects.create_user(email='user1@test.com', password='pass')
+        cls.user2 = User.objects.create_user(email='user2@test.com', password='pass')
+        cls.user3 = User.objects.create_user(email='user3@test.com', password='pass')
 
-        self.trip = TripSyntheticData.create_test_trip(user=self.user1, title='Test Trip')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user1, title='Test Trip')
 
     def test_for_trip_returns_all_member_images(self):
         """for_trip should return images from all trip members."""
@@ -458,9 +462,10 @@ class TripImageManagerForTripTestCase(TestCase):
 class TripImageManagerEdgeCasesTestCase(TestCase):
     """Test edge cases and boundary conditions."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(email='user@test.com', password='pass')
-        self.trip = TripSyntheticData.create_test_trip(user=self.user, title='Test Trip')
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email='user@test.com', password='pass')
+        cls.trip = TripSyntheticData.create_test_trip(user=cls.user, title='Test Trip')
 
     def test_accessible_empty_trip(self):
         """accessible_to_user_in_trip should work with trip that has no images."""

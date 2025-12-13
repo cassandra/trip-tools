@@ -316,6 +316,11 @@ print_notice "Creating user groups..."
 ./manage.py tt_creategroups
 print_success "User groups created"
 
+# Seed application data
+print_notice "Seeding application data..."
+./manage.py tt_createseeddata
+print_success "Application data seeded"
+
 # Step 7: Run Tests
 print_notice "Step 7: Validation"
 

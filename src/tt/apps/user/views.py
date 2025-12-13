@@ -6,19 +6,24 @@ from django.contrib.auth.models import User as UserType
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import BadRequest, ValidationError
 from django.core.validators import validate_email
-from django.http import HttpRequest, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.http import Http404, HttpRequest, HttpResponseRedirect
+from django.shortcuts import render
+from django.template.loader import get_template
 from django.urls import reverse
 from django.views.generic import View
 
-from tt.apps.api.models import APIToken
+from tt.apps.api.enums import TokenType
 from tt.apps.api.services import APITokenService
+from tt.apps.common.rate_limit import rate_limit
+import tt.apps.common.antinode as antinode
+from tt.environment.constants import TtConst
 from tt.apps.notify.email_sender import EmailSender
 from tt.async_view import ModalView
 
 from . import forms
 from .context import AccountPageContext
 from .enums import AccountPageType, SigninErrorType
+from .extension_service import ExtensionTokenService
 from .magic_code_generator import MagicCodeStatus, MagicCodeGenerator
 from .signin_manager import SigninManager
 from .schemas import UserAuthenticationData
@@ -248,35 +253,46 @@ class AccountHomeView(LoginRequiredMixin, View):
         return render(request, 'user/pages/account_home.html', context)
 
 
-class APIKeyManagementView(LoginRequiredMixin, View):
+class APITokenManagementView( LoginRequiredMixin, View ):
 
-    def get(self, request, *args, **kwargs):
+    def get( self, request, *args, **kwargs ):
         account_page_context = AccountPageContext(
-            active_page = AccountPageType.API_KEYS,
+            active_page = AccountPageType.API_TOKENS,
         )
-        api_keys = APIToken.objects.filter( user = request.user ).order_by('-created_at')
+        api_token_list = APITokenService.list_tokens( request.user, TokenType.STANDARD )
         context = {
             'account_page': account_page_context,
             'user': request.user,
-            'api_keys': api_keys,
+            'api_token_list': api_token_list,
         }
-        return render(request, 'user/pages/api_keys.html', context)
+        return render( request, 'user/pages/api_tokens.html', context )
 
 
-class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
+class APITokenCreateModalView(LoginRequiredMixin, ModalView):
 
     def get_template_name(self) -> str:
-        return 'user/modals/api_key_create.html'
+        return 'user/modals/api_token_create.html'
 
     def get(self, request, *args, **kwargs):
-        form = forms.APIKeyCreateForm()
+        form = forms.APITokenCreateForm()
         context = {
             'form': form,
         }
-        return self.modal_response(request, context=context)
+        return self.modal_response( request, context = context )
 
+    @rate_limit( 'api_token_ops', limit = 100, period_secs = 3600 )
     def post(self, request, *args, **kwargs):
-        form = forms.APIKeyCreateForm(request.POST)
+        from tt.apps.api.messages import APIMessages
+
+        form = forms.APITokenCreateForm( request.POST )
+
+        # Check token limit before processing form
+        if not APITokenService.can_create_token( request.user ):
+            form.add_error( None, APIMessages.TOKEN_LIMIT_REACHED )
+            context = {
+                'form': form,
+            }
+            return self.modal_response( request, context = context, status = 400 )
 
         if form.is_valid():
             api_token_data = APITokenService.create_token(
@@ -284,12 +300,12 @@ class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
                 api_token_name = form.cleaned_data['name'],
             )
             context = {
-                'new_api_key_str': api_token_data.api_token_str,
+                'new_api_token_str': api_token_data.api_token_str,
             }
             return self.modal_response(
                 request,
                 context = context,
-                template_name = 'user/modals/api_key_created.html',
+                template_name = 'user/modals/api_token_created.html',
             )
 
         context = {
@@ -298,29 +314,87 @@ class APIKeyCreateModalView(LoginRequiredMixin, ModalView):
         return self.modal_response(request, context=context, status=400)
 
 
-class APIKeyDeleteModalView(LoginRequiredMixin, ModalView):
+class APITokenDeleteModalView( LoginRequiredMixin, ModalView ):
 
-    def get_template_name(self) -> str:
-        return 'user/modals/api_key_delete.html'
+    def get_template_name( self ) -> str:
+        return 'user/modals/api_token_delete.html'
 
-    def get(self, request, api_key_id: int, *args, **kwargs):
-        api_key = get_object_or_404(
-            APIToken,
-            id = api_key_id,
+    def get( self, request, lookup_key: str, *args, **kwargs ):
+        api_token, error = APITokenService.get_token_by_lookup_key( request.user, lookup_key )
+        if error:
+            if error == 'Token not found':
+                raise Http404( error )
+            context = { 'error_message': error }
+            return self.modal_response( request, context = context, status = 400 )
+
+        context = { 'api_token': api_token }
+        return self.modal_response( request, context = context )
+
+    @rate_limit( 'api_token_ops', limit = 100, period_secs = 3600 )
+    def post( self, request, lookup_key: str, *args, **kwargs ):
+        success, error = APITokenService.delete_token( request.user, lookup_key )
+        if not success:
+            if error == 'Token not found':
+                raise Http404( error )
+            context = { 'error_message': error }
+            return self.modal_response( request, context = context, status = 400 )
+
+        return self.refresh_response( request )
+
+
+class APITokenExtensionDisconnectModalView( APITokenDeleteModalView ):
+
+    def get_template_name( self ) -> str:
+        return 'user/modals/api_token_extension_disconnect.html'
+
+
+class ExtensionsHomeView( LoginRequiredMixin, View ):
+    """
+    Extensions management page - shows extension tokens and authorization options.
+
+    GET: Displays the extensions page with current status.
+    POST: Creates a new extension token (via antinode.js async form).
+    """
+
+    def get(self, request, *args, **kwargs):
+        context = self._get_template_context( request )
+        return render( request, 'user/pages/extensions.html', context )
+
+    def post(self, request, *args, **kwargs):
+        # Get platform from form data (optional, for token naming)
+        platform = request.POST.get( 'platform', None ) or None
+
+        # Create the extension token
+        token_data = ExtensionTokenService.create_extension_token(
             user = request.user,
+            platform = platform,
         )
-        context = {
-            'api_key': api_key,
+        context = self._get_template_context( request )        
+        context.update({
+            'token_str': token_data.api_token_str,
+            'token_name': token_data.api_token.name,
+        })
+
+        auth_result_template = get_template( 'user/components/extension_authorize_result.html' )
+        auth_result_html = auth_result_template.render( context, request = request )
+        token_table_template = get_template( 'user/components/api_token_table_extension.html' )
+        token_table_html = token_table_template.render( context, request = request )
+        
+        return antinode.response(
+            insert_map = {
+                TtConst.EXT_AUTH_RESULT_ID:auth_result_html,
+                TtConst.EXT_API_TOKEN_TABLE_ID: token_table_html,
+            },
+        )
+
+    def _get_template_context( self, request ):
+        account_page_context = AccountPageContext(
+            active_page = AccountPageType.EXTENSIONS,
+        )
+        api_token_list = ExtensionTokenService.get_extension_tokens( request.user )
+        return {
+            'account_page': account_page_context,
+            'user': request.user,
+            'api_token_list': api_token_list,
         }
-        return self.modal_response(request, context=context)
-
-    def post(self, request, api_key_id: int, *args, **kwargs):
-        api_key = get_object_or_404(
-            APIToken,
-            id = api_key_id,
-            user = request.user,
-        )
-        api_key.delete()
-        redirect_url = reverse('user_api_keys')
-        return self.redirect_response( request, redirect_url )
-
+ 

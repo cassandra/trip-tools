@@ -1266,4 +1266,50 @@ body {
     transition: background-color 0.2s, border 0.2s;
 }
 
+/* =============================================================================
+   Extension State Classes
+
+   These classes control visibility based on browser extension state.
+   The extension's content script adds one of these classes to <body>:
+   - tt-ext-authorized: Extension installed and authorized
+   - tt-ext-not-authorized: Extension installed but not authorized
+   - (no class): Extension not installed
+
+   Usage in HTML:
+   <div class="tt-ext-show-authorized">Shown when authorized</div>
+   <div class="tt-ext-show-not-authorized">Shown when not authorized</div>
+   <div class="tt-ext-show-not-installed">Shown when extension not installed</div>
+   ============================================================================= */
+
+/* Default state: extension not installed */
+.tt-ext-show-authorized {
+    display: none !important;
+}
+.tt-ext-show-not-authorized {
+    display: none !important;
+}
+
+/* Extension installed and authorized */
+body.tt-ext-authorized .tt-ext-show-authorized {
+    display: block !important;
+}
+body.tt-ext-authorized .tt-ext-show-not-authorized {
+    display: none !important;
+}
+body.tt-ext-authorized .tt-ext-show-not-installed {
+    display: none !important;
+}
+
+/* Extension installed but not authorized */
+body.tt-ext-not-authorized .tt-ext-show-not-authorized {
+    display: block !important;
+}
+body.tt-ext-not-authorized .tt-ext-show-authorized {
+    display: none !important;
+}
+body.tt-ext-not-authorized .tt-ext-show-not-installed {
+    display: none !important;
+}
+
+
 

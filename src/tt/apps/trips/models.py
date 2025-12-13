@@ -1,25 +1,25 @@
-import uuid
-
 from django.db import models
 
+from tt.apps.api.models import SyncableModel
 from tt.apps.common.model_fields import LabeledEnumField
 
 from .enums import TripPermissionLevel, TripStatus
 from . import managers
 
 
-class Trip(models.Model):
+class Trip( SyncableModel ):
     """
     Core organizing entity for all trip-related data.
     Access controlled via TripMember permission model.
+
+    Inherits from SyncableModel:
+    - uuid: External identifier
+    - version: Auto-incremented on save for change detection
+    - created_datetime: Record creation timestamp
+    - modified_datetime: Last modification timestamp
     """
     objects = managers.TripManager()
 
-    uuid = models.UUIDField(
-        default = uuid.uuid4,
-        unique = True,
-        editable = False,
-    )
     title = models.CharField(
         max_length = 200,
     )
@@ -37,8 +37,13 @@ class Trip(models.Model):
         TripStatus,
         'Trip Status',
     )
-    created_datetime = models.DateTimeField( auto_now_add = True )
-    modified_datetime = models.DateTimeField( auto_now = True )
+    gmm_map_id = models.CharField(
+        max_length = 255,
+        blank = True,
+        null = True,
+        unique = True,
+        help_text = 'Google My Maps map identifier (from URL mid parameter)',
+    )
 
     class Meta:
         verbose_name = 'Trip'

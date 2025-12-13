@@ -12,13 +12,16 @@ User = get_user_model()
 class DashboardViewTests(TestCase):
     """Tests for the dashboard view."""
 
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
             email='test@example.com',
             password='testpass123'
         )
-        self.dashboard_home_url = reverse('dashboard_home')
+        cls.dashboard_home_url = reverse('dashboard_home')
+
+    def setUp(self):
+        self.client = Client()
 
     def test_dashboard_home_requires_authentication(self):
         """Test that dashboard_home redirects unauthenticated users."""

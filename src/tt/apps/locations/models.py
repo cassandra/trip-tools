@@ -1,8 +1,7 @@
-import uuid
-
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 
+from tt.apps.api.models import SyncableModel
 from tt.apps.common.model_fields import LabeledEnumField
 from tt.apps.contacts.models import ContactInfo
 from tt.apps.geo.models import GeoPointModelMixin
@@ -76,21 +75,22 @@ class LocationSubCategory(models.Model):
         return f"{self.category.name} - {self.name}"
 
 
-class Location( GeoPointModelMixin, models.Model ):
+class Location( GeoPointModelMixin, SyncableModel ):
     """
     A place of interest associated with a trip.
 
     Design: Locations are trip-specific to maintain clean data isolation and
     trip context. For location reuse across trips, use copy/import features.
     For pre-trip research, create a "Future Trips" or "Wishlist" trip.
+
+    Inherits from SyncableModel:
+    - uuid: External identifier
+    - version: Auto-incremented on save for change detection
+    - created_datetime: Record creation timestamp
+    - modified_datetime: Last modification timestamp
     """
     objects = managers.LocationManager()
 
-    uuid = models.UUIDField(
-        default = uuid.uuid4,
-        editable = False,
-        unique = True,
-    )
     trip = models.ForeignKey(
         Trip,
         on_delete = models.CASCADE,
@@ -144,13 +144,20 @@ class Location( GeoPointModelMixin, models.Model ):
         # Maybe make this data more structured in the future?
         blank = True,
     )
-    created_datetime = models.DateTimeField( auto_now_add = True )
-    modified_datetime = models.DateTimeField( auto_now = True )
+    gmm_id = models.CharField(
+        max_length = 255,
+        blank = True,
+        null = True,
+        help_text = 'Google My Maps feature ID for extension sync',
+    )
 
     class Meta:
         verbose_name = 'Location'
         verbose_name_plural = 'Locations'
         ordering = ['title']
+        indexes = [
+            models.Index( fields = ['trip', 'modified_datetime'] ),
+        ]
 
 
 class LocationNote(models.Model):
@@ -168,6 +175,7 @@ class LocationNote(models.Model):
     text = models.TextField()
     source_label = models.CharField( max_length = 200, blank = True )
     source_url = models.URLField( blank = True )
+    sort_order = models.PositiveIntegerField( default = 0 )
 
     created_datetime = models.DateTimeField( auto_now_add = True )
     modified_datetime = models.DateTimeField( auto_now = True )
@@ -175,4 +183,4 @@ class LocationNote(models.Model):
     class Meta:
         verbose_name = 'Location Note'
         verbose_name_plural = 'Location Notes'
-        ordering = ['created_datetime']
+        ordering = ['sort_order', 'created_datetime']

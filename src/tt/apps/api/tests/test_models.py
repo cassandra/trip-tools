@@ -23,19 +23,23 @@ User = get_user_model()
 class APITokenRecordUsageThrottlingTestCase(TestCase):
     """Test APIToken.record_usage() throttling behavior."""
 
-    def setUp(self):
-        """Create test user and token."""
-        datetimeproxy.reset()
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        """Create test user and token once for all tests."""
+        cls.user = User.objects.create_user(
             email='testuser@example.com',
             password='testpass123'
         )
-        self.token = APIToken.objects.create(
-            user=self.user,
+        cls.token = APIToken.objects.create(
+            user=cls.user,
             name='Test Token',
             lookup_key='testkey1',
             api_token_hash='test_hash_value_1234567890abcdef1234567890abcdef12345678'
         )
+
+    def setUp(self):
+        """Reset time proxy for each test."""
+        datetimeproxy.reset()
 
     def tearDown(self):
         """Reset time after each test."""
