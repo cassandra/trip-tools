@@ -1023,3 +1023,66 @@ input:checked + .tt-toggle-slider:before {
     padding: 8px 0;
     text-align: center;
 }
+
+/* =============================================================================
+ * Link Success Panel
+ * ============================================================================= */
+
+.tt-link-success-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--tt-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+}
+
+.tt-link-success-panel.tt-hidden {
+    display: none;
+}
+
+.tt-link-success-content {
+    text-align: center;
+    padding: 32px 24px;
+}
+
+.tt-link-success-icon {
+    margin-bottom: 16px;
+    color: var(--tt-success-color);
+}
+
+.tt-link-success-icon svg {
+    stroke: currentColor;
+}
+
+.tt-link-success-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--tt-text-color);
+    margin-bottom: 8px;
+}
+
+.tt-link-success-hint {
+    font-size: 14px;
+    color: var(--tt-muted-color);
+    margin: 0 0 24px 0;
+}
+
+.tt-link-success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+.tt-link-success-actions .tt-btn-primary {
+    min-width: 160px;
+}
+
+.tt-link-success-actions .tt-btn-link {
+    font-size: 13px;
+}

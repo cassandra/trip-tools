@@ -111,6 +111,7 @@ function setupEventListeners() {
     setupTripEventListeners();
     setupGmmEventListeners();
     setupLinkMapEventListeners();
+    setupLinkSuccessEventListeners();
 
     var decorateToggle = document.getElementById( TT.DOM.ID_DECORATE_TOGGLE );
     if ( decorateToggle ) {
@@ -911,10 +912,13 @@ function handleCreateTripSubmit() {
             addLocalDebugEntry( 'info', 'Trip created: ' + response.data.activeTripUuid );
             hideCreateTripPanel();
 
-            // If we linked a map, update local state
+            // If we linked a map, update local state and show success panel
             if ( gmmMapId ) {
                 currentGmmLinkStatus = { isLinked: true, tripUuid: response.data.activeTripUuid };
                 updateUIForCurrentPage();
+
+                // Show success panel with reload prompt
+                showLinkSuccessPanel( 'Trip Created for Map' );
             }
 
             // Render updated trip list from response
@@ -1536,6 +1540,9 @@ function handleLinkMapToTrip( trip ) {
                         renderTrips( setResponse.data.workingSet, setResponse.data.activeTripUuid );
                     }
                 });
+
+            // Show success panel with reload prompt
+            showLinkSuccessPanel( 'Trip Linked to Map' );
         } else {
             var errorMsg = response && response.error ? response.error : 'Unknown error';
             addLocalDebugEntry( 'error', 'Link map failed: ' + errorMsg );
@@ -1546,4 +1553,60 @@ function handleLinkMapToTrip( trip ) {
         addLocalDebugEntry( 'error', 'Link map error: ' + error.message );
         alert( 'Failed to link map: ' + error.message );
     });
+}
+
+// =============================================================================
+// Link Success Panel
+// =============================================================================
+
+/**
+ * Set up event listeners for the link success panel.
+ */
+function setupLinkSuccessEventListeners() {
+    var reloadBtn = document.getElementById( TT.DOM.ID_LINK_SUCCESS_RELOAD );
+    if ( reloadBtn ) {
+        reloadBtn.addEventListener( 'click', function() {
+            // Reload the current tab and close popup
+            chrome.tabs.query( { active: true, currentWindow: true }, function( tabs ) {
+                if ( tabs && tabs.length > 0 ) {
+                    chrome.tabs.reload( tabs[0].id );
+                }
+                window.close();
+            });
+        });
+    }
+
+    var dismissBtn = document.getElementById( TT.DOM.ID_LINK_SUCCESS_DISMISS );
+    if ( dismissBtn ) {
+        dismissBtn.addEventListener( 'click', function() {
+            hideLinkSuccessPanel();
+        });
+    }
+}
+
+/**
+ * Show the link success panel with a custom title.
+ * @param {string} title - The success message title.
+ */
+function showLinkSuccessPanel( title ) {
+    var panel = document.getElementById( TT.DOM.ID_LINK_SUCCESS_PANEL );
+    var titleEl = document.getElementById( TT.DOM.ID_LINK_SUCCESS_TITLE );
+
+    if ( titleEl && title ) {
+        titleEl.textContent = title;
+    }
+
+    if ( panel ) {
+        panel.classList.remove( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+/**
+ * Hide the link success panel.
+ */
+function hideLinkSuccessPanel() {
+    var panel = document.getElementById( TT.DOM.ID_LINK_SUCCESS_PANEL );
+    if ( panel ) {
+        panel.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
 }

@@ -731,6 +731,92 @@
 }
 
 /* =============================================================================
+ * One-Sided and High-Volume Sync Dialog
+ * ============================================================================= */
+
+.tt-sync-summary-section {
+    padding: 16px 0;
+    text-align: center;
+}
+
+.tt-sync-summary-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 8px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.tt-sync-summary-hint {
+    font-size: 13px;
+    color: #5f6368;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+/* Button row (horizontal) for two buttons */
+.tt-sync-button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8eaed;
+}
+
+/* Button column (vertical) for three buttons */
+.tt-sync-button-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8eaed;
+}
+
+/* Sync dialog buttons */
+.tt-sync-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tt-sync-btn-primary {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+}
+
+.tt-sync-btn-primary:hover {
+    background: #1765cc;
+}
+
+.tt-sync-btn-secondary {
+    background: #fff;
+    color: #1a73e8;
+    border: 1px solid #dadce0;
+}
+
+.tt-sync-btn-secondary:hover {
+    background: #f1f3f4;
+    border-color: #1a73e8;
+}
+
+.tt-sync-btn-link {
+    background: none;
+    border: none;
+    color: #5f6368;
+    padding: 8px;
+}
+
+.tt-sync-btn-link:hover {
+    color: #202124;
+    text-decoration: underline;
+}
+
+/* =============================================================================
  * Operation Mode Indicator
  * ============================================================================= */
 

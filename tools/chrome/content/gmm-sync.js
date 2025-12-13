@@ -50,6 +50,9 @@
     ERROR_MESSAGES[ERROR_TYPE.NO_DIALOG] = "Multiple matches found, none selected";
     ERROR_MESSAGES[ERROR_TYPE.TOO_MANY_RESULTS] = "Too many matches - search manually";
 
+    // Threshold for determining low vs high volume sync dialog
+    var SYNC_LOW_VOLUME_THRESHOLD = 20;
+
     /**
      * Calculate distance between two points using Haversine formula.
      * @param {number} lat1 - Latitude of first point.
@@ -138,7 +141,7 @@
                 inBoth: diff.inBoth.length
             });
 
-            return showSyncCompareDialog( data, diff );
+            return showSyncDialog( data, diff );
         })
         .then( function( dialogResult ) {
             if ( dialogResult.cancelled ) {
@@ -224,7 +227,7 @@
                 _syncInProgress = true;
 
                 // Show dialog with auto-check context
-                return showSyncCompareDialog( _currentTripData, diff, { autoCheck: true } );
+                return showSyncDialog( _currentTripData, diff, { autoCheck: true } );
         })
         .then( function( dialogResult ) {
             if ( !dialogResult || dialogResult.cancelled ) {
@@ -1714,6 +1717,395 @@
             inBoth: inBoth,
             suggestedMatches: suggestedMatches
         };
+    }
+
+    /**
+     * Categorize sync comparison results for UX branching.
+     *
+     * Categories:
+     * - zero: No changes needed. Silent.
+     * - one_side_empty: One side is completely empty, the other has items.
+     *   This is clearly an initial sync/setup. Sync/Cancel only.
+     * - no_conflicts: Both sides have locations, but only one side has unmatched
+     *   items (e.g., 95 matched, 4 map-only, 0 server-only). No conflicts possible,
+     *   but ambiguous situation. Three choices: Sync All / Review / Cancel.
+     * - potential_conflicts: Both sides have unmatched items. Conflicts possible.
+     *   Three choices: Sync All / Review / Cancel.
+     *
+     * @param {Object} comparison - Result from compareLocations().
+     * @returns {Object} Category info with type, counts, and summary.
+     */
+    function categorizeSyncResults( comparison ) {
+        var serverCount = comparison.serverOnly.length;
+        var gmmCount = comparison.gmmOnly.length;
+        var matchCount = comparison.suggestedMatches.length;
+        var matchedCount = comparison.matched ? comparison.matched.length : 0;
+        var totalChanges = serverCount + gmmCount + matchCount;
+
+        if ( totalChanges === 0 ) {
+            return { type: 'zero', serverCount: 0, gmmCount: 0, matchCount: 0, totalChanges: 0 };
+        }
+
+        // Check if one side is completely empty (no matched items either)
+        var serverEmpty = serverCount === 0 && matchedCount === 0;
+        var gmmEmpty = gmmCount === 0 && matchedCount === 0;
+
+        if ( serverEmpty || gmmEmpty ) {
+            // One side is completely empty - initial sync situation
+            return {
+                type: 'one_side_empty',
+                serverCount: serverCount,
+                gmmCount: gmmCount,
+                matchCount: matchCount,
+                totalChanges: totalChanges,
+                summary: serverCount > 0
+                    ? serverCount + ' location' + ( serverCount === 1 ? '' : 's' ) + ' to add from server'
+                    : gmmCount + ' location' + ( gmmCount === 1 ? '' : 's' ) + ' to add from map'
+            };
+        }
+
+        // Both sides have locations. Check if unmatched items are on both sides.
+        var hasUnmatchedOnBothSides = serverCount > 0 && gmmCount > 0;
+
+        // Build summary
+        var summaryParts = [];
+        if ( gmmCount > 0 ) {
+            summaryParts.push( gmmCount + ' from map' );
+        }
+        if ( serverCount > 0 ) {
+            summaryParts.push( serverCount + ' from server' );
+        }
+        if ( matchCount > 0 ) {
+            summaryParts.push( matchCount + ' suggested match' + ( matchCount === 1 ? '' : 'es' ) );
+        }
+
+        if ( hasUnmatchedOnBothSides || matchCount > 0 ) {
+            // Both sides have unmatched items, or there are suggested matches
+            // (suggested matches imply potential conflicts)
+            return {
+                type: 'potential_conflicts',
+                serverCount: serverCount,
+                gmmCount: gmmCount,
+                matchCount: matchCount,
+                totalChanges: totalChanges,
+                summary: summaryParts.join( ', ' )
+            };
+        }
+
+        // Only one side has unmatched items, but both sides have locations
+        // No conflicts possible, but ambiguous situation
+        return {
+            type: 'no_conflicts',
+            serverCount: serverCount,
+            gmmCount: gmmCount,
+            matchCount: matchCount,
+            totalChanges: totalChanges,
+            summary: summaryParts.join( ', ' )
+        };
+    }
+
+    /**
+     * Build sync decisions object with all items set to KEEP and matches set to LINK.
+     * Use this when user wants to accept suggested matches.
+     * @param {Object} comparison - Result from compareLocations().
+     * @returns {Object} Decisions object for executeSyncDecisions().
+     */
+    function buildAcceptMatchesDecisions( comparison ) {
+        var decisions = {};
+
+        comparison.gmmOnly.forEach( function( loc ) {
+            decisions[loc.fl_id] = { action: 'keep', source: 'gmm', location: loc };
+        });
+
+        comparison.serverOnly.forEach( function( loc ) {
+            decisions[loc.uuid] = { action: 'keep', source: 'server', location: loc };
+        });
+
+        comparison.suggestedMatches.forEach( function( match ) {
+            decisions['match_' + match.server.uuid] = {
+                action: 'link',
+                source: 'match',
+                server: match.server,
+                gmm: match.gmm
+            };
+        });
+
+        return decisions;
+    }
+
+    /**
+     * Build sync decisions for full sync (reject all suggested matches).
+     * Treats suggested matches as separate items: both sides get kept as distinct.
+     * @param {Object} comparison - Result from compareLocations().
+     * @returns {Object} Decisions object for executeSyncDecisions().
+     */
+    function buildFullSyncDecisions( comparison ) {
+        var decisions = {};
+
+        comparison.gmmOnly.forEach( function( loc ) {
+            decisions[loc.fl_id] = { action: 'keep', source: 'gmm', location: loc };
+        });
+
+        comparison.serverOnly.forEach( function( loc ) {
+            decisions[loc.uuid] = { action: 'keep', source: 'server', location: loc };
+        });
+
+        // Reject suggested matches - treat each side as a separate keep
+        comparison.suggestedMatches.forEach( function( match ) {
+            // Keep the GMM location (will create on server)
+            decisions[match.gmm.fl_id] = { action: 'keep', source: 'gmm', location: match.gmm };
+            // Keep the server location (will create on GMM)
+            decisions[match.server.uuid] = { action: 'keep', source: 'server', location: match.server };
+        });
+
+        return decisions;
+    }
+
+    /**
+     * Show simple sync dialog for one-side-empty case (initial sync).
+     * One side is completely empty, so this is clearly a first-time sync.
+     * Only offers Sync/Cancel since there are no decisions to make.
+     * @param {Object} data - Sync request data (tripUuid, tripTitle, etc.).
+     * @param {Object} diff - Diff results from compareLocations.
+     * @param {Object} category - Result from categorizeSyncResults().
+     * @returns {Promise<Object|null>} Sync decisions or null if cancelled.
+     */
+    function showOneSideEmptySyncDialog( data, diff, category ) {
+        return new Promise( function( resolve ) {
+            // Remove any existing dialog
+            var existingDialog = document.querySelector( '.' + TT_SYNC_DIALOG_CLASS );
+            if ( existingDialog ) {
+                existingDialog.remove();
+            }
+
+            var dialog = TTDom.createElement( 'div', {
+                className: TT_SYNC_DIALOG_CLASS
+            });
+
+            // Header
+            var header = TTDom.createElement( 'div', {
+                className: 'tt-sync-header',
+                text: 'Sync Locations'
+            });
+            dialog.appendChild( header );
+
+            // Trip info
+            var tripInfo = TTDom.createElement( 'div', {
+                className: 'tt-sync-trip-info',
+                text: 'Trip: ' + ( data.tripTitle || 'Unknown' )
+            });
+            dialog.appendChild( tripInfo );
+
+            // Summary message
+            var summarySection = TTDom.createElement( 'div', {
+                className: 'tt-sync-summary-section'
+            });
+
+            var summaryText = TTDom.createElement( 'div', {
+                className: 'tt-sync-summary-text',
+                text: category.summary
+            });
+            summarySection.appendChild( summaryText );
+
+            var hintText = TTDom.createElement( 'div', {
+                className: 'tt-sync-summary-hint',
+                text: 'These locations will be synced to your trip.'
+            });
+            summarySection.appendChild( hintText );
+
+            dialog.appendChild( summarySection );
+
+            // Action buttons
+            var buttonRow = TTDom.createElement( 'div', {
+                className: 'tt-sync-button-row'
+            });
+
+            var cancelBtn = TTDom.createElement( 'button', {
+                className: 'tt-sync-btn tt-sync-btn-secondary',
+                text: 'Cancel'
+            });
+            cancelBtn.addEventListener( 'click', function() {
+                dialog.remove();
+                resolve( null );
+            });
+            buttonRow.appendChild( cancelBtn );
+
+            var syncBtn = TTDom.createElement( 'button', {
+                className: 'tt-sync-btn tt-sync-btn-primary',
+                text: 'Sync'
+            });
+            syncBtn.addEventListener( 'click', function() {
+                dialog.remove();
+                resolve( buildAcceptMatchesDecisions( diff ) );
+            });
+            buttonRow.appendChild( syncBtn );
+
+            dialog.appendChild( buttonRow );
+            document.body.appendChild( dialog );
+        });
+    }
+
+    /**
+     * Route to appropriate sync dialog based on sync result category.
+     * Unified entry point for sync UI that handles all branching logic.
+     * @param {Object} data - Sync request data (tripUuid, tripTitle, etc.).
+     * @param {Object} diff - Diff results from compareLocations.
+     * @param {Object} options - Options like autoCheck.
+     * @returns {Promise<Object>} Dialog result with decisions or cancelled flag.
+     */
+    function showSyncDialog( data, diff, options ) {
+        var category = categorizeSyncResults( diff );
+
+        // Zero changes - silently succeed (this shouldn't be called in this case)
+        if ( category.type === 'zero' ) {
+            return Promise.resolve( { cancelled: true, reason: 'no_changes' } );
+        }
+
+        // One side empty - initial sync, simple Sync/Cancel dialog
+        if ( category.type === 'one_side_empty' ) {
+            return showOneSideEmptySyncDialog( data, diff, category )
+                .then( function( decisions ) {
+                    if ( decisions === null ) {
+                        return { cancelled: true };
+                    }
+                    return { decisions: decisions };
+                });
+        }
+
+        // Both no_conflicts and potential_conflicts show choice dialog
+        return showThreeChoiceSyncDialog( data, diff, category )
+            .then( function( choice ) {
+                if ( choice === 'cancel' ) {
+                    return { cancelled: true };
+                }
+                if ( choice === 'full_sync' ) {
+                    // Reject all suggested matches - treat as distinct items
+                    return { decisions: buildFullSyncDecisions( diff ) };
+                }
+                if ( choice === 'accept_matches' ) {
+                    // Accept suggested matches and sync all
+                    return { decisions: buildAcceptMatchesDecisions( diff ) };
+                }
+                // choice === 'review' - show line-by-line
+                return showSyncCompareDialog( data, diff, options );
+            });
+    }
+
+    /**
+     * Show sync choice dialog for no_conflicts and potential_conflicts cases.
+     * Both sides have locations, so user may want to review individual items.
+     *
+     * When no suggested matches: Sync All / Review / Cancel
+     * When suggested matches exist: Full Sync / Accept Matches / Review / Cancel
+     *
+     * @param {Object} data - Sync request data (tripUuid, tripTitle, etc.).
+     * @param {Object} diff - Diff results from compareLocations.
+     * @param {Object} category - Result from categorizeSyncResults().
+     * @returns {Promise<string>} 'full_sync', 'accept_matches', 'review', or 'cancel'.
+     */
+    function showThreeChoiceSyncDialog( data, diff, category ) {
+        return new Promise( function( resolve ) {
+            // Remove any existing dialog
+            var existingDialog = document.querySelector( '.' + TT_SYNC_DIALOG_CLASS );
+            if ( existingDialog ) {
+                existingDialog.remove();
+            }
+
+            var hasMatches = category.matchCount > 0;
+
+            var dialog = TTDom.createElement( 'div', {
+                className: TT_SYNC_DIALOG_CLASS
+            });
+
+            // Header
+            var header = TTDom.createElement( 'div', {
+                className: 'tt-sync-header',
+                text: 'Sync Locations'
+            });
+            dialog.appendChild( header );
+
+            // Trip info
+            var tripInfo = TTDom.createElement( 'div', {
+                className: 'tt-sync-trip-info',
+                text: 'Trip: ' + ( data.tripTitle || 'Unknown' )
+            });
+            dialog.appendChild( tripInfo );
+
+            // Summary message
+            var summarySection = TTDom.createElement( 'div', {
+                className: 'tt-sync-summary-section'
+            });
+
+            var summaryText = TTDom.createElement( 'div', {
+                className: 'tt-sync-summary-text',
+                text: category.summary
+            });
+            summarySection.appendChild( summaryText );
+
+            dialog.appendChild( summarySection );
+
+            // Action buttons - stacked vertically
+            var buttonColumn = TTDom.createElement( 'div', {
+                className: 'tt-sync-button-column'
+            });
+
+            if ( hasMatches ) {
+                // When there are suggested matches, offer two sync options
+                var fullSyncBtn = TTDom.createElement( 'button', {
+                    className: 'tt-sync-btn tt-sync-btn-primary',
+                    text: 'Full Sync'
+                });
+                fullSyncBtn.addEventListener( 'click', function() {
+                    dialog.remove();
+                    resolve( 'full_sync' );
+                });
+                buttonColumn.appendChild( fullSyncBtn );
+
+                var acceptMatchesBtn = TTDom.createElement( 'button', {
+                    className: 'tt-sync-btn tt-sync-btn-primary',
+                    text: 'Accept Matches'
+                });
+                acceptMatchesBtn.addEventListener( 'click', function() {
+                    dialog.remove();
+                    resolve( 'accept_matches' );
+                });
+                buttonColumn.appendChild( acceptMatchesBtn );
+            } else {
+                // No matches - simple Sync All
+                var syncAllBtn = TTDom.createElement( 'button', {
+                    className: 'tt-sync-btn tt-sync-btn-primary',
+                    text: 'Sync All'
+                });
+                syncAllBtn.addEventListener( 'click', function() {
+                    dialog.remove();
+                    resolve( 'accept_matches' );  // Same as accept_matches when no matches
+                });
+                buttonColumn.appendChild( syncAllBtn );
+            }
+
+            var reviewBtn = TTDom.createElement( 'button', {
+                className: 'tt-sync-btn tt-sync-btn-secondary',
+                text: 'Review Line-by-Line'
+            });
+            reviewBtn.addEventListener( 'click', function() {
+                dialog.remove();
+                resolve( 'review' );
+            });
+            buttonColumn.appendChild( reviewBtn );
+
+            var cancelBtn = TTDom.createElement( 'button', {
+                className: 'tt-sync-btn tt-sync-btn-link',
+                text: 'Cancel'
+            });
+            cancelBtn.addEventListener( 'click', function() {
+                dialog.remove();
+                resolve( 'cancel' );
+            });
+            buttonColumn.appendChild( cancelBtn );
+
+            dialog.appendChild( buttonColumn );
+            document.body.appendChild( dialog );
+        });
     }
 
     /**

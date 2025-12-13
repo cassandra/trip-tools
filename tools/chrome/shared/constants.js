@@ -230,7 +230,12 @@ TT.DOM = {
     ID_LINK_MAP_LOADING: 'tt-link-map-loading',
     ID_LINK_MAP_ERROR: 'tt-link-map-error',
     ID_LINK_MAP_LIST: 'tt-link-map-list',
-    ID_LINK_MAP_EMPTY: 'tt-link-map-empty'
+    ID_LINK_MAP_EMPTY: 'tt-link-map-empty',
+    // Link Success Panel
+    ID_LINK_SUCCESS_PANEL: 'tt-link-success-panel',
+    ID_LINK_SUCCESS_TITLE: 'tt-link-success-title',
+    ID_LINK_SUCCESS_RELOAD: 'tt-link-success-reload',
+    ID_LINK_SUCCESS_DISMISS: 'tt-link-success-dismiss'
 };
 
 TT.URL = {
