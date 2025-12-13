@@ -1,6 +1,6 @@
 /*
  * Trip Tools Chrome Extension - Trips Module
- * Manages the working set of trips and active trip selection.
+ * Manages the working set of trips and current trip selection.
  * Depends on: constants.js, storage.js, api.js
  */
 
@@ -34,23 +34,23 @@ TTTrips.setWorkingSet = function( trips ) {
 };
 
 /**
- * Get the active trip UUID.
- * @returns {Promise<string|null>} The active trip UUID or null.
+ * Get the current trip UUID from storage.
+ * @returns {Promise<string|null>} The current trip UUID or null.
  */
-TTTrips.getActiveTripUuid = function() {
-    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null );
+TTTrips.getCurrentTripUuidFromStorage = function() {
+    return TTStorage.get( TT.STORAGE.KEY_CURRENT_TRIP_UUID, null );
 };
 
 /**
- * Set the active trip UUID.
+ * Set the current trip UUID in storage.
  * @param {string|null} uuid - The trip UUID or null to clear.
  * @returns {Promise<void>}
  */
-TTTrips.setActiveTripUuid = function( uuid ) {
+TTTrips.setCurrentTripUuidInStorage = function( uuid ) {
     if ( uuid ) {
-        return TTStorage.set( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, uuid );
+        return TTStorage.set( TT.STORAGE.KEY_CURRENT_TRIP_UUID, uuid );
     }
-    return TTStorage.remove( TT.STORAGE.KEY_ACTIVE_TRIP_UUID );
+    return TTStorage.remove( TT.STORAGE.KEY_CURRENT_TRIP_UUID );
 };
 
 // =============================================================================
@@ -176,7 +176,7 @@ TTTrips.getCurrentTrip = function() {
 /**
  * Add a trip to the working set.
  * Updates lastAccessedAt and enforces MAX_WORKING_SET_SIZE by removing
- * the least recently accessed trip if needed (but never the active or pinned trip).
+ * the least recently accessed trip if needed (but never the current or pinned trip).
  * @param {Object} trip - Trip object with uuid, title, version.
  * @param {Object} [options] - Optional settings.
  * @param {string} [options.lastAccessedAt] - Custom lastAccessedAt timestamp (ISO string).
@@ -188,10 +188,10 @@ TTTrips.addToWorkingSet = function( trip, options ) {
     var accessTime = options.lastAccessedAt || new Date().toISOString();
 
     return Promise.all([
-        TTTrips.getActiveTripUuid(),
+        TTTrips.getCurrentTripUuidFromStorage(),
         TTTrips.getPinnedTripUuid()
     ]).then( function( results ) {
-        var activeUuid = results[0];
+        var currentUuid = results[0];
         var pinnedUuid = results[1];
 
         return TTTrips.getWorkingSet()
@@ -214,13 +214,13 @@ TTTrips.addToWorkingSet = function( trip, options ) {
                     return b.lastAccessedAt.localeCompare( a.lastAccessedAt );
                 });
 
-                // Enforce max size by removing from end (but never active or pinned trip)
+                // Enforce max size by removing from end (but never current or pinned trip)
                 while ( workingSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
-                    // Find last trip that isn't active or pinned
+                    // Find last trip that isn't current or pinned
                     var removed = false;
                     for ( var j = workingSet.length - 1; j >= 0; j-- ) {
                         var uuid = workingSet[j].uuid;
-                        if ( uuid !== activeUuid && uuid !== pinnedUuid ) {
+                        if ( uuid !== currentUuid && uuid !== pinnedUuid ) {
                             workingSet.splice( j, 1 );
                             removed = true;
                             break;
@@ -239,15 +239,15 @@ TTTrips.addToWorkingSet = function( trip, options ) {
 };
 
 /**
- * Set a trip as active.
- * Adds to working set and sets as active trip.
+ * Set a trip as current.
+ * Adds to working set and sets as current trip.
  * @param {Object} trip - Trip object with uuid, title, version.
  * @returns {Promise<void>}
  */
-TTTrips.setActiveTrip = function( trip ) {
+TTTrips.setCurrentTripInStorage = function( trip ) {
     return TTTrips.addToWorkingSet( trip )
         .then( function() {
-            return TTTrips.setActiveTripUuid( trip.uuid );
+            return TTTrips.setCurrentTripUuidInStorage( trip.uuid );
         });
 };
 
@@ -278,17 +278,17 @@ TTTrips.touchTrip = function( tripUuid ) {
 };
 
 /**
- * Get the active trip object from working set.
- * @returns {Promise<Object|null>} The active trip or null.
+ * Get the current trip object from storage.
+ * @returns {Promise<Object|null>} The current trip or null.
  */
-TTTrips.getActiveTrip = function() {
-    var activeUuid;
-    return TTTrips.getActiveTripUuid()
+TTTrips.getCurrentTripFromStorage = function() {
+    var currentUuid;
+    return TTTrips.getCurrentTripUuidFromStorage()
         .then( function( uuid ) {
             if ( !uuid ) {
                 return null;
             }
-            activeUuid = uuid;
+            currentUuid = uuid;
             return TTTrips.getWorkingSet();
         })
         .then( function( workingSet ) {
@@ -296,7 +296,7 @@ TTTrips.getActiveTrip = function() {
                 return null;
             }
             return workingSet.find( function( t ) {
-                return t.uuid === activeUuid;
+                return t.uuid === currentUuid;
             }) || null;
         });
 };
@@ -402,7 +402,7 @@ TTTrips.applyTripUpdate = function( tripData ) {
  *
  * For trips in deleted:
  *   - Remove from working set
- *   - If active trip was deleted, select a new active trip
+ *   - If current trip was deleted, select a new current trip
  *
  * @param {TripDataUpdates} tripDataUpdates - The updates to apply.
  * @returns {Promise<void>}
@@ -411,14 +411,14 @@ TTTrips.applyTripUpdate = function( tripData ) {
 TTTrips._applyUpdatesToWorkingSet = function( tripDataUpdates ) {
     var updates = tripDataUpdates.updates || {};
     var deleted = tripDataUpdates.deleted || [];
-    var activeUuidBeforeSync;
+    var currentUuidBeforeSync;
     var pinnedUuidBeforeSync;
 
     return Promise.all([
-        TTTrips.getActiveTripUuid(),
+        TTTrips.getCurrentTripUuidFromStorage(),
         TTTrips.getPinnedTripUuid()
     ]).then( function( results ) {
-        activeUuidBeforeSync = results[0];
+        currentUuidBeforeSync = results[0];
         pinnedUuidBeforeSync = results[1];
         return TTTrips.getWorkingSet();
     })
@@ -476,12 +476,12 @@ TTTrips._applyUpdatesToWorkingSet = function( tripDataUpdates ) {
                 return ( b.lastAccessedAt || '' ).localeCompare( a.lastAccessedAt || '' );
             });
 
-            // Enforce max size, but never evict active or pinned trip
+            // Enforce max size, but never evict current or pinned trip
             while ( updatedSet.length > TTTrips.MAX_WORKING_SET_SIZE ) {
                 var removed = false;
                 for ( var j = updatedSet.length - 1; j >= 0; j-- ) {
                     var uuid = updatedSet[j].uuid;
-                    if ( uuid !== activeUuidBeforeSync && uuid !== pinnedUuidBeforeSync ) {
+                    if ( uuid !== currentUuidBeforeSync && uuid !== pinnedUuidBeforeSync ) {
                         updatedSet.splice( j, 1 );
                         removed = true;
                         break;
@@ -499,18 +499,18 @@ TTTrips._applyUpdatesToWorkingSet = function( tripDataUpdates ) {
                 });
         })
         .then( function( updatedSet ) {
-            // Handle active trip if it was deleted
-            if ( activeUuidBeforeSync ) {
+            // Handle current trip if it was deleted
+            if ( currentUuidBeforeSync ) {
                 var stillExists = updatedSet.some( function( trip ) {
-                    return trip.uuid === activeUuidBeforeSync;
+                    return trip.uuid === currentUuidBeforeSync;
                 });
 
                 if ( !stillExists ) {
-                    // Active trip was deleted - select first available
+                    // Current trip was deleted - select first available
                     if ( updatedSet.length > 0 ) {
-                        return TTTrips.setActiveTripUuid( updatedSet[0].uuid );
+                        return TTTrips.setCurrentTripUuidInStorage( updatedSet[0].uuid );
                     }
-                    return TTTrips.setActiveTripUuid( null );
+                    return TTTrips.setCurrentTripUuidInStorage( null );
                 }
             }
         });
@@ -712,6 +712,6 @@ TTTrips.clearGmmMapIndex = function() {
 TTTrips.clearAll = function() {
     return Promise.all([
         TTTrips.setWorkingSet( [] ),
-        TTTrips.setActiveTripUuid( null )
+        TTTrips.setCurrentTripUuidInStorage( null )
     ]);
 };

@@ -573,10 +573,10 @@ function renderTrips( workingSet, pinnedTripUuid, pinTimestamp ) {
     var currentTripUuid = pinnedTripUuid || workingSet[0].uuid;
 
     // Store current trip for details panel
-    var currentTrip = workingSet.find( function( t ) {
+    var foundTrip = workingSet.find( function( t ) {
         return t.uuid === currentTripUuid;
     }) || workingSet[0];
-    currentActiveTrip = currentTrip;
+    currentTrip = foundTrip;
 
     // Render unified trip list
     var tripList = document.getElementById( TT.DOM.ID_TRIP_LIST );
@@ -763,7 +763,7 @@ function handleStalePinDismiss() {
 }
 
 function switchToTrip( trip ) {
-    TTMessaging.send( TT.MESSAGE.TYPE_SET_ACTIVE_TRIP, { trip: trip } )
+    TTMessaging.send( TT.MESSAGE.TYPE_SET_CURRENT_TRIP, { trip: trip } )
         .then( function( response ) {
             if ( response && response.success ) {
                 addLocalDebugEntry( 'info', 'Switched to trip: ' + trip.title );
@@ -1002,8 +1002,8 @@ function handleCreateMapFromDetails() {
     var trip = currentViewedTrip;
     if ( !trip ) return;
 
-    // Set currentActiveTrip for confirmCreateMap to use
-    currentActiveTrip = trip;
+    // Set currentTrip for confirmCreateMap to use
+    currentTrip = trip;
 
     hideTripDetailsPanel();
     showCreatingMapDialog( 'Creating map in Google My Maps...' );
@@ -1020,7 +1020,7 @@ function handleCreateMapFromDetails() {
 
             // Update local trip data
             trip.gmm_map_id = response.data.mapId;
-            currentActiveTrip = trip;
+            currentTrip = trip;
 
             // Refresh trip list to show new link status
             loadTrips();
@@ -1198,12 +1198,12 @@ function handleCreateTripSubmit() {
     TTMessaging.send( TT.MESSAGE.TYPE_CREATE_AND_ACTIVATE_TRIP, requestData )
     .then( function( response ) {
         if ( response && response.success ) {
-            addLocalDebugEntry( 'info', 'Trip created: ' + response.data.activeTripUuid );
+            addLocalDebugEntry( 'info', 'Trip created: ' + response.data.currentTripUuid );
             hideCreateTripPanel();
 
             // If we linked a map, update local state and show success panel
             if ( gmmMapId ) {
-                currentGmmLinkStatus = { isLinked: true, tripUuid: response.data.activeTripUuid };
+                currentGmmLinkStatus = { isLinked: true, tripUuid: response.data.currentTripUuid };
                 updateUIForCurrentPage();
 
                 // Show success panel with reload prompt
@@ -1304,8 +1304,8 @@ function renderAllTrips( trips ) {
 }
 
 function selectTripFromList( trip ) {
-    // Use existing setActiveTrip which adds to working set AND sets active
-    TTMessaging.send( TT.MESSAGE.TYPE_SET_ACTIVE_TRIP, { trip: trip } )
+    // Use existing setCurrentTrip which adds to working set AND sets as current
+    TTMessaging.send( TT.MESSAGE.TYPE_SET_CURRENT_TRIP, { trip: trip } )
         .then( function( response ) {
             if ( response && response.success ) {
                 addLocalDebugEntry( 'info', 'Selected trip from list: ' + trip.title );
@@ -1329,8 +1329,8 @@ function selectTripFromList( trip ) {
 // GMM Map Management
 // =============================================================================
 
-// Current active trip for GMM operations
-var currentActiveTrip = null;
+// Current trip for GMM operations
+var currentTrip = null;
 
 // Current page detection state
 var currentPageInfo = null;      // Result from TTPageInfo.detectCurrentPage()
@@ -1718,8 +1718,8 @@ function handleLinkMapToTrip( trip ) {
             // Use the updated trip from response (has gmm_map_id set)
             var updatedTrip = response.data.trip;
 
-            // Refresh trip display and set this as active trip
-            TTMessaging.send( TT.MESSAGE.TYPE_SET_ACTIVE_TRIP, { trip: updatedTrip } )
+            // Refresh trip display and set this as current trip
+            TTMessaging.send( TT.MESSAGE.TYPE_SET_CURRENT_TRIP, { trip: updatedTrip } )
                 .then( function( setResponse ) {
                     if ( setResponse && setResponse.success ) {
                         loadTrips();

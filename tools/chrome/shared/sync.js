@@ -98,8 +98,8 @@ TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_TRIP, function( data ) {
 
 /*
  * Location sync handler.
- * Updates location sync metadata for the active trip.
- * Locations are scoped to trips - only syncs if an active trip is set.
+ * Updates location sync metadata for the current trip.
+ * Locations are scoped to trips - only syncs if a current trip is set.
  * Marks locations as stale when version changes or new locations detected.
  *
  * @param {Object} data - Sync data with { versions: {...}, deleted: [...] }
@@ -108,12 +108,12 @@ TTSync.registerHandler( TT.SYNC.OBJECT_TYPE_LOCATION, function( data ) {
     var versions = data[TT.SYNC.FIELD_VERSIONS] || {};
     var deleted = data[TT.SYNC.FIELD_DELETED] || [];
 
-    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
-        .then( function( activeTripUuid ) {
-            if ( !activeTripUuid ) {
-                // No active trip - can't store location metadata
+    return TTStorage.get( TT.STORAGE.KEY_CURRENT_TRIP_UUID, null )
+        .then( function( currentTripUuid ) {
+            if ( !currentTripUuid ) {
+                // No current trip - can't store location metadata
                 return;
             }
-            return TTLocations.syncMetadata( activeTripUuid, versions, deleted );
+            return TTLocations.syncMetadata( currentTripUuid, versions, deleted );
         });
 });

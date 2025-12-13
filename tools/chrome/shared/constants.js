@@ -51,7 +51,7 @@ TT.STORAGE = {
     KEY_AUTH_STATE: 'tt_authState',
     // Sync infrastructure
     KEY_SYNC_AS_OF: 'tt_syncAsOf',
-    KEY_ACTIVE_TRIP_UUID: 'tt_activeTripUuid',
+    KEY_CURRENT_TRIP_UUID: 'tt_currentTripUuid',
     // Trip working set
     KEY_WORKING_SET_TRIPS: 'tt_workingSetTrips',
     // Client config
@@ -83,7 +83,7 @@ TT.MESSAGE = {
     TYPE_DISCONNECT: 'tt_disconnect',
     // Trip management
     TYPE_GET_TRIPS_WORKING_SET: 'tt_getTripsWorkingSet',
-    TYPE_SET_ACTIVE_TRIP: 'tt_setActiveTrip',
+    TYPE_SET_CURRENT_TRIP: 'tt_setCurrentTrip',
     TYPE_GET_ALL_TRIPS: 'tt_getAllTrips',
     TYPE_CREATE_AND_ACTIVATE_TRIP: 'tt_createAndActivateTrip',
     // Location management (GMM content script <-> background)
@@ -106,7 +106,7 @@ TT.MESSAGE = {
     TYPE_GMM_SYNC_LOCATIONS: 'tt_gmmSyncLocations',
     TYPE_GET_TRIP_LOCATIONS: 'tt_getTripLocations',
     // Trip context
-    TYPE_GET_ACTIVE_TRIP: 'tt_getActiveTrip',
+    TYPE_GET_CURRENT_TRIP: 'tt_getCurrentTrip',
     // GMM map linkage check
     TYPE_IS_GMM_MAP_LINKED: 'tt_isGmmMapLinked',
     // Pin management
@@ -181,8 +181,6 @@ TT.DOM = {
     CLASS_POPUP_HEADER: 'tt-popup-header',
     CLASS_TOKEN_VALIDATION_STATUS: 'tt-token-validation-status',
     // Trip UI (legacy - to be removed)
-    ID_ACTIVE_TRIP: 'tt-active-trip',
-    ID_ACTIVE_TRIP_TITLE: 'tt-active-trip-title',
     ID_OTHER_TRIPS: 'tt-other-trips',
     ID_OTHER_TRIPS_LIST: 'tt-other-trips-list',
     CLASS_TRIP_LOADING: 'tt-trip-loading',
@@ -203,7 +201,6 @@ TT.DOM = {
     ID_MORE_TRIPS_LOADING: 'tt-more-trips-loading',
     ID_MORE_TRIPS_ERROR: 'tt-more-trips-error',
     // GMM Map Status
-    ID_ACTIVE_TRIP_ROW: 'tt-active-trip-row',
     ID_GMM_STATUS: 'tt-gmm-status',
     CLASS_GMM_LINKED: 'tt-gmm-linked',
     CLASS_GMM_UNLINKED: 'tt-gmm-unlinked',
@@ -349,7 +346,6 @@ TT.STRINGS = {
     STATUS_TIMEOUT: 'Connection timeout',
     STATUS_RATE_LIMITED: 'Rate limited',
     // Trip UI
-    TRIP_SECTION_HEADER: 'Active Trip',
     TRIP_LOADING: 'Loading trips...',
     TRIP_EMPTY: 'No trips available.',
     TRIP_ERROR: 'Unable to load trips.'

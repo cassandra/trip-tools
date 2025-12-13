@@ -52,8 +52,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleDisconnect();
         case TT.MESSAGE.TYPE_GET_TRIPS_WORKING_SET:
             return handleGetTripsWorkingSet();
-        case TT.MESSAGE.TYPE_SET_ACTIVE_TRIP:
-            return handleSetActiveTrip( message.data );
+        case TT.MESSAGE.TYPE_SET_CURRENT_TRIP:
+            return handleSetCurrentTrip( message.data );
         case TT.MESSAGE.TYPE_GET_ALL_TRIPS:
             return handleGetAllTrips();
         case TT.MESSAGE.TYPE_CREATE_AND_ACTIVATE_TRIP:
@@ -80,8 +80,8 @@ TTMessaging.listen( function( message, sender ) {
             return handleGmmSyncLocations( message.data );
         case TT.MESSAGE.TYPE_GET_TRIP_LOCATIONS:
             return handleGetTripLocations( message.data );
-        case TT.MESSAGE.TYPE_GET_ACTIVE_TRIP:
-            return handleGetActiveTrip();
+        case TT.MESSAGE.TYPE_GET_CURRENT_TRIP:
+            return handleGetCurrentTrip();
         case TT.MESSAGE.TYPE_IS_GMM_MAP_LINKED:
             return handleIsGmmMapLinked( message.data );
         case TT.MESSAGE.TYPE_SET_PINNED_TRIP:
@@ -450,7 +450,7 @@ function broadcastAuthStateChange( authorized, email ) {
 
 /**
  * Handle request to get trips working set.
- * Returns the working set of trips and the active trip UUID.
+ * Returns the working set of trips and the pinned trip UUID.
  */
 function handleGetTripsWorkingSet() {
     var workingSet;
@@ -482,11 +482,11 @@ function handleGetTripsWorkingSet() {
 }
 
 /**
- * Get the currently active trip.
+ * Get the current trip.
  * @returns {Promise<Object>} Response with trip object or null.
  */
-function handleGetActiveTrip() {
-    return TTTrips.getActiveTrip()
+function handleGetCurrentTrip() {
+    return TTTrips.getCurrentTripFromStorage()
         .then( function( trip ) {
             return TTMessaging.createResponse( true, {
                 trip: trip
@@ -567,11 +567,11 @@ function handleResetPinTimestamp() {
 }
 
 /**
- * Handle request to set active trip.
- * Adds trip to working set and sets as active.
+ * Handle request to set current trip.
+ * Adds trip to working set and sets as current.
  * @param {Object} data - Object with trip property.
  */
-function handleSetActiveTrip( data ) {
+function handleSetCurrentTrip( data ) {
     var trip = data.trip;
 
     if ( !trip || !trip.uuid ) {
@@ -580,14 +580,14 @@ function handleSetActiveTrip( data ) {
         }));
     }
 
-    return TTTrips.setActiveTrip( trip )
+    return TTTrips.setCurrentTripInStorage( trip )
         .then( function() {
             return TTTrips.getWorkingSet();
         })
         .then( function( workingSet ) {
             return TTMessaging.createResponse( true, {
                 workingSet: workingSet,
-                activeTripUuid: trip.uuid
+                currentTripUuid: trip.uuid
             });
         })
         .catch( function( error ) {
@@ -613,7 +613,7 @@ function handleGetAllTrips() {
 
 /**
  * Handle create trip request.
- * Creates trip via API, adds to working set, sets as active.
+ * Creates trip via API, adds to working set, sets as current.
  * @param {Object} data - { title, description, gmm_map_id (optional) }
  * @returns {Promise<Object>} Response with created trip data.
  */
@@ -629,7 +629,7 @@ function handleCreateTrip( data ) {
             // Apply trip to all internal data structures
             return TTTrips.applyTripUpdate( trip )
                 .then( function() {
-                    return TTTrips.setActiveTripUuid( trip.uuid );
+                    return TTTrips.setCurrentTripUuidInStorage( trip.uuid );
                 })
                 .then( function() {
                     return TTTrips.getWorkingSet();
@@ -637,7 +637,7 @@ function handleCreateTrip( data ) {
                 .then( function( workingSet ) {
                     return TTMessaging.createResponse( true, {
                         workingSet: workingSet,
-                        activeTripUuid: trip.uuid
+                        currentTripUuid: trip.uuid
                     });
                 });
         })
@@ -1008,7 +1008,7 @@ function handleSaveLocation( data ) {
 
     var tripUuid;
 
-    // Route to trip by GMM map ID (not active trip)
+    // Route to trip by GMM map ID (not current trip)
     return TTTrips.getTripUuidByGmmMapId( data.gmm_map_id )
         .then( function( resolvedTripUuid ) {
             if ( !resolvedTripUuid ) {
@@ -1066,11 +1066,11 @@ function handleGetLocation( data ) {
         }));
     }
 
-    return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null )
+    return TTStorage.get( TT.STORAGE.KEY_CURRENT_TRIP_UUID, null )
         .then( function( tripUuid ) {
             if ( !tripUuid ) {
                 return TTMessaging.createResponse( false, {
-                    error: 'No active trip selected',
+                    error: 'No current trip selected',
                     notFound: true
                 });
             }
@@ -1112,7 +1112,7 @@ function handleUpdateLocation( data ) {
 
     var tripUuid;
 
-    // Route to trip by GMM map ID (not active trip)
+    // Route to trip by GMM map ID (not current trip)
     return TTTrips.getTripUuidByGmmMapId( data.gmm_map_id )
         .then( function( resolvedTripUuid ) {
             if ( !resolvedTripUuid ) {
@@ -1154,7 +1154,7 @@ function handleDeleteLocation( data ) {
 
     var tripUuid;
 
-    // Route to trip by GMM map ID (not active trip)
+    // Route to trip by GMM map ID (not current trip)
     return TTTrips.getTripUuidByGmmMapId( data.gmm_map_id )
         .then( function( resolvedTripUuid ) {
             if ( !resolvedTripUuid ) {

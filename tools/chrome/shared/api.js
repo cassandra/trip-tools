@@ -37,7 +37,7 @@ TTApi._getSyncHeaders = function() {
             if ( syncAsOf ) {
                 headers[TT.HEADERS.SYNC_SINCE] = syncAsOf;
             }
-            return TTStorage.get( TT.STORAGE.KEY_ACTIVE_TRIP_UUID, null );
+            return TTStorage.get( TT.STORAGE.KEY_CURRENT_TRIP_UUID, null );
         })
         .then( function( tripUuid ) {
             if ( tripUuid ) {

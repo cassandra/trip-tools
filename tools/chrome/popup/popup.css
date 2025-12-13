@@ -538,59 +538,6 @@ input:checked + .tt-toggle-slider:before {
     color: var(--tt-warning-color);
 }
 
-/* =============================================================================
- * Legacy Active Trip Display (keeping for backward compatibility)
- * ============================================================================= */
-
-/* Active Trip Display */
-.tt-active-trip {
-    background-color: #e8f4ea;
-    border: 2px solid var(--tt-primary-color);
-    border-radius: 6px;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-}
-
-.tt-active-trip-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 4px;
-}
-
-.tt-active-trip-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--tt-primary-color);
-    font-weight: 600;
-}
-
-.tt-active-trip-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    padding: 4px;
-    margin: -4px;
-    border-radius: 4px;
-    transition: background-color 0.15s;
-}
-
-.tt-active-trip-row:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-.tt-active-trip-title {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--tt-black);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
-}
-
 /* GMM Status Indicator */
 .tt-gmm-status {
     display: flex;
