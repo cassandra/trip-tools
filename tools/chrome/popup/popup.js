@@ -382,19 +382,17 @@ function setupTripEventListeners() {
         });
     }
 
-    var tripDetailsBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_BTN );
-    if ( tripDetailsBtn ) {
-        tripDetailsBtn.addEventListener( 'click', function( e ) {
-            e.stopPropagation();
-            showTripDetailsPanel();
-        });
-    }
-
     var tripDetailsBackBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_BACK );
     if ( tripDetailsBackBtn ) {
         tripDetailsBackBtn.addEventListener( 'click', function() {
             hideTripDetailsPanel();
         });
+    }
+
+    // Stale pin dismiss button
+    var stalePinDismissBtn = document.getElementById( TT.DOM.ID_STALE_PIN_DISMISS );
+    if ( stalePinDismissBtn ) {
+        stalePinDismissBtn.addEventListener( 'click', handleStalePinDismiss );
     }
 
     var syncLocationsBtn = document.getElementById( TT.DOM.ID_TRIP_DETAILS_SYNC_BTN );
@@ -488,62 +486,40 @@ function hideTripSection() {
     if ( tripSection ) {
         tripSection.classList.add( TT.DOM.CLASS_HIDDEN );
     }
-    // Clear trip UI
-    var activeTripTitle = document.getElementById( TT.DOM.ID_ACTIVE_TRIP_TITLE );
-    if ( activeTripTitle ) {
-        activeTripTitle.textContent = '';
-    }
-    var otherTripsList = document.getElementById( TT.DOM.ID_OTHER_TRIPS_LIST );
-    if ( otherTripsList ) {
-        otherTripsList.innerHTML = '';
+    // Clear trip list
+    var tripList = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    if ( tripList ) {
+        tripList.innerHTML = '';
     }
 }
 
 function showTripLoading() {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
-    var activeTrip = document.getElementById( TT.DOM.ID_ACTIVE_TRIP );
-    var otherTrips = document.getElementById( TT.DOM.ID_OTHER_TRIPS );
+    var workingSet = document.getElementById( TT.DOM.ID_WORKING_SET );
     var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
 
     if ( loading ) loading.classList.remove( TT.DOM.CLASS_HIDDEN );
-    if ( activeTrip ) activeTrip.classList.add( TT.DOM.CLASS_HIDDEN );
-    if ( otherTrips ) otherTrips.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( workingSet ) workingSet.classList.add( TT.DOM.CLASS_HIDDEN );
     if ( empty ) empty.classList.add( TT.DOM.CLASS_HIDDEN );
 }
 
-function showTripContent( hasActiveTrip, hasOtherTrips ) {
+function showTripContent() {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
-    var activeTrip = document.getElementById( TT.DOM.ID_ACTIVE_TRIP );
-    var otherTrips = document.getElementById( TT.DOM.ID_OTHER_TRIPS );
+    var workingSet = document.getElementById( TT.DOM.ID_WORKING_SET );
     var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
 
     if ( loading ) loading.classList.add( TT.DOM.CLASS_HIDDEN );
-    if ( activeTrip ) {
-        if ( hasActiveTrip ) {
-            activeTrip.classList.remove( TT.DOM.CLASS_HIDDEN );
-        } else {
-            activeTrip.classList.add( TT.DOM.CLASS_HIDDEN );
-        }
-    }
-    if ( otherTrips ) {
-        if ( hasOtherTrips ) {
-            otherTrips.classList.remove( TT.DOM.CLASS_HIDDEN );
-        } else {
-            otherTrips.classList.add( TT.DOM.CLASS_HIDDEN );
-        }
-    }
+    if ( workingSet ) workingSet.classList.remove( TT.DOM.CLASS_HIDDEN );
     if ( empty ) empty.classList.add( TT.DOM.CLASS_HIDDEN );
 }
 
 function showTripEmpty() {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
-    var activeTrip = document.getElementById( TT.DOM.ID_ACTIVE_TRIP );
-    var otherTrips = document.getElementById( TT.DOM.ID_OTHER_TRIPS );
+    var workingSet = document.getElementById( TT.DOM.ID_WORKING_SET );
     var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
 
     if ( loading ) loading.classList.add( TT.DOM.CLASS_HIDDEN );
-    if ( activeTrip ) activeTrip.classList.add( TT.DOM.CLASS_HIDDEN );
-    if ( otherTrips ) otherTrips.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( workingSet ) workingSet.classList.add( TT.DOM.CLASS_HIDDEN );
     if ( empty ) empty.classList.remove( TT.DOM.CLASS_HIDDEN );
 }
 
@@ -553,7 +529,12 @@ function loadTrips() {
     TTMessaging.send( TT.MESSAGE.TYPE_GET_TRIPS_WORKING_SET, {} )
         .then( function( response ) {
             if ( response && response.success ) {
-                renderTrips( response.data.workingSet, response.data.activeTripUuid );
+                addLocalDebugEntry( 'info', 'Pin data: uuid=' + response.data.pinnedTripUuid + ', timestamp=' + response.data.pinTimestamp );
+                renderTrips(
+                    response.data.workingSet,
+                    response.data.pinnedTripUuid,
+                    response.data.pinTimestamp
+                );
             } else {
                 showTripEmpty();
                 var errorMsg = response && response.error ? response.error : 'Unknown error';
@@ -566,55 +547,208 @@ function loadTrips() {
         });
 }
 
-function renderTrips( workingSet, activeTripUuid ) {
+/**
+ * Render the unified working set trip list.
+ * @param {Array} workingSet - Array of trip objects sorted by recency.
+ * @param {string|null} pinnedTripUuid - UUID of pinned trip, or null if auto mode.
+ * @param {string|null} pinTimestamp - ISO timestamp when trip was pinned.
+ */
+function renderTrips( workingSet, pinnedTripUuid, pinTimestamp ) {
     if ( !workingSet || workingSet.length === 0 ) {
         showTripEmpty();
         return;
     }
 
-    // Find active trip and other trips
-    var activeTrip = null;
-    var otherTrips = [];
+    // Determine current trip: pinned or most recent
+    var currentTripUuid = pinnedTripUuid || workingSet[0].uuid;
 
-    workingSet.forEach( function( trip ) {
-        if ( trip.uuid === activeTripUuid ) {
-            activeTrip = trip;
-        } else {
-            otherTrips.push( trip );
-        }
-    });
+    // Store current trip for details panel
+    var currentTrip = workingSet.find( function( t ) {
+        return t.uuid === currentTripUuid;
+    }) || workingSet[0];
+    currentActiveTrip = currentTrip;
 
-    // Render active trip display
-    var activeTripTitle = document.getElementById( TT.DOM.ID_ACTIVE_TRIP_TITLE );
-    if ( activeTripTitle && activeTrip ) {
-        activeTripTitle.textContent = activeTrip.title || 'Loading...';
-    }
+    // Render unified trip list
+    var tripList = document.getElementById( TT.DOM.ID_TRIP_LIST );
+    if ( tripList ) {
+        tripList.innerHTML = '';
 
-    // Update GMM status for active trip
-    if ( activeTrip ) {
-        updateGmmStatus( activeTrip );
-    }
-
-    // Render other trips as switch buttons
-    var otherTripsList = document.getElementById( TT.DOM.ID_OTHER_TRIPS_LIST );
-    if ( otherTripsList ) {
-        otherTripsList.innerHTML = '';
-
-        otherTrips.forEach( function( trip ) {
-            var button = document.createElement( 'button' );
-            button.className = TT.DOM.CLASS_SWITCH_TRIP_BTN;
-            button.textContent = trip.title || 'Loading...';
-
-            // Click handler - switch trip (will eventually also navigate)
-            button.addEventListener( 'click', function() {
-                switchToTrip( trip );
-            });
-
-            otherTripsList.appendChild( button );
+        workingSet.forEach( function( trip ) {
+            var isCurrent = trip.uuid === currentTripUuid;
+            var isPinned = trip.uuid === pinnedTripUuid;
+            var row = createTripRow( trip, isCurrent, isPinned );
+            tripList.appendChild( row );
         });
     }
 
-    showTripContent( activeTrip !== null, otherTrips.length > 0 );
+    // Check and show stale pin warning if needed
+    checkStalePinWarning( pinnedTripUuid, pinTimestamp );
+
+    showTripContent();
+}
+
+/**
+ * Create a trip row element with pin control, title, GMM status, and info button.
+ * @param {Object} trip - The trip object.
+ * @param {boolean} isCurrent - Whether this is the current trip.
+ * @param {boolean} isPinned - Whether this trip is pinned.
+ * @returns {HTMLElement} The trip row element.
+ */
+function createTripRow( trip, isCurrent, isPinned ) {
+    var row = document.createElement( 'div' );
+    row.className = TT.DOM.CLASS_TRIP_ROW;
+    if ( isCurrent ) {
+        row.classList.add( TT.DOM.CLASS_TRIP_CURRENT );
+    }
+    row.setAttribute( 'data-trip-uuid', trip.uuid );
+
+    // Pin control button
+    var pinBtn = document.createElement( 'button' );
+    pinBtn.className = TT.DOM.CLASS_PIN_CONTROL;
+    pinBtn.setAttribute( 'data-pinned', isPinned ? 'true' : 'false' );
+    pinBtn.title = isPinned ? 'Unpin trip' : 'Pin as current';
+    pinBtn.innerHTML = isPinned
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+
+    pinBtn.addEventListener( 'click', function( e ) {
+        e.stopPropagation();
+        handlePinClick( trip.uuid, isPinned );
+    });
+
+    // Trip content area (title + GMM status)
+    var content = document.createElement( 'div' );
+    content.className = 'tt-trip-content';
+
+    var title = document.createElement( 'span' );
+    title.className = 'tt-trip-title';
+    title.textContent = trip.title || 'Loading...';
+
+    var gmmStatus = document.createElement( 'span' );
+    gmmStatus.className = 'tt-gmm-status';
+    if ( trip.gmm_map_id ) {
+        gmmStatus.classList.add( TT.DOM.CLASS_GMM_LINKED );
+        gmmStatus.title = 'Map linked';
+        gmmStatus.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+    } else {
+        gmmStatus.classList.add( TT.DOM.CLASS_GMM_UNLINKED );
+        gmmStatus.title = 'No map linked';
+        gmmStatus.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle><line x1="4" y1="4" x2="20" y2="20" stroke-width="2"></line></svg>';
+    }
+
+    content.appendChild( title );
+    content.appendChild( gmmStatus );
+
+    // Info button
+    var infoBtn = document.createElement( 'button' );
+    infoBtn.className = 'tt-trip-info-btn';
+    infoBtn.title = 'Trip details';
+    infoBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+    infoBtn.addEventListener( 'click', function( e ) {
+        e.stopPropagation();
+        showTripDetailsPanel( trip );
+    });
+
+    // Click on row -> visit map or show create dialog
+    row.addEventListener( 'click', function() {
+        handleTripRowClick( trip );
+    });
+
+    row.appendChild( pinBtn );
+    row.appendChild( content );
+    row.appendChild( infoBtn );
+
+    return row;
+}
+
+/**
+ * Handle pin button click - toggle pin state.
+ * @param {string} tripUuid - The trip UUID.
+ * @param {boolean} isCurrentlyPinned - Whether the trip is currently pinned.
+ */
+function handlePinClick( tripUuid, isCurrentlyPinned ) {
+    if ( isCurrentlyPinned ) {
+        // Unpin - return to auto mode
+        TTMessaging.send( TT.MESSAGE.TYPE_SET_PINNED_TRIP, { uuid: null } )
+            .then( function( response ) {
+                if ( response && response.success ) {
+                    addLocalDebugEntry( 'info', 'Trip unpinned, returned to auto mode' );
+                    loadTrips();
+                }
+            });
+    } else {
+        // Pin this trip
+        TTMessaging.send( TT.MESSAGE.TYPE_SET_PINNED_TRIP, { uuid: tripUuid } )
+            .then( function( response ) {
+                if ( response && response.success ) {
+                    addLocalDebugEntry( 'info', 'Trip pinned: ' + tripUuid );
+                    loadTrips();
+                }
+            });
+    }
+}
+
+/**
+ * Handle click on trip row - visit map or show create dialog.
+ * @param {Object} trip - The trip object.
+ */
+function handleTripRowClick( trip ) {
+    if ( trip.gmm_map_id ) {
+        // Has map - open it
+        openGmmMap( trip.gmm_map_id );
+    } else {
+        // No map - show create dialog
+        showCreateMapDialog( trip );
+    }
+}
+
+/**
+ * Check if pin is stale and show warning if needed.
+ * @param {string|null} pinnedTripUuid - Pinned trip UUID.
+ * @param {string|null} pinTimestamp - When trip was pinned.
+ */
+function checkStalePinWarning( pinnedTripUuid, pinTimestamp ) {
+    var warningEl = document.getElementById( TT.DOM.ID_STALE_PIN_WARNING );
+    if ( !warningEl ) return;
+
+    // Only show warning if there is both a pinned trip AND a valid timestamp
+    if ( !pinnedTripUuid || !pinTimestamp ) {
+        warningEl.classList.add( TT.DOM.CLASS_HIDDEN );
+        return;
+    }
+
+    // Validate timestamp is a parseable date
+    var pinnedAt = new Date( pinTimestamp ).getTime();
+    if ( isNaN( pinnedAt ) || pinnedAt <= 0 ) {
+        warningEl.classList.add( TT.DOM.CLASS_HIDDEN );
+        return;
+    }
+
+    // Check if pin is stale
+    var age = Date.now() - pinnedAt;
+    var thresholdMs = TT.CONFIG.PIN_STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
+
+    if ( age > thresholdMs ) {
+        warningEl.classList.remove( TT.DOM.CLASS_HIDDEN );
+    } else {
+        warningEl.classList.add( TT.DOM.CLASS_HIDDEN );
+    }
+}
+
+/**
+ * Handle stale pin dismiss button click.
+ */
+function handleStalePinDismiss() {
+    TTMessaging.send( TT.MESSAGE.TYPE_RESET_PIN_TIMESTAMP, {} )
+        .then( function( response ) {
+            if ( response && response.success ) {
+                addLocalDebugEntry( 'info', 'Pin timestamp reset' );
+                var warningEl = document.getElementById( TT.DOM.ID_STALE_PIN_WARNING );
+                if ( warningEl ) {
+                    warningEl.classList.add( TT.DOM.CLASS_HIDDEN );
+                }
+            }
+        });
 }
 
 function switchToTrip( trip ) {
@@ -675,10 +809,18 @@ function hideMoreTripsPanel() {
 // Trip Details Panel
 // =============================================================================
 
-function showTripDetailsPanel() {
+// The trip currently being viewed in the details panel
+var currentViewedTrip = null;
+
+/**
+ * Show the trip details panel for a given trip.
+ * @param {Object} trip - The trip to show details for.
+ */
+function showTripDetailsPanel( trip ) {
     var panel = document.getElementById( TT.DOM.ID_TRIP_DETAILS_PANEL );
     if ( panel ) {
-        populateTripDetails();
+        currentViewedTrip = trip;
+        populateTripDetails( trip );
         panel.classList.remove( TT.DOM.CLASS_HIDDEN );
         requestAnimationFrame( function() {
             panel.classList.add( TT.DOM.CLASS_VISIBLE );
@@ -703,8 +845,12 @@ function hideTripDetailsPanel() {
     }
 }
 
-function populateTripDetails() {
-    if ( !currentActiveTrip ) return;
+/**
+ * Populate the trip details panel with trip data.
+ * @param {Object} trip - The trip to display.
+ */
+function populateTripDetails( trip ) {
+    if ( !trip ) return;
 
     var titleEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_TITLE );
     var descEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_DESCRIPTION );
@@ -713,12 +859,12 @@ function populateTripDetails() {
     var gmmRow = document.getElementById( TT.DOM.ID_TRIP_DETAILS_GMM_ROW );
     var actionsEl = document.getElementById( TT.DOM.ID_TRIP_DETAILS_ACTIONS );
 
-    if ( titleEl ) titleEl.textContent = currentActiveTrip.title;
-    if ( descEl ) descEl.textContent = currentActiveTrip.description || '';
-    if ( uuidEl ) uuidEl.textContent = currentActiveTrip.uuid;
+    if ( titleEl ) titleEl.textContent = trip.title;
+    if ( descEl ) descEl.textContent = trip.description || '';
+    if ( uuidEl ) uuidEl.textContent = trip.uuid;
 
-    if ( currentActiveTrip.gmm_map_id ) {
-        if ( gmmIdEl ) gmmIdEl.textContent = currentActiveTrip.gmm_map_id;
+    if ( trip.gmm_map_id ) {
+        if ( gmmIdEl ) gmmIdEl.textContent = trip.gmm_map_id;
         if ( gmmRow ) gmmRow.classList.remove( TT.DOM.CLASS_HIDDEN );
         if ( actionsEl ) actionsEl.classList.remove( TT.DOM.CLASS_HIDDEN );
     } else {
@@ -730,24 +876,26 @@ function populateTripDetails() {
 /**
  * Handle Sync Map button click.
  * Sends sync message to GMM content script if map is open.
+ * Uses currentViewedTrip (the trip shown in details panel).
  */
 function handleSyncLocations() {
-    if ( !currentActiveTrip ) {
-        addLocalDebugEntry( 'warning', 'Sync: No active trip' );
+    var trip = currentViewedTrip;
+    if ( !trip ) {
+        addLocalDebugEntry( 'warning', 'Sync: No trip selected' );
         return;
     }
 
-    if ( !currentActiveTrip.gmm_map_id ) {
+    if ( !trip.gmm_map_id ) {
         addLocalDebugEntry( 'warning', 'Sync: Trip has no linked map' );
         return;
     }
 
-    addLocalDebugEntry( 'info', 'Sync Map requested for trip: ' + currentActiveTrip.title );
+    addLocalDebugEntry( 'info', 'Sync Map requested for trip: ' + trip.title );
 
     TTMessaging.send( TT.MESSAGE.TYPE_GMM_SYNC_LOCATIONS, {
-        tripUuid: currentActiveTrip.uuid,
-        tripTitle: currentActiveTrip.title,
-        mapId: currentActiveTrip.gmm_map_id
+        tripUuid: trip.uuid,
+        tripTitle: trip.title,
+        mapId: trip.gmm_map_id
     })
     .then( function( response ) {
         if ( response && response.success ) {
@@ -757,7 +905,7 @@ function handleSyncLocations() {
             // Map tab not open - prompt user
             // eslint-disable-next-line no-alert
             if ( confirm( 'The map must be open to sync.\n\nOpen the map now?' ) ) {
-                openGmmMap( currentActiveTrip.gmm_map_id );
+                openGmmMap( trip.gmm_map_id );
             }
         } else {
             var errorMsg = response && response.data && response.data.error
@@ -770,8 +918,13 @@ function handleSyncLocations() {
     });
 }
 
+/**
+ * Handle Unlink Map button click.
+ * Uses currentViewedTrip (the trip shown in details panel).
+ */
 function handleUnlinkMap() {
-    if ( !currentActiveTrip || !currentActiveTrip.gmm_map_id ) return;
+    var trip = currentViewedTrip;
+    if ( !trip || !trip.gmm_map_id ) return;
 
     // eslint-disable-next-line no-alert
     if ( !confirm( 'Unlink the Google My Maps map from this trip?' ) ) {
@@ -779,13 +932,15 @@ function handleUnlinkMap() {
     }
 
     TTMessaging.send( TT.MESSAGE.TYPE_GMM_UNLINK_MAP, {
-        tripUuid: currentActiveTrip.uuid
+        tripUuid: trip.uuid
     })
     .then( function( response ) {
         if ( response && response.success ) {
-            currentActiveTrip.gmm_map_id = null;
-            populateTripDetails();
-            updateGmmStatus( currentActiveTrip );
+            trip.gmm_map_id = null;
+            currentViewedTrip = trip;
+            populateTripDetails( trip );
+            // Refresh the trip list to update GMM status
+            loadTrips();
             addLocalDebugEntry( 'info', 'Map unlinked from trip' );
         } else {
             var errorMsg = response && response.error ? response.error : 'Unknown error';
@@ -1128,41 +1283,9 @@ function isOnUnlinkedGmmPage() {
 }
 
 /**
- * Update GMM status indicator for the active trip.
- * @param {Object} trip - The active trip with optional gmm_map_id.
- */
-function updateGmmStatus( trip ) {
-    var statusEl = document.getElementById( TT.DOM.ID_GMM_STATUS );
-    if ( !statusEl ) {
-        return;
-    }
-
-    // Store trip for later use
-    currentActiveTrip = trip;
-
-    var hasMap = trip && trip.gmm_map_id;
-
-    if ( hasMap ) {
-        statusEl.classList.add( TT.DOM.CLASS_GMM_LINKED );
-        statusEl.classList.remove( TT.DOM.CLASS_GMM_UNLINKED );
-        statusEl.title = 'Map linked - click to open';
-    } else {
-        statusEl.classList.remove( TT.DOM.CLASS_GMM_LINKED );
-        statusEl.classList.add( TT.DOM.CLASS_GMM_UNLINKED );
-        statusEl.title = 'No map - click to create';
-    }
-}
-
-/**
  * Set up event listeners for GMM features.
  */
 function setupGmmEventListeners() {
-    // Active trip row click - open map or show create dialog
-    var activeTripRow = document.getElementById( TT.DOM.ID_ACTIVE_TRIP_ROW );
-    if ( activeTripRow ) {
-        activeTripRow.addEventListener( 'click', handleActiveTripClick );
-    }
-
     // Create map dialog buttons
     var cancelBtn = document.getElementById( TT.DOM.ID_CREATE_MAP_CANCEL );
     if ( cancelBtn ) {
@@ -1172,24 +1295,6 @@ function setupGmmEventListeners() {
     var confirmBtn = document.getElementById( TT.DOM.ID_CREATE_MAP_CONFIRM );
     if ( confirmBtn ) {
         confirmBtn.addEventListener( 'click', confirmCreateMap );
-    }
-}
-
-/**
- * Handle click on active trip row.
- * Opens existing map or shows create map dialog.
- */
-function handleActiveTripClick() {
-    if ( !currentActiveTrip ) {
-        return;
-    }
-
-    if ( currentActiveTrip.gmm_map_id ) {
-        // Has map - open it
-        openGmmMap( currentActiveTrip.gmm_map_id );
-    } else {
-        // No map - show create dialog
-        showCreateMapDialog( currentActiveTrip );
     }
 }
 

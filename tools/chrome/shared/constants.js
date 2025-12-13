@@ -33,7 +33,9 @@ TT.CONFIG = {
     GMM_OTHER_LAYER_COLOR: 'RGB (117, 117, 117)',
     GMM_OTHER_LAYER_ICON: '1594',
     // GMM map index cache TTL (1 hour)
-    GMM_MAP_INDEX_TTL_MS: 60 * 60 * 1000
+    GMM_MAP_INDEX_TTL_MS: 60 * 60 * 1000,
+    // Pinned trip stale threshold (30 days)
+    PIN_STALE_THRESHOLD_DAYS: 30
 };
 
 TT.STORAGE = {
@@ -61,7 +63,10 @@ TT.STORAGE = {
     // GMM map index (gmm_map_id -> trip_uuid mapping)
     KEY_GMM_MAP_INDEX: 'tt_gmmMapIndex',
     // Dismissed unlinked GMM map dialogs (user chose "Dismiss")
-    KEY_DISMISSED_UNLINKED_GMM_MAPS: 'tt_dismissedUnlinkedGmmMaps'
+    KEY_DISMISSED_UNLINKED_GMM_MAPS: 'tt_dismissedUnlinkedGmmMaps',
+    // Pinned current trip
+    KEY_PINNED_TRIP_UUID: 'tt_pinnedTripUuid',
+    KEY_PIN_TIMESTAMP: 'tt_pinTimestamp'
 };
 
 TT.MESSAGE = {
@@ -103,7 +108,10 @@ TT.MESSAGE = {
     // Trip context
     TYPE_GET_ACTIVE_TRIP: 'tt_getActiveTrip',
     // GMM map linkage check
-    TYPE_IS_GMM_MAP_LINKED: 'tt_isGmmMapLinked'
+    TYPE_IS_GMM_MAP_LINKED: 'tt_isGmmMapLinked',
+    // Pin management
+    TYPE_SET_PINNED_TRIP: 'tt_setPinnedTrip',
+    TYPE_RESET_PIN_TIMESTAMP: 'tt_resetPinTimestamp'
 };
 
 TT.DOM = {
@@ -172,7 +180,7 @@ TT.DOM = {
     ID_OPTIONS_VERSION: 'tt-options-version',
     CLASS_POPUP_HEADER: 'tt-popup-header',
     CLASS_TOKEN_VALIDATION_STATUS: 'tt-token-validation-status',
-    // Trip UI
+    // Trip UI (legacy - to be removed)
     ID_ACTIVE_TRIP: 'tt-active-trip',
     ID_ACTIVE_TRIP_TITLE: 'tt-active-trip-title',
     ID_OTHER_TRIPS: 'tt-other-trips',
@@ -180,6 +188,13 @@ TT.DOM = {
     CLASS_TRIP_LOADING: 'tt-trip-loading',
     CLASS_TRIP_EMPTY: 'tt-trip-empty',
     CLASS_SWITCH_TRIP_BTN: 'tt-switch-trip-btn',
+    // Working Set UI (unified trip list)
+    ID_WORKING_SET: 'tt-working-set',
+    ID_STALE_PIN_WARNING: 'tt-stale-pin-warning',
+    ID_STALE_PIN_DISMISS: 'tt-stale-pin-dismiss',
+    CLASS_TRIP_ROW: 'tt-trip-row',
+    CLASS_TRIP_CURRENT: 'tt-current',
+    CLASS_PIN_CONTROL: 'tt-pin-control',
     // More Trips Panel
     ID_MORE_TRIPS_BTN: 'tt-more-trips-btn',
     ID_MORE_TRIPS_PANEL: 'tt-more-trips-panel',

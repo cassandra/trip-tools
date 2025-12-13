@@ -358,6 +358,190 @@ input:checked + .tt-toggle-slider:before {
     padding: 8px 0;
 }
 
+/* =============================================================================
+ * Working Set (Unified Trip List)
+ * ============================================================================= */
+
+.tt-working-set {
+    margin-bottom: 12px;
+}
+
+.tt-working-set-header {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.tt-working-set-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--tt-muted-color);
+    font-weight: 500;
+}
+
+/* Stale Pin Warning */
+.tt-stale-pin-warning {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: #fff8e1;
+    border: 1px solid var(--tt-warning-color);
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.tt-stale-pin-text {
+    color: #7c5e1d;
+}
+
+.tt-stale-pin-dismiss {
+    background: none;
+    border: 1px solid var(--tt-warning-color);
+    color: #7c5e1d;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--tt-font-family);
+}
+
+.tt-stale-pin-dismiss:hover {
+    background: rgba(255, 152, 0, 0.1);
+}
+
+.tt-stale-pin-warning.tt-hidden {
+    display: none;
+}
+
+/* Trip List Container */
+.tt-trip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Trip Row */
+.tt-trip-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--tt-primary-bg-light);
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.tt-trip-row:hover {
+    background: #f0f7f1;
+}
+
+.tt-trip-row.tt-current {
+    border-color: var(--tt-primary-color);
+    background: #e8f4ea;
+}
+
+/* Pin Control Button */
+.tt-pin-control {
+    width: 32px;
+    height: 32px;
+    margin-right: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+}
+
+.tt-pin-control:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.tt-pin-control svg {
+    color: var(--tt-muted-color);
+}
+
+.tt-pin-control[data-pinned="true"] svg {
+    color: var(--tt-primary-color);
+}
+
+/* Trip Content (title + GMM status) */
+.tt-trip-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.tt-trip-title {
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--tt-black);
+}
+
+.tt-trip-row.tt-current .tt-trip-title {
+    font-weight: 500;
+}
+
+/* Trip Info Button */
+.tt-trip-info-btn {
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    padding: 6px;
+    margin-left: 4px;
+    cursor: pointer;
+    color: var(--tt-muted-color);
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.15s, opacity 0.15s;
+}
+
+.tt-trip-info-btn:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* GMM Status in Trip Row (smaller than old version) */
+.tt-trip-row .tt-gmm-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+
+.tt-trip-row .tt-gmm-status svg {
+    color: var(--tt-muted-color);
+}
+
+.tt-trip-row .tt-gmm-status.tt-gmm-linked svg {
+    color: var(--tt-primary-color);
+}
+
+.tt-trip-row .tt-gmm-status.tt-gmm-unlinked svg {
+    color: var(--tt-warning-color);
+}
+
+/* =============================================================================
+ * Legacy Active Trip Display (keeping for backward compatibility)
+ * ============================================================================= */
+
 /* Active Trip Display */
 .tt-active-trip {
     background-color: #e8f4ea;

@@ -40,34 +40,20 @@
             <div class="tt-section" id="tt-trip-section">
                 <div class="tt-trip-loading" id="tt-trip-loading">Loading trips...</div>
 
-                <!-- Active Trip Display -->
-                <div class="tt-active-trip tt-hidden" id="tt-active-trip">
-                    <div class="tt-active-trip-header">
-                        <div class="tt-active-trip-label">Active Trip</div>
-                        <button class="tt-trip-details-btn" id="tt-trip-details-btn" title="Trip details">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="16" x2="12" y2="12"></line>
-                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                            </svg>
-                        </button>
+                <!-- Working Set (unified trip list) -->
+                <div class="tt-working-set tt-hidden" id="tt-working-set">
+                    <div class="tt-working-set-header">
+                        <span class="tt-working-set-label">Your Trips</span>
                     </div>
-                    <div class="tt-active-trip-row" id="tt-active-trip-row">
-                        <div class="tt-active-trip-title" id="tt-active-trip-title"></div>
-                        <div class="tt-gmm-status" id="tt-gmm-status" title="No map linked">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            <span class="tt-gmm-indicator"></span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Other Trips (switch buttons) -->
-                <div class="tt-other-trips tt-hidden" id="tt-other-trips">
-                    <div class="tt-other-trips-label">Switch Trip</div>
-                    <div class="tt-other-trips-list" id="tt-other-trips-list"></div>
+                    <!-- Stale pin warning (hidden by default) -->
+                    <div class="tt-stale-pin-warning tt-hidden" id="tt-stale-pin-warning">
+                        <span class="tt-stale-pin-text">Your pinned trip is over 30 days old</span>
+                        <button class="tt-stale-pin-dismiss" id="tt-stale-pin-dismiss">Dismiss</button>
+                    </div>
+
+                    <!-- Unified trip list (populated by JS) -->
+                    <div class="tt-trip-list" id="tt-trip-list"></div>
                 </div>
 
                 <div class="tt-trip-empty tt-hidden" id="tt-trip-empty">No trips available.</div>

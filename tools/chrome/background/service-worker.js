@@ -84,6 +84,10 @@ TTMessaging.listen( function( message, sender ) {
             return handleGetActiveTrip();
         case TT.MESSAGE.TYPE_IS_GMM_MAP_LINKED:
             return handleIsGmmMapLinked( message.data );
+        case TT.MESSAGE.TYPE_SET_PINNED_TRIP:
+            return handleSetPinnedTrip( message.data );
+        case TT.MESSAGE.TYPE_RESET_PIN_TIMESTAMP:
+            return handleResetPinTimestamp();
         default:
             return TTMessaging.createResponse( false, {
                 error: 'Unknown message type: ' + message.type
@@ -450,18 +454,24 @@ function broadcastAuthStateChange( authorized, email ) {
  */
 function handleGetTripsWorkingSet() {
     var workingSet;
-    var activeTripUuid;
+    var pinnedTripUuid;
+    var pinTimestamp;
 
     return TTTrips.getWorkingSet()
         .then( function( trips ) {
             workingSet = trips;
-            return TTTrips.getActiveTripUuid();
+            return TTTrips.getPinnedTripUuid();
         })
         .then( function( uuid ) {
-            activeTripUuid = uuid;
+            pinnedTripUuid = uuid;
+            return TTTrips.getPinTimestamp();
+        })
+        .then( function( timestamp ) {
+            pinTimestamp = timestamp;
             return TTMessaging.createResponse( true, {
                 workingSet: workingSet,
-                activeTripUuid: activeTripUuid
+                pinnedTripUuid: pinnedTripUuid,
+                pinTimestamp: pinTimestamp
             });
         })
         .catch( function( error ) {
@@ -508,6 +518,46 @@ function handleIsGmmMapLinked( data ) {
                 isLinked: !!tripUuid,
                 tripUuid: tripUuid || null
             } );
+        } )
+        .catch( function( error ) {
+            return TTMessaging.createResponse( false, {
+                error: error.message
+            } );
+        } );
+}
+
+/**
+ * Handle request to set pinned trip.
+ * @param {Object} data - Object with uuid property (null to unpin).
+ */
+function handleSetPinnedTrip( data ) {
+    var uuid = data && data.uuid ? data.uuid : null;
+    var timestamp = uuid ? new Date().toISOString() : null;
+
+    return Promise.all([
+        TTTrips.setPinnedTripUuid( uuid ),
+        TTTrips.setPinTimestamp( timestamp )
+    ])
+    .then( function() {
+        return TTMessaging.createResponse( true, {
+            pinnedTripUuid: uuid,
+            pinTimestamp: timestamp
+        } );
+    } )
+    .catch( function( error ) {
+        return TTMessaging.createResponse( false, {
+            error: error.message
+        } );
+    } );
+}
+
+/**
+ * Handle request to reset pin timestamp (dismiss stale warning).
+ */
+function handleResetPinTimestamp() {
+    return TTTrips.resetPinTimestamp()
+        .then( function() {
+            return TTMessaging.createResponse( true, {} );
         } )
         .catch( function( error ) {
             return TTMessaging.createResponse( false, {
