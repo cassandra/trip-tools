@@ -612,14 +612,15 @@ function createTripRow( trip, isCurrent, isPinned ) {
     }
     row.setAttribute( 'data-trip-uuid', trip.uuid );
 
-    // Pin control button
+    // Anchor control button (pin/unpin trip)
     var pinBtn = document.createElement( 'button' );
     pinBtn.className = TT.DOM.CLASS_PIN_CONTROL;
     pinBtn.setAttribute( 'data-pinned', isPinned ? 'true' : 'false' );
-    pinBtn.title = isPinned ? 'Unpin trip' : 'Pin as current';
+    pinBtn.title = isPinned ? 'Release anchor' : 'Anchor as current';
+    // Anchor icon: ring at top, vertical shaft, crossbar, curved flukes at bottom
     pinBtn.innerHTML = isPinned
-        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>'
-        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="21"/><line x1="5" y1="12" x2="19" y2="12"/><path d="M5 19c2.5 2.5 4.5 3 7 3s4.5-.5 7-3"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="21"/><line x1="5" y1="12" x2="19" y2="12"/><path d="M5 19c2.5 2.5 4.5 3 7 3s4.5-.5 7-3"/></svg>';
 
     pinBtn.addEventListener( 'click', function( e ) {
         e.stopPropagation();

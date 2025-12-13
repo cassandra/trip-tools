@@ -36,6 +36,16 @@
 
         <!-- Main Content -->
         <div class="tt-popup-content">
+            <div class="tt-section" id="tt-settings-section">
+                <div class="tt-toggle-row">
+                    <span class="tt-toggle-label">Text Selection Decoration</span>
+                    <label class="tt-toggle-switch">
+                        <input type="checkbox" id="tt-decorate-toggle">
+                        <span class="tt-toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
             <!-- Trip Section -->
             <div class="tt-section" id="tt-trip-section">
                 <div class="tt-trip-loading" id="tt-trip-loading">Loading trips...</div>
@@ -46,9 +56,9 @@
                         <span class="tt-working-set-label">Your Trips</span>
                     </div>
 
-                    <!-- Stale pin warning (hidden by default) -->
+                    <!-- Stale anchor warning (hidden by default) -->
                     <div class="tt-stale-pin-warning tt-hidden" id="tt-stale-pin-warning">
-                        <span class="tt-stale-pin-text">Your pinned trip is over 30 days old</span>
+                        <span class="tt-stale-pin-text">Your anchored trip is over 30 days old</span>
                         <button class="tt-stale-pin-dismiss" id="tt-stale-pin-dismiss">Dismiss</button>
                     </div>
 
@@ -65,27 +75,6 @@
                         Link Map
                     </button>
                     <button class="tt-btn tt-btn-link" id="tt-more-trips-btn">More trips...</button>
-                </div>
-            </div>
-
-            <!-- Actions Section (stub) -->
-            <div class="tt-section" id="tt-actions-section">
-                <div class="tt-section-header">Quick Actions</div>
-                <button class="tt-btn tt-btn-stub" id="tt-open-mymaps-btn" disabled>
-                    Open My Maps
-                </button>
-                <button class="tt-btn tt-btn-stub" id="tt-sync-btn" disabled>
-                    Sync with Trip Tools
-                </button>
-            </div>
-
-            <div class="tt-section" id="tt-settings-section">
-                <div class="tt-toggle-row">
-                    <span class="tt-toggle-label">Text Selection Decoration</span>
-                    <label class="tt-toggle-switch">
-                        <input type="checkbox" id="tt-decorate-toggle">
-                        <span class="tt-toggle-slider"></span>
-                    </label>
                 </div>
             </div>
         </div>
