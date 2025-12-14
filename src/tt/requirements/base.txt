@@ -20,10 +20,8 @@ gunicorn==23.0.0
 idna==3.10
 multidict==6.0.5
 mysqlclient==2.2.7
-numpy==2.1.0
 pillow==10.4.0
 pillow-heif==0.20.0
-Pint==0.24.4
 psutil==6.0.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1

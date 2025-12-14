@@ -37,6 +37,8 @@ class TestAuthenticationMiddleware(BaseTestCase):
             'env_home',
             'home',
             'home_index',
+            'privacy',
+            'terms',
             'admin',
             'manifest',
             'notify_email_unsubscribe',

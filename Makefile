@@ -30,34 +30,41 @@ lint:
 lint-strict:
 	flake8 --config=src/.flake8 src/tt/ 2>/dev/null
 
+TEST_JS_PORT := 8765
+
 test-js:
-	@if command -v xdg-open > /dev/null; then \
-		xdg-open src/tt/static/tests/test-all.html; \
-	elif command -v open > /dev/null; then \
-		open src/tt/static/tests/test-all.html; \
-	else \
-		echo "Cannot detect browser opener. Please open src/tt/static/tests/test-all.html manually."; \
-	fi
+	@echo "Starting test server on http://localhost:$(TEST_JS_PORT)/tests/test-all.html"
+	@echo "Press Ctrl+C to stop the server when done."
+	@sleep 1 && ( \
+		if command -v xdg-open > /dev/null; then \
+			xdg-open http://localhost:$(TEST_JS_PORT)/tests/test-all.html; \
+		elif command -v open > /dev/null; then \
+			open http://localhost:$(TEST_JS_PORT)/tests/test-all.html; \
+		fi \
+	) &
+	@python -m http.server $(TEST_JS_PORT) --directory src/tt/static
 
 # E2E Testing (Playwright)
-# Note: These targets source nvm to ensure correct Node.js version (see testing/e2e/.nvmrc)
+# Uses nvm if available, otherwise falls back to system node
+NVM_SH := $(shell [ -f ~/.nvm/nvm.sh ] && echo ". ~/.nvm/nvm.sh && nvm use &&" || echo "")
+
 test-e2e:
-	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm test
+	cd testing/e2e && $(NVM_SH) npm test
 
 test-e2e-webapp-extension-none:
-	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm run test:webapp-extension-none
+	cd testing/e2e && $(NVM_SH) npm run test:webapp-extension-none
 
 test-e2e-webapp-extension-sim:
-	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm run test:webapp-extension-sim
+	cd testing/e2e && $(NVM_SH) npm run test:webapp-extension-sim
 
 test-e2e-extension-isolated:
-	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm run test:extension-isolated
+	cd testing/e2e && $(NVM_SH) npm run test:extension-isolated
 
 test-e2e-webapp-extension-real:
-	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm run test:webapp-extension-real
+	cd testing/e2e && $(NVM_SH) npm run test:webapp-extension-real
 
 test-e2e-install:
-	cd testing/e2e && . ~/.nvm/nvm.sh && nvm use && npm install && npx playwright install chromium
+	cd testing/e2e && $(NVM_SH) npm install && npx playwright install chromium
 
 test-e2e-seed:
 	./src/manage.py seed_e2e_data
