@@ -76,6 +76,7 @@ check:	lint test
 docker-build:	check-docker Dockerfile
 	@TT_VERSION=$$(cat TT_VERSION); \
 	docker build \
+		--platform linux/amd64 \
 		--label "name=tt" \
 		--label "version=$$TT_VERSION" \
 		--label "build-date=$(NOW_DATE)" \
