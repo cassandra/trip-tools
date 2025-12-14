@@ -120,10 +120,15 @@ test.describe( 'Server Unreachable', () => {
         expect( state.tt_apiToken ).toBe( 'tt_12345678_preseededtokenvalue' );
     });
 
-    test( 'cached auth persists when server unreachable', async ({ context, page }) => {
+    test( 'cached auth persists when server unreachable', async ({ context, page, request }) => {
         // First authorize successfully
         await setExtensionStorage( context, {
             tt_serverUrl: MOCK_SERVER_URL,
+        });
+
+        // Ensure mock server returns success for initial authorization
+        await request.post( '/__test__/profile', {
+            data: { profile: 'ext_auth_success' }
         });
 
         // Navigate and authorize
