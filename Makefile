@@ -1,6 +1,6 @@
 NOW_DATE := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 
-SCRIPTS = deploy/env-generate.py deploy/run_container.sh deploy/docker-compose-env-convert.py deploy/deploy-prod.sh
+SCRIPTS = deploy/env-generate.py deploy/run_container.sh deploy/docker-compose-env-convert.py deploy/deploy-prod.sh deploy/build-extension.sh
 
 # Docker daemon check - fails fast if Docker is not running
 .PHONY: check-docker
@@ -123,4 +123,7 @@ docker-push:
 deploy-prod:	check-docker .private/env/docker-compose.production.env fix-permissions
 	./deploy/deploy-prod.sh
 
+# Chrome Extension Build
+extension-build:	fix-permissions
+	./deploy/build-extension.sh
 

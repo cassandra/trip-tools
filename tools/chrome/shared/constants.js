@@ -8,7 +8,7 @@ var TT = TT || {};
 
 TT.CONFIG = {
     EXTENSION_NAME: 'Trip Tools Extension',
-    EXTENSION_VERSION: '0.1.0',
+    EXTENSION_VERSION: 'ext-v0.1.0-dev',
     IS_DEVELOPMENT: true,
     DEBUG_LOG_MAX_ENTRIES: 50,
     DEFAULT_SERVER_URL_DEV: 'http://localhost:6777',
