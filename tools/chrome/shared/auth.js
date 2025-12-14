@@ -180,3 +180,26 @@ TTAuth.getLookupKey = function( token ) {
     var parts = token.split( '_', 3 );
     return parts[1];
 };
+
+/**
+ * Open the authorization page in a new tab.
+ * Routes through signin with next/from params for proper UX flow.
+ * - If user is already logged in, they redirect straight to extensions page.
+ * - If not logged in, they see signin with extension context message.
+ * @returns {Promise<void>}
+ */
+TTAuth.openAuthorizePage = function() {
+    var defaultUrl = TT.CONFIG.IS_DEVELOPMENT
+        ? TT.CONFIG.DEFAULT_SERVER_URL_DEV
+        : TT.CONFIG.DEFAULT_SERVER_URL_PROD;
+
+    return TTStorage.get( TT.STORAGE.KEY_SERVER_URL, defaultUrl )
+        .then( function( serverUrl ) {
+            var signinUrl = serverUrl + '/user/signin';
+            var params = new URLSearchParams({
+                next: TT.CONFIG.EXTENSION_AUTHORIZE_PATH,
+                from: 'extension'
+            });
+            chrome.tabs.create( { url: signinUrl + '?' + params.toString() } );
+        });
+};

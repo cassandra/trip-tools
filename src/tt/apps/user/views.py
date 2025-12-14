@@ -15,12 +15,14 @@ from django.views.generic import View
 from tt.apps.api.enums import TokenType
 from tt.apps.api.services import APITokenService
 from tt.apps.common.rate_limit import rate_limit
+from tt.apps.common.url_utils import is_safe_redirect_url
 import tt.apps.common.antinode as antinode
 from tt.environment.constants import TtConst
 from tt.apps.notify.email_sender import EmailSender
 from tt.async_view import ModalView
 
 from . import forms
+from .constants import SIGNIN_NEXT_URL_SESSION_KEY
 from .context import AccountPageContext
 from .enums import AccountPageType, SigninErrorType
 from .extension_service import ExtensionTokenService
@@ -34,10 +36,19 @@ logger = logging.getLogger(__name__)
 class UserSigninView( View ):
 
     def get(self, request, *args, **kwargs):
+        next_url = request.GET.get('next', '')
+        from_source = request.GET.get('from', '')
+
+        # If already authenticated, redirect immediately
         if request.user.is_authenticated:
-            url = reverse( 'dashboard_home' )
-            return HttpResponseRedirect( url )
-            
+            if next_url and is_safe_redirect_url(next_url):
+                return HttpResponseRedirect(next_url)
+            return HttpResponseRedirect(reverse('dashboard_home'))
+
+        # Store next in session for magic code flow persistence
+        if next_url:
+            request.session[SIGNIN_NEXT_URL_SESSION_KEY] = next_url
+
         error_message = None
         error_param = request.GET.get( 'error' )
 
@@ -52,6 +63,7 @@ class UserSigninView( View ):
         context = {
             'email_not_configured': not EmailSender.is_email_configured(),
             'error_message': error_message,
+            'from_extension': from_source == 'extension',
         }
         return render( request, 'user/pages/signin.html', context )
 
@@ -161,10 +173,15 @@ class SigninMagicCodeView( View ):
         SigninManager().do_login( request = request, verified_email = True )
         magic_code_generator.expire_magic_code( request )
 
+        # Get and clear stored next URL from session
+        next_url = request.session.pop(SIGNIN_NEXT_URL_SESSION_KEY, None)
+        if next_url and is_safe_redirect_url(next_url):
+            return HttpResponseRedirect(next_url)
+
         url = reverse( 'dashboard_home' )
         return HttpResponseRedirect( url )
 
-    
+
 class SigninMagicLinkView( View ):
     """ This is the view for the links we include in emails for logging in. """
 
@@ -193,6 +210,11 @@ class SigninMagicLinkView( View ):
 
         request.user = existing_user
         SigninManager().do_login( request = request, verified_email = True )
+
+        # Get and clear stored next URL from session (if same browser)
+        next_url = request.session.pop(SIGNIN_NEXT_URL_SESSION_KEY, None)
+        if next_url and is_safe_redirect_url(next_url):
+            return HttpResponseRedirect(next_url)
 
         url = reverse( 'dashboard_home' )
         return HttpResponseRedirect( url )

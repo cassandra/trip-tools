@@ -207,7 +207,7 @@ function setupAuthEventListeners() {
     var authorizeBtn = document.getElementById( TT.DOM.ID_OPTIONS_AUTHORIZE_BTN );
     if ( authorizeBtn ) {
         authorizeBtn.addEventListener( 'click', function() {
-            openAuthorizePage();
+            TTAuth.openAuthorizePage();
         });
     }
 
@@ -233,18 +233,6 @@ function setupAuthEventListeners() {
             }
         });
     }
-}
-
-function openAuthorizePage() {
-    var defaultUrl = TT.CONFIG.IS_DEVELOPMENT
-        ? TT.CONFIG.DEFAULT_SERVER_URL_DEV
-        : TT.CONFIG.DEFAULT_SERVER_URL_PROD;
-
-    TTStorage.get( TT.STORAGE.KEY_SERVER_URL, defaultUrl )
-        .then( function( serverUrl ) {
-            var authUrl = serverUrl + TT.CONFIG.EXTENSION_AUTHORIZE_PATH;
-            chrome.tabs.create( { url: authUrl } );
-        });
 }
 
 function handleDisconnect() {

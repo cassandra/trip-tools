@@ -41,3 +41,22 @@ def simplify_url_path( original_path        : str,
         continue
 
     return original_path
+
+
+def is_safe_redirect_url(url: str) -> bool:
+    """
+    Validate that a redirect URL is safe (internal path only).
+    Prevents open redirect attacks.
+    """
+    if not url:
+        return False
+
+    # Only allow relative paths starting with /
+    if not url.startswith('/'):
+        return False
+
+    # Reject protocol-relative URLs (//example.com)
+    if url.startswith('//'):
+        return False
+
+    return True

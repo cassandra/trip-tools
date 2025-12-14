@@ -23,6 +23,17 @@
       {{ error_message }}
     </div>
     {% endif %}
+    {% if from_extension %}
+    <div class="alert alert-info">
+      <div class="d-flex align-items-center">
+        {% icon "plug" size="md" css_class="mr-2" %}
+        <div>
+          <strong>Browser Extension Authorization</strong>
+          <p class="mb-0 small">Sign in to connect your browser extension to Trip Tools.</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
     <form class="sigin form" method="post" 
           action="{% url 'user_signin' %}"
           data-synchronous="true">
