@@ -56,7 +56,9 @@
       "WebFetch(domain:www.google.com)",
       "Bash(npm run lint)",
       "Bash(npx eslint:*)",
-      "Bash(nvm ls:*)"
+      "Bash(nvm ls:*)",
+      "WebFetch(domain:wordsacrossamerica.com)",
+      "WebFetch(domain:www.termsfeed.com)"
     ],
     "deny": [],
     "ask": []

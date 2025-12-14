@@ -176,6 +176,18 @@ class HomeView( View ):
     def get(self, request, *args, **kwargs):
         return render( request, 'pages/home.html' )
 
+
+class PrivacyView( View ):
+
+    def get(self, request, *args, **kwargs):
+        return render( request, 'pages/privacy.html' )
+
+
+class TermsView( View ):
+
+    def get(self, request, *args, **kwargs):
+        return render( request, 'pages/terms.html' )
+
     
 class StartView( View ):
 

@@ -1,0 +1,15 @@
+{% extends "pages/base_bare.html" %}
+{% load pipeline %}
+
+{% block head_css %}
+{% stylesheet 'css_head' %}
+{% block website_css %}{% endblock %}
+{% endblock %}
+
+{% block body_pre_javascript %}
+{% javascript 'js_before_content' %}
+{% endblock %}
+
+{% block body_post_javascript %}
+{% javascript 'js_after_content' %}
+{% endblock %}

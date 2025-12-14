@@ -13,6 +13,8 @@ class AuthenticationMiddleware(object):
         'env_home',
         'home',
         'home_index',
+        'privacy',
+        'terms',
         'admin',
         'manifest',
         'user_signin',

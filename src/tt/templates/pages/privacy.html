@@ -1,0 +1,80 @@
+{% extends "pages/base_website.html" %}
+{% load static %}
+
+{% block head_title %}Privacy Policy - Trip Tools{% endblock %}
+
+{% block content %}
+<div class="tt-page-gradient">
+  <div class="text-center pt-4 pb-2 px-4">
+    <a href="{% url 'home' %}">
+      <img src="{% static 'img/tt-logo-467x200.png' %}" alt="Trip Tools" style="max-height: 55px;">
+    </a>
+    <h1 class="h4 mt-4 mb-2 text-primary font-weight-bold">Privacy Policy</h1>
+  </div>
+
+  <div class="container px-4 pb-4" style="max-width: 720px;">
+    <p class="lead text-center text-secondary mb-4">
+      We believe your travel data is yours. Here's how we handle it.
+    </p>
+
+    <ol class="pl-4">
+      <li class="mb-3">
+        <strong class="text-primary">We only collect what you give us.</strong>
+        Your email address is required for your account. Your name is optional.
+        Trip data (titles, descriptions, locations, maps) is only stored when you explicitly create or save it.
+      </li>
+
+      <li class="mb-3">
+        <strong class="text-primary">We only use your data to provide the service.</strong>
+        Your trip information is used solely to display it back to you and to people you explicitly invite to share a trip.
+      </li>
+
+      <li class="mb-3">
+        <strong class="text-primary">We don't track you.</strong>
+        No third-party analytics, no advertising trackers, no behavioral profiling.
+      </li>
+
+      <li class="mb-3">
+        <strong class="text-primary">We don't sell or share your data.</strong>
+        Your information stays between you, the people you invite, and our servers. That's it.
+      </li>
+
+      <li class="mb-3">
+        <strong class="text-primary">The browser extension stores minimal data locally.</strong>
+        This includes your session token (so you stay logged in) and cached trip information (so the popup loads quickly).
+        This data never leaves your device except to communicate with our servers.
+      </li>
+
+      <li class="mb-3">
+        <strong class="text-primary">Third-party services use your browser's authentication.</strong>
+        The extension integrates with services like Google Maps and Google My Maps to help you collect and organize travel data.
+        When accessing these services, the extension uses your browser's existing sessions.
+        We don't participate in third-party authentication or store any third-party credentials.
+      </li>
+
+      <li class="mb-3">
+        <strong class="text-primary">We only use necessary cookies.</strong>
+        Session cookies keep you logged in. No tracking cookies.
+      </li>
+
+      <li class="mb-3">
+        <strong class="text-primary">You can delete your data anytime.</strong>
+        Contact us to request complete deletion of your account and all associated trip data.
+      </li>
+
+      <li class="mb-3">
+        <strong class="text-primary">We communicate only when necessary.</strong>
+        We'll email you for account verification and critical service notifications. No marketing spam.
+      </li>
+    </ol>
+
+    <div class="text-center text-muted mt-4 py-3 border-top">
+      <p class="mb-1"><strong>Effective Date:</strong> December 2025</p>
+      <p class="mb-0"><strong>Contact:</strong> privacy@pomdp.com</p>
+    </div>
+
+    {% include "components/base_footer.html" %}
+
+  </div>
+</div>
+{% endblock %}

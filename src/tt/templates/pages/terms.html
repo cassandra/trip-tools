@@ -1,0 +1,139 @@
+{% extends "pages/base_website.html" %}
+{% load static %}
+
+{% block head_title %}Terms of Service - Trip Tools{% endblock %}
+
+{% block content %}
+<div class="tt-page-gradient">
+  <div class="text-center pt-4 pb-2 px-4">
+    <a href="{% url 'home' %}">
+      <img src="{% static 'img/tt-logo-467x200.png' %}" alt="Trip Tools" style="max-height: 55px;">
+    </a>
+    <h1 class="h4 mt-4 mb-2 text-primary font-weight-bold">Terms of Service</h1>
+  </div>
+
+  <div class="container px-4 pb-4" style="max-width: 720px;">
+
+    <h5 class="text-primary mt-4">General</h5>
+    <p>
+      These Terms of Service ("Terms") govern your use of the Trip Tools website, browser extension,
+      and related services (collectively, the "Services") operated by POMDP, Inc. ("The Company", "we", "us", or "our").
+    </p>
+    <p>
+      By accessing or using the Services, you agree to be bound by these Terms. If you do not agree,
+      do not use the Services. We reserve the right to modify, suspend, or discontinue the Services
+      at any time without liability.
+    </p>
+
+    <h5 class="text-primary mt-4">Age Requirements</h5>
+    <p>
+      You must be at least 13 years old to use the Services. If you are under 18, you represent that
+      your parent or legal guardian has reviewed and agreed to these Terms. Account holders are
+      responsible for all activity under their account, including use by minors.
+    </p>
+
+    <h5 class="text-primary mt-4">Account Security</h5>
+    <p>
+      You are solely responsible for maintaining access to the email address associated with your account,
+      as it is used for sign-in verification. You are also responsible for safeguarding any API keys
+      generated for your account, including those used by the browser extension.
+      You agree to notify us immediately of any unauthorized use. We are not liable for any loss
+      resulting from unauthorized access to your account or misuse of your API keys.
+    </p>
+
+    <h5 class="text-primary mt-4">Our Content</h5>
+    <p>
+      All materials published in the Services, including but not limited to the user interface, design,
+      graphics, and software, are protected by copyright and owned or controlled by The Company.
+      You may not modify, reproduce, distribute, or create derivative works from these materials
+      without our express written permission.
+    </p>
+
+    <h5 class="text-primary mt-4">Your Content</h5>
+    <p>
+      You retain ownership of all content you create, including trip information, journal entries,
+      photos, and other materials ("Your Content"). By using the Services, you grant us a limited,
+      non-exclusive license to store, process, and display Your Content solely for the purpose of
+      providing the Services to you and to users you explicitly authorize to view or collaborate on your trips.
+    </p>
+    <p>
+      You represent that you have the right to share any content you upload and that Your Content
+      does not violate any third party's rights or any applicable laws.
+    </p>
+
+    <h5 class="text-primary mt-4">Sharing and Collaboration</h5>
+    <p>
+      The Services allow you to invite others to view or collaborate on your trips. You are responsible
+      for managing who has access to Your Content. We are not responsible for how invited users may
+      use or share information you provide them access to.
+    </p>
+
+    <h5 class="text-primary mt-4">Browser Extension</h5>
+    <p>
+      The Trip Tools browser extension accesses third-party websites on your behalf to help you
+      collect and organize travel information. You are responsible for complying with the terms of
+      service of any third-party websites you access through the extension. The extension uses your
+      browser's existing sessions to access these services; we do not store third-party credentials.
+    </p>
+
+    <h5 class="text-primary mt-4">Third-Party Services</h5>
+    <p>
+      The Services integrate with third-party platforms such as Google Maps and Google My Maps.
+      Your use of these integrations is also subject to those platforms' terms of service and privacy
+      policies. We are not responsible for the availability, accuracy, or changes to third-party services.
+    </p>
+
+    <h5 class="text-primary mt-4">Prohibited Conduct</h5>
+    <p>You agree not to:</p>
+    <ul>
+      <li>Use the Services for any unlawful purpose</li>
+      <li>Harass, abuse, or harm other users</li>
+      <li>Post false, misleading, or defamatory content</li>
+      <li>Attempt to gain unauthorized access to the Services or other users' accounts</li>
+      <li>Reverse engineer, decompile, or attempt to extract source code from the Services</li>
+      <li>Use automated tools to scrape or collect data from the Services</li>
+      <li>Abuse sharing features to spam or harass invitees</li>
+      <li>Impersonate any person or entity</li>
+      <li>Interfere with the proper functioning of the Services</li>
+    </ul>
+
+    <h5 class="text-primary mt-4">Open Source</h5>
+    <p>
+      Portions of Trip Tools are available as open source software under the MIT License.
+      Your use of the open source code is governed by that license. These Terms govern your use
+      of the hosted Services.
+    </p>
+
+    <h5 class="text-primary mt-4">Disclaimer of Warranties</h5>
+    <p>
+      The Services are provided "as is" and "as available" without warranties of any kind, either
+      express or implied. We do not warrant that the Services will be uninterrupted, error-free,
+      or free of harmful components. We make no guarantees regarding the accuracy of travel information
+      or third-party data accessed through the Services.
+    </p>
+
+    <h5 class="text-primary mt-4">Limitation of Liability</h5>
+    <p>
+      To the fullest extent permitted by law, The Company shall not be liable for any indirect,
+      incidental, special, consequential, or punitive damages, including loss of data, profits,
+      or goodwill, arising from your use of the Services, even if we have been advised of the
+      possibility of such damages.
+    </p>
+
+    <h5 class="text-primary mt-4">Changes to Terms</h5>
+    <p>
+      We may update these Terms from time to time. We will notify you of material changes by
+      posting the updated Terms on this page with a new effective date. Your continued use of the
+      Services after changes take effect constitutes acceptance of the revised Terms.
+    </p>
+
+    <div class="text-center text-muted mt-4 py-3 border-top">
+      <p class="mb-1"><strong>Effective Date:</strong> December 2025</p>
+      <p class="mb-0"><strong>Contact:</strong> info@pomdp.com</p>
+    </div>
+
+    {% include "components/base_footer.html" %}
+
+  </div>
+</div>
+{% endblock %}

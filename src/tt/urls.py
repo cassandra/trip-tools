@@ -29,6 +29,8 @@ urlpatterns = [
 
     re_path( r'^$', views.HomeView.as_view(), name='home' ),
     re_path( r'^index.html$', views.HomeView.as_view(), name='home_index' ),
+    re_path( r'^privacy$', views.PrivacyView.as_view(), name='privacy' ),
+    re_path( r'^terms$', views.TermsView.as_view(), name='terms' ),
     re_path( r'^start$', views.StartView.as_view(), name='start' ),
     re_path( r'^health$', views.HealthView.as_view(), name='health' ),
 
