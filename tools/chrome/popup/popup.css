@@ -118,9 +118,18 @@ html, body {
 }
 
 .tt-popup-content {
-    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
     flex: 1;
     overflow-y: auto;
+}
+
+/* Override shared.css section spacing - container owns gaps */
+.tt-popup-content > .tt-section {
+    margin-bottom: 0;
+    padding: 0 0 8px 0;
 }
 
 .tt-maps-list {
@@ -140,7 +149,6 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
 }
 
 .tt-toggle-label {
@@ -354,12 +362,38 @@ input:checked + .tt-toggle-slider:before {
  * Trip Section
  * ============================================================================= */
 
-.tt-trip-loading,
-.tt-trip-empty {
+.tt-trip-loading {
     color: var(--tt-muted-color);
     font-style: italic;
     font-size: 13px;
     padding: 8px 0;
+}
+
+/* =============================================================================
+ * Welcome Card (shown when no trips)
+ * ============================================================================= */
+
+.tt-welcome-card {
+    text-align: center;
+    padding: 20px 16px;
+}
+
+.tt-welcome-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--tt-text-primary);
+    margin-bottom: 8px;
+}
+
+.tt-welcome-description {
+    font-size: 13px;
+    color: var(--tt-text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.tt-btn-block {
+    width: 100%;
 }
 
 /* =============================================================================
@@ -653,6 +687,10 @@ input:checked + .tt-toggle-slider:before {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.tt-trip-actions.tt-hidden {
+    display: none;
 }
 
 /* Link-style buttons for trip actions */

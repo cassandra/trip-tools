@@ -358,6 +358,14 @@ function setupTripEventListeners() {
         });
     }
 
+    // Welcome card new trip button (same action as regular new trip button)
+    var welcomeNewTripBtn = document.getElementById( TT.DOM.ID_WELCOME_NEW_TRIP_BTN );
+    if ( welcomeNewTripBtn ) {
+        welcomeNewTripBtn.addEventListener( 'click', function() {
+            openNewTripPage();
+        });
+    }
+
     var moreTripsBtn = document.getElementById( TT.DOM.ID_MORE_TRIPS_BTN );
     if ( moreTripsBtn ) {
         moreTripsBtn.addEventListener( 'click', function() {
@@ -485,31 +493,46 @@ function hideTripSection() {
 function showTripLoading() {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
     var workingSet = document.getElementById( TT.DOM.ID_WORKING_SET );
-    var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
+    var welcomeCard = document.getElementById( TT.DOM.ID_WELCOME_CARD );
+    var tripActions = document.getElementById( TT.DOM.ID_TRIP_ACTIONS );
+    var settingsSection = document.getElementById( TT.DOM.ID_SETTINGS_SECTION );
 
     if ( loading ) loading.classList.remove( TT.DOM.CLASS_HIDDEN );
     if ( workingSet ) workingSet.classList.add( TT.DOM.CLASS_HIDDEN );
-    if ( empty ) empty.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( welcomeCard ) welcomeCard.classList.add( TT.DOM.CLASS_HIDDEN );
+    // Hide until we know if there are trips
+    if ( tripActions ) tripActions.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( settingsSection ) settingsSection.classList.add( TT.DOM.CLASS_HIDDEN );
 }
 
 function showTripContent() {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
     var workingSet = document.getElementById( TT.DOM.ID_WORKING_SET );
-    var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
+    var welcomeCard = document.getElementById( TT.DOM.ID_WELCOME_CARD );
+    var tripActions = document.getElementById( TT.DOM.ID_TRIP_ACTIONS );
+    var settingsSection = document.getElementById( TT.DOM.ID_SETTINGS_SECTION );
 
     if ( loading ) loading.classList.add( TT.DOM.CLASS_HIDDEN );
     if ( workingSet ) workingSet.classList.remove( TT.DOM.CLASS_HIDDEN );
-    if ( empty ) empty.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( welcomeCard ) welcomeCard.classList.add( TT.DOM.CLASS_HIDDEN );
+    if ( tripActions ) tripActions.classList.remove( TT.DOM.CLASS_HIDDEN );
+    if ( settingsSection ) settingsSection.classList.remove( TT.DOM.CLASS_HIDDEN );
 }
 
 function showTripEmpty() {
     var loading = document.getElementById( TT.DOM.ID_TRIP_LOADING );
     var workingSet = document.getElementById( TT.DOM.ID_WORKING_SET );
-    var empty = document.getElementById( TT.DOM.ID_TRIP_EMPTY );
+    var welcomeCard = document.getElementById( TT.DOM.ID_WELCOME_CARD );
+    var tripActions = document.getElementById( TT.DOM.ID_TRIP_ACTIONS );
+    var settingsSection = document.getElementById( TT.DOM.ID_SETTINGS_SECTION );
 
     if ( loading ) loading.classList.add( TT.DOM.CLASS_HIDDEN );
     if ( workingSet ) workingSet.classList.add( TT.DOM.CLASS_HIDDEN );
-    if ( empty ) empty.classList.remove( TT.DOM.CLASS_HIDDEN );
+    if ( welcomeCard ) welcomeCard.classList.remove( TT.DOM.CLASS_HIDDEN );
+    // Hide trip actions row since welcome card has its own button
+    if ( tripActions ) tripActions.classList.add( TT.DOM.CLASS_HIDDEN );
+    // Hide settings section since features require trips
+    if ( settingsSection ) settingsSection.classList.add( TT.DOM.CLASS_HIDDEN );
 }
 
 function loadTrips() {

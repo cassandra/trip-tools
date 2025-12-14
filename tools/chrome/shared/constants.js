@@ -186,6 +186,11 @@ TT.DOM = {
     CLASS_TRIP_LOADING: 'tt-trip-loading',
     CLASS_TRIP_EMPTY: 'tt-trip-empty',
     CLASS_SWITCH_TRIP_BTN: 'tt-switch-trip-btn',
+    // Welcome Card (shown when no trips)
+    ID_WELCOME_CARD: 'tt-welcome-card',
+    ID_WELCOME_NEW_TRIP_BTN: 'tt-welcome-new-trip-btn',
+    // Trip Actions Row
+    ID_TRIP_ACTIONS: 'tt-trip-actions',
     // Working Set UI (unified trip list)
     ID_WORKING_SET: 'tt-working-set',
     ID_STALE_PIN_WARNING: 'tt-stale-pin-warning',

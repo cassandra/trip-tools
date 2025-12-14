@@ -10,7 +10,7 @@
     <div id="tt-popup-container">
         <!-- Header -->
         <div class="tt-popup-header">
-            <img src="../images/icon-48.png" alt="Trip Tools Extension" id="tt-header-icon">
+            <img src="../images/icon-on-primary-48.png" alt="Trip Tools Extension" id="tt-header-icon">
             <h1>Trip Tools Extension</h1>
             <button class="tt-settings-btn" id="tt-settings-btn" title="Options">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -71,7 +71,16 @@
                     <div class="tt-trip-list" id="tt-trip-list"></div>
                 </div>
 
-                <div class="tt-trip-empty tt-hidden" id="tt-trip-empty">No trips available.</div>
+                <!-- Welcome Card (shown when no trips) -->
+                <div class="tt-welcome-card tt-hidden" id="tt-welcome-card">
+                    <div class="tt-welcome-title">Create your first trip to get started</div>
+                    <p class="tt-welcome-description">
+                        Plan trips, save places from Google Maps, and organize your travel all in one place.
+                    </p>
+                    <button class="tt-btn tt-btn-primary tt-btn-block" id="tt-welcome-new-trip-btn">
+                        + New Trip
+                    </button>
+                </div>
 
                 <!-- Link Map Action (shown only on unlinked GMM pages) -->
                 <div class="tt-link-map-action tt-hidden" id="tt-link-map-action">
@@ -81,7 +90,7 @@
                 </div>
 
                 <!-- Trip Actions Row -->
-                <div class="tt-trip-actions">
+                <div class="tt-trip-actions" id="tt-trip-actions">
                     <button class="tt-btn tt-btn-link" id="tt-new-trip-btn">+ New Trip</button>
                     <button class="tt-btn tt-btn-link" id="tt-more-trips-btn">More Trips →</button>
                 </div>
