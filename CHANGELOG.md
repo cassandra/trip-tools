@@ -4,6 +4,7 @@
 
 _High-level view of the applications change history.  See releases and commits for more fine-grained history._
 
+- v0.3.0 : Added Chrome extension for Google My Maps integration, privacy and terms pages for Chrome Web Store submission, and macOS compatibility fixes
 - v0.2.5 : Added API key management, user invitation system, profile editing, and improved journal entry layouts and email notifications
 - v0.2.4 : Enhanced image inspector with full-sized image viewing, improved journal editing drag-and-drop, and added API framework foundation
 - v0.2.3 : Fixed password toggle styling and functionality, improved prompt page layouts, and added production backup system
