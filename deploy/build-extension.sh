@@ -77,8 +77,7 @@ cp -r "$EXT_SOURCE_DIR"/* "$EXT_DIST_DIR"/
 # Update manifest.json - version (Chrome-compatible) and version_name (display)
 echo "Updating manifest.json..."
 sed -i.bak "s/\"version\": \"[^\"]*\"/\"version\": \"$MANIFEST_VERSION\"/" "$EXT_DIST_DIR/manifest.json"
-# Add version_name after version line
-sed -i.bak "s/\"version\": \"$MANIFEST_VERSION\"/\"version\": \"$MANIFEST_VERSION\",\n    \"version_name\": \"$VERSION_NAME\"/" "$EXT_DIST_DIR/manifest.json"
+sed -i.bak "s/\"version_name\": \"[^\"]*\"/\"version_name\": \"$VERSION_NAME\"/" "$EXT_DIST_DIR/manifest.json"
 /bin/rm -f "$EXT_DIST_DIR/manifest.json.bak"
 
 # Update constants.js - version and IS_DEVELOPMENT
