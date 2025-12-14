@@ -1,16 +1,8 @@
-{% extends "pages/base.html" %}
+{% extends "pages/prompt_page.html" %}
 {% load static %}
 
-{% block content %}
-<div class="container-fluid tt-interstitial-page">
-  
-  <div class="tt-interstitial-page-content">
-    <div class="">
-      <img class="img-fluid" src="{% static 'img/tt-logo-467x200.png' %}" alt="Trip Tools Logo" />
-    </div>
-    <div class="">
-      <em>Happy Travels!</em>
-    </div>
-  </div>
+{% block prompt_content %}
+<div class="text-center">
+  <div class="display-4 text-primary">Happy Travels!</div>
 </div>
 {% endblock %}
