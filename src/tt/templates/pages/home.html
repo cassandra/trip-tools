@@ -180,6 +180,12 @@
         </ol>
         <div class="carousel-inner rounded">
           <div class="carousel-item active">
+            <img src="{% static 'img/home/extension-popup.png' %}" alt="Add Locations" class="d-block w-100">
+            <div class="carousel-caption rounded px-2 py-1">
+              <p class="mb-0 small">Create mapped, enriched location data</p>
+            </div>
+          </div>
+          <div class="carousel-item">
             <img src="{% static 'img/home/journal-entry-edit.png' %}" alt="Journal Editor" class="d-block w-100">
             <div class="carousel-caption rounded px-2 py-1">
               <p class="mb-0 small">Write with a rich text editor and drag-drop images</p>
@@ -189,12 +195,6 @@
             <img src="{% static 'img/home/travelog-day.png' %}" alt="Published Travelog" class="d-block w-100">
             <div class="carousel-caption rounded px-2 py-1">
               <p class="mb-0 small">Publish as a beautiful travelog to share</p>
-            </div>
-          </div>
-          <div class="carousel-item">
-            <img src="{% static 'img/home/journal-home.png' %}" alt="Journal Page" class="d-block w-100">
-            <div class="carousel-caption rounded px-2 py-1">
-              <p class="mb-0 small">Organize your journal entries by date</p>
             </div>
           </div>
         </div>
@@ -261,6 +261,49 @@
       </div>
     </div>
 
+    <!-- Browser Extension Section -->
+    <div class="py-4 border-top">
+      <h2 class="text-primary mb-3">Available Now: Browser Extension</h2>
+
+      <p>
+        Many travelers use Google My Maps for visual planning. Our Chrome extension enhances
+        GMM with trip planning features while keeping your location data synced to Trip Tools.
+      </p>
+
+      <div class="row mt-4">
+        <div class="col-md-6 col-lg-4 mb-3">
+          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+            <strong class="text-primary">Category-based adding</strong> - locations auto-styled and organized by layer
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 mb-3">
+          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+            <strong class="text-primary">Bidirectional sync</strong> - locations flow between GMM and Trip Tools
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 mb-3">
+          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+            <strong class="text-primary">Rich attributes</strong> - desirability, booking status, and more
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 mb-3">
+          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+            <strong class="text-primary">Multi-trip support</strong> - manage multiple trips and maps simultaneously
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 mb-3">
+          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+            <strong class="text-primary">Flexible linking</strong> - connect existing maps to trips or create new ones
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 mb-3">
+          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+            <strong class="text-primary">Available for Chrome</strong> - install from the Chrome Web Store
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- The Story Section -->
     <div class="py-4 border-top">
       <h2 class="text-primary mb-3">Why We're Building This</h2>
@@ -295,7 +338,7 @@
         <h5 class="alert-heading">Coming Soon</h5>
         <ul class="mb-0 pl-3">
           <li><strong>Planning</strong> - Compare options for lodging, transportation, activities</li>
-          <li><strong>Locations</strong> - Organize places with maps and rich details</li>
+          <li><strong>Locations</strong> - From more sources, referencing in journals</li>
           <li><strong>Itineraries</strong> - Day-by-day schedules linked to locations and bookings</li>
           <li><strong>Bookings</strong> - Track reservations, expenses, and shared costs</li>
           <li><strong>Reviews</strong> - Capture thoughts on places you visit</li>
