@@ -2,8 +2,8 @@
     "manifest_version": 3,
     "name": "Trip Tools Extension",
     "description": "Browser companion for Trip Tools trip planning.",
-    "version": "0.1.0.999",
-    "version_name": "ext-v0.1.0-dev",
+    "version": "0.1.1.999",
+    "version_name": "ext-v0.1.1-dev",
     "permissions": [
         "storage",
         "tabs",
