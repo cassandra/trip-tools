@@ -368,4 +368,104 @@ class TestSigninMagicLinkView(SyncViewTestCase):
         response = self.client.post(url)
 
         self.assertEqual(response.status_code, 405)
-        
+
+
+class TestPasswordSigninView(SyncViewTestCase):
+    """
+    Tests for PasswordSigninView - password-based signin for @triptools.net accounts.
+    """
+
+    def setUp(self):
+        super().setUp()
+        # Create a user with @triptools.net email and password
+        self.reviewer_email = 'reviewer@triptools.net'
+        self.reviewer_password = 'test-password-123'
+        self.reviewer = User.objects.create_user(
+            email=self.reviewer_email,
+            password=self.reviewer_password,
+        )
+
+    def test_get_signin_page(self):
+        """Test getting the password signin page."""
+        url = reverse('user_signin_password')
+        response = self.client.get(url)
+
+        self.assertSuccessResponse(response)
+        self.assertTemplateRendered(response, 'user/pages/password_signin.html')
+
+    def test_get_redirects_if_authenticated(self):
+        """Test GET redirects to dashboard if already authenticated."""
+        self.client.force_login(self.reviewer)
+
+        url = reverse('user_signin_password')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('dashboard_home'))
+
+    def test_post_successful_login(self):
+        """Test successful password login."""
+        url = reverse('user_signin_password')
+        response = self.client.post(url, {
+            'email': self.reviewer_email,
+            'password': self.reviewer_password,
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('dashboard_home'))
+
+    def test_post_wrong_password(self):
+        """Test login with wrong password."""
+        url = reverse('user_signin_password')
+        response = self.client.post(url, {
+            'email': self.reviewer_email,
+            'password': 'wrong-password',
+        })
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn('Invalid email or password', response.content.decode())
+
+    def test_post_nonexistent_user(self):
+        """Test login with nonexistent user."""
+        url = reverse('user_signin_password')
+        response = self.client.post(url, {
+            'email': 'nobody@triptools.net',
+            'password': 'any-password',
+        })
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn('Invalid email or password', response.content.decode())
+
+    def test_post_non_triptools_domain_rejected(self):
+        """Test that non-@triptools.net emails are rejected."""
+        url = reverse('user_signin_password')
+        response = self.client.post(url, {
+            'email': 'user@gmail.com',
+            'password': 'any-password',
+        })
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn('restricted to authorized accounts', response.content.decode())
+
+    def test_post_invalid_form(self):
+        """Test POST with invalid form data."""
+        url = reverse('user_signin_password')
+        response = self.client.post(url, {
+            'email': 'not-an-email',
+            'password': '',
+        })
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_redirects_if_authenticated(self):
+        """Test POST redirects to dashboard if already authenticated."""
+        self.client.force_login(self.reviewer)
+
+        url = reverse('user_signin_password')
+        response = self.client.post(url, {
+            'email': self.reviewer_email,
+            'password': self.reviewer_password,
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('dashboard_home'))

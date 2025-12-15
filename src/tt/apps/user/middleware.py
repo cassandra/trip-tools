@@ -20,6 +20,7 @@ class AuthenticationMiddleware(object):
         'user_signin',
         'user_signin_magic_code',
         'user_signin_magic_link',
+        'user_signin_password',
         'notify_email_unsubscribe',
         'members_accept_invitation',
         'members_signup_and_accept',

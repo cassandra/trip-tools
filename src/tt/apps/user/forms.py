@@ -34,6 +34,25 @@ class APITokenCreateForm(forms.Form):
     )
 
 
+class PasswordSigninForm(forms.Form):
+    """Form for password-based signin (alternative to magic link flow)."""
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'e-mail address',
+            'style': 'width: 20rem;',
+            'autofocus': 'autofocus',
+        }),
+    )
+
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'password',
+            'style': 'width: 20rem;',
+        }),
+    )
+
+
 class ProfileEditForm(forms.Form):
 
     first_name = forms.CharField(

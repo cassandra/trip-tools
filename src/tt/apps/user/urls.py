@@ -11,6 +11,11 @@ urlpatterns = [
         name='user_signin'
     ),
     path(
+        'signin/reviewer',
+        views.PasswordSigninView.as_view(),
+        name='user_signin_password'
+    ),
+    path(
         'signin/magic/code',
         views.SigninMagicCodeView.as_view(),
         name='user_signin_magic_code'

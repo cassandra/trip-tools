@@ -1,6 +1,6 @@
 import logging
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User as UserType
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -368,6 +368,54 @@ class APITokenExtensionDisconnectModalView( APITokenDeleteModalView ):
 
     def get_template_name( self ) -> str:
         return 'user/modals/api_token_extension_disconnect.html'
+
+
+class PasswordSigninView(View):
+    """
+    Password-based signin for accounts with @triptools.net emails.
+
+    This is an alternative to the magic link flow, intended for special accounts
+    like Chrome Web Store reviewers who need password-based authentication.
+    Only accepts emails ending in @triptools.net for controlled access.
+    """
+
+    TEMPLATE_NAME = 'user/pages/password_signin.html'
+    ALLOWED_DOMAIN = '@triptools.net'
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('dashboard_home'))
+
+        form = forms.PasswordSigninForm()
+        return render(request, self.TEMPLATE_NAME, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('dashboard_home'))
+
+        form = forms.PasswordSigninForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.TEMPLATE_NAME, {'form': form}, status=400)
+
+        email = form.cleaned_data['email']
+        password = form.cleaned_data['password']
+
+        # Restrict to @triptools.net domain
+        if not email.endswith(self.ALLOWED_DOMAIN):
+            form.add_error('email', 'This signin is restricted to authorized accounts.')
+            return render(request, self.TEMPLATE_NAME, {'form': form}, status=403)
+
+        # Authenticate using Django's standard mechanism
+        user = authenticate(request, username=email, password=password)
+        if user is None:
+            form.add_error(None, 'Invalid email or password.')
+            return render(request, self.TEMPLATE_NAME, {'form': form}, status=401)
+
+        # Log them in
+        request.user = user
+        SigninManager().do_login(request=request, verified_email=True)
+
+        return HttpResponseRedirect(reverse('dashboard_home'))
 
 
 class ExtensionsHomeView( LoginRequiredMixin, View ):
