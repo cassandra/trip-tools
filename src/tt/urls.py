@@ -31,6 +31,7 @@ urlpatterns = [
     re_path( r'^index.html$', views.HomeView.as_view(), name='home_index' ),
     re_path( r'^privacy$', views.PrivacyView.as_view(), name='privacy' ),
     re_path( r'^terms$', views.TermsView.as_view(), name='terms' ),
+    re_path( r'^why-trip-tools$', views.WhyTripToolsView.as_view(), name='why_trip_tools' ),
     re_path( r'^start$', views.StartView.as_view(), name='start' ),
     re_path( r'^health$', views.HealthView.as_view(), name='health' ),
 

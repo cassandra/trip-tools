@@ -15,6 +15,7 @@ class AuthenticationMiddleware(object):
         'home_index',
         'privacy',
         'terms',
+        'why_trip_tools',
         'admin',
         'manifest',
         'user_signin',

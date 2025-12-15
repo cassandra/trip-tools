@@ -1,0 +1,206 @@
+{% extends "pages/base_website.html" %}
+{% load static %}
+
+{% block head_title %}Why Trip Tools{% endblock %}
+
+{% block content %}
+<div class="tt-page-gradient">
+  <div class="text-center pt-4 pb-2 px-4">
+    <a href="{% url 'home' %}">
+      <img src="{% static 'img/tt-logo-467x200.png' %}" alt="Trip Tools" style="max-height: 55px;">
+    </a>
+    <h1 class="h4 mt-4 mb-2 text-primary font-weight-bold">Why I'm Building Trip Tools</h1>
+    <p class="text-muted small mb-0">by Tony Cassandra, December 2025</p>
+  </div>
+
+  <div class="container px-4 pb-4" style="max-width: 720px;">
+
+    <p class="text-center text-secondary font-italic my-4">
+      Trip Tools is in early development. This article explains the problem we're solving and where we're headed.
+    </p>
+
+    <div class="border-top pt-4">
+
+      <p>
+        There are lots of good tools for managing trips. That's the problem.
+      </p>
+
+      <p>
+        TripIt parses confirmation emails. Tricount handles expense splitting. Google Maps knows where everything is.
+        Each tool does its job well. But none of them talk to each other, and none of them understand that all of
+        this activity is part of the same trip. The burden falls on me (and you) to juggle them all: cutting and pasting,
+        multiple logins, different formats. Planning with others makes it worse - now everyone has their own separate
+        research scattered across their own apps.
+      </p>
+
+      <p>
+        I've been planning trips for a long time and have invested in refining my methods: custom spreadsheets,
+        map templates, scripts to manage data. It's more than the average person would want to do, and it's still a mess.
+      </p>
+
+      <h2 class="text-primary mt-4 mb-3">The Insight: Locations Bind Everything</h2>
+
+      <p>
+        After years of this, I realized what ties a trip together: Locations.
+      </p>
+
+      <p>
+        Every phase of trip planning revolves around places. The museum you want to visit. The hotel you're considering.
+        The restaurant someone recommended. The airport you'll fly into. During research, you're gathering Locations.
+        During planning, you're comparing and prioritizing them. During booking, you're reserving access to them.
+        During the trip, you're navigating between them. When writing your journal afterward, you're writing about them.
+      </p>
+
+      <p>
+        If Locations are the organizing principle, then a trip tool should treat them as first-class objects that
+        connect to everything else - not as pins on a map disconnected from your itinerary, bookings, and memories.
+      </p>
+
+      <p>
+        This is the core idea behind Trip Tools: one place for the entire trip lifecycle, with Locations to bind it all together.
+      </p>
+
+      <h2 class="text-primary mt-4 mb-3">The Trip Lifecycle</h2>
+
+      <p>
+        A trip isn't just "planning." It's a continuous thing that can span months (years?):
+      </p>
+
+      <p>
+        <strong>Research and Planning</strong> - Gathering places of interest, comparing options for lodging and transportation,
+        deciding what's worth the time. Right now this lives in browser tabs, bookmarks, notes, and half-remembered conversations.
+      </p>
+
+      <p>
+        <strong>Booking</strong> - Converting decisions into reservations. Tracking what's booked versus what still needs booking.
+        Managing confirmations, costs, cancellation deadlines, and who paid for what.
+      </p>
+
+      <p>
+        <strong>Execution</strong> - Actually traveling. Referencing all that planning and booking data. Knowing where you're going,
+        when things are open, what you've reserved.
+      </p>
+
+      <p>
+        <strong>Memory</strong> - Writing about the trip, organizing photos, sharing with others. Connecting what you experienced
+        back to the places you visited.
+      </p>
+
+      <p>
+        Each phase builds on the previous one. But our tools treat them as if they exist in isolation.
+      </p>
+
+      <h2 class="text-primary mt-4 mb-3">What I'm Building</h2>
+
+      <p>
+        Trip Tools is my attempt to build what I wish existed. Here's the vision:
+      </p>
+
+      <p>
+        <strong>Locations</strong> - Every place associated with a trip, organized and enriched. Not just pins, but places with notes,
+        categories, links to related bookings, and context about why they matter. The foundation everything else connects to.
+      </p>
+
+      <p>
+        <strong>Planning</strong> - A structured way to research and compare options before you commit. Track candidates for lodging,
+        transportation, activities. Add custom attributes for comparison. See what's decided versus what's still open.
+      </p>
+
+      <p>
+        <strong>Itineraries</strong> - Day-by-day schedules that connect to your locations and bookings. Bookings appear automatically.
+        Changes stay synchronized. Clear visibility into what's confirmed versus what's still tentative.
+      </p>
+
+      <p>
+        <strong>Bookings</strong> - The financial and logistical layer. What's booked, what still needs booking, what it cost, who paid,
+        when the cancellation deadlines are. Connected to the itinerary so you can see your trip as a whole.
+      </p>
+
+      <p>
+        <strong>Journal and Travelog</strong> - Where memories live. Write about your trip with rich text and your photos.
+        Reference your locations, see the context of your itinerary. Publish as a shareable travelog for friends and family.
+      </p>
+
+      <p>
+        The key is connection. Your journal entry about that restaurant links to the location, shows photos from that day,
+        notes what you spent. The trip is the organizing principle, not an afterthought.
+      </p>
+
+      <h2 class="text-primary mt-4 mb-3">Where We Are Now</h2>
+
+      <p>
+        I've started with two pieces: the journal and a browser extension for managing locations.
+      </p>
+
+      <h3 class="mt-3 mb-2">Journal and Travelog</h3>
+
+      <p>
+        I started here because this is where my personal pain was most acute - two years of trip notes and photos I hadn't organized.
+        The journal feature lets you write rich travel entries with drag-and-drop photos, auto-save, version history,
+        and publishing as shareable travelogs. It works. I'm using it for my own trips.
+      </p>
+
+      <h3 class="mt-3 mb-2">Browser Extension</h3>
+
+      <p>
+        For visual planning, I use Google My Maps to plot locations. It's capable but clunky, and all the data lives trapped inside Google.
+        The browser extension bridges this gap: use GMM for visual plotting while keeping your location data synced to Trip Tools,
+        where it can connect to everything else.
+      </p>
+
+      <p>
+        These are the first two pieces. The planning and itinerary features are next.
+      </p>
+
+      <h2 class="text-primary mt-4 mb-3">Why Open Source</h2>
+
+      <p>
+        I'm building Trip Tools as an open source project because travel tools should work for travelers, not for ad revenue or data harvesting.
+      </p>
+
+      <p>
+        The business model for most travel apps is advertising, affiliate commissions, or selling your data.
+        That creates incentives that don't align with what users need. I'd rather build something useful and let people
+        who find it valuable contribute - code, design feedback, or just telling me what would make it work for their trips.
+      </p>
+
+      <p>
+        This also means you can self-host if you want to keep your travel data private.
+      </p>
+
+      <h2 class="text-primary mt-4 mb-3">What's Next</h2>
+
+      <p>
+        The near-term roadmap:
+      </p>
+
+      <ul>
+        <li><strong>Planning</strong> - Structured comparison of options before booking. The "candidates" workflow that no current tool handles well.</li>
+        <li><strong>Itineraries</strong> - Day-by-day schedules that connect locations, bookings, and activities.</li>
+      </ul>
+
+      <p>
+        These will roll out over the coming months as I build them, test them on my own trips, and iterate based on feedback.
+      </p>
+
+      <p>
+        If this resonates - if you've felt the same frustration with trip fragmentation - I'd like to hear from you.
+        The project is on GitHub, and I'm looking for early users willing to try it and share how they plan trips.
+      </p>
+
+      <div class="text-center text-muted mt-4 py-3 border-top">
+        <p class="mb-1">
+          Trip Tools is available at <a href="{% url 'home' %}">triptools.net</a> (currently invite-only during early development).
+        </p>
+        <p class="mb-0">
+          Source code: <a href="https://github.com/cassandra/trip-tools" target="_blank" rel="noopener">github.com/cassandra/trip-tools</a>
+        </p>
+      </div>
+
+    </div>
+
+    {% include "components/base_footer.html" %}
+
+  </div>
+</div>
+{% endblock %}

@@ -188,7 +188,13 @@ class TermsView( View ):
     def get(self, request, *args, **kwargs):
         return render( request, 'pages/terms.html' )
 
-    
+
+class WhyTripToolsView( View ):
+
+    def get(self, request, *args, **kwargs):
+        return render( request, 'pages/why_trip_tools.html' )
+
+
 class StartView( View ):
 
     def get(self, request, *args, **kwargs):
