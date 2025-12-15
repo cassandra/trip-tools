@@ -21,18 +21,6 @@ html, body {
     color: var(--tt-on-primary-color);
 }
 
-/* Dev Mode Banner */
-.tt-dev-banner {
-    background-color: #dc3545;
-    color: #fff;
-    text-align: center;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
 .tt-popup-header img {
     width: 32px;
     height: 32px;

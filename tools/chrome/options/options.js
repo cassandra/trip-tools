@@ -8,10 +8,20 @@ document.addEventListener( 'DOMContentLoaded', function() {
 });
 
 function initializeOptions() {
+    applyDevModeStyles();
     loadSettings();
     setupEventListeners();
     checkAuthStatus();
     listenForAuthStateChanges();
+}
+
+function applyDevModeStyles() {
+    if ( TT.CONFIG.IS_DEVELOPMENT ) {
+        var devBanner = document.getElementById( TT.DOM.ID_DEV_BANNER );
+        if ( devBanner ) {
+            devBanner.classList.remove( TT.DOM.CLASS_HIDDEN );
+        }
+    }
 }
 
 function listenForAuthStateChanges() {
