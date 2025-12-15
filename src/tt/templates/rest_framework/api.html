@@ -1,0 +1,79 @@
+{% extends "rest_framework/base.html" %}
+{% load static %}
+
+{% block branding %}
+    <a class="navbar-brand" href="/">
+        <img src="{% static 'img/tt-on-primary-logo-467x200.png' %}" alt="Trip Tools" height="28">
+    </a>
+{% endblock %}
+
+{% block style %}
+    {{ block.super }}
+    <style>
+        /* Trip Tools brand colors */
+        :root {
+            --tt-primary: #177072;
+            --tt-primary-dark: #115354;
+            --tt-secondary: #F45F36;
+            --tt-white: #fdfdfd;
+        }
+
+        /* Navbar */
+        .navbar-inverse {
+            background-color: var(--tt-primary);
+            border-color: var(--tt-primary-dark);
+        }
+        .navbar-inverse .navbar-brand:hover,
+        .navbar-inverse .navbar-brand:focus {
+            background-color: var(--tt-primary-dark);
+        }
+        .navbar-inverse .navbar-nav > li > a:hover,
+        .navbar-inverse .navbar-nav > li > a:focus {
+            background-color: var(--tt-primary-dark);
+        }
+        .navbar-inverse .navbar-nav > .open > a,
+        .navbar-inverse .navbar-nav > .open > a:hover,
+        .navbar-inverse .navbar-nav > .open > a:focus {
+            background-color: var(--tt-primary-dark);
+        }
+
+        /* Links */
+        a {
+            color: var(--tt-primary);
+        }
+        a:hover, a:focus {
+            color: var(--tt-primary-dark);
+        }
+
+        /* Primary buttons */
+        .btn-primary {
+            background-color: var(--tt-primary);
+            border-color: var(--tt-primary-dark);
+        }
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .btn-primary:active,
+        .btn-primary.active {
+            background-color: var(--tt-primary-dark);
+            border-color: var(--tt-primary-dark);
+        }
+
+        /* Form focus states */
+        .form-control:focus {
+            border-color: var(--tt-primary);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(23, 112, 114, 0.6);
+        }
+
+        /* Dropdown active items */
+        .dropdown-menu > .active > a,
+        .dropdown-menu > .active > a:hover,
+        .dropdown-menu > .active > a:focus {
+            background-color: var(--tt-primary);
+        }
+
+        /* Page header */
+        .page-header {
+            border-bottom-color: var(--tt-primary);
+        }
+    </style>
+{% endblock %}

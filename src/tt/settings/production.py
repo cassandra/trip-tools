@@ -72,3 +72,11 @@ LOGGING = {
 }
 
 BASE_URL_FOR_EMAIL_LINKS = f'https://{SITE_DOMAIN}'
+
+# Disable DRF Browsable API in production - JSON responses only
+REST_FRAMEWORK = {
+    **REST_FRAMEWORK,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+}
