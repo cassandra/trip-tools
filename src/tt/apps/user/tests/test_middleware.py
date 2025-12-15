@@ -39,6 +39,7 @@ class TestAuthenticationMiddleware(BaseTestCase):
             'home_index',
             'privacy',
             'terms',
+            'why_trip_tools',
             'admin',
             'manifest',
             'notify_email_unsubscribe',
