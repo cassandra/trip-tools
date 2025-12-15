@@ -72,3 +72,11 @@ LOGGING = {
 }
 
 BASE_URL_FOR_EMAIL_LINKS = f'https://{SITE_DOMAIN}'
+
+# Cookie settings for Chrome extension compatibility
+# SameSite=None allows cookies to be sent when extension opens tabs via chrome.tabs.create()
+# Secure=True is required when SameSite=None and ensures cookies only sent over HTTPS
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
