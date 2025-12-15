@@ -2,7 +2,6 @@
 Tests for API utility functions.
 
 Focuses on high-value testing of:
-- String cleaning and whitespace handling
 - Dict value extraction with defaults
 - UUID parsing and validation
 """
@@ -11,53 +10,9 @@ from uuid import UUID
 
 from django.test import TestCase
 
-from tt.apps.api.utils import clean_str, get_str, get_uuid
+from tt.apps.api.utils import get_str, get_uuid
 
 logging.disable(logging.CRITICAL)
-
-
-class CleanStrTestCase(TestCase):
-    """Test clean_str utility function."""
-
-    def test_clean_str_strips_leading_whitespace(self):
-        """Test clean_str removes leading whitespace."""
-        result = clean_str('  hello')
-        self.assertEqual(result, 'hello')
-
-    def test_clean_str_strips_trailing_whitespace(self):
-        """Test clean_str removes trailing whitespace."""
-        result = clean_str('hello  ')
-        self.assertEqual(result, 'hello')
-
-    def test_clean_str_strips_both_sides(self):
-        """Test clean_str removes whitespace from both sides."""
-        result = clean_str('  hello  ')
-        self.assertEqual(result, 'hello')
-
-    def test_clean_str_preserves_internal_whitespace(self):
-        """Test clean_str preserves whitespace in the middle."""
-        result = clean_str('  hello world  ')
-        self.assertEqual(result, 'hello world')
-
-    def test_clean_str_handles_tabs_and_newlines(self):
-        """Test clean_str handles tabs, newlines, and other whitespace."""
-        result = clean_str('\t\nhello\t\n')
-        self.assertEqual(result, 'hello')
-
-    def test_clean_str_returns_empty_string_for_whitespace_only(self):
-        """Test clean_str returns empty string for whitespace-only input."""
-        result = clean_str('   ')
-        self.assertEqual(result, '')
-
-    def test_clean_str_returns_empty_string_for_empty_input(self):
-        """Test clean_str returns empty string for empty input."""
-        result = clean_str('')
-        self.assertEqual(result, '')
-
-    def test_clean_str_handles_none(self):
-        """Test clean_str returns empty string for None."""
-        result = clean_str(None)
-        self.assertEqual(result, '')
 
 
 class GetStrTestCase(TestCase):
