@@ -4,6 +4,7 @@
 
 _High-level view of the applications change history.  See releases and commits for more fine-grained history._
 
+- v0.3.3 : Added "Why Trip Tools" page, improved home page layout with extension showcase, and enhanced development tooling
 - v0.3.1 : Added password signin for Chrome extension reviewers and fixed extension test issues
 - v0.3.0 : Added Chrome extension for Google My Maps integration, privacy and terms pages for Chrome Web Store submission, and macOS compatibility fixes
 - v0.2.5 : Added API key management, user invitation system, profile editing, and improved journal entry layouts and email notifications
