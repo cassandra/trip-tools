@@ -163,15 +163,12 @@
         <span class="small text-secondary">Memories</span>
       </div>
     </div>
-    <p class="mb-0 text-secondary" style="max-width: 520px; margin: 0 auto; font-size: 1rem; line-height: 1.6;">
-      From first research to final photo album, all connected.
-    </p>
   </div>
 
   <div class="container" style="max-width: 1000px;">
 
     <!-- Screenshot Carousel -->
-    <div class="tt-carousel-wrap mx-auto py-3">
+    <div class="tt-carousel-wrap mx-auto pb-3">
       <div id="homeCarousel" class="carousel slide tt-carousel" data-ride="carousel" data-interval="5000">
         <ol class="carousel-indicators">
           <li data-target="#homeCarousel" data-slide-to="0" class="active"></li>
@@ -207,123 +204,132 @@
           <span class="sr-only">Next</span>
         </a>
       </div>
+
+      <p class="my-3 text-secondary text-center" style="max-width: 520px; margin: 0 auto; font-size: 1rem; line-height: 1.6;">
+        From first research to final photo album, all connected.
+      </p>
+
     </div>
 
-    <div class="text-center my-3">
-      {% if user.is_authenticated %}
+    {% if user.is_authenticated %}
+    <p class="text-center pb-4" >
       <a href="{% url 'dashboard_home' %}" class="btn btn-primary btn-lg px-5">Go to Dashboard</a>
-      {% else %}
-      <a href="{% url 'user_signin' %}" class="btn btn-primary btn-lg px-5">Sign In</a>
-      {% endif %}
-    </div>
-    <p class="text-center small text-muted font-italic">Currently in early access (invite only)</p>
-
-    <!-- Journal Feature Section -->
-    <div class="py-4 border-top">
-      <h2 class="text-primary mb-3">Available Now: Journal &amp; Travelog</h2>
-
-      <p>
-        We're starting with post-trip journaling - because that's where your memories live.
-        Write rich travel journals, add photos, then publish beautiful travelogs to share.
-      </p>
-
-      <div class="row mt-4">
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Rich text editor</strong> with drag-and-drop images
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Auto-save</strong> with conflict detection
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Flexible publishing</strong> - private, protected, or public
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">6 color themes</strong> for your travelog
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Version history</strong> with restore capability
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Image management</strong> with EXIF metadata
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Browser Extension Section -->
-    <div class="py-4 border-top">
-      <h2 class="text-primary mb-3">Available Now: Browser Extension</h2>
-
-      <p>
-        Many travelers use Google My Maps for visual planning. Our Chrome extension enhances
-        GMM with trip planning features while keeping your location data synced to Trip Tools.
-      </p>
-
-      <div class="row mt-4">
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Category-based adding</strong> - locations auto-styled and organized by layer
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Bidirectional sync</strong> - locations flow between GMM and Trip Tools
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Rich attributes</strong> - desirability, booking status, and more
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Multi-trip support</strong> - manage multiple trips and maps simultaneously
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Flexible linking</strong> - connect existing maps to trips or create new ones
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4 mb-3">
-          <div class="bg-light rounded p-3 h-100 tt-feature-accent">
-            <strong class="text-primary">Available for Chrome</strong> - install from the Chrome Web Store
-          </div>
-        </div>
-      </div>
-    </div>
-
+    </p>
+    {% endif %}
+    
     <!-- The Story Section -->
     <div class="py-4 border-top">
-      <h2 class="text-primary mb-3">Why We're Building This</h2>
+      <h2 class="text-primary mb-3">What We're Building</h2>
+
 
       <p>
-        A trip isn't just planning, or booking, or sharing photos. It's all of these things, connected.
-        But existing tools force you to juggle multiple apps, cut and paste between them, and somehow
-        keep everything in sync.
+      A trip isn't just planning, or booking, or sharing photos. It's all of these things, connected across months of activity. But no tool exists to manage this - you're left juggling separate apps and services for each piece, none of which know about each other.
       </p>
 
       <p>
-        Trip Tools takes a different approach: <strong>one place for your entire trip lifecycle</strong>.
-        Research and planning. Comparing options. Managing bookings and itineraries. Capturing memories.
-        Writing and sharing your travel journal. All connected.
+        Trip Tools is <strong>one place for your entire trip lifecycle</strong>: research and planning, comparing options, managing bookings and itineraries, capturing memories, writing and sharing your travel journal.
+      </p>      
+      
+      <p>
+        We're building this open source because travel tools should work for travelers. <a href="{% url 'why_trip_tools' %}">Read the full story.</a>
+      </p>
+    </div>
+
+    <!-- Available Now Section -->
+    <div class="py-4 border-top">
+      <h2 class="text-primary mb-2">Available Now</h2>
+      <p>
+        Our vision is ambitious, so we are taking an incremental approach. Here are the tools we have built which are available and already useful.
       </p>
 
-      <p>
-        We're building this open source because travel tools should work for travelers, not for ad revenue.
-        <a href="{% url 'why_trip_tools' %}">Read the full story.</a>
-      </p>
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="clearfix mb-3">
+            <img src="{% static 'img/home/journal-entry-edit.png' %}" class="float-right ml-3 mb-2 rounded shadow-sm d-none d-md-block" alt="Journal Editor" style="max-width: 250px;">
+            <h3 class="text-primary mb-2">Journal &amp; Travelog</h3>
+            <p class="mb-0">
+              We started with post-trip journaling - because that's where your memories live.
+              Write rich travel journals, add photos, then publish beautiful travelogs to share.
+            </p>
+          </div>
+          <div class="row">
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Rich text editor</strong> with drag-and-drop images
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Auto-save</strong> with conflict detection
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Flexible publishing</strong> - private, protected, or public
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">6 color themes</strong> for your travelog
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Version history</strong> with restore capability
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Image management</strong> with EXIF metadata
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="clearfix mb-3">
+            <img src="{% static 'img/home/extension-popup.png' %}" class="float-right ml-3 mb-2 rounded shadow-sm d-none d-md-block" alt="Browser Extension" style="max-width: 250px;">
+            <h3 class="text-primary mb-2">Browser Extension</h3>
+            <p class="mb-0">
+              Trips are all about locations. Google My Maps is great for visually seeing these locations, but is a closed system. Our Chrome extension enhances GMM with trip planning features while keeping your location data synced to Trip Tools.
+            </p>
+          </div>
+          <div class="row">
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Category-based adding</strong> - locations auto-styled and organized by layer
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Bidirectional sync</strong> - locations flow between GMM and Trip Tools
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Rich attributes</strong> - desirability, booking status, and more
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Multi-trip support</strong> - manage multiple trips and maps simultaneously
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Flexible linking</strong> - connect existing maps to trips or create new ones
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="bg-light rounded p-3 h-100 tt-feature-accent">
+                <strong class="text-primary">Available for Chrome</strong> - install from the Chrome Web Store
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Coming Soon Section -->
@@ -331,19 +337,16 @@
       <h2 class="text-primary mb-3">Where We're Headed</h2>
 
       <p>
-        The Journal is just the beginning. We're building toward complete trip management:
+        We're building toward complete trip management:
       </p>
 
-      <div class="alert alert-info mt-3">
-        <h5 class="alert-heading">Coming Soon</h5>
-        <ul class="mb-0 pl-3">
-          <li><strong>Planning</strong> - Compare options for lodging, transportation, activities</li>
-          <li><strong>Locations</strong> - From more sources, referencing in journals</li>
-          <li><strong>Itineraries</strong> - Day-by-day schedules linked to locations and bookings</li>
-          <li><strong>Bookings</strong> - Track reservations, expenses, and shared costs</li>
-          <li><strong>Reviews</strong> - Capture thoughts on places you visit</li>
-        </ul>
-      </div>
+      <ul class="mt-3">
+        <li class="mb-2"><strong class="text-primary">Planning</strong> - Compare options for lodging, transportation, activities</li>
+        <li class="mb-2"><strong class="text-primary">Locations</strong> - From more sources, referencing in journals</li>
+        <li class="mb-2"><strong class="text-primary">Itineraries</strong> - Day-by-day schedules linked to locations and bookings</li>
+        <li class="mb-2"><strong class="text-primary">Bookings</strong> - Track reservations, expenses, and shared costs</li>
+        <li class="mb-2"><strong class="text-primary">Reviews</strong> - Capture thoughts on places you visit</li>
+      </ul>
     </div>
 
     <!-- Contributing Section -->
@@ -360,15 +363,22 @@
         improve design, or share feedback on what would make this useful for your trips.
       </p>
 
-      <div class="card border-primary mt-3">
+      <div class="card border-primary my-3">
         <div class="card-body text-center">
           <h5 class="card-title text-primary">Want to Help Build This?</h5>
           <p class="card-text">
             Check out the project on GitHub for the roadmap, issues, and contribution guide.
           </p>
-          <a href="https://github.com/cassandra/trip-tools" class="btn btn-secondary" target="_blank" rel="noopener">
-            View on GitHub
-          </a>
+          <p>
+            <a href="https://github.com/cassandra/trip-tools" class="btn btn-secondary" target="_blank" rel="noopener">
+              View on GitHub
+            </a>
+          </p>
+          {% if not user.is_authenticated %}
+          <p>Already have an invite?</p>
+          <a href="{% url 'user_signin' %}" class="btn btn-primary px-5">Sign In</a>
+          <p class="text-center small text-muted font-italic my-3">Currently in early access (invite only)</p>
+          {% endif %}
         </div>
       </div>
     </div>
