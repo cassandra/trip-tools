@@ -29,6 +29,17 @@ Create and share beautiful travel journals:
 - **Visibility controls** - Private, Password-Protected, or Public
 - **6 color themes** for published travelogs
 - **Version history** with restore capabilities
+- **Collaborative editing** all trip members can contribute
+
+### Available Now: Browser Extension
+
+Use Google My Maps to add and visualize locations, then use Trip Tools to enrich and connect them to all your other trip data.
+
+- **Category-based adding** locations auto-styled and organized by layer
+- **Bidirectional sync** locations flow between GMM and Trip Tools
+- **Rich attributes** desirability, booking status, and more
+- **Multi-trip support** manage multiple trips and maps simultaneously
+- **Flexible linking** connect existing maps to trips or create new ones
 
 ### Coming Soon
 
