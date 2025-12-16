@@ -320,7 +320,7 @@ If tests fail to connect to the server:
 Extension-isolated tests require:
 - Headed mode (cannot run headless)
 - Chrome browser (not Firefox/WebKit)
-- Valid extension at `tools/chrome/`
+- Valid extension at `tools/extension/src/`
 
 ### Service Worker Not Found
 

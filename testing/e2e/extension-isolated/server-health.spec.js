@@ -20,7 +20,7 @@ const {
 } = require( './fixtures/extension-helpers' );
 
 // Extension path (resolved from this file's location)
-const extensionPath = path.resolve( __dirname, '../../../tools/chrome' );
+const extensionPath = path.resolve( __dirname, '../../../tools/extension/src' );
 
 // Mock server URL
 const MOCK_SERVER_URL = 'http://localhost:6779';

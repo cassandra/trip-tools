@@ -30,6 +30,9 @@ __pycache__/
 /testing/e2e/test-results/
 /testing/e2e/playwright-report/
 
+# Browser extension working manifest (symlink to manifest.chrome.json or manifest.firefox.json)
+/tools/extension/src/manifest.json
+
 /*.html
 /docs/**/*.html
 

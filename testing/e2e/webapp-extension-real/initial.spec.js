@@ -12,7 +12,7 @@ const { getExtensionId, waitForServiceWorker } = require( './fixtures/extension-
 const { loginUser, DEFAULT_TEST_EMAIL } = require( '../webapp-extension-sim/fixtures/auth' );
 
 // Extension path (resolved from this file's location)
-const extensionPath = path.resolve( __dirname, '../../../tools/chrome' );
+const extensionPath = path.resolve( __dirname, '../../../tools/extension/src' );
 
 // Django server URL
 const DJANGO_URL = 'http://localhost:6778';

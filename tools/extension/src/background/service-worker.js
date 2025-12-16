@@ -3,15 +3,18 @@
  * Handles extension lifecycle and message routing.
  */
 
-importScripts( '../shared/constants.js' );
-importScripts( '../shared/storage.js' );
-importScripts( '../shared/messaging.js' );
-importScripts( '../shared/auth.js' );
-importScripts( '../shared/api.js' );
-importScripts( '../shared/trips.js' );
-importScripts( '../shared/locations.js' );
-importScripts( '../shared/sync.js' );
-importScripts( '../shared/client-config.js' );
+// Chrome uses service worker with importScripts; Firefox uses event page with manifest scripts
+if ( typeof importScripts !== 'undefined' ) {
+    importScripts( '../shared/constants.js' );
+    importScripts( '../shared/storage.js' );
+    importScripts( '../shared/messaging.js' );
+    importScripts( '../shared/auth.js' );
+    importScripts( '../shared/api.js' );
+    importScripts( '../shared/trips.js' );
+    importScripts( '../shared/locations.js' );
+    importScripts( '../shared/sync.js' );
+    importScripts( '../shared/client-config.js' );
+}
 
 var extensionStartTime = Date.now();
 var lastAuthValidation = 0;

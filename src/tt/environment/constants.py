@@ -120,8 +120,8 @@ class TtConst:
     JOURNAL_EDITOR_MULTI_IMAGE_ENTRY_DATE_BTN_ID = 'btn-entry-date-images'
     JOURNAL_EDITOR_MULTI_IMAGE_RECENT_BTN_ID = 'btn-recent-images'
 
-    # Chrome Extension Integration
-    # These constants must match values in tools/chrome/shared/constants.js
+    # Browser Extension Integration
+    # These constants must match values in tools/extension/src/shared/constants.js
     # Body classes added by extension content script (also in main.css)
     EXT_STATE_CLASS_AUTHORIZED           = 'tt-ext-authorized'
     EXT_STATE_CLASS_NOT_AUTHORIZED       = 'tt-ext-not-authorized'

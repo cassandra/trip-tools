@@ -1,15 +1,77 @@
-# Chrome Extension Development
+# Browser Extension Development
 
-## Running in Development Mode
+## Directory Structure
 
-1. Open Chrome and navigate to `chrome://extensions`
-2. Enable **Developer mode** (toggle in top right)
-3. Click **Load unpacked**
-4. Select the `tools/chrome/` directory
-5. Click **Details**
-6. Enable **Pin to toolbar**
+```
+tools/extension/
+  manifest.chrome.json   # Chrome-specific manifest (authoritative)
+  manifest.firefox.json  # Firefox-specific manifest (authoritative)
+  src/                   # Shared source code
+    manifest.json        # Symlink → ../manifest.chrome.json (not in git)
+    background/
+    content/
+    popup/
+    options/
+    shared/
+    adapters/
+    styles/
+    images/
+```
+
+## Initial Setup
+
+The `src/manifest.json` file is not tracked in git. Create a symlink to the Chrome manifest:
+
+```bash
+cd tools/extension/src
+ln -s ../manifest.chrome.json manifest.json
+```
+
+This symlink allows loading the extension directly from `src/` for development.
+
+## Running in Chrome (Development Mode)
+
+1. Ensure the manifest symlink exists (see Initial Setup above)
+2. Open Chrome and navigate to `chrome://extensions`
+3. Enable **Developer mode** (toggle in top right)
+4. Click **Load unpacked**
+5. Select the `tools/extension/src/` directory
+6. Click **Details**
+7. Enable **Pin to toolbar**
 
 The extension icon will appear in the toolbar. Click it to open the popup.
+
+## Running in Firefox (Development Mode)
+
+Firefox requires a different manifest due to MV3 differences (event pages vs service workers, no ports in match patterns).
+
+### Switch to Firefox Manifest
+
+```bash
+cd tools/extension/src
+rm manifest.json
+ln -s ../manifest.firefox.json manifest.json
+```
+
+### Load in Firefox
+
+1. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on...**
+3. Navigate to `tools/extension/src/` and select `manifest.json`
+
+### Switch Back to Chrome Manifest
+
+After Firefox testing, restore the Chrome symlink:
+
+```bash
+cd tools/extension/src
+rm manifest.json
+ln -s ../manifest.chrome.json manifest.json
+```
+
+**Important:** E2E tests use Chrome and expect the Chrome manifest. Always restore the Chrome symlink after Firefox testing.
+
+**Note:** Firefox has limitations with localhost content scripts - port numbers in match patterns don't work. The Firefox manifest is configured to work around this.
 
 ### Development vs Production
 
@@ -18,7 +80,7 @@ The extension displays visual cues in development mode:
 - **Coral header** (instead of teal)
 - **Version shows "(DEV)"** suffix
 
-This is controlled by `TT.CONFIG.IS_DEVELOPMENT` in `tools/chrome/shared/constants.js`.
+This is controlled by `TT.CONFIG.IS_DEVELOPMENT` in `tools/extension/src/shared/constants.js`.
 
 ### Reloading Changes
 
@@ -119,6 +181,6 @@ Example:
 
 These values are defined in both:
 - Server: `TtConst` in `src/tt/environment/constants.py`
-- Extension: `TT.SERVER_SYNC` in `tools/chrome/shared/constants.js`
+- Extension: `TT.SERVER_SYNC` in `tools/extension/src/shared/constants.js`
 
 Variable names are identical for searchability. CSS rules are in `src/tt/static/css/main.css`.

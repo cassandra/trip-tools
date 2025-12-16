@@ -2,8 +2,14 @@
  * Trip Tools Chrome Extension - Popup Styles
  */
 
-html, body {
+html {
     width: 380px;
+    min-height: 400px;
+}
+
+body {
+    width: 380px;
+    min-height: 400px;
     max-height: 75vh;
     margin: 0;
     padding: 0;

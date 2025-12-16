@@ -1,13 +1,14 @@
-# Chrome Extension Release Process
+# Browser Extension Release Process
 
 ## Release Overview
 
-The Chrome extension follows its own release cycle, independent of but coordinated with the server application:
+The browser extension follows its own release cycle, independent of but coordinated with the server application:
 
-- Extension source code lives in `tools/chrome/`
+- Extension source code lives in `tools/extension/src/`
+- Browser-specific manifests in `tools/extension/` (manifest.chrome.json, manifest.firefox.json)
 - Version info stored in `EXT_VERSION` at project root
 - Extension releases tagged with version name
-- Built extension submitted to Chrome Web Store
+- Built extensions submitted to Chrome Web Store and Firefox Add-ons
 
 **Key Constraint:** Extension releases may depend on specific server API versions. The `MIN_SERVER_VERSION` in `EXT_VERSION` documents this dependency.
 
@@ -86,7 +87,7 @@ make test-e2e-webapp-extension-real
 **Actions:**
 ```bash
 # 1. Review changes since last extension release
-git log --oneline ext-v<last-release>..HEAD -- tools/chrome/
+git log --oneline ext-v<last-release>..HEAD -- tools/extension/
 # Examine what changed - do any changes depend on new server endpoints/fields?
 
 # 2. Check current MIN_SERVER_VERSION
@@ -174,12 +175,13 @@ grep -e EXTENSION_VERSION -e IS_DEVELOPMENT dist/chrome-extension/shared/constan
 ```
 
 **What the Build Does:**
-1. Copies `tools/chrome/` to `dist/chrome-extension/`
-2. Updates `manifest.json` with release version
-3. Updates `constants.js`:
+1. Copies `tools/extension/src/` to `dist/extension-{browser}/`
+2. Copies the appropriate manifest (manifest.chrome.json or manifest.firefox.json)
+3. Updates `manifest.json` with release version
+4. Updates `constants.js`:
    - Sets `EXTENSION_VERSION` to release version
    - Sets `IS_DEVELOPMENT` to `false`
-4. Creates `dist/chrome-extension-{version}.zip`
+5. Creates `dist/extension-{browser}-{version}.zip` (or .xpi for Firefox)
 
 **Validation Checklist:**
 - [ ] Build completed without errors
@@ -258,21 +260,25 @@ git ls-remote --tags origin | grep ext-v0.1.0
 #   VERSION=ext-v0.1.1-dev
 #   MIN_SERVER_VERSION=v0.3.0
 
-# 3. Update tools/chrome/manifest.json:
+# 3. Update tools/extension/manifest.chrome.json:
 # Edit to set next development version:
 #   "version": "0.1.1.999",
 #   "version_name": "ext-v0.1.1-dev",
 
-# 4. Update tools/chrome/shared/constants.js:
+# 4. Update tools/extension/manifest.firefox.json:
+# Edit to set next development version:
+#   "version": "0.1.1.999",
+
+# 5. Update tools/extension/src/shared/constants.js:
 # Edit to set next development version:
 #   EXTENSION_VERSION: 'ext-v0.1.1-dev',
 
-# 5. Commit
-git add EXT_VERSION tools/chrome/manifest.json tools/chrome/shared/constants.js
+# 6. Commit
+git add EXT_VERSION tools/extension/manifest.*.json tools/extension/src/shared/constants.js
 git commit -m "Bump extension version to ext-v0.1.1-dev"
 git push origin main
 
-# 6. Verify clean state
+# 7. Verify clean state
 git status
 # Expected: clean working directory
 ```
@@ -319,8 +325,9 @@ Do NOT update when:
 
 **Solution:**
 1. Check EXT_VERSION file exists and has correct format
-2. Verify `tools/chrome/` directory exists
-3. Check for syntax errors in source files
+2. Verify `tools/extension/src/` directory exists
+3. Verify browser-specific manifest exists (manifest.chrome.json or manifest.firefox.json)
+4. Check for syntax errors in source files
 
 ### "Chrome Web Store rejection"
 
@@ -337,5 +344,5 @@ Do NOT update when:
 ## Related Documentation
 
 - [Server Release Process](release-process.md)
-- [Chrome Extension Development](../extensions/chrome.md)
+- [Browser Extension Development](../extensions/browser-extension.md)
 - [E2E Testing](../testing/e2e-testing.md)
