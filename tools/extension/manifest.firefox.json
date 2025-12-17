@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Trip Tools Extension",
     "description": "Browser companion for Trip Tools trip planning.",
-    "version": "0.1.1.999",
+    "version": "0.1.2.999",
     "browser_specific_settings": {
         "gecko": {
             "id": "extension@triptools.net",
