@@ -209,6 +209,8 @@ test.describe( 'Server Error Recovery', () => {
         });
 
         await page.waitForFunction( () => window.extensionAck !== null, { timeout: 10000 } );
+        let ack = await page.evaluate( () => window.extensionAck );
+        expect( ack.payload.success ).toBe( true );
 
         // Switch to server error profile
         await request.post( '/__test__/profile', {
@@ -344,8 +346,10 @@ test.describe( 'Token Revocation', () => {
         });
 
         await page.waitForFunction( () => window.extensionAck !== null, { timeout: 10000 } );
+        const ack = await page.evaluate( () => window.extensionAck );
+        expect( ack.payload.success ).toBe( true );
 
-        // Verify authorized (this opens options page which validates - allow time)
+        // Verify authorized
         let state = await getExtensionAuthState( context );
         expect( state.tt_authState ).toBe( 'authorized' );
 
@@ -409,6 +413,8 @@ test.describe( 'Disconnect Flow', () => {
         });
 
         await page.waitForFunction( () => window.extensionAck !== null, { timeout: 10000 } );
+        let ack = await page.evaluate( () => window.extensionAck );
+        expect( ack.payload.success ).toBe( true );
 
         // Verify authorized
         let state = await getExtensionAuthState( context );
@@ -437,6 +443,8 @@ test.describe( 'Disconnect Flow', () => {
         });
 
         await page.waitForFunction( () => window.extensionAck !== null, { timeout: 10000 } );
+        let ack = await page.evaluate( () => window.extensionAck );
+        expect( ack.payload.success ).toBe( true );
 
         // Point to unreachable server
         await setExtensionStorage( context, {
@@ -466,6 +474,8 @@ test.describe( 'Disconnect Flow', () => {
         });
 
         await page.waitForFunction( () => window.extensionAck !== null, { timeout: 10000 } );
+        let ack = await page.evaluate( () => window.extensionAck );
+        expect( ack.payload.success ).toBe( true );
 
         // Switch to server error profile
         await request.post( '/__test__/profile', {
