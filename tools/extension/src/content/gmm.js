@@ -1004,7 +1004,7 @@
 
             // Load selected note's stored text into description
             var noteText = newItem.getAttribute( 'data-tt-note-text' ) || '';
-            gmmDescriptionValue.innerHTML = noteText.replace( /\n/g, '<br>' );
+            TT.DOM.setTextWithLineBreaks( gmmDescriptionValue, noteText );
 
             // Update description owner to new note
             gmmDescriptionValue.setAttribute( TT_DESCRIPTION_OWNER_ATTR, String( noteIndex ) );
@@ -1389,10 +1389,9 @@
             };
 
             // Write flattened notes to GMM description for native storage sync
-            // Convert \n to <br> for contenteditable
             if ( gmmDescriptionValue && locationNotes.length > 0 ) {
                 var flattenedDescription = flattenNotesToDescription( locationNotes );
-                gmmDescriptionValue.innerHTML = flattenedDescription.replace( /\n/g, '<br>' );
+                TT.DOM.setTextWithLineBreaks( gmmDescriptionValue, flattenedDescription );
             }
 
             updateLocationOnServer( location.uuid, updates );

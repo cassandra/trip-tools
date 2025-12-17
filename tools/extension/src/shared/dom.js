@@ -275,7 +275,7 @@ TTDom.retry = function( operation, options ) {
 /**
  * Create an element with attributes and content.
  * @param {string} tag - HTML tag name.
- * @param {Object} options - { id, className, attrs, text, html, children }
+ * @param {Object} options - { id, className, attrs, text, children }
  * @returns {Element}
  */
 TTDom.createElement = function( tag, options ) {
@@ -300,10 +300,6 @@ TTDom.createElement = function( tag, options ) {
         el.textContent = options.text;
     }
 
-    if ( options.html ) {
-        el.innerHTML = options.html;
-    }
-
     if ( options.children ) {
         options.children.forEach( function( child ) {
             el.appendChild( child );
@@ -311,6 +307,66 @@ TTDom.createElement = function( tag, options ) {
     }
 
     return el;
+};
+
+/**
+ * Set element content as text with line breaks.
+ * Safely converts newlines to <br> elements without using innerHTML.
+ * @param {Element} element - Target element.
+ * @param {string} text - Text content with newlines.
+ */
+TTDom.setTextWithLineBreaks = function( element, text ) {
+    element.textContent = '';
+    var lines = ( text || '' ).split( '\n' );
+    lines.forEach( function( line, i ) {
+        if ( i > 0 ) {
+            element.appendChild( document.createElement( 'br' ) );
+        }
+        element.appendChild( document.createTextNode( line ) );
+    });
+};
+
+/**
+ * SVG namespace for creating SVG elements.
+ * @type {string}
+ */
+TTDom.SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * Create an SVG element with attributes and children.
+ * Safely creates SVG without innerHTML.
+ * @param {number} width - SVG width.
+ * @param {number} height - SVG height.
+ * @param {string} viewBox - SVG viewBox attribute.
+ * @param {Object} attrs - Additional SVG attributes (fill, stroke, etc.).
+ * @param {Array} children - Array of child element definitions: { tag, attrs }
+ * @returns {SVGElement}
+ */
+TTDom.createSvg = function( width, height, viewBox, attrs, children ) {
+    var svg = document.createElementNS( TTDom.SVG_NS, 'svg' );
+    svg.setAttribute( 'width', width );
+    svg.setAttribute( 'height', height );
+    svg.setAttribute( 'viewBox', viewBox );
+
+    if ( attrs ) {
+        Object.keys( attrs ).forEach( function( key ) {
+            svg.setAttribute( key, attrs[key] );
+        });
+    }
+
+    if ( children ) {
+        children.forEach( function( child ) {
+            var el = document.createElementNS( TTDom.SVG_NS, child.tag );
+            if ( child.attrs ) {
+                Object.keys( child.attrs ).forEach( function( key ) {
+                    el.setAttribute( key, child.attrs[key] );
+                });
+            }
+            svg.appendChild( el );
+        });
+    }
+
+    return svg;
 };
 
 /**

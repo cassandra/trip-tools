@@ -3,6 +3,71 @@
  * Handles popup UI initialization and user interactions.
  */
 
+// --- Icon Creation Functions ---
+// Create SVG icons programmatically to avoid innerHTML security warnings.
+
+var ICON_STROKE_ATTRS = {
+    'fill': 'none',
+    'stroke': 'currentColor',
+    'stroke-width': '2',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round'
+};
+
+/**
+ * Create anchor icon (for pin/unpin trip button).
+ * @param {boolean} filled - Whether the anchor should be filled.
+ * @returns {SVGElement}
+ */
+function createAnchorIcon( filled ) {
+    var attrs = Object.assign( {}, ICON_STROKE_ATTRS );
+    if ( filled ) {
+        attrs.fill = 'currentColor';
+    }
+    return TT.DOM.createSvg( 16, 16, '0 0 24 24', attrs, [
+        { tag: 'circle', attrs: { cx: '12', cy: '5', r: '3' } },
+        { tag: 'line', attrs: { x1: '12', y1: '8', x2: '12', y2: '21' } },
+        { tag: 'line', attrs: { x1: '5', y1: '12', x2: '19', y2: '12' } },
+        { tag: 'path', attrs: { d: 'M5 19c2.5 2.5 4.5 3 7 3s4.5-.5 7-3' } }
+    ]);
+}
+
+/**
+ * Create map pin icon.
+ * @param {boolean} slashed - Whether to show a slash through the icon.
+ * @returns {SVGElement}
+ */
+function createMapPinIcon( slashed ) {
+    var children = [
+        { tag: 'path', attrs: { d: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z' } },
+        { tag: 'circle', attrs: { cx: '12', cy: '10', r: '3' } }
+    ];
+    if ( slashed ) {
+        children.push( { tag: 'line', attrs: { x1: '4', y1: '4', x2: '20', y2: '20', 'stroke-width': '2' } } );
+    }
+    return TT.DOM.createSvg( 14, 14, '0 0 24 24', {
+        'fill': 'none',
+        'stroke': 'currentColor',
+        'stroke-width': '2'
+    }, children );
+}
+
+/**
+ * Create info icon (circle with "i").
+ * @returns {SVGElement}
+ */
+function createInfoIcon() {
+    return TT.DOM.createSvg( 14, 14, '0 0 24 24', {
+        'fill': 'none',
+        'stroke': 'currentColor',
+        'stroke-width': '2'
+    }, [
+        { tag: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+        { tag: 'line', attrs: { x1: '12', y1: '16', x2: '12', y2: '12' } },
+        { tag: 'line', attrs: { x1: '12', y1: '8', x2: '12.01', y2: '8' } }
+    ]);
+}
+
 document.addEventListener( 'DOMContentLoaded', function() {
     initializePopup();
 });
@@ -619,9 +684,7 @@ function createTripRow( trip, isCurrent, isPinned ) {
     pinBtn.setAttribute( 'data-pinned', isPinned ? 'true' : 'false' );
     pinBtn.title = isPinned ? 'Release anchor' : 'Anchor as current';
     // Anchor icon: ring at top, vertical shaft, crossbar, curved flukes at bottom
-    pinBtn.innerHTML = isPinned
-        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="21"/><line x1="5" y1="12" x2="19" y2="12"/><path d="M5 19c2.5 2.5 4.5 3 7 3s4.5-.5 7-3"/></svg>'
-        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="21"/><line x1="5" y1="12" x2="19" y2="12"/><path d="M5 19c2.5 2.5 4.5 3 7 3s4.5-.5 7-3"/></svg>';
+    pinBtn.appendChild( createAnchorIcon( isPinned ) );
 
     pinBtn.addEventListener( 'click', function( e ) {
         e.stopPropagation();
@@ -641,11 +704,11 @@ function createTripRow( trip, isCurrent, isPinned ) {
     if ( trip.gmm_map_id ) {
         gmmStatus.classList.add( TT.DOM.CLASS_GMM_LINKED );
         gmmStatus.title = 'Map linked';
-        gmmStatus.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+        gmmStatus.appendChild( createMapPinIcon( false ) );
     } else {
         gmmStatus.classList.add( TT.DOM.CLASS_GMM_UNLINKED );
         gmmStatus.title = 'No map linked';
-        gmmStatus.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle><line x1="4" y1="4" x2="20" y2="20" stroke-width="2"></line></svg>';
+        gmmStatus.appendChild( createMapPinIcon( true ) );
     }
 
     content.appendChild( title );
@@ -655,7 +718,7 @@ function createTripRow( trip, isCurrent, isPinned ) {
     var infoBtn = document.createElement( 'button' );
     infoBtn.className = 'tt-trip-info-btn';
     infoBtn.title = 'Trip details';
-    infoBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+    infoBtn.appendChild( createInfoIcon() );
     infoBtn.addEventListener( 'click', function( e ) {
         e.stopPropagation();
         showTripDetailsPanel( trip );
