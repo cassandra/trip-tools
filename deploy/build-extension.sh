@@ -1,13 +1,14 @@
 #!/bin/bash
 #
 # Build browser extension for production release.
-# Creates a zip/xpi file ready for store submission.
+# Creates packages for all supported browsers ready for store submission.
 #
-# Usage: ./deploy/build-extension.sh <browser>
-#   browser: chrome or firefox
+# Usage: ./deploy/build-extension.sh
 #
 # Reads version info from EXT_VERSION file.
-# Outputs to dist/extension-<browser>-{version}.zip (or .xpi for Firefox)
+# Outputs to dist/:
+#   - chrome-extension-{version}.zip
+#   - firefox-extension-{version}.xpi
 #
 
 set -eu
@@ -15,24 +16,10 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Parse browser argument
-BROWSER="${1:-}"
-if [ -z "$BROWSER" ]; then
-    echo "Usage: $0 <browser>"
-    echo "  browser: chrome or firefox"
-    exit 1
-fi
-
-if [ "$BROWSER" != "chrome" ] && [ "$BROWSER" != "firefox" ]; then
-    echo "ERROR: Invalid browser '$BROWSER'. Must be 'chrome' or 'firefox'"
-    exit 1
-fi
-
 EXT_VERSION_FILE="$PROJECT_ROOT/EXT_VERSION"
 EXT_SOURCE_DIR="$PROJECT_ROOT/tools/extension/src"
 EXT_MANIFEST_DIR="$PROJECT_ROOT/tools/extension"
 DIST_DIR="$PROJECT_ROOT/dist"
-EXT_DIST_DIR="$DIST_DIR/extension-$BROWSER"
 
 # Read version info from EXT_VERSION
 if [ ! -f "$EXT_VERSION_FILE" ]; then
@@ -64,7 +51,7 @@ if [[ "$MANIFEST_VERSION" == *"-dev"* ]]; then
     MANIFEST_VERSION="${MANIFEST_VERSION%-dev}.999"
 fi
 
-echo "=== Building Extension for ${BROWSER^} ==="
+echo "=== Building Browser Extensions ==="
 echo "  Version: $VERSION_NAME"
 echo "  Manifest Version: $MANIFEST_VERSION"
 echo "  Min Server Version: $MIN_SERVER_VERSION"
@@ -77,55 +64,77 @@ if [[ "$VERSION" == *"-dev"* ]]; then
     echo ""
 fi
 
-# Clean previous build (hardcoded paths for safety - rm -rf is dangerous)
-echo "Cleaning previous build..."
-/bin/rm -rf "$PROJECT_ROOT/dist/extension-$BROWSER"
-/bin/rm -f "$PROJECT_ROOT/dist"/extension-"$BROWSER"-*.zip
-/bin/rm -f "$PROJECT_ROOT/dist"/extension-"$BROWSER"-*.xpi
+# Clean previous builds (hardcoded paths for safety - rm -rf is dangerous)
+echo "Cleaning previous builds..."
+/bin/rm -rf "$PROJECT_ROOT/dist/chrome-extension"
+/bin/rm -rf "$PROJECT_ROOT/dist/firefox-extension"
+/bin/rm -f "$PROJECT_ROOT/dist"/chrome-extension-*.zip
+/bin/rm -f "$PROJECT_ROOT/dist"/firefox-extension-*.xpi
 
 # Create dist directory
-mkdir -p "$EXT_DIST_DIR"
+mkdir -p "$DIST_DIR"
 
-# Copy source files
-echo "Copying extension files..."
-cp -r "$EXT_SOURCE_DIR"/* "$EXT_DIST_DIR"/
+#
+# Build for a specific browser
+# Args: $1 = browser name (chrome or firefox)
+#
+build_for_browser() {
+    local browser="$1"
+    local ext_dist_dir="$DIST_DIR/$browser-extension"
 
-# Copy the appropriate manifest for the target browser
-echo "Copying $BROWSER manifest..."
-cp "$EXT_MANIFEST_DIR/manifest.$BROWSER.json" "$EXT_DIST_DIR/manifest.json"
+    echo "--- Building for $browser ---"
 
-# Update manifest.json - version
-echo "Updating manifest.json..."
-sed -i.bak "s/\"version\": \"[^\"]*\"/\"version\": \"$MANIFEST_VERSION\"/" "$EXT_DIST_DIR/manifest.json"
+    # Create browser-specific dist directory
+    mkdir -p "$ext_dist_dir"
 
-# Chrome-specific: update version_name
-if [ "$BROWSER" = "chrome" ]; then
-    sed -i.bak "s/\"version_name\": \"[^\"]*\"/\"version_name\": \"$VERSION_NAME\"/" "$EXT_DIST_DIR/manifest.json"
-fi
+    # Copy source files
+    echo "  Copying extension files..."
+    cp -r "$EXT_SOURCE_DIR"/* "$ext_dist_dir"/
 
-/bin/rm -f "$EXT_DIST_DIR/manifest.json.bak"
+    # Remove the manifest symlink and copy the appropriate manifest
+    /bin/rm -f "$ext_dist_dir/manifest.json"
+    echo "  Copying $browser manifest..."
+    cp "$EXT_MANIFEST_DIR/manifest.$browser.json" "$ext_dist_dir/manifest.json"
 
-# Update constants.js - version and IS_DEVELOPMENT
-echo "Updating constants.js..."
-sed -i.bak "s/EXTENSION_VERSION: '[^']*'/EXTENSION_VERSION: '$VERSION_NAME'/" "$EXT_DIST_DIR/shared/constants.js"
-sed -i.bak "s/IS_DEVELOPMENT: true/IS_DEVELOPMENT: false/" "$EXT_DIST_DIR/shared/constants.js"
-/bin/rm -f "$EXT_DIST_DIR/shared/constants.js.bak"
+    # Update manifest.json - version
+    echo "  Updating manifest.json..."
+    sed -i.bak "s/\"version\": \"[^\"]*\"/\"version\": \"$MANIFEST_VERSION\"/" "$ext_dist_dir/manifest.json"
 
-# Create archive file
-echo "Creating archive file..."
-cd "$DIST_DIR"
+    # Chrome-specific: update version_name
+    if [ "$browser" = "chrome" ]; then
+        sed -i.bak "s/\"version_name\": \"[^\"]*\"/\"version_name\": \"$VERSION_NAME\"/" "$ext_dist_dir/manifest.json"
+    fi
 
-if [ "$BROWSER" = "firefox" ]; then
-    # Firefox uses .xpi (which is just a zip with different extension)
-    OUTPUT_FILE="extension-$BROWSER-$VERSION_NAME.xpi"
-else
-    OUTPUT_FILE="extension-$BROWSER-$VERSION_NAME.zip"
-fi
+    /bin/rm -f "$ext_dist_dir/manifest.json.bak"
 
-zip -rq "$OUTPUT_FILE" "extension-$BROWSER/"
+    # Update constants.js - version and IS_DEVELOPMENT
+    echo "  Updating constants.js..."
+    sed -i.bak "s/EXTENSION_VERSION: '[^']*'/EXTENSION_VERSION: '$VERSION_NAME'/" "$ext_dist_dir/shared/constants.js"
+    sed -i.bak "s/IS_DEVELOPMENT: true/IS_DEVELOPMENT: false/" "$ext_dist_dir/shared/constants.js"
+    /bin/rm -f "$ext_dist_dir/shared/constants.js.bak"
 
-echo ""
+    # Create archive file
+    echo "  Creating archive..."
+
+    if [ "$browser" = "firefox" ]; then
+        # Firefox uses .xpi (which is just a zip with different extension)
+        local output_file="$browser-extension-$VERSION_NAME.xpi"
+    else
+        local output_file="$browser-extension-$VERSION_NAME.zip"
+    fi
+
+    # Zip from inside the extension directory so manifest.json is at the root
+    cd "$ext_dist_dir"
+    zip -rq "$DIST_DIR/$output_file" .
+
+    echo "  Output: $DIST_DIR/$output_file"
+    echo ""
+}
+
+# Build for all browsers
+build_for_browser "chrome"
+build_for_browser "firefox"
+
 echo "=== Build Complete ==="
-echo "Output: $DIST_DIR/$OUTPUT_FILE"
 echo ""
-ls -lh "$DIST_DIR/$OUTPUT_FILE"
+ls -lh "$DIST_DIR"/chrome-extension-*.zip "$DIST_DIR"/firefox-extension-*.xpi 2>/dev/null || true

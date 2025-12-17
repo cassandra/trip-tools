@@ -16,6 +16,7 @@ The browser extension follows its own release cycle, independent of but coordina
 
 - Direct repository access (core maintainers only)
 - Chrome Web Store developer account access
+- Firefox Add-ons developer account access
 - All target changes merged into `main` branch
 - Production server running at least `MIN_SERVER_VERSION`
 
@@ -43,8 +44,8 @@ MIN_SERVER_VERSION=v0.3.0
 | manifest.json `version_name` | `ext-v0.1.0-dev` | `ext-v0.1.0` |
 | constants.js `EXTENSION_VERSION` | `ext-v0.1.0-dev` | `ext-v0.1.0` |
 
-**Files updated by build script in `dist1 directory before ZIP:**
-- `manifest.json` - `version` (stripped) and `version_name` (full)
+**Files updated by build script in `dist/` directory before ZIP:**
+- `manifest.json` - `version` (stripped) and `version_name` (full, Chrome only)
 - `shared/constants.js` - `EXTENSION_VERSION` and `IS_DEVELOPMENT` flag
 
 ## Release Workflow
@@ -147,45 +148,63 @@ cat EXT_VERSION
 - [ ] VERSION follows semantic versioning
 - [ ] MIN_SERVER_VERSION is accurate
 
-### Phase 4: Build Extension
+### Phase 4: Build Extensions
 
-**Purpose:** Create production-ready extension package
+**Purpose:** Create production-ready extension packages for all browsers
 
 **Actions:**
 ```bash
-# 1. Run the build script
+# 1. Run the build script (builds both Chrome and Firefox)
 make extension-build
 
 # 2. Verify output
 ls -la dist/
-# Should show: chrome-extension-0.1.0.zip
+# Should show:
+#   chrome-extension-ext-v0.1.0.zip
+#   firefox-extension-ext-v0.1.0.xpi
 
 # 3. Ensure script string replacements worked:
+# Chrome:
 grep -e version dist/chrome-extension/manifest.json
-# Should show proper version and version name
+# Should show proper version and version_name
 
 grep -e EXTENSION_VERSION -e IS_DEVELOPMENT dist/chrome-extension/shared/constants.js
-# Should show proper version and development mode 'false'
+# Should show proper version and IS_DEVELOPMENT: false
 
-# 4. Optionally test the built extension locally
+# Firefox:
+grep -e version dist/firefox-extension/manifest.json
+# Should show proper version (no version_name in Firefox)
+
+grep -e EXTENSION_VERSION -e IS_DEVELOPMENT dist/firefox-extension/shared/constants.js
+# Should show proper version and IS_DEVELOPMENT: false
+
+# 4. Optionally test the built extensions locally
+#    Chrome:
 #    - Open chrome://extensions/
 #    - Enable Developer mode
 #    - Load unpacked from dist/chrome-extension/
 #    - Verify it works against production server
+#
+#    Firefox:
+#    - Open about:debugging#/runtime/this-firefox
+#    - Click "Load Temporary Add-on..."
+#    - Select dist/firefox-extension/manifest.json
+#    - Verify it works against production server
 ```
 
 **What the Build Does:**
-1. Copies `tools/extension/src/` to `dist/extension-{browser}/`
-2. Copies the appropriate manifest (manifest.chrome.json or manifest.firefox.json)
-3. Updates `manifest.json` with release version
-4. Updates `constants.js`:
-   - Sets `EXTENSION_VERSION` to release version
-   - Sets `IS_DEVELOPMENT` to `false`
-5. Creates `dist/extension-{browser}-{version}.zip` (or .xpi for Firefox)
+1. For each browser (Chrome, Firefox):
+   - Copies `tools/extension/src/` to `dist/{browser}-extension/`
+   - Copies the appropriate manifest (manifest.chrome.json or manifest.firefox.json)
+   - Updates `manifest.json` with release version
+   - Updates `constants.js`:
+     - Sets `EXTENSION_VERSION` to release version
+     - Sets `IS_DEVELOPMENT` to `false`
+   - Creates archive: `dist/chrome-extension-{version}.zip` or `dist/firefox-extension-{version}.xpi`
 
 **Validation Checklist:**
 - [ ] Build completed without errors
-- [ ] Zip file created at expected location
+- [ ] Both zip and xpi files created
 - [ ] Versions and IS_DEVELOPMENT all have correct settings
 - [ ] (Optional) Local testing against production passed
 
@@ -220,14 +239,15 @@ git ls-remote --tags origin | grep ext-v0.1.0
 - [ ] Pushed to origin/main
 - [ ] Tag pushed to origin
 
-### Phase 6: Submit to Chrome Web Store
+### Phase 6: Submit to Browser Stores
 
 **Purpose:** Publish extension to users
 
-**Actions:**
+#### Chrome Web Store
+
 1. Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
 2. Select the Trip Tools Extension (or create new if first release)
-3. Upload `dist/chrome-extension-{version}.zip`
+3. Upload `dist/chrome-extension-ext-v{version}.zip`
 4. Fill in/update store listing:
    - Description
    - Screenshots
@@ -239,11 +259,30 @@ git ls-remote --tags origin | grep ext-v0.1.0
 - First submission may take longer
 - Keep browser open to respond to any reviewer questions
 
+#### Firefox Add-ons
+
+1. Go to [Firefox Add-on Developer Hub](https://addons.mozilla.org/developers/)
+2. Select the Trip Tools Extension (or "Submit a New Add-on" if first release)
+3. Upload `dist/firefox-extension-ext-v{version}.xpi`
+4. Fill in/update listing:
+   - Description
+   - Screenshots
+   - Privacy policy URL: `https://triptools.net/privacy`
+5. Submit for review
+
+**Firefox Add-ons Notes:**
+- Review typically takes 1-2 business days for listed add-ons
+- Self-distribution option available for faster release (no review)
+- Firefox requires `data_collection_permissions` in manifest (set to "none")
+
 **Validation Checklist:**
-- [ ] Zip file uploaded
-- [ ] Store listing complete
-- [ ] Submitted for review
-- [ ] Note submission date for tracking
+- [ ] Chrome zip file uploaded
+- [ ] Chrome store listing complete
+- [ ] Chrome submitted for review
+- [ ] Firefox xpi file uploaded
+- [ ] Firefox listing complete
+- [ ] Firefox submitted for review
+- [ ] Note submission dates for tracking
 
 ### Phase 7: Post-Release Cleanup
 
@@ -339,6 +378,18 @@ Do NOT update when:
    - Missing privacy policy
    - Excessive permissions
    - Policy violations
+3. Fix issues and resubmit
+
+### "Firefox Add-ons rejection"
+
+**Problem:** Extension rejected during review
+
+**Solution:**
+1. Read rejection reason carefully
+2. Common issues:
+   - Missing `data_collection_permissions` in manifest
+   - Missing privacy policy
+   - Excessive permissions
 3. Fix issues and resubmit
 
 ## Related Documentation
