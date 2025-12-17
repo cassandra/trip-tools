@@ -75,9 +75,15 @@ class SubsystemAttributeItemEditContext(AttributeItemEditContext):
         
     def create_regular_attributes_formset(
             self, form_data : Optional[ Dict[str, Any] ] = None ) -> BaseInlineFormSet:
+        # Filter by user - SubsystemAttributes are per-user settings
+        queryset = SubsystemAttribute.objects.filter(
+            subsystem = self.subsystem,
+            user = self.user,
+        )
         return SubsystemAttributeRegularFormSet(
             form_data,
             instance = self.subsystem,
+            queryset = queryset,
             prefix = self.formset_prefix,
             form_kwargs={
                 'show_as_editable': True,
