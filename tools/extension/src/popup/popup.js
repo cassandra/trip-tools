@@ -24,7 +24,7 @@ function createAnchorIcon( filled ) {
     if ( filled ) {
         attrs.fill = 'currentColor';
     }
-    return TT.DOM.createSvg( 16, 16, '0 0 24 24', attrs, [
+    return TTDom.createSvg( 16, 16, '0 0 24 24', attrs, [
         { tag: 'circle', attrs: { cx: '12', cy: '5', r: '3' } },
         { tag: 'line', attrs: { x1: '12', y1: '8', x2: '12', y2: '21' } },
         { tag: 'line', attrs: { x1: '5', y1: '12', x2: '19', y2: '12' } },
@@ -34,19 +34,23 @@ function createAnchorIcon( filled ) {
 
 /**
  * Create map pin icon.
- * @param {boolean} slashed - Whether to show a slash through the icon.
+ * @param {Object} options - { filled: boolean, slashed: boolean }
  * @returns {SVGElement}
  */
-function createMapPinIcon( slashed ) {
+function createMapPinIcon( options ) {
+    options = options || {};
+    // Outer pin shape + inner circle as counter-clockwise subpath for cutout effect
+    // Hole radius 4.5 (vs original 3) to compensate for stroke-width eating into it
+    var pinPath = 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z';
+    var holePath = 'M16.5 10a4.5 4.5 0 1 0 -9 0a4.5 4.5 0 1 0 9 0';
     var children = [
-        { tag: 'path', attrs: { d: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z' } },
-        { tag: 'circle', attrs: { cx: '12', cy: '10', r: '3' } }
+        { tag: 'path', attrs: { d: pinPath + ' ' + holePath, 'fill-rule': 'evenodd' } }
     ];
-    if ( slashed ) {
+    if ( options.slashed ) {
         children.push( { tag: 'line', attrs: { x1: '4', y1: '4', x2: '20', y2: '20', 'stroke-width': '2' } } );
     }
-    return TT.DOM.createSvg( 14, 14, '0 0 24 24', {
-        'fill': 'none',
+    return TTDom.createSvg( 14, 14, '0 0 24 24', {
+        'fill': options.filled ? 'currentColor' : 'none',
         'stroke': 'currentColor',
         'stroke-width': '2'
     }, children );
@@ -57,7 +61,7 @@ function createMapPinIcon( slashed ) {
  * @returns {SVGElement}
  */
 function createInfoIcon() {
-    return TT.DOM.createSvg( 14, 14, '0 0 24 24', {
+    return TTDom.createSvg( 14, 14, '0 0 24 24', {
         'fill': 'none',
         'stroke': 'currentColor',
         'stroke-width': '2'
@@ -704,11 +708,11 @@ function createTripRow( trip, isCurrent, isPinned ) {
     if ( trip.gmm_map_id ) {
         gmmStatus.classList.add( TT.DOM.CLASS_GMM_LINKED );
         gmmStatus.title = 'Map linked';
-        gmmStatus.appendChild( createMapPinIcon( false ) );
+        gmmStatus.appendChild( createMapPinIcon( { filled: true } ) );
     } else {
         gmmStatus.classList.add( TT.DOM.CLASS_GMM_UNLINKED );
         gmmStatus.title = 'No map linked';
-        gmmStatus.appendChild( createMapPinIcon( true ) );
+        gmmStatus.appendChild( createMapPinIcon( { slashed: true } ) );
     }
 
     content.appendChild( title );
