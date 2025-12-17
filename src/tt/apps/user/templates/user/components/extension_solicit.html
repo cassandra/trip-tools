@@ -3,37 +3,47 @@
   <div class="card-body">
     <p>The Trip Tools extension lets you save data from travel sites directly to your trip.</p>
     <p class="text-muted small">Works with Google My Maps, Booking.com, TripAdvisor, and more.</p>
-    
+
     <div class="{{ TtConst.EXT_SHOW_NOT_INSTALLED_CLASS }}">
       <p id="tt-ext-not-available" class="alert alert-warning d-none">
-        The extension is currently only available for Chrome and Chromium-based browsers.
+        The extension is available for Chrome and Firefox browsers.
       </p>
-      <a id="tt-ext-install-btn" href="#" class="btn btn-outline-primary disabled">
-        Coming Soon to Chrome Web Store
-      </a>
+
+      <div id="tt-ext-install-chrome" class="d-none">
+        <a href="https://chromewebstore.google.com/detail/trip-tools-extension/pnhnmgjeepmholbboiheafjadfohpifg"
+           class="btn btn-secondary"
+           target="_blank">
+          Install from Chrome Web Store
+        </a>
+      </div>
+
+      <div id="tt-ext-install-firefox" class="d-none">
+        <a href="#"
+           class="btn btn-secondary"
+           target="_blank">
+          Install from Firefox Add-ons
+        </a>
+        <span class="text-muted ms-2">Coming soon</span>
+      </div>
     </div>
-    
+
   </div>
 </div>
 
 <script>
 (function() {
-   var extensionResponded = false;
-   
-   // Detect if browser is Chrome-based
+   // Detect browser type
    var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
    var isEdge = /Edg/.test(navigator.userAgent);
    var isChromium = isChrome || isEdge;
-   
-   if ( ! isChromium ) {
-     var notAvailableEl = document.getElementById('tt-ext-not-available');
-     var installBtn = document.getElementById('tt-ext-install-btn');
-     if ( notAvailableEl ) {
-       notAvailableEl.classList.remove('d-none');
-     }
-     if ( installBtn ) {
-       installBtn.classList.add('d-none');
-     }
+   var isFirefox = /Firefox/.test(navigator.userAgent);
+
+   if ( isChromium ) {
+     document.getElementById('tt-ext-install-chrome').classList.remove('d-none');
+   } else if ( isFirefox ) {
+     document.getElementById('tt-ext-install-firefox').classList.remove('d-none');
+   } else {
+     document.getElementById('tt-ext-not-available').classList.remove('d-none');
    }
  })();
 </script>

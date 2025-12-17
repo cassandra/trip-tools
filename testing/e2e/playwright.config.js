@@ -13,36 +13,17 @@ const extensionPath = path.resolve( __dirname, '../../tools/extension/src' );
     // Check manifest.json exists
     if ( !fs.existsSync( manifestPath ) ) {
         console.error( '\n❌ Extension manifest not found: tools/extension/src/manifest.json' );
-        console.error( '\nSetup required - create a symlink to the Chrome manifest:' );
-        console.error( '  cd tools/extension/src' );
-        console.error( '  ln -s ../manifest.chrome.json manifest.json\n' );
+        console.error( '\nSetup required - run: make extension-set-chrome\n' );
         process.exit( 1 );
     }
 
-    // Check it points to Chrome manifest (either symlink or matching content)
-    const manifestStat = fs.lstatSync( manifestPath );
-    if ( manifestStat.isSymbolicLink() ) {
-        const linkTarget = fs.readlinkSync( manifestPath );
-        if ( !linkTarget.includes( 'manifest.chrome.json' ) ) {
-            console.error( '\n❌ Extension manifest symlink points to wrong target: ' + linkTarget );
-            console.error( '\nE2E tests require Chrome manifest. Fix the symlink:' );
-            console.error( '  cd tools/extension/src' );
-            console.error( '  rm manifest.json' );
-            console.error( '  ln -s ../manifest.chrome.json manifest.json\n' );
-            process.exit( 1 );
-        }
-    } else {
-        // Not a symlink - verify content matches Chrome manifest
-        const manifestContent = fs.readFileSync( manifestPath, 'utf8' );
-        const chromeContent = fs.readFileSync( chromeManifestPath, 'utf8' );
-        if ( manifestContent !== chromeContent ) {
-            console.error( '\n❌ Extension manifest does not match Chrome manifest' );
-            console.error( '\nE2E tests require Chrome manifest. Replace with symlink:' );
-            console.error( '  cd tools/extension/src' );
-            console.error( '  rm manifest.json' );
-            console.error( '  ln -s ../manifest.chrome.json manifest.json\n' );
-            process.exit( 1 );
-        }
+    // Verify content matches Chrome manifest
+    const manifestContent = fs.readFileSync( manifestPath, 'utf8' );
+    const chromeContent = fs.readFileSync( chromeManifestPath, 'utf8' );
+    if ( manifestContent !== chromeContent ) {
+        console.error( '\n❌ Extension manifest does not match Chrome manifest' );
+        console.error( '\nE2E tests require Chrome manifest. Run: make extension-set-chrome\n' );
+        process.exit( 1 );
     }
 } )();
 

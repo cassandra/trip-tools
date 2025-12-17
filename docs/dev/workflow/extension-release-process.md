@@ -252,6 +252,17 @@ git ls-remote --tags origin | grep ext-v0.1.0
    - Description
    - Screenshots
    - Privacy policy URL: `https://triptools.net/privacy`
+   - Reviewer requires a special account, password and instructions
+     """
+     e: gcws-reviewer@triptools.net
+     p: <redacted>
+
+     Before you try to authenticate the extension with the web site, you must first login using this special login page for those credentials:
+
+        https://triptools.net/user/signin/reviewer
+
+    If you do not signin first through this page, the normal signin page the extension defaults to will not work as it is OTC-based and not password-based.
+     """
 5. Submit for review
 
 **Chrome Web Store Notes:**
@@ -267,6 +278,17 @@ git ls-remote --tags origin | grep ext-v0.1.0
 4. Fill in/update listing:
    - Description
    - Screenshots
+   - Reviewer requires a special account, password and instructions
+     """
+     e: amo-reviewer@triptools.net
+     p: <redacted>
+
+     Before you try to authenticate the extension with the web site, you must first login using this special login page for those credentials:
+
+        https://triptools.net/user/signin/reviewer
+
+    If you do not signin first through this page, the normal signin page the extension defaults to will not work as it is OTC-based and not password-based.
+     """
    - Privacy policy URL: `https://triptools.net/privacy`
 5. Submit for review
 

@@ -7,7 +7,7 @@ tools/extension/
   manifest.chrome.json   # Chrome-specific manifest (authoritative)
   manifest.firefox.json  # Firefox-specific manifest (authoritative)
   src/                   # Shared source code
-    manifest.json        # Symlink → ../manifest.chrome.json (not in git)
+    manifest.json        # Copy of browser-specific manifest (not in git)
     background/
     content/
     popup/
@@ -20,18 +20,17 @@ tools/extension/
 
 ## Initial Setup
 
-The `src/manifest.json` file is not tracked in git. Create a symlink to the Chrome manifest:
+The `src/manifest.json` file is not tracked in git. Use the Makefile target to set it up for Chrome:
 
 ```bash
-cd tools/extension/src
-ln -s ../manifest.chrome.json manifest.json
+make extension-set-chrome
 ```
 
-This symlink allows loading the extension directly from `src/` for development.
+This copies the Chrome manifest to `src/manifest.json` for development.
 
 ## Running in Chrome (Development Mode)
 
-1. Ensure the manifest symlink exists (see Initial Setup above)
+1. Ensure the manifest is set up (see Initial Setup above)
 2. Open Chrome and navigate to `chrome://extensions`
 3. Enable **Developer mode** (toggle in top right)
 4. Click **Load unpacked**
@@ -48,9 +47,7 @@ Firefox requires a different manifest due to MV3 differences (event pages vs ser
 ### Switch to Firefox Manifest
 
 ```bash
-cd tools/extension/src
-rm manifest.json
-ln -s ../manifest.firefox.json manifest.json
+make extension-set-firefox
 ```
 
 ### Load in Firefox
@@ -61,15 +58,13 @@ ln -s ../manifest.firefox.json manifest.json
 
 ### Switch Back to Chrome Manifest
 
-After Firefox testing, restore the Chrome symlink:
+After Firefox testing, restore the Chrome manifest:
 
 ```bash
-cd tools/extension/src
-rm manifest.json
-ln -s ../manifest.chrome.json manifest.json
+make extension-set-chrome
 ```
 
-**Important:** E2E tests use Chrome and expect the Chrome manifest. Always restore the Chrome symlink after Firefox testing.
+**Important:** E2E tests use Chrome and expect the Chrome manifest. Always restore it after Firefox testing.
 
 **Note:** Firefox has limitations with localhost content scripts - port numbers in match patterns don't work. The Firefox manifest is configured to work around this.
 

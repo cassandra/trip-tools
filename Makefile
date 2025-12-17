@@ -123,7 +123,15 @@ docker-push:
 deploy-prod:	check-docker .private/env/docker-compose.production.env fix-permissions
 	./deploy/deploy-prod.sh
 
-# Chrome Extension Build
+# Browser Extension
 extension-build:	fix-permissions
 	./deploy/build-extension.sh
+
+extension-set-chrome:
+	cp tools/extension/manifest.chrome.json tools/extension/src/manifest.json
+	@echo "Extension manifest set to Chrome"
+
+extension-set-firefox:
+	cp tools/extension/manifest.firefox.json tools/extension/src/manifest.json
+	@echo "Extension manifest set to Firefox"
 
