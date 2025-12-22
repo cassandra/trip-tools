@@ -120,7 +120,24 @@ function setupEventListeners() {
     var serverUrlInput = document.getElementById( TT.DOM.ID_OPTIONS_SERVER_URL );
     if ( serverUrlInput ) {
         serverUrlInput.addEventListener( 'change', function() {
-            TTStorage.set( TT.STORAGE.KEY_SERVER_URL, this.value )
+            var newUrl = this.value;
+            TTStorage.get( TT.STORAGE.KEY_SERVER_URL, getDefaultServerUrl() )
+                .then( function( oldUrl ) {
+                    var oldOrigin = TTPlatform.getOriginFromUrl( oldUrl );
+                    var newOrigin = TTPlatform.getOriginFromUrl( newUrl );
+
+                    if ( oldOrigin !== newOrigin ) {
+                        // Server changed - disconnect to invalidate old token
+                        return TTAuth.disconnect()
+                            .then( function() {
+                                return TTStorage.set( TT.STORAGE.KEY_SERVER_URL, newUrl );
+                            })
+                            .then( function() {
+                                showNotAuthorizedState();
+                            });
+                    }
+                    return TTStorage.set( TT.STORAGE.KEY_SERVER_URL, newUrl );
+                })
                 .then( function() {
                     showSaveStatus();
                 });

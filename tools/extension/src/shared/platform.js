@@ -71,3 +71,19 @@ TTPlatform.getInfo = function() {
         browser: TTPlatform.detectBrowser()
     };
 };
+
+/**
+ * Extract normalized origin from a URL string.
+ * Handles trailing slashes, paths, case differences, and default ports.
+ * Returns the original string if parsing fails.
+ * @param {string} url - The URL to extract origin from.
+ * @returns {string} The normalized origin (protocol + host + port).
+ */
+TTPlatform.getOriginFromUrl = function( url ) {
+    try {
+        var parsed = new URL( url );
+        return parsed.origin;
+    } catch ( e ) {
+        return url;
+    }
+};

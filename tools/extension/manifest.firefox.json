@@ -60,6 +60,7 @@
             ],
             "js": [
                 "shared/constants.js",
+                "shared/platform.js",
                 "content/triptools-state.js"
             ],
             "run_at": "document_idle"

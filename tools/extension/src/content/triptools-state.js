@@ -45,20 +45,6 @@
     }
 
     /**
-     * Extract normalized origin from a URL string.
-     * Handles trailing slashes, paths, case differences, and default ports.
-     * Returns the original string if parsing fails.
-     */
-    function getOriginFromUrl( url ) {
-        try {
-            var parsed = new URL( url );
-            return parsed.origin;
-        } catch ( e ) {
-            return url;
-        }
-    }
-
-    /**
      * Get the page's user UUID from the data attribute on body.
      * Returns null if not present (unauthenticated page or attribute missing).
      */
@@ -86,7 +72,7 @@
 
             // Step 1: Check server URL match (normalize to handle trailing slashes, paths, etc.)
             var storedServerUrl = result[TT.STORAGE.KEY_SERVER_URL] || getDefaultServerUrl();
-            var storedOrigin = getOriginFromUrl( storedServerUrl );
+            var storedOrigin = TTPlatform.getOriginFromUrl( storedServerUrl );
             var pageOrigin = window.location.origin;
 
             if ( storedOrigin !== pageOrigin ) {
