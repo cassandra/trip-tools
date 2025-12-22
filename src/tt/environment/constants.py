@@ -126,10 +126,16 @@ class TtConst:
     # Body classes added by extension content script (also in main.css)
     EXT_STATE_CLASS_AUTHORIZED           = 'tt-ext-authorized'
     EXT_STATE_CLASS_NOT_AUTHORIZED       = 'tt-ext-not-authorized'
+    EXT_STATE_CLASS_ACCOUNT_MISMATCH     = 'tt-ext-account-mismatch'
+    EXT_STATE_CLASS_SERVER_MISMATCH      = 'tt-ext-server-mismatch'
     # CSS visibility classes (also in main.css)
     EXT_SHOW_AUTHORIZED_CLASS            = 'tt-ext-show-authorized'
     EXT_SHOW_NOT_AUTHORIZED_CLASS        = 'tt-ext-show-not-authorized'
     EXT_SHOW_NOT_INSTALLED_CLASS         = 'tt-ext-show-not-installed'
+    EXT_SHOW_ACCOUNT_MISMATCH_CLASS      = 'tt-ext-show-account-mismatch'
+    EXT_SHOW_SERVER_MISMATCH_CLASS       = 'tt-ext-show-server-mismatch'
+    # Data attribute for page user UUID (read by extension content script)
+    EXT_USER_UUID_DATA_ATTR              = 'data-tt-user-uuid'
     # PostMessage types for extension<->page communication
     EXT_POSTMESSAGE_DATA_TYPE            = 'tt_extension_data'
     EXT_POSTMESSAGE_ACK_TYPE             = 'tt_extension_ack'

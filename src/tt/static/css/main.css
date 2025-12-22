@@ -1271,25 +1271,35 @@ body {
 
    These classes control visibility based on browser extension state.
    The extension's content script adds one of these classes to <body>:
-   - tt-ext-authorized: Extension installed and authorized
+   - tt-ext-authorized: Extension installed, authorized, server and account match
    - tt-ext-not-authorized: Extension installed but not authorized
+   - tt-ext-server-mismatch: Extension configured for different server
+   - tt-ext-account-mismatch: Extension authorized to different account
    - (no class): Extension not installed
 
    Usage in HTML:
    <div class="tt-ext-show-authorized">Shown when authorized</div>
    <div class="tt-ext-show-not-authorized">Shown when not authorized</div>
    <div class="tt-ext-show-not-installed">Shown when extension not installed</div>
+   <div class="tt-ext-show-server-mismatch">Shown when server mismatch</div>
+   <div class="tt-ext-show-account-mismatch">Shown when account mismatch</div>
    ============================================================================= */
 
-/* Default state: extension not installed */
+/* Default state: extension not installed - hide all extension-specific states */
 .tt-ext-show-authorized {
     display: none !important;
 }
 .tt-ext-show-not-authorized {
     display: none !important;
 }
+.tt-ext-show-server-mismatch {
+    display: none !important;
+}
+.tt-ext-show-account-mismatch {
+    display: none !important;
+}
 
-/* Extension installed and authorized */
+/* Extension installed and authorized (server and account match) */
 body.tt-ext-authorized .tt-ext-show-authorized {
     display: block !important;
 }
@@ -1297,6 +1307,12 @@ body.tt-ext-authorized .tt-ext-show-not-authorized {
     display: none !important;
 }
 body.tt-ext-authorized .tt-ext-show-not-installed {
+    display: none !important;
+}
+body.tt-ext-authorized .tt-ext-show-server-mismatch {
+    display: none !important;
+}
+body.tt-ext-authorized .tt-ext-show-account-mismatch {
     display: none !important;
 }
 
@@ -1308,6 +1324,46 @@ body.tt-ext-not-authorized .tt-ext-show-authorized {
     display: none !important;
 }
 body.tt-ext-not-authorized .tt-ext-show-not-installed {
+    display: none !important;
+}
+body.tt-ext-not-authorized .tt-ext-show-server-mismatch {
+    display: none !important;
+}
+body.tt-ext-not-authorized .tt-ext-show-account-mismatch {
+    display: none !important;
+}
+
+/* Extension configured for different server */
+body.tt-ext-server-mismatch .tt-ext-show-server-mismatch {
+    display: block !important;
+}
+body.tt-ext-server-mismatch .tt-ext-show-authorized {
+    display: none !important;
+}
+body.tt-ext-server-mismatch .tt-ext-show-not-authorized {
+    display: none !important;
+}
+body.tt-ext-server-mismatch .tt-ext-show-not-installed {
+    display: none !important;
+}
+body.tt-ext-server-mismatch .tt-ext-show-account-mismatch {
+    display: none !important;
+}
+
+/* Extension authorized to different account */
+body.tt-ext-account-mismatch .tt-ext-show-account-mismatch {
+    display: block !important;
+}
+body.tt-ext-account-mismatch .tt-ext-show-authorized {
+    display: none !important;
+}
+body.tt-ext-account-mismatch .tt-ext-show-not-authorized {
+    display: none !important;
+}
+body.tt-ext-account-mismatch .tt-ext-show-not-installed {
+    display: none !important;
+}
+body.tt-ext-account-mismatch .tt-ext-show-server-mismatch {
     display: none !important;
 }
 

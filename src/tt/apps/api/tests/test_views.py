@@ -320,8 +320,8 @@ class ExtensionStatusViewTestCase( TestCase ):
         response = self.client.get( '/api/v1/extension/status/' )
         self.assertEqual( response.status_code, 401 )
 
-    def test_returns_user_email( self ):
-        """Test returns user email."""
+    def test_returns_user_uuid( self ):
+        """Test returns user UUID."""
         self.client.credentials(
             HTTP_AUTHORIZATION = 'Bearer ' + self.token_data.api_token_str
         )
@@ -330,7 +330,7 @@ class ExtensionStatusViewTestCase( TestCase ):
         self.assertEqual( response.status_code, 200 )
         self.assertIn( 'data', response.json() )
         data = response.json()['data']
-        self.assertEqual( data['email'], 'testuser@example.com' )
+        self.assertEqual( data['uuid'], str( self.user.uuid ) )
 
     def test_returns_config_version( self ):
         """Test returns config_version field as MD5 hash."""

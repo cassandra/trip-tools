@@ -41,7 +41,7 @@
     {% block head_css %}{% endblock %}
     {% block head_javascript %}{% endblock %}
   </head>
-  <body>
+  <body{% if user.is_authenticated %} data-tt-user-uuid="{{ user.uuid }}"{% endif %}>
     <script>
      window.TtClientConfig = {{ tt_client_config.to_json_dict_str|safe }};
      window.TtConst = {{ TtConst.to_json_dict_str|safe }};

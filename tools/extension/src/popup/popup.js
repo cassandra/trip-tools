@@ -92,7 +92,7 @@ function listenForAuthStateChanges() {
     chrome.runtime.onMessage.addListener( function( message ) {
         if ( message.type === TT.MESSAGE.TYPE_AUTH_STATE_CHANGED ) {
             if ( message.data.authorized ) {
-                showAuthorizedState( message.data.email, message.data.serverStatus );
+                showAuthorizedState( message.data.uuid, message.data.serverStatus );
             } else {
                 showNotAuthorizedState();
             }
@@ -323,7 +323,7 @@ function checkAuthStatus() {
     TTMessaging.send( TT.MESSAGE.TYPE_AUTH_STATUS_REQUEST, {} )
         .then( function( response ) {
             if ( response && response.success && response.data.authorized ) {
-                showAuthorizedState( response.data.email, response.data.serverStatus );
+                showAuthorizedState( response.data.uuid, response.data.serverStatus );
             } else {
                 showNotAuthorizedState();
             }
@@ -334,7 +334,7 @@ function checkAuthStatus() {
         });
 }
 
-function showAuthorizedState( email, serverStatus ) {
+function showAuthorizedState( uuid, serverStatus ) {
     var authSection = document.getElementById( TT.DOM.ID_AUTH_SECTION );
     if ( authSection ) {
         authSection.classList.add( TT.DOM.CLASS_HIDDEN );
@@ -377,7 +377,7 @@ function showAuthorizedState( email, serverStatus ) {
         }
     }
 
-    updateDebugAuthInfo( email );
+    updateDebugAuthInfo( uuid );
 
     // Show trip section and load trips
     showTripSection();
@@ -509,7 +509,7 @@ function openNewTripPage() {
     showCreateTripPanel();
 }
 
-function updateDebugAuthInfo( email ) {
+function updateDebugAuthInfo( uuid ) {
     var authInfo = document.getElementById( TT.DOM.ID_DEBUG_AUTH_INFO );
     if ( !authInfo ) {
         return;
@@ -523,10 +523,10 @@ function updateDebugAuthInfo( email ) {
 
     var messageSpan = document.createElement( 'span' );
 
-    if ( email ) {
+    if ( uuid ) {
         messageSpan.className = 'tt-debug-level-info';
-        // Use textContent to prevent XSS from email values
-        messageSpan.textContent = TT.STRINGS.DEBUG_USER_EMAIL + ': ' + email;
+        // Use textContent to prevent XSS
+        messageSpan.textContent = TT.STRINGS.DEBUG_USER_UUID + ': ' + uuid;
     } else {
         messageSpan.className = 'tt-debug-level-warning';
         messageSpan.textContent = TT.STRINGS.AUTH_STATUS_NOT_AUTHORIZED;

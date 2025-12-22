@@ -196,8 +196,8 @@ class ExtensionStatusView( SyncableAPIView ):
     permission_classes = [ IsAuthenticated ]
 
     def get( self, request: Request ) -> Response:
-        """Returns user email and config version with sync envelope."""
+        """Returns user UUID and config version with sync envelope."""
         return Response({
-            F.EMAIL: request.user.email,
+            F.UUID: str( request.user.uuid ),
             F.CONFIG_VERSION: ClientConfigService.get_version(),
         })

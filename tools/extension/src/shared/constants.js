@@ -46,7 +46,7 @@ TT.STORAGE = {
     KEY_EXTENSION_STATE: 'tt_extensionState',
     KEY_DEBUG_LOG: 'tt_debugLog',
     KEY_API_TOKEN: 'tt_apiToken',
-    KEY_USER_EMAIL: 'tt_userEmail',
+    KEY_USER_UUID: 'tt_userUuid',
     KEY_AUTH_STATE: 'tt_authState',
     // Sync infrastructure
     KEY_SYNC_AS_OF: 'tt_syncAsOf',
@@ -171,7 +171,7 @@ TT.DOM = {
     ID_OPTIONS_AUTH_SECTION: 'tt-options-auth-section',
     ID_OPTIONS_AUTH_AUTHORIZED: 'tt-options-auth-authorized',
     ID_OPTIONS_AUTH_NOT_AUTHORIZED: 'tt-options-auth-not-authorized',
-    ID_OPTIONS_AUTH_EMAIL: 'tt-options-auth-email',
+    ID_OPTIONS_AUTH_UUID: 'tt-options-auth-uuid',
     ID_OPTIONS_DISCONNECT_BTN: 'tt-options-disconnect-btn',
     ID_OPTIONS_AUTHORIZE_BTN: 'tt-options-authorize-btn',
     ID_OPTIONS_MANUAL_TOKEN_INPUT: 'tt-options-manual-token-input',
@@ -280,6 +280,10 @@ TT.SERVER_SYNC = {
     // Body classes added by content script for extension state
     EXT_STATE_CLASS_AUTHORIZED: 'tt-ext-authorized',
     EXT_STATE_CLASS_NOT_AUTHORIZED: 'tt-ext-not-authorized',
+    EXT_STATE_CLASS_ACCOUNT_MISMATCH: 'tt-ext-account-mismatch',
+    EXT_STATE_CLASS_SERVER_MISMATCH: 'tt-ext-server-mismatch',
+    // Data attribute for page user UUID (set by webapp on authenticated pages)
+    EXT_USER_UUID_DATA_ATTR: 'data-tt-user-uuid',
     // PostMessage types for extension<->page communication
     EXT_POSTMESSAGE_DATA_TYPE: 'tt_extension_data',
     EXT_POSTMESSAGE_ACK_TYPE: 'tt_extension_ack',
@@ -340,7 +344,7 @@ TT.STRINGS = {
     AUTH_PROMPT_MANUAL: 'Or enter your API token manually:',
     AUTH_REQUIRES_AUTHORIZATION: 'Requires authorization',
     AUTH_SERVER_UNAVAILABLE: 'Server unavailable',
-    DEBUG_USER_EMAIL: 'User',
+    DEBUG_USER_UUID: 'UUID',
     DEBUG_AUTH_STATUS: 'Auth',
     DEBUG_TOKEN_PRESENT: 'Token present',
     DEBUG_TOKEN_ABSENT: 'No token',

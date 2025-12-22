@@ -28,7 +28,7 @@ function listenForAuthStateChanges() {
     chrome.runtime.onMessage.addListener( function( message ) {
         if ( message.type === TT.MESSAGE.TYPE_AUTH_STATE_CHANGED ) {
             if ( message.data.authorized ) {
-                showAuthorizedState( message.data.email );
+                showAuthorizedState( message.data.uuid );
             } else {
                 showNotAuthorizedState();
             }
@@ -171,7 +171,7 @@ function checkAuthStatus() {
     TTMessaging.send( TT.MESSAGE.TYPE_AUTH_STATUS_REQUEST, {} )
         .then( function( response ) {
             if ( response && response.success && response.data.authorized ) {
-                showAuthorizedState( response.data.email );
+                showAuthorizedState( response.data.uuid );
             } else {
                 showNotAuthorizedState();
             }
@@ -181,10 +181,10 @@ function checkAuthStatus() {
         });
 }
 
-function showAuthorizedState( email ) {
+function showAuthorizedState( uuid ) {
     var authorizedSection = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_AUTHORIZED );
     var notAuthorizedSection = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_NOT_AUTHORIZED );
-    var emailSpan = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_EMAIL );
+    var uuidSpan = document.getElementById( TT.DOM.ID_OPTIONS_AUTH_UUID );
 
     if ( authorizedSection ) {
         authorizedSection.classList.remove( TT.DOM.CLASS_HIDDEN );
@@ -192,8 +192,11 @@ function showAuthorizedState( email ) {
     if ( notAuthorizedSection ) {
         notAuthorizedSection.classList.add( TT.DOM.CLASS_HIDDEN );
     }
-    if ( emailSpan ) {
-        emailSpan.textContent = email;
+    if ( uuidSpan ) {
+        // Display truncated UUID for diagnostics (first 8 chars)
+        var displayUuid = uuid ? uuid.substring( 0, 8 ) + '...' : '';
+        uuidSpan.textContent = displayUuid;
+        uuidSpan.title = uuid || '';  // Full UUID on hover
     }
 
     clearTokenValidationStatus();

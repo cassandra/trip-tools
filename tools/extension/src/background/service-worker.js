@@ -181,22 +181,22 @@ function handleTokenReceived( data ) {
             return userInfo;
         })
         .then( function( userInfo ) {
-            // Token is valid - store user email and update state
+            // Token is valid - store user UUID and update state
             connectionStartTime = Date.now();
             lastAuthValidation = 0;  // Reset debounce on auth state change
-            return TTAuth.setUserEmail( userInfo.email )
+            return TTAuth.setUserUuid( userInfo.uuid )
                 .then( function() {
                     return TTAuth.setAuthState( TT.AUTH.STATE_AUTHORIZED );
                 })
                 .then( function() {
-                    // Log success (without revealing token)
-                    return addDebugLogEntry( 'info', 'Authorization successful: ' + userInfo.email );
+                    // Log success (without revealing token or PII)
+                    return addDebugLogEntry( 'info', 'Authorization successful: ' + userInfo.uuid );
                 })
                 .then( function() {
-                    broadcastAuthStateChange( true, userInfo.email );
+                    broadcastAuthStateChange( true, userInfo.uuid );
                     return TTMessaging.createResponse( true, {
                         authorized: true,
-                        email: userInfo.email
+                        uuid: userInfo.uuid
                     });
                 });
         })
@@ -256,11 +256,11 @@ function handleAuthStatusRequest( sender ) {
                                 serverStatus: null
                             });
                         }
-                        return TTAuth.getUserEmail()
-                            .then( function( email ) {
+                        return TTAuth.getUserUuid()
+                            .then( function( uuid ) {
                                 return TTMessaging.createResponse( true, {
                                     authorized: true,
-                                    email: email,
+                                    uuid: uuid,
                                     serverStatus: TT.AUTH.STATUS_ONLINE,
                                     cached: true
                                 });
@@ -305,7 +305,7 @@ function validateAuthWithServer() {
                     }
                     return TTMessaging.createResponse( true, {
                         authorized: true,
-                        email: data.email,
+                        uuid: data.uuid,
                         serverStatus: TT.AUTH.STATUS_ONLINE
                     });
                 })
@@ -353,13 +353,13 @@ function handleValidationError( error ) {
     }
 
     // Keep cached auth, return with error status
-    return TTAuth.getUserEmail()
-        .then( function( email ) {
+    return TTAuth.getUserUuid()
+        .then( function( uuid ) {
             return addDebugLogEntry( 'warn', 'Server validation failed: ' + serverStatus )
                 .then( function() {
                     return TTMessaging.createResponse( true, {
                         authorized: true,
-                        email: email,
+                        uuid: uuid,
                         serverStatus: serverStatus
                     });
                 });
@@ -433,12 +433,12 @@ function handleDisconnect() {
 /**
  * Broadcast auth state change to all extension views (popup, options).
  */
-function broadcastAuthStateChange( authorized, email ) {
+function broadcastAuthStateChange( authorized, uuid ) {
     var message = {
         type: TT.MESSAGE.TYPE_AUTH_STATE_CHANGED,
         data: {
             authorized: authorized,
-            email: email
+            uuid: uuid
         }
     };
 

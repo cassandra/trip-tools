@@ -20,6 +20,43 @@
       </div>
     </div>
 
+    <!-- State: Server Mismatch (extension configured for different server) -->
+    <div class="{{ TtConst.EXT_SHOW_SERVER_MISMATCH_CLASS }}">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="alert alert-warning mt-3">
+            {% icon "alert-triangle" size="sm" %} <strong>Extension configured for different server</strong>
+          </div>
+          <p class="text-muted">
+            The Trip Tools extension is installed but configured to connect to a different server.
+            Open the extension's Options page to update the server URL.
+          </p>
+        </div>
+        <div class="col-md-4 text-center">
+          {% icon "plug" size="xxxl" css_class="text-warning" %}
+        </div>
+      </div>
+    </div>
+
+    <!-- State: Account Mismatch (extension authorized to different account) -->
+    <div class="{{ TtConst.EXT_SHOW_ACCOUNT_MISMATCH_CLASS }}">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="alert alert-warning mt-3">
+            {% icon "alert-triangle" size="sm" %} <strong>Extension connected to different account</strong>
+          </div>
+          <p class="text-muted">
+            The Trip Tools extension is connected to a different account.
+            To use the extension with this account, open the extension's Options page
+            and click Disconnect, then return here to connect.
+          </p>
+        </div>
+        <div class="col-md-4 text-center">
+          {% icon "plug" size="xxxl" css_class="text-warning" %}
+        </div>
+      </div>
+    </div>
+
     <!-- State: Installed but Not Authorized -->
     <div id="{{ TtConst.EXT_AUTH_RESULT_ID }}" class="{{ TtConst.EXT_SHOW_NOT_AUTHORIZED_CLASS }}">
       <div class="row">

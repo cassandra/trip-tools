@@ -32,28 +32,28 @@ TTAuth.clearApiToken = function() {
 };
 
 /**
- * Get the stored user email.
- * @returns {Promise<string|null>} The email or null if not set.
+ * Get the stored user UUID.
+ * @returns {Promise<string|null>} The UUID or null if not set.
  */
-TTAuth.getUserEmail = function() {
-    return TTStorage.get( TT.STORAGE.KEY_USER_EMAIL, null );
+TTAuth.getUserUuid = function() {
+    return TTStorage.get( TT.STORAGE.KEY_USER_UUID, null );
 };
 
 /**
- * Store the user email.
- * @param {string} email - The user email to store.
+ * Store the user UUID.
+ * @param {string} uuid - The user UUID to store.
  * @returns {Promise<void>}
  */
-TTAuth.setUserEmail = function( email ) {
-    return TTStorage.set( TT.STORAGE.KEY_USER_EMAIL, email );
+TTAuth.setUserUuid = function( uuid ) {
+    return TTStorage.set( TT.STORAGE.KEY_USER_UUID, uuid );
 };
 
 /**
- * Clear the stored user email.
+ * Clear the stored user UUID.
  * @returns {Promise<void>}
  */
-TTAuth.clearUserEmail = function() {
-    return TTStorage.remove( TT.STORAGE.KEY_USER_EMAIL );
+TTAuth.clearUserUuid = function() {
+    return TTStorage.remove( TT.STORAGE.KEY_USER_UUID );
 };
 
 /**
@@ -85,14 +85,14 @@ TTAuth.isAuthorized = function() {
 };
 
 /**
- * Disconnect: clear token, email, and set state to not authorized.
+ * Disconnect: clear token, UUID, and set state to not authorized.
  * Token remains valid on server - only cleared locally.
  * @returns {Promise<void>}
  */
 TTAuth.disconnect = function() {
     return Promise.all([
         TTAuth.clearApiToken(),
-        TTAuth.clearUserEmail(),
+        TTAuth.clearUserUuid(),
         TTAuth.setAuthState( TT.AUTH.STATE_NOT_AUTHORIZED )
     ]);
 };
