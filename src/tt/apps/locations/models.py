@@ -158,6 +158,13 @@ class Location( GeoPointModelMixin, SyncableModel ):
         indexes = [
             models.Index( fields = ['trip', 'modified_datetime'] ),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields = ['trip', 'gmm_id'],
+                name = 'unique_trip_gmm_id',
+                condition = models.Q( gmm_id__isnull = False ),
+            ),
+        ]
 
 
 class LocationNote(models.Model):

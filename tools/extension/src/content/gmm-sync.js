@@ -182,7 +182,7 @@
         }
 
         // Check if map is linked to a trip
-        TTGmmAdapter.isGmmMapLinkedToTrip()
+        TTGmmAdapter.getGmmMapData()
             .then( function( linkResult ) {
                 if ( !linkResult.isLinked ) {
                     console.log( '[TT GMM Sync] Map not linked to any trip, skipping sync' );

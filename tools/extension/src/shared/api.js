@@ -433,6 +433,26 @@ TTApi.getLocation = function( locationUuid ) {
 };
 
 /**
+ * Get a location by GMM ID within a trip.
+ * @param {string} tripUuid - The trip UUID.
+ * @param {string} gmmId - The GMM feature ID.
+ * @returns {Promise<Object|null>} Location data or null if not found.
+ */
+TTApi.getLocationByGmmId = function( tripUuid, gmmId ) {
+    var endpoint = TT.CONFIG.API_LOCATIONS_ENDPOINT + 'by-gmm-id/' + tripUuid + '/' + gmmId + '/';
+    return TTApi.get( endpoint )
+        .then( function( response ) {
+            if ( response.status === 404 ) {
+                return null;
+            }
+            if ( !response.ok ) {
+                throw new Error( 'Failed to get location: ' + response.status );
+            }
+            return TTApi.processResponse( response );
+        });
+};
+
+/**
  * Create a new location.
  * @param {Object} locationData - Location data including trip_uuid, title, etc.
  * @returns {Promise<Object>} Created location data.

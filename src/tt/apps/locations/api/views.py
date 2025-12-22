@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -157,3 +158,30 @@ class LocationItemView( TripViewMixin, TtApiView ):
 
         location.delete()
         return Response( status = status.HTTP_204_NO_CONTENT )
+
+
+class LocationByGmmIdView( TripViewMixin, TtApiView ):
+    """
+    Get a location by its GMM ID within a trip.
+
+    GET /api/v1/locations/by-gmm-id/{trip_uuid}/{gmm_id}/
+    Returns location if found and user is a member, 404 otherwise.
+    """
+    permission_classes = [ IsAuthenticated ]
+
+    def get( self, request: Request, trip_uuid: UUID, gmm_id: str ) -> Response:
+        trip_member = self.get_trip_member( request, trip_uuid = trip_uuid )
+        self.assert_is_viewer( trip_member )
+
+        location = Location.objects.filter(
+            trip = trip_member.trip,
+            gmm_id = gmm_id
+        ).select_related( 'subcategory', 'trip' ).prefetch_related(
+            'location_notes'
+        ).first()
+
+        if not location:
+            raise NotFound( 'No location found with this GMM ID' )
+
+        serializer = LocationSerializer( location )
+        return Response( serializer.data )

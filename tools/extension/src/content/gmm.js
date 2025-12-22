@@ -115,7 +115,7 @@
     function dispatchPageLoad() {
         waitForGmmReady()
             .then( function() {
-                return TTGmmAdapter.isGmmMapLinkedToTrip();
+                return TTGmmAdapter.getGmmMapData();
             } )
             .then( function( linkResult ) {
                 if ( linkResult.isLinked ) {
@@ -408,7 +408,7 @@
         dialogNode.setAttribute( TT_DECORATED_ATTR, 'true' );
 
         // Check if map is linked to a trip before decorating
-        TTGmmAdapter.isGmmMapLinkedToTrip()
+        TTGmmAdapter.getGmmMapData()
             .then( function( result ) {
                 if ( !result.isLinked ) {
                     console.log( '[TT GMM] Map not linked - skipping add-to-map decoration' );
@@ -617,6 +617,12 @@
         })
         .finally( function() {
             TTOperationMode.exit();
+
+            // GMM shows info dialog after add; decorate it now that mode has exited
+            var infoDialog = TTGmmAdapter.getVisibleLocationDetailsDialog();
+            if ( infoDialog ) {
+                handleLocationDetailsDialog( infoDialog );
+            }
         });
     }
 
@@ -650,7 +656,7 @@
         console.log( '[TT GMM] Location details opened: ' + title + ' (id: ' + gmmId + ')' );
 
         // Only decorate if map is linked to a trip
-        TTGmmAdapter.isGmmMapLinkedToTrip()
+        TTGmmAdapter.getGmmMapData()
             .then( function( result ) {
                 if ( !result.isLinked ) {
                     console.log( '[TT GMM] Skipping location details decoration - map not linked' );
@@ -658,7 +664,7 @@
                 }
 
                 // Look up location from server
-                return getLocationFromServer( gmmId )
+                return getLocationFromServer( result.tripUuid, gmmId )
                     .then( function( location ) {
                         if ( location ) {
                             decorateLocationDetails( dialogNode, location );
@@ -1665,14 +1671,15 @@
 
     /**
      * Get location from server via background script.
+     * @param {string} tripUuid - Trip UUID (from map linkage).
      * @param {string} gmmId - GMM location ID.
      * @returns {Promise<Object|null>} Location or null.
      */
-    function getLocationFromServer( gmmId ) {
+    function getLocationFromServer( tripUuid, gmmId ) {
         return new Promise( function( resolve, reject ) {
             chrome.runtime.sendMessage({
                 type: TT.MESSAGE.TYPE_GET_LOCATION,
-                data: { gmm_id: gmmId }
+                data: { trip_uuid: tripUuid, gmm_id: gmmId }
             }, function( response ) {
                 if ( chrome.runtime.lastError ) {
                     reject( new Error( chrome.runtime.lastError.message ) );

@@ -73,6 +73,23 @@ var TTGmmAdapter = TTSiteAdapter.create({
             }
         },
 
+        /**
+         * Get the currently visible location details dialog, if any.
+         * @returns {Element|null} The dialog element, or null if not visible.
+         */
+        getVisibleLocationDetailsDialog: function() {
+            var dialogs = this.getVisibleElements( 'DIALOG' );
+            var self = this;
+
+            for ( var i = 0; i < dialogs.length; i++ ) {
+                var dialog = dialogs[i];
+                if ( dialog.querySelector( self.selectors.INFO_CONTAINER ) ) {
+                    return dialog;
+                }
+            }
+            return null;
+        },
+
         // =====================================================================
         // Map Context
         // =====================================================================
@@ -95,11 +112,11 @@ var TTGmmAdapter = TTSiteAdapter.create({
         },
 
         /**
-         * Check if current GMM map is linked to any trip.
+         * Get data about the current GMM map's linkage to a trip.
          * Uses GMM map index in service worker (3-layer cache).
          * @returns {Promise<{isLinked: boolean, tripUuid: string|null}>}
          */
-        isGmmMapLinkedToTrip: function() {
+        getGmmMapData: function() {
             var mapId = this.getMapInfo().mapId;
             if ( !mapId ) {
                 return Promise.resolve( { isLinked: false, tripUuid: null } );

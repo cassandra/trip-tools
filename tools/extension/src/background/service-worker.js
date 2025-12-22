@@ -1059,39 +1059,23 @@ function handleSaveLocation( data ) {
 
 /**
  * Handle get location request from content script.
- * Looks up UUID by gmm_id, then fetches location from server.
- * @param {Object} data - { gmm_id }
+ * Fetches location from server by trip UUID and GMM ID.
+ * @param {Object} data - { trip_uuid, gmm_id }
  * @returns {Promise<Object>} Response with location data or notFound flag.
  */
 function handleGetLocation( data ) {
-    if ( !data || !data.gmm_id ) {
+    if ( !data || !data.trip_uuid || !data.gmm_id ) {
         return Promise.resolve( TTMessaging.createResponse( false, {
-            error: 'gmm_id is required'
+            error: 'trip_uuid and gmm_id are required'
         }));
     }
 
-    return TTStorage.get( TT.STORAGE.KEY_CURRENT_TRIP_UUID, null )
-        .then( function( tripUuid ) {
-            if ( !tripUuid ) {
-                return TTMessaging.createResponse( false, {
-                    error: 'No current trip selected',
-                    notFound: true
-                });
+    return TTApi.getLocationByGmmId( data.trip_uuid, data.gmm_id )
+        .then( function( location ) {
+            if ( !location ) {
+                return TTMessaging.createResponse( false, { notFound: true });
             }
-
-            return TTLocations.getUuidByGmmId( tripUuid, data.gmm_id )
-                .then( function( locationUuid ) {
-                    if ( !locationUuid ) {
-                        return TTMessaging.createResponse( false, {
-                            notFound: true
-                        });
-                    }
-
-                    return TTApi.getLocation( locationUuid )
-                        .then( function( location ) {
-                            return TTMessaging.createResponse( true, location );
-                        });
-                });
+            return TTMessaging.createResponse( true, location );
         })
         .catch( function( error ) {
             console.error( '[TT Background] Get location failed:', error );
