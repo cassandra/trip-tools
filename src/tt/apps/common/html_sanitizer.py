@@ -136,7 +136,7 @@ if BLEACH_AVAILABLE:
             'a': ['href'],
             'span': ['class', 'data-layout'],
             'div': ['class', 'style'],
-            'p': ['style'],
+            'p': ['class', 'style'],
             'h1': ['style'],
             'h2': ['style'],
             'h3': ['style'],

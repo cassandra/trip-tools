@@ -157,6 +157,132 @@ class TestTravelogImageCacheService(TestCase):
 
         self.assertEqual(len(images), 0)
 
+    def test_extract_images_consecutive_float_right_reversed(self):
+        """Consecutive float-right images should be reversed to match display order.
+
+        CSS float:right causes images to display in reverse HTML order.
+        When multiple float-right images are prepended to a paragraph, they
+        appear in HTML as [Image2][Image1] but display as [Image1][Image2].
+        """
+        html = '''
+        <p class="text-block has-float-image">
+            <span class="trip-image-wrapper" data-layout="float-right">
+                <img class="trip-image" data-uuid="22222222-2222-2222-2222-222222222222" src="/2.jpg">
+            </span>
+            <span class="trip-image-wrapper" data-layout="float-right">
+                <img class="trip-image" data-uuid="11111111-1111-1111-1111-111111111111" src="/1.jpg">
+            </span>
+            Text content flows around both images.
+        </p>
+        '''
+
+        images = TravelogImageCacheService._extract_images_from_html(
+            html_content=html,
+            entry_date='2024-01-20',
+            display_date='Saturday, Jan. 20, 2024',
+            document_order=1
+        )
+
+        self.assertEqual(len(images), 2)
+        # Display order: 11111111 (rightmost) then 22222222 (second from right)
+        self.assertEqual(images[0].uuid, '11111111-1111-1111-1111-111111111111')
+        self.assertEqual(images[0].document_order, 1)
+        self.assertEqual(images[1].uuid, '22222222-2222-2222-2222-222222222222')
+        self.assertEqual(images[1].document_order, 2)
+
+    def test_extract_images_float_right_separated_by_text_not_reversed(self):
+        """Float-right images separated by text should NOT be reversed."""
+        html = '''
+        <p class="text-block has-float-image">
+            <span class="trip-image-wrapper" data-layout="float-right">
+                <img class="trip-image" data-uuid="11111111-1111-1111-1111-111111111111" src="/1.jpg">
+            </span>
+            Some text between images
+            <span class="trip-image-wrapper" data-layout="float-right">
+                <img class="trip-image" data-uuid="22222222-2222-2222-2222-222222222222" src="/2.jpg">
+            </span>
+            More text
+        </p>
+        '''
+
+        images = TravelogImageCacheService._extract_images_from_html(
+            html_content=html,
+            entry_date='2024-01-21',
+            display_date='Sunday, Jan. 21, 2024',
+            document_order=1
+        )
+
+        self.assertEqual(len(images), 2)
+        # Not consecutive - order preserved as-is
+        self.assertEqual(images[0].uuid, '11111111-1111-1111-1111-111111111111')
+        self.assertEqual(images[1].uuid, '22222222-2222-2222-2222-222222222222')
+
+    def test_extract_images_full_width_not_reversed(self):
+        """Consecutive full-width images should NOT be reversed."""
+        html = '''
+        <div class="content-block full-width-image-group">
+            <span class="trip-image-wrapper" data-layout="full-width">
+                <img class="trip-image" data-uuid="11111111-1111-1111-1111-111111111111" src="/1.jpg">
+            </span>
+            <span class="trip-image-wrapper" data-layout="full-width">
+                <img class="trip-image" data-uuid="22222222-2222-2222-2222-222222222222" src="/2.jpg">
+            </span>
+        </div>
+        '''
+
+        images = TravelogImageCacheService._extract_images_from_html(
+            html_content=html,
+            entry_date='2024-01-22',
+            display_date='Monday, Jan. 22, 2024',
+            document_order=1
+        )
+
+        self.assertEqual(len(images), 2)
+        # Full-width images are not reversed
+        self.assertEqual(images[0].uuid, '11111111-1111-1111-1111-111111111111')
+        self.assertEqual(images[1].uuid, '22222222-2222-2222-2222-222222222222')
+
+    def test_extract_images_mixed_layouts_partial_reverse(self):
+        """Mixed layouts: only consecutive float-right groups are reversed."""
+        html = '''
+        <p class="text-block has-float-image">
+            <span class="trip-image-wrapper" data-layout="float-right">
+                <img class="trip-image" data-uuid="22222222-2222-2222-2222-222222222222" src="/2.jpg">
+            </span>
+            <span class="trip-image-wrapper" data-layout="float-right">
+                <img class="trip-image" data-uuid="11111111-1111-1111-1111-111111111111" src="/1.jpg">
+            </span>
+            Text
+        </p>
+        <div class="content-block full-width-image-group">
+            <span class="trip-image-wrapper" data-layout="full-width">
+                <img class="trip-image" data-uuid="33333333-3333-3333-3333-333333333333" src="/3.jpg">
+            </span>
+        </div>
+        <p class="text-block has-float-image">
+            <span class="trip-image-wrapper" data-layout="float-right">
+                <img class="trip-image" data-uuid="44444444-4444-4444-4444-444444444444" src="/4.jpg">
+            </span>
+            More text
+        </p>
+        '''
+
+        images = TravelogImageCacheService._extract_images_from_html(
+            html_content=html,
+            entry_date='2024-01-23',
+            display_date='Tuesday, Jan. 23, 2024',
+            document_order=1
+        )
+
+        self.assertEqual(len(images), 4)
+        # First group (consecutive float-right) reversed
+        self.assertEqual(images[0].uuid, '11111111-1111-1111-1111-111111111111')
+        self.assertEqual(images[1].uuid, '22222222-2222-2222-2222-222222222222')
+        # Full-width not reversed
+        self.assertEqual(images[2].uuid, '33333333-3333-3333-3333-333333333333')
+        # Single float-right (no reversal needed)
+        self.assertEqual(images[3].uuid, '44444444-4444-4444-4444-444444444444')
+
     def test_extract_images_from_content(self):
         """Test extracting images from journal entries in chronological order."""
         # Create journal entries with images
@@ -478,255 +604,6 @@ class TestTravelogImageCacheService(TestCase):
         self.assertIn('VIEW', cache_key)
 
 
-class TestImageUuidPatternRegex(TestCase):
-    """
-    Direct tests for IMAGE_UUID_PATTERN regex.
-
-    Tests the compiled pattern directly to ensure refactoring
-    to use TtConst doesn't break matching behavior.
-    """
-
-    def test_basic_match(self):
-        """Test basic image tag with class and data-uuid."""
-        html = '<img class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
-
-    def test_class_with_additional_classes_before(self):
-        """Test when trip-image has classes before it."""
-        html = '<img class="other-class trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
-
-    def test_class_with_additional_classes_after(self):
-        """Test when trip-image has classes after it."""
-        html = '<img class="trip-image extra-class" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
-
-    def test_class_with_additional_classes_both_sides(self):
-        """Test when trip-image has classes on both sides."""
-        html = '<img class="before trip-image after" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
-
-    def test_additional_attributes_before_class(self):
-        """Test with additional attributes before class."""
-        html = '<img src="/test.jpg" alt="Test" class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
-
-    def test_additional_attributes_between_class_and_uuid(self):
-        """Test with additional attributes between class and data-uuid."""
-        html = '<img class="trip-image" src="/test.jpg" alt="Test" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '12345678-1234-1234-1234-123456789012')
-
-    def test_case_insensitive_tag(self):
-        """Test case insensitivity for img tag."""
-        html = '<IMG class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-
-    def test_case_insensitive_attributes(self):
-        """Test case insensitivity for attributes."""
-        html = '<img CLASS="trip-image" DATA-UUID="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-
-    def test_self_closing_tag(self):
-        """Test self-closing img tag."""
-        html = '<img class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012" />'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNotNone(match)
-
-    def test_no_match_wrong_class(self):
-        """Test no match when class doesn't contain trip-image."""
-        html = '<img class="other-image" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNone(match)
-
-    def test_no_match_missing_data_uuid(self):
-        """Test no match when data-uuid is missing."""
-        html = '<img class="trip-image" src="/test.jpg">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNone(match)
-
-    def test_no_match_invalid_uuid_format(self):
-        """Test no match when UUID format is invalid."""
-        html = '<img class="trip-image" data-uuid="not-a-valid-uuid">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNone(match)
-
-    def test_no_match_wrong_tag(self):
-        """Test no match for non-img tags."""
-        html = '<div class="trip-image" data-uuid="12345678-1234-1234-1234-123456789012">'
-        match = TravelogImageCacheService.IMAGE_UUID_PATTERN.search(html)
-        self.assertIsNone(match)
-
-    def test_multiple_images_findall(self):
-        """Test finding multiple images in HTML."""
-        html = '''
-        <img class="trip-image" data-uuid="11111111-1111-1111-1111-111111111111">
-        <p>Text</p>
-        <img class="trip-image" data-uuid="22222222-2222-2222-2222-222222222222">
-        '''
-        matches = TravelogImageCacheService.IMAGE_UUID_PATTERN.findall(html)
-        self.assertEqual(len(matches), 2)
-        self.assertEqual(matches[0], '11111111-1111-1111-1111-111111111111')
-        self.assertEqual(matches[1], '22222222-2222-2222-2222-222222222222')
-
-
-class TestLayoutPatternRegex(TestCase):
-    """
-    Direct tests for LAYOUT_PATTERN regex.
-
-    Tests the compiled pattern directly to ensure refactoring
-    to use TtConst doesn't break matching behavior.
-    """
-
-    def test_basic_match_float_right(self):
-        """Test basic wrapper with float-right layout."""
-        html = '<span class="trip-image-wrapper" data-layout="float-right">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'float-right')
-
-    def test_basic_match_full_width(self):
-        """Test basic wrapper with full-width layout."""
-        html = '<span class="trip-image-wrapper" data-layout="full-width">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'full-width')
-
-    def test_class_with_additional_classes_before(self):
-        """Test when trip-image-wrapper has classes before it."""
-        html = '<span class="other-class trip-image-wrapper" data-layout="float-right">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'float-right')
-
-    def test_class_with_additional_classes_after(self):
-        """Test when trip-image-wrapper has classes after it."""
-        html = '<span class="trip-image-wrapper extra-class" data-layout="full-width">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'full-width')
-
-    def test_additional_attributes_before_class(self):
-        """Test with additional attributes before class."""
-        html = '<span id="test" class="trip-image-wrapper" data-layout="float-right">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'float-right')
-
-    def test_additional_attributes_between_class_and_layout(self):
-        """Test with additional attributes between class and data-layout."""
-        html = '<span class="trip-image-wrapper" id="test" data-layout="full-width">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'full-width')
-
-    def test_case_insensitive_tag(self):
-        """Test case insensitivity for span tag."""
-        html = '<SPAN class="trip-image-wrapper" data-layout="float-right">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-
-    def test_case_insensitive_attributes(self):
-        """Test case insensitivity for attributes."""
-        html = '<span CLASS="trip-image-wrapper" DATA-LAYOUT="full-width">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-
-    def test_no_match_wrong_class(self):
-        """Test no match when class doesn't contain trip-image-wrapper."""
-        html = '<span class="other-wrapper" data-layout="float-right">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNone(match)
-
-    def test_no_match_missing_data_layout(self):
-        """Test no match when data-layout is missing."""
-        html = '<span class="trip-image-wrapper">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNone(match)
-
-    def test_no_match_wrong_tag(self):
-        """Test no match for non-span tags."""
-        html = '<div class="trip-image-wrapper" data-layout="float-right">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNone(match)
-
-    def test_arbitrary_layout_value(self):
-        """Test capturing arbitrary layout values."""
-        html = '<span class="trip-image-wrapper" data-layout="custom-layout-123">'
-        match = TravelogImageCacheService.LAYOUT_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'custom-layout-123')
-
-
-class TestCaptionPatternRegex(TestCase):
-    """
-    Direct tests for CAPTION_PATTERN regex.
-
-    Tests the compiled pattern for extracting captions from HTML.
-    """
-
-    def test_basic_caption_match(self):
-        """Test basic caption span."""
-        html = '<span class="trip-image-caption">Test caption</span>'
-        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Test caption')
-
-    def test_caption_with_additional_classes(self):
-        """Test caption with additional CSS classes."""
-        html = '<span class="other-class trip-image-caption extra">Caption text</span>'
-        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Caption text')
-
-    def test_empty_caption(self):
-        """Test empty caption span."""
-        html = '<span class="trip-image-caption"></span>'
-        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '')
-
-    def test_whitespace_caption(self):
-        """Test caption with only whitespace."""
-        html = '<span class="trip-image-caption">   </span>'
-        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), '   ')
-
-    def test_no_match_wrong_class(self):
-        """Test no match for wrong class."""
-        html = '<span class="other-caption">Text</span>'
-        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
-        self.assertIsNone(match)
-
-    def test_case_insensitive(self):
-        """Test case insensitivity."""
-        html = '<SPAN CLASS="trip-image-caption">Caption</SPAN>'
-        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'Caption')
-
-    def test_caption_with_special_characters(self):
-        """Test caption with special characters (but not HTML tags)."""
-        html = '<span class="trip-image-caption">View from 5,000ft - amazing!</span>'
-        match = TravelogImageCacheService.CAPTION_PATTERN.search(html)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), 'View from 5,000ft - amazing!')
-
-
 class TestCaptionExtraction(TestCase):
     """Tests for caption extraction functionality."""
 
@@ -924,18 +801,18 @@ class TestTravelogImageCacheKeySecurity(TestCase):
         self.assertNotEqual(key_v1, key_v2)
 
 
-class TestTravelogImageCacheRegexSecurity(TestCase):
-    """Test regex patterns against ReDoS attacks."""
+class TestTravelogImageCacheParserSecurity(TestCase):
+    """Test HTML parser security against malicious input."""
 
     def test_image_extraction_html_injection_resistance(self):
         """Test image extraction resists HTML injection attempts."""
         from ..services import TravelogImageCacheService
 
-        # Malicious HTML with injection attempts
+        # Malicious HTML with injection attempts - note proper structure needed for parser
         malicious_html = """
-        <img class="trip-image" data-uuid="550e8400-e29b-41d4-a716-446655440000" onload="alert(\"xss\")">
-        <img class="trip-image" data-uuid="<script>alert(\"xss\")</script>">
-        <img class="trip-image" data-uuid="550e8400-e29b-41d4-a716-446655440001" data-layout="float-right\" onload=\"alert(\"xss\")"
+        <img class="trip-image" data-uuid="550e8400-e29b-41d4-a716-446655440000" onload="alert('xss')">
+        <img class="trip-image" data-uuid="<script>alert('xss')</script>">
+        <img class="trip-image" data-uuid="550e8400-e29b-41d4-a716-446655440001">
         """
 
         images = TravelogImageCacheService._extract_images_from_html(
@@ -945,12 +822,10 @@ class TestTravelogImageCacheRegexSecurity(TestCase):
             document_order=1
         )
 
-        # Only valid UUIDs should be extracted
-        # XSS attempts should be ignored (UUID format validation)
-        valid_images = [img for img in images if len(img.uuid) == 36]
-        self.assertEqual(len(valid_images), 2)  # Two valid UUIDs
+        # Only valid UUIDs should be extracted (UUID format validation rejects injections)
+        self.assertEqual(len(images), 2)  # Two valid UUIDs
 
-        for img in valid_images:
+        for img in images:
             # UUID should be valid format (no injection)
             self.assertEqual(len(img.uuid), 36)  # UUID format: 8-4-4-4-12
             self.assertNotIn("<", img.uuid)

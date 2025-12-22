@@ -57,6 +57,13 @@ class HTMLSanitizerTests(TestCase):
         self.assertIn('data-uuid="123"', result)
         self.assertIn('data-layout="full"', result)
 
+    def test_sanitize_paragraph_with_class_attributes(self):
+        """Test that paragraph class attributes are preserved (needed for has-float-image)."""
+        html = '<p class="text-block has-float-image">Text with float image</p>'
+        result = sanitize_rich_text_html(html)
+        self.assertIn('class="text-block has-float-image"', result)
+        self.assertIn('Text with float image', result)
+
     def test_sanitize_removes_script_tags(self):
         """Test that script tags are removed (content is stripped by default)."""
         html = '<p>Safe content</p><script>alert("XSS")</script>'

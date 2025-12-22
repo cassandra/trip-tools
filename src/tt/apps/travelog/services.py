@@ -2,6 +2,7 @@ import json
 import logging
 import re
 from datetime import date
+from html.parser import HTMLParser
 from typing import Callable, List, Optional, Tuple
 from uuid import UUID
 
@@ -12,7 +13,6 @@ from django.db import transaction
 from django.http import Http404
 
 from tt.apps.common.redis_client import get_redis_client
-from tt.apps.common.regex_utils import HtmlRegexPatterns
 from tt.apps.images.models import TripImage
 from tt.apps.journal.models import Journal, JournalContent, JournalEntryContent
 from tt.apps.trips.models import Trip
@@ -298,6 +298,126 @@ class TravelogPublicListBuilder:
         return None
 
 
+class TravelogImageExtractor(HTMLParser):
+    """
+    Extract image metadata from journal HTML content using Python's html.parser.
+
+    Handles float-right image reordering: when multiple consecutive float-right
+    images appear in the same has-float-image container (paragraph or div), they
+    are reversed to match CSS display order.
+
+    CSS float:right causes images to display in reverse HTML order. When images
+    are prepended to a paragraph, the HTML order [Image2, Image1] displays as
+    [Image1, Image2]. This parser detects such groups by their parent container
+    and reverses them, but only if they are truly consecutive (no text between).
+
+    Usage:
+        parser = TravelogImageExtractor()
+        parser.feed(html_content)
+        images = parser.get_images()
+    """
+
+    # Regex for validating UUID format (8-4-4-4-12 hex digits)
+    UUID_PATTERN = re.compile(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        re.IGNORECASE
+    )
+
+    def __init__(self):
+        super().__init__()
+        self.images = []                    # Final list of all images
+        self.in_float_container = False     # Inside <p/div class="has-float-image">
+        self.consecutive_float_images = []  # Current group of consecutive float-right images
+        self.text_since_last_image = False  # Track if text appeared since last float-right image
+        self.in_wrapper = False             # Inside <span class="trip-image-wrapper">
+        self.current_layout = None          # Current wrapper's data-layout
+        self.in_caption = False             # Inside <span class="trip-image-caption">
+        self.current_caption = ''           # Caption text accumulator
+
+    def _flush_consecutive_group(self):
+        """Flush current consecutive float-right group with reversal."""
+        if self.consecutive_float_images:
+            self.images.extend(reversed(self.consecutive_float_images))
+            self.consecutive_float_images = []
+        self.text_since_last_image = False
+
+    def handle_starttag(self, tag, attrs):
+        attrs_dict = {k.lower(): v for k, v in attrs}
+        classes = attrs_dict.get('class', '')
+
+        # Track float-right containers (paragraphs/divs with has-float-image class)
+        if tag in ('p', 'div') and 'has-float-image' in classes:
+            self.in_float_container = True
+            self.consecutive_float_images = []
+            self.text_since_last_image = False
+
+        # Track image wrappers
+        elif tag == 'span' and TtConst.JOURNAL_IMAGE_WRAPPER_CLASS in classes:
+            self.in_wrapper = True
+            self.current_layout = attrs_dict.get('data-' + TtConst.LAYOUT_DATA_ATTR, 'float-right')
+
+        # Track caption spans
+        elif tag == 'span' and TtConst.TRIP_IMAGE_CAPTION_CLASS in classes:
+            self.in_caption = True
+            self.current_caption = ''
+
+        # Extract image data
+        elif tag == 'img' and TtConst.JOURNAL_IMAGE_CLASS in classes:
+            uuid = attrs_dict.get('data-' + TtConst.UUID_DATA_ATTR, '')
+
+            # Validate UUID format
+            if not self.UUID_PATTERN.match(uuid):
+                return
+
+            img_data = {
+                'uuid': uuid,
+                'layout': self.current_layout or 'float-right',
+                'caption': '',
+            }
+
+            if self.in_float_container and self.current_layout == 'float-right':
+                # Check if text appeared since last float-right image
+                if self.text_since_last_image and self.consecutive_float_images:
+                    # Text breaks the consecutive group - flush previous group
+                    self._flush_consecutive_group()
+                self.consecutive_float_images.append(img_data)
+                self.text_since_last_image = False
+            else:
+                self.images.append(img_data)
+
+    def handle_endtag(self, tag):
+        if tag == 'span':
+            if self.in_caption:
+                self.in_caption = False
+                # Attach caption to most recent image in current context
+                target = self.consecutive_float_images if self.consecutive_float_images else self.images
+                if target:
+                    target[-1]['caption'] = self.current_caption.strip()
+                self.current_caption = ''
+            elif self.in_wrapper:
+                self.in_wrapper = False
+                self.current_layout = None
+
+        elif tag in ('p', 'div') and self.in_float_container:
+            # Exiting float container - flush collected images
+            self._flush_consecutive_group()
+            self.in_float_container = False
+
+    def handle_data(self, data):
+        if self.in_caption:
+            self.current_caption += data
+        elif self.in_float_container and not self.in_wrapper:
+            # Text outside wrappers in float container marks non-consecutive
+            if data.strip():
+                self.text_since_last_image = True
+
+    def get_images(self):
+        """Return extracted images in display order."""
+        # Flush any remaining consecutive group (shouldn't happen with well-formed HTML)
+        self._flush_consecutive_group()
+        return self.images
+
+
 class TravelogImageCacheService:
     """
     Service for caching image lists extracted from travelog HTML content.
@@ -315,42 +435,6 @@ class TravelogImageCacheService:
     TTL_DRAFT = 3600        # 1 hour
     TTL_VIEW = None         # Infinite (manual invalidation only)
     TTL_VERSION = 86400     # 24 hours
-
-    # Regex pattern for extracting image UUIDs from HTML
-    # Matches: <img class="...trip-image..." data-uuid="{UUID}" ...>
-    IMAGE_UUID_PATTERN = re.compile(
-        r'<img' + HtmlRegexPatterns.ANY_ATTRS
-        + HtmlRegexPatterns.class_containing(TtConst.JOURNAL_IMAGE_CLASS)
-        + HtmlRegexPatterns.ANY_ATTRS
-        + HtmlRegexPatterns.uuid_capture('data-' + TtConst.UUID_DATA_ATTR),
-        re.IGNORECASE
-    )
-
-    # Regex pattern for extracting layout from wrapper
-    # Matches: <span class="...trip-image-wrapper..." data-layout="{LAYOUT}">
-    LAYOUT_PATTERN = re.compile(
-        r'<span' + HtmlRegexPatterns.ANY_ATTRS
-        + HtmlRegexPatterns.class_containing(TtConst.JOURNAL_IMAGE_WRAPPER_CLASS)
-        + HtmlRegexPatterns.ANY_ATTRS
-        + HtmlRegexPatterns.attr_capture('data-' + TtConst.LAYOUT_DATA_ATTR),
-        re.IGNORECASE
-    )
-
-    # Regex pattern for extracting caption from wrapper
-    # Matches: <span class="...trip-image-caption...">CAPTION_TEXT</span>
-    CAPTION_PATTERN = re.compile(
-        r'<span' + HtmlRegexPatterns.ANY_ATTRS
-        + HtmlRegexPatterns.class_containing(TtConst.TRIP_IMAGE_CAPTION_CLASS)
-        + r'[^>]*>'       # End of opening tag
-        + r'([^<]*)'      # Capture caption text (no HTML tags)
-        + r'</span>',
-        re.IGNORECASE
-    )
-
-    # Constants for image processing
-    IMAGE_WRAPPER_SEARCH_WINDOW = 500  # Characters to search backward for wrapper element
-    CAPTION_SEARCH_WINDOW = 200        # Characters to search forward for caption span
-    DEFAULT_IMAGE_LAYOUT = 'float-right'  # Default layout when wrapper not found
 
     @classmethod
     def _get_cache_key( cls,
@@ -387,6 +471,10 @@ class TravelogImageCacheService:
         """
         Extract image metadata from HTML content.
 
+        Uses TravelogImageExtractor (html.parser based) to parse HTML structure
+        and extract image metadata. Handles float-right image reordering by
+        detecting images in has-float-image containers.
+
         Args:
             html_content: HTML string containing trip-image elements
             entry_date: Date string (YYYY-MM-DD) for the entry
@@ -396,48 +484,25 @@ class TravelogImageCacheService:
         Returns:
             List of TravelogImageMetadata objects
         """
-        images = []
+        # Use HTML parser for robust extraction and float-right reordering
+        parser = TravelogImageExtractor()
+        parser.feed(html_content)
+        images = parser.get_images()
 
-        # Split HTML into sections to track layout context
-        # We need to find images and their surrounding wrapper elements
-        image_matches = list( cls.IMAGE_UUID_PATTERN.finditer( html_content ))
-
-        for match in image_matches:
-            uuid_str = match.group(1)
-
-            # Look backwards from image position to find the wrapper element
-            search_start = max( 0, match.start() - cls.IMAGE_WRAPPER_SEARCH_WINDOW )
-            backward_context = html_content[ search_start:match.end() ]
-
-            # Try to find the layout from the wrapper (appears before image)
-            layout = cls.DEFAULT_IMAGE_LAYOUT
-            layout_match = cls.LAYOUT_PATTERN.search( backward_context )
-            if layout_match:
-                layout = layout_match.group(1)
-
-            # Look forward from image position to find the caption
-            # (caption span appears after img tag within the wrapper)
-            # Use smaller window to avoid matching next image's caption
-            caption_end = min( len(html_content), match.end() + cls.CAPTION_SEARCH_WINDOW )
-            forward_context = html_content[ match.end():caption_end ]
-
-            # Try to find the caption (appears after image)
-            caption = ''
-            caption_match = cls.CAPTION_PATTERN.search( forward_context )
-            if caption_match:
-                caption = caption_match.group(1).strip()
-
-            images.append( TravelogImageMetadata(
-                uuid = uuid_str,
-                entry_date = entry_date,
-                layout = layout,
-                document_order = document_order,
-                caption = caption,
-                display_date = display_date,
+        # Convert to TravelogImageMetadata with document_order
+        result = []
+        for img_data in images:
+            result.append(TravelogImageMetadata(
+                uuid=img_data['uuid'],
+                entry_date=entry_date,
+                layout=img_data['layout'],
+                document_order=document_order,
+                caption=img_data['caption'],
+                display_date=display_date,
             ))
             document_order += 1
 
-        return images
+        return result
 
     @classmethod
     def _extract_images_from_content(cls, content: JournalContent) -> List[TravelogImageMetadata]:

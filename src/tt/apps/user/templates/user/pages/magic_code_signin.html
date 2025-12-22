@@ -8,9 +8,9 @@
 
 <div class="my-3">
   <form role="form" class="form"
-	method="POST" 
-	action="{% url 'user_signin_magic_code' %}"
-	data-synchronous="true">
+        method="POST" 
+        action="{% url 'user_signin_magic_code' %}"
+        data-synchronous="true">
     {% csrf_token %}
     {% for hidden in magic_code_form.hidden_fields %}
     {{ hidden }}
@@ -18,23 +18,28 @@
     {{ magic_code_form.non_field_errors }}
     <div class="d-flex input-group input-group-lg">
       <input type="text"
-	     class="form-control"
-	     name="magic_code"
-	     autofocus="autofocus"
-	     placeholder="access code"
-	     maxlength="12"
-	     required=""
-	     id="hi-magic-code-input"
-	     width="8">
+             class="form-control"
+             name="magic_code"
+             autofocus="autofocus"
+             placeholder="access code"
+             maxlength="12"
+             required=""
+             id="hi-magic-code-input"
+             width="8">
       <div class="input-group-append">
-	<button id="hi-magic-code-submit-button"
-		type="submit" name=submit" value="main" 
-		class="main btn btn-primary">SUBMIT</button>
+        <button id="hi-magic-code-submit-button"
+                type="submit" name=submit" value="main" 
+                class="main btn btn-primary">SUBMIT</button>
       </div>
     </div>
+    {% if magic_code_form.magic_code.errors %}
     <div class=" text-left text-danger mt-2">
       <small class="form-error">{{ magic_code_form.magic_code.errors }}</small>
     </div>
+    <div>
+      <a href="{% url 'user_signin' %}" class="btn btn-secondary px-5">Start Over</a>
+    </div>
+    {% endif %}
   </form>
 </div>
 
