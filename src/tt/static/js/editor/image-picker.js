@@ -187,7 +187,8 @@
     var uuid = $card.data(TtConst.IMAGE_UUID_DATA_ATTR);
 
     if (uuid && typeof AN !== 'undefined' && AN.get) {
-      var inspectUrl = Tt.buildImageInspectUrl(uuid);
+      var tripUuid = this.editor.tripUuid;
+      var inspectUrl = Tt.buildImageInspectUrl(uuid, tripUuid);
       AN.get(inspectUrl);
     }
   };

@@ -72,6 +72,7 @@ class TtConst:
     UUID_DATA_ATTR                       = 'uuid'
     REFERENCE_IMAGE_UUID_DATA_ATTR       = 'reference-image-uuid'
     ENTRY_UUID_DATA_ATTR                 = 'entry-uuid'
+    TRIP_UUID_DATA_ATTR                  = 'trip-uuid'
     JOURNAL_IMAGE_WRAPPER_CLASS          = 'trip-image-wrapper'
     JOURNAL_IMAGE_CLASS                  = 'trip-image'
     JOURNAL_FLOAT_MARKER_CLASS           = 'has-float-image'

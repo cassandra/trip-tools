@@ -165,6 +165,7 @@
     this.editorLayoutManager = new EditorLayoutManager(this.$editor);
 
     var entryUuid = $editor.data(TtConst.ENTRY_UUID_DATA_ATTR);
+    this.tripUuid = $editor.data(TtConst.TRIP_UUID_DATA_ATTR);
     var autosaveUrl = Tt.buildJournalEntryAutosaveUrl(entryUuid);
     var csrfToken = this.getCSRFToken();
     this.autoSaveManager = new AutoSaveManager(this, autosaveUrl, csrfToken);
@@ -697,7 +698,7 @@
       var uuid = $img.data(TtConst.UUID_DATA_ATTR);
 
       if (uuid) {
-        var inspectUrl = TtUrlPatterns.IMAGE_INSPECT.replace(TtUrlPatterns.PLACEHOLDER_UUID, uuid);
+        var inspectUrl = Tt.buildImageInspectUrl(uuid, self.tripUuid);
         AN.get(inspectUrl);
       }
     });

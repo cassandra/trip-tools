@@ -117,16 +117,21 @@
         },
 
         /**
-         * Build image inspect URL from UUID.
+         * Build image inspect URL from UUID with optional trip context.
          * Uses TtUrlPatterns.IMAGE_INSPECT pattern.
          * @param {string} imageUuid - The image UUID
+         * @param {string} [tripUuid] - Optional trip UUID for trip context permission
          * @returns {string} Full inspect URL
          */
-        buildImageInspectUrl: function(imageUuid) {
-            return TtUrlPatterns.IMAGE_INSPECT.replace(
+        buildImageInspectUrl: function(imageUuid, tripUuid) {
+            var url = TtUrlPatterns.IMAGE_INSPECT.replace(
                 TtUrlPatterns.PLACEHOLDER_UUID,
                 imageUuid
             );
+            if (tripUuid) {
+                url += '?trip_uuid=' + encodeURIComponent(tripUuid);
+            }
+            return url;
         },
 
         /**
