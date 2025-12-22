@@ -63,7 +63,8 @@
       "Bash(npm --version:*)",
       "Bash(make test-e2e-webapp-extension-none:*)",
       "WebFetch(domain:bugzilla.mozilla.org)",
-      "Bash(exiftool:*)"
+      "Bash(exiftool:*)",
+      "WebFetch(domain:forum.vivaldi.net)"
     ],
     "deny": [],
     "ask": []
