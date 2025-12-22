@@ -8,6 +8,7 @@ if ( typeof importScripts !== 'undefined' ) {
     importScripts( '../shared/constants.js' );
     importScripts( '../shared/storage.js' );
     importScripts( '../shared/messaging.js' );
+    importScripts( '../shared/platform.js' );
     importScripts( '../shared/auth.js' );
     importScripts( '../shared/api.js' );
     importScripts( '../shared/trips.js' );

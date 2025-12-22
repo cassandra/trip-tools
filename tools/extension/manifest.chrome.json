@@ -57,6 +57,7 @@
             ],
             "js": [
                 "shared/constants.js",
+                "shared/platform.js",
                 "content/triptools-auth.js"
             ],
             "run_at": "document_idle"

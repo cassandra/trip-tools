@@ -19,21 +19,31 @@ User = get_user_model()
 class ExtensionTokenService:
     """Service for creating browser extension API tokens."""
 
-    TOKEN_NAME_PREFIX = 'Chrome Extension'
+    DEFAULT_BROWSER = 'Browser'
+    VALID_BROWSERS = frozenset({
+        'Chrome', 'Firefox', 'Safari', 'Edge', 'Brave', 'Opera', 'Vivaldi'
+    })
 
     @classmethod
     def create_extension_token( cls,
-                                user      : User,
-                                platform  : Optional[str] = None ) -> APITokenData:
+                                user    : User,
+                                browser : Optional[str] = None ) -> APITokenData:
         """
+        Create an extension API token with browser-specific naming.
+
         Args:
-            platform: Optional platform info (e.g., 'Windows', 'macOS').
+            browser: Browser name (e.g., 'Chrome', 'Firefox', 'Vivaldi').
+                     Must be in VALID_BROWSERS or will be ignored.
 
         Uses a transaction with select_for_update to prevent race conditions
         when multiple requests try to create tokens simultaneously.
         """
+        # Validate browser name (prevent injection of arbitrary strings)
+        if browser and browser not in cls.VALID_BROWSERS:
+            browser = None
+
         with transaction.atomic():
-            token_name = cls._generate_token_name_locked( user, platform )
+            token_name = cls._generate_token_name_locked( user, browser )
             return APITokenService.create_token(
                 user = user,
                 api_token_name = token_name,
@@ -42,8 +52,8 @@ class ExtensionTokenService:
 
     @classmethod
     def _generate_token_name_locked( cls,
-                                     user      : User,
-                                     platform  : Optional[str] = None ) -> str:
+                                     user    : User,
+                                     browser : Optional[str] = None ) -> str:
         """
         Generate a unique token name while holding a lock on user's tokens.
 
@@ -53,36 +63,33 @@ class ExtensionTokenService:
         # Lock all tokens for this user to prevent concurrent name conflicts
         list( APIToken.objects.filter( user=user ).select_for_update() )
 
-        return cls.generate_token_name( user, platform )
+        return cls.generate_token_name( user, browser )
 
     @classmethod
     def generate_token_name( cls,
-                             user      : User,
-                             platform  : Optional[str] = None ) -> str:
+                             user    : User,
+                             browser : Optional[str] = None ) -> str:
         """
         Generate a descriptive token name with collision handling.
 
-        Format: "Chrome Extension - {Platform} - {Month Year}"
-        If collision: "Chrome Extension - {Platform} - {Month Year} (2)"
+        Format: "{Browser} Extension - {Month Year}"
+        If collision: "{Browser} Extension - {Month Year} (2)"
 
         Args:
-            platform: Optional platform info (e.g., 'Windows', 'macOS').
+            browser: Browser name (e.g., 'Chrome', 'Firefox').
 
         Note: For race-condition-safe token creation, use create_extension_token()
         which wraps this in a transaction with row locking.
         """
-        # Build base name components
-        parts = [cls.TOKEN_NAME_PREFIX]
-
-        if platform:
-            parts.append( platform )
+        # Build token name prefix from browser
+        browser_name = browser if browser else cls.DEFAULT_BROWSER
+        prefix = f'{browser_name} Extension'
 
         # Add current month and year
         now = datetime.now()
         date_str = now.strftime( '%b %Y' )  # e.g., "Dec 2025"
-        parts.append( date_str )
 
-        base_name = ' - '.join( parts )
+        base_name = f'{prefix} - {date_str}'
 
         # Check for collisions and find unique name
         return cls._get_unique_name( user, base_name )

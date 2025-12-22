@@ -292,7 +292,6 @@ TT.AUTH = {
     STATE_NOT_AUTHORIZED: 'not_authorized',
     STATE_PENDING: 'pending',
     POSTMESSAGE_TYPE: 'tt_extension_token',
-    TOKEN_NAME_PREFIX: 'Chrome Extension',
     STATUS_ONLINE: 'online',
     STATUS_OFFLINE: 'offline',
     STATUS_SERVER_ERROR: 'server_error',

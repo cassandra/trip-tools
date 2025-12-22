@@ -116,20 +116,34 @@ class TestExtensionsHomeViewPost(SyncViewTestCase):
 
         data = response.json()
         auth_html = data['insert'][TtConst.EXT_AUTH_RESULT_ID]
-        # Token name should include the prefix
-        self.assertIn(ExtensionTokenService.TOKEN_NAME_PREFIX, auth_html)
+        # Token name should include "Extension" suffix
+        self.assertIn('Extension', auth_html)
 
-    def test_platform_passed_through_form(self):
-        """Test that platform from POST data is used in token name."""
+    def test_browser_passed_through_form(self):
+        """Test that browser from POST data is used in token name."""
         self.client.force_login(self.user)
 
         url = reverse('user_extensions')
-        response = self.client.post(url, {'platform': 'Windows'})
+        response = self.client.post(url, {'browser': 'Firefox'})
 
         self.assertSuccessResponse(response)
         data = response.json()
         auth_html = data['insert'][TtConst.EXT_AUTH_RESULT_ID]
-        self.assertIn('Windows', auth_html)
+        self.assertIn('Firefox Extension', auth_html)
+
+    def test_invalid_browser_falls_back_to_default(self):
+        """Test that invalid browser value is ignored and falls back to default."""
+        self.client.force_login(self.user)
+
+        url = reverse('user_extensions')
+        response = self.client.post(url, {'browser': 'EvilBrowser<script>'})
+
+        self.assertSuccessResponse(response)
+        data = response.json()
+        auth_html = data['insert'][TtConst.EXT_AUTH_RESULT_ID]
+        # Should use default browser name, not the injected value
+        self.assertNotIn('EvilBrowser', auth_html)
+        self.assertIn('Browser Extension', auth_html)
 
     def test_multiple_posts_create_unique_tokens(self):
         """Test that multiple POSTs create tokens with unique names."""
@@ -155,17 +169,22 @@ class TestExtensionTokenService(SyncViewTestCase):
         """Test that generated name follows expected format."""
         name = ExtensionTokenService.generate_token_name(self.user)
 
-        # Should start with prefix
-        self.assertTrue(name.startswith(ExtensionTokenService.TOKEN_NAME_PREFIX))
+        # Should use default browser when none provided
+        self.assertTrue(name.startswith(f'{ExtensionTokenService.DEFAULT_BROWSER} Extension'))
         # Should contain month/year format (e.g., "Dec 2025")
-        import re
         self.assertTrue(re.search(r'[A-Z][a-z]{2} \d{4}', name))
 
-    def test_generate_token_name_with_platform(self):
-        """Test that platform is included in token name."""
-        name = ExtensionTokenService.generate_token_name(self.user, platform='macOS')
+    def test_generate_token_name_with_browser(self):
+        """Test that browser is included in token name."""
+        name = ExtensionTokenService.generate_token_name(self.user, browser='Chrome')
 
-        self.assertIn('macOS', name)
+        self.assertTrue(name.startswith('Chrome Extension'))
+
+    def test_generate_token_name_with_various_browsers(self):
+        """Test that various valid browsers are correctly used in token names."""
+        for browser in ['Firefox', 'Safari', 'Edge', 'Brave', 'Opera', 'Vivaldi']:
+            name = ExtensionTokenService.generate_token_name(self.user, browser=browser)
+            self.assertTrue(name.startswith(f'{browser} Extension'), f'Failed for {browser}')
 
     def test_generate_token_name_collision_handling(self):
         """Test that collisions are handled by appending suffix."""
@@ -217,16 +236,16 @@ class TestExtensionTokenService(SyncViewTestCase):
 
     def test_get_extension_tokens_ordering(self):
         """Test that extension tokens are returned in reverse chronological order."""
-        # Create two tokens
-        ExtensionTokenService.create_extension_token(self.user, platform='First')
-        ExtensionTokenService.create_extension_token(self.user, platform='Second')
+        # Create two tokens with different browsers
+        ExtensionTokenService.create_extension_token(self.user, browser='Chrome')
+        ExtensionTokenService.create_extension_token(self.user, browser='Firefox')
 
         tokens = ExtensionTokenService.get_extension_tokens(self.user)
 
         self.assertEqual(len(tokens), 2)
         # Most recent should be first
-        self.assertIn('Second', tokens[0].name)
-        self.assertIn('First', tokens[1].name)
+        self.assertIn('Firefox', tokens[0].name)
+        self.assertIn('Chrome', tokens[1].name)
 
     def test_name_generation_includes_date(self):
         """Test that token name includes month and year format."""
@@ -378,14 +397,14 @@ class TestExtensionTokenTableRendering(SyncViewTestCase):
     def test_token_row_displays_token_name(self):
         """Test that token rows display the token name."""
         self.client.force_login(self.user)
-        ExtensionTokenService.create_extension_token(self.user, platform='TestPlatform')
+        ExtensionTokenService.create_extension_token(self.user, browser='Vivaldi')
 
         url = reverse('user_extensions')
         response = self.client.get(url)
 
         html = response.content.decode('utf-8')
-        # Token name should contain the platform
-        self.assertIn('TestPlatform', html)
+        # Token name should contain the browser
+        self.assertIn('Vivaldi Extension', html)
 
 
 class TestJavaScriptConstantsInjection(SyncViewTestCase):

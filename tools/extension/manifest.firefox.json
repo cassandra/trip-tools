@@ -41,6 +41,7 @@
             "shared/constants.js",
             "shared/storage.js",
             "shared/messaging.js",
+            "shared/platform.js",
             "shared/auth.js",
             "shared/api.js",
             "shared/trips.js",
@@ -70,6 +71,7 @@
             ],
             "js": [
                 "shared/constants.js",
+                "shared/platform.js",
                 "content/triptools-auth.js"
             ],
             "run_at": "document_idle"

@@ -431,13 +431,13 @@ class ExtensionsHomeView( LoginRequiredMixin, View ):
         return render( request, 'user/pages/extensions.html', context )
 
     def post(self, request, *args, **kwargs):
-        # Get platform from form data (optional, for token naming)
-        platform = request.POST.get( 'platform', None ) or None
+        # Get browser from form data (injected by extension content script)
+        browser = request.POST.get( 'browser', None ) or None
 
         # Create the extension token
         token_data = ExtensionTokenService.create_extension_token(
             user = request.user,
-            platform = platform,
+            browser = browser,
         )
         context = self._get_template_context( request )        
         context.update({

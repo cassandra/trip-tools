@@ -13,6 +13,31 @@
     }
 
     /**
+     * Inject browser name as hidden field into authorization forms.
+     * This allows the backend to name tokens based on the actual browser.
+     */
+    function injectBrowserField() {
+        var browser = TTPlatform.detectBrowser();
+        var forms = document.querySelectorAll( 'form[method="post"]' );
+
+        forms.forEach( function( form ) {
+            // Skip if already has browser field
+            if ( form.querySelector( 'input[name="browser"]' ) ) {
+                return;
+            }
+
+            var input = document.createElement( 'input' );
+            input.type = 'hidden';
+            input.name = 'browser';
+            input.value = browser;
+            form.appendChild( input );
+        });
+    }
+
+    // Inject browser field on page load
+    injectBrowserField();
+
+    /**
      * Handle incoming postMessage events.
      * Listens for tt_extension_data messages from the page and sends ack back.
      */

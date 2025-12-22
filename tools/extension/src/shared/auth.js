@@ -99,44 +99,11 @@ TTAuth.disconnect = function() {
 
 /**
  * Get platform information for token naming.
+ * Delegates to TTPlatform module.
  * @returns {Object} Platform info with os and browser properties.
  */
 TTAuth.getPlatformInfo = function() {
-    var platform = 'Unknown';
-    var browser = 'Chrome';
-
-    // Try navigator.userAgentData first (modern browsers)
-    if ( navigator.userAgentData && navigator.userAgentData.platform ) {
-        platform = navigator.userAgentData.platform;
-    } else if ( navigator.platform ) {
-        // Fallback to navigator.platform
-        var p = navigator.platform.toLowerCase();
-        if ( p.indexOf( 'win' ) !== -1 ) {
-            platform = 'Windows';
-        } else if ( p.indexOf( 'mac' ) !== -1 ) {
-            platform = 'macOS';
-        } else if ( p.indexOf( 'linux' ) !== -1 ) {
-            platform = 'Linux';
-        } else if ( p.indexOf( 'cros' ) !== -1 ) {
-            platform = 'Chrome OS';
-        }
-    }
-
-    // Detect browser from user agent
-    var ua = navigator.userAgent;
-    if ( ua.indexOf( 'Edg/' ) !== -1 ) {
-        browser = 'Edge';
-    } else if ( ua.indexOf( 'Brave' ) !== -1 ) {
-        browser = 'Brave';
-    } else if ( ua.indexOf( 'OPR/' ) !== -1 || ua.indexOf( 'Opera' ) !== -1 ) {
-        browser = 'Opera';
-    }
-    // Default remains Chrome
-
-    return {
-        os: platform,
-        browser: browser
-    };
+    return TTPlatform.getInfo();
 };
 
 /**

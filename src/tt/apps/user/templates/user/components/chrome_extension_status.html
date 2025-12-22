@@ -24,18 +24,21 @@
     <div id="{{ TtConst.EXT_AUTH_RESULT_ID }}" class="{{ TtConst.EXT_SHOW_NOT_AUTHORIZED_CLASS }}">
       <div class="row">
         <div class="col-md-8">
-          <p class="mb-3">Extension detected. Signed in as <strong>{{ user.email }}</strong></p>
-          <p class="small text-muted mb-3">
-            Click "Authorize" to connect the extension to your Trip Tools account.
+          <p class="mb-3 alert alert-warning">Extension detected, but not connected.</p>
+          <p class="text-primary mb-3">
+            Click to authorize and connect the extension to your Trip Tools account.
           </p>
           <div>
             <form method="post" data-async="true" debounce>
               {% csrf_token %}
-              <button type="submit" class="btn btn-primary">
-                {% icon "plug" size="sm" %} Authorize Extension
+              <button type="submit" class="btn btn-lg btn-secondary">
+                {% icon "plug" size="sm" %} Connect Extension
               </button>
             </form>
           </div>
+          <p class="mt-3">
+            You are signed in as <strong>{{ user.email }}</strong>
+          </p>
         </div>
         <div class="col-md-4 text-center">
           {% icon "plug" size="xxxl" css_class="text-primary" %}
