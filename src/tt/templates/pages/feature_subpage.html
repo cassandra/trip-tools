@@ -1,5 +1,26 @@
 {% extends "pages/feature_page.html" %}
 
+{% block footer_post_javascript %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var activeEntry = document.querySelector('.app-sidebar-nav a.active');
+    if (activeEntry) {
+        var sidebar = document.getElementById('appSidebar');
+        if (sidebar) {
+            var entryRect = activeEntry.getBoundingClientRect();
+            var sidebarRect = sidebar.getBoundingClientRect();
+            var isFullyVisible = entryRect.top >= sidebarRect.top &&
+                                 entryRect.bottom <= sidebarRect.bottom;
+            if (!isFullyVisible) {
+                activeEntry.scrollIntoView({ block: 'center', behavior: 'instant' });
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+
 {% block sidebar_header %}
 <div class="plain h3 pl-3">
   {% block sidebar_title %}Trip Tools{% endblock %}
