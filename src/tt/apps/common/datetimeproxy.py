@@ -14,6 +14,7 @@ import pytz
 import logging
 from email.utils import format_datetime
 from email.utils import parsedate_to_datetime
+from typing import Optional
 
 from django.conf import settings
 from django.utils import timezone
@@ -462,3 +463,74 @@ def offset_to_timezone( offset_minutes : int, reference_datetime : datetime.date
     hours = abs(int(offset_minutes / 60))
     minutes = abs(offset_minutes % 60)
     return f'Etc/GMT{sign}{hours}{":" + str(minutes) if minutes else ""}'
+
+
+def gps_to_timezone(latitude: float, longitude: float) -> Optional[str]:
+    """
+    Estimate timezone from GPS coordinates using longitude-based approximation.
+
+    Uses the simple formula: offset_hours = round(longitude / 15) to estimate
+    the UTC offset, then finds a matching IANA timezone. This is a lightweight
+    fallback when EXIF timezone offset tags are not present but GPS coordinates
+    are available.
+
+    Args:
+        latitude: GPS latitude in decimal degrees (-90 to 90)
+        longitude: GPS longitude in decimal degrees (-180 to 180)
+
+    Returns:
+        IANA timezone name or None if no match found.
+
+    Design Notes:
+        We chose this simple longitude-based approximation over precise polygon-based
+        libraries (e.g., timezonefinder, tzfpy) because:
+
+        1. This is a fallback for images missing EXIF timezone offset tags - most
+           images have proper timezone data and never need this code path.
+        2. Polygon libraries require 28-40MB of geographic data loaded into memory.
+        3. The timezonefinder library had cleanup issues causing errors at interpreter
+           shutdown (TypeError in AbstractCoordAccessor.__del__).
+        4. For photo timestamps, "close enough" is acceptable - being off by an hour
+           in edge cases near timezone boundaries is better than assuming UTC.
+
+        If more accurate timezone detection becomes necessary in the future, consider:
+        - timezonefinder (pip install timezonefinder): Most accurate, ~28MB, pure Python
+        - tzfpy (pip install tzfpy): Faster, Rust-based, ~40MB runtime memory
+        - Online API calls (Google Time Zone API, GeoNames): No memory overhead but
+          requires network access and may have rate limits/costs
+
+        The latitude parameter is currently unused but retained for API compatibility
+        if a more sophisticated implementation is added later.
+    """
+    from tt.constants import TIMEZONE_NAME_LIST
+
+    # Estimate UTC offset from longitude (each 15 degrees = 1 hour)
+    offset_hours = round(longitude / 15)
+    offset_minutes = offset_hours * 60
+
+    # Find a timezone that matches this offset
+    # Use current time as reference for DST consideration
+    reference_dt = now()
+    target_offset = datetime.timedelta(minutes=offset_minutes)
+
+    # First try preferred timezones
+    for tz_name in TIMEZONE_NAME_LIST:
+        try:
+            tz = pytz.timezone(tz_name)
+            tz_dt = reference_dt.astimezone(tz)
+            if tz_dt.utcoffset() == target_offset:
+                return tz_name
+        except Exception:
+            continue
+
+    # Fall back to common timezones
+    for tz_name in pytz.common_timezones:
+        try:
+            tz = pytz.timezone(tz_name)
+            tz_dt = reference_dt.astimezone(tz)
+            if tz_dt.utcoffset() == target_offset:
+                return tz_name
+        except Exception:
+            continue
+
+    return None

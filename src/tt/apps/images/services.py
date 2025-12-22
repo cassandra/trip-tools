@@ -313,6 +313,14 @@ class ImageUploadService(Singleton):
                 except (KeyError, ValueError, AttributeError) as e:
                     logger.warning(f"Failed to parse GPS coordinates: {e}")
 
+            # GPS-based timezone fallback: If no timezone from offset but we have GPS,
+            # attempt to derive timezone from geographic location
+            if detected_timezone is None and gps is not None:
+                detected_timezone = datetimeproxy.gps_to_timezone(
+                    float(gps.latitude),
+                    float(gps.longitude),
+                )
+
             # Extract caption/description
             image_description = exif_tag_names.get('ImageDescription')
             if image_description:

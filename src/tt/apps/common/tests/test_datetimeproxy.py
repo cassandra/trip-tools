@@ -285,6 +285,52 @@ class TestDateTimeProxy(unittest.TestCase):
         self.assertEqual( 8, new_dt.hour )
         self.assertEqual( 5, new_dt.minute )
         self.assertEqual( start_dt.tzname(), new_dt.tzname() )
-        
+
         return
+
+
+class TestGpsToTimezone(unittest.TestCase):
+    """Test GPS-based timezone estimation using longitude approximation."""
+
+    def test_gps_to_timezone_returns_valid_timezone(self):
+        """Returned timezone should be valid pytz timezone name."""
+        # Salzburg area (longitude ~13, so UTC+1)
+        result = datetimeproxy.gps_to_timezone(47.797, 13.045)
+        self.assertIsNotNone(result)
+        # Verify it's a valid timezone
+        tz = pytz.timezone(result)
+        self.assertIsNotNone(tz)
+
+    def test_gps_to_timezone_positive_longitude(self):
+        """Positive longitude (east) should return eastern timezone."""
+        # Tokyo area (longitude ~140, so UTC+9)
+        result = datetimeproxy.gps_to_timezone(35.6762, 139.6503)
+        self.assertIsNotNone(result)
+        tz = pytz.timezone(result)
+        # Verify offset is approximately +9 hours
+        offset = tz.utcoffset(datetime.datetime.now())
+        self.assertGreaterEqual(offset.total_seconds(), 8 * 3600)
+        self.assertLessEqual(offset.total_seconds(), 10 * 3600)
+
+    def test_gps_to_timezone_negative_longitude(self):
+        """Negative longitude (west) should return western timezone."""
+        # New York area (longitude ~-74, so UTC-5)
+        result = datetimeproxy.gps_to_timezone(40.7128, -74.0060)
+        self.assertIsNotNone(result)
+        tz = pytz.timezone(result)
+        # Verify offset is approximately -5 hours (may vary with DST)
+        offset = tz.utcoffset(datetime.datetime.now())
+        self.assertGreaterEqual(offset.total_seconds(), -6 * 3600)
+        self.assertLessEqual(offset.total_seconds(), -4 * 3600)
+
+    def test_gps_to_timezone_zero_longitude(self):
+        """Zero longitude should return UTC or nearby timezone."""
+        # Greenwich (longitude 0, so UTC+0)
+        result = datetimeproxy.gps_to_timezone(51.4772, 0.0)
+        self.assertIsNotNone(result)
+        tz = pytz.timezone(result)
+        offset = tz.utcoffset(datetime.datetime.now())
+        # Should be UTC+0 or UTC+1 (BST)
+        self.assertGreaterEqual(offset.total_seconds(), 0)
+        self.assertLessEqual(offset.total_seconds(), 1 * 3600)
     
