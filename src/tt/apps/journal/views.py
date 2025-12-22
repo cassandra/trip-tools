@@ -12,6 +12,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic import View
 
+from tt.apps.common import antinode
 from tt.apps.common.antinode import http_response
 from tt.apps.console.console_helper import ConsoleSettingsHelper
 from tt.apps.images.enums import UploadStatus
@@ -38,7 +39,7 @@ from .autosave_helpers import (
 )
 from .context import JournalPageContext
 from .enums import ImagePickerScope, JournalVisibility
-from .forms import JournalForm, JournalEntryForm, JournalVisibilityForm
+from .forms import JournalForm, JournalEntryForm, JournalTimezonesBulkUpdateForm, JournalVisibilityForm
 from .helpers import PublishingStatusHelper, JournalPublishContextBuilder, JournalEditorHelper
 from .mixins import JournalViewMixin
 from .models import Journal, JournalEntry, PROLOGUE_DATE, EPILOGUE_DATE, SPECIAL_DATES
@@ -220,12 +221,30 @@ class JournalEditView( LoginRequiredMixin, TripViewMixin, ModalView ):
         )
         self.assert_is_editor(request_member)
 
+        original_timezone = journal.timezone
         form = JournalForm(request.POST, instance=journal)
 
         if form.is_valid():
+            new_timezone = form.cleaned_data['timezone']
+            timezone_changed = (original_timezone != new_timezone)
+            entry_count = journal.entries.count()
+
             journal = form.save(commit=False)
             journal.modified_by = request.user
             journal.save()
+
+            if timezone_changed and entry_count > 0:
+                context = {
+                    'journal': journal,
+                    'entry_count': entry_count,
+                    'old_timezone': original_timezone,
+                    'new_timezone': new_timezone,
+                }
+                return antinode.modal_from_template(
+                    request=request,
+                    template_name='journal/modals/journal_timezone_bulk_update.html',
+                    context=context,
+                )
 
             return self.refresh_response(request)
 
@@ -235,6 +254,38 @@ class JournalEditView( LoginRequiredMixin, TripViewMixin, ModalView ):
             'trip': journal.trip,
         }
         return self.modal_response(request, context=context, status=400)
+
+
+class JournalTimezonesBulkUpdateView(LoginRequiredMixin, TripViewMixin, ModalView):
+    """Bulk update all journal entry timezones."""
+
+    def get_template_name(self) -> str:
+        return 'journal/modals/journal_timezone_bulk_update.html'
+
+    def post(self, request, journal_uuid: UUID, *args, **kwargs) -> HttpResponse:
+        from django.utils import timezone
+
+        journal = get_object_or_404(
+            Journal,
+            uuid=journal_uuid,
+        )
+        request_member = get_object_or_404(
+            TripMember,
+            trip=journal.trip,
+            user=request.user,
+        )
+        self.assert_is_editor(request_member)
+
+        form = JournalTimezonesBulkUpdateForm(request.POST)
+        if form.is_valid():
+            new_timezone = form.cleaned_data['timezone']
+            journal.entries.update(
+                timezone=new_timezone,
+                modified_by=request.user,
+                modified_datetime=timezone.now(),
+            )
+
+        return self.refresh_response(request)
 
 
 class JournalVisibilityChangeView( LoginRequiredMixin, TripViewMixin, ModalView ):

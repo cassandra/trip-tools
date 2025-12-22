@@ -24,6 +24,11 @@ urlpatterns = [
         name='journal_edit'
     ),
     path(
+        '<uuid:journal_uuid>/bulk-update-timezones',
+        views.JournalTimezonesBulkUpdateView.as_view(),
+        name='journal_bulk_update_timezones'
+    ),
+    path(
         '<uuid:journal_uuid>/visibility',
         views.JournalVisibilityChangeView.as_view(),
         name='journal_visibility'

@@ -1,0 +1,42 @@
+{% extends "modals/action_2.html" %}
+{% load icons %}
+
+{% block modal_dialog_id %}journal-timezone-bulk-update-modal{% endblock %}
+
+{% block title_text %}Update Entry Timezones{% endblock %}
+
+{% block preamble %}
+<form method="post" action="{% url 'journal_bulk_update_timezones' journal_uuid=journal.uuid %}" data-async="modal">
+  {% csrf_token %}
+  <input type="hidden" name="timezone" value="{{ new_timezone }}">
+{% endblock %}
+
+{% block body %}
+<div class="alert alert-info">
+  <div class="d-flex align-items-start">
+    <div class="mr-2">
+      {% icon "info-circle" size="sm" %}
+    </div>
+    <div>
+      <p class="mb-2">
+        Journal timezone changed from <strong>{{ old_timezone }}</strong> to <strong>{{ new_timezone }}</strong>.
+      </p>
+      <p class="mb-0">
+        Would you like to update the timezone for all {{ entry_count }} existing entr{{ entry_count|pluralize:"y,ies" }}?
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block action_left %}
+<button type="button" class="btn btn-outline-secondary" onclick="location.reload()">NO, KEEP EXISTING</button>
+{% endblock %}
+
+{% block action_right %}
+<button type="submit" class="btn btn-primary">YES, UPDATE ALL</button>
+{% endblock %}
+
+{% block postamble %}
+</form>
+{% endblock %}

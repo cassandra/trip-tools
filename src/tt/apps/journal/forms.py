@@ -1,3 +1,5 @@
+import pytz
+
 from django import forms
 
 from tt.constants import TIMEZONE_NAME_LIST
@@ -53,8 +55,11 @@ class JournalForm(forms.ModelForm):
 
     def clean_timezone(self):
         timezone = self.cleaned_data.get('timezone')
-        if timezone and timezone not in TIMEZONE_NAME_LIST:
-            raise forms.ValidationError('Please select a valid timezone from the list.')
+        if timezone:
+            try:
+                pytz.timezone(timezone)
+            except pytz.exceptions.UnknownTimeZoneError:
+                raise forms.ValidationError('Invalid timezone.')
         return timezone
 
 
@@ -86,8 +91,11 @@ class JournalEntryForm(forms.ModelForm):
 
     def clean_timezone(self):
         timezone = self.cleaned_data.get('timezone')
-        if timezone and timezone not in TIMEZONE_NAME_LIST:
-            raise forms.ValidationError('Please select a valid timezone from the list.')
+        if timezone:
+            try:
+                pytz.timezone(timezone)
+            except pytz.exceptions.UnknownTimeZoneError:
+                raise forms.ValidationError('Invalid timezone.')
         return timezone
 
 
@@ -176,3 +184,22 @@ class JournalVisibilityForm(forms.Form):
 
         # If existing password, only update if user chose SET_NEW
         return bool( password_action == self.PASSWORD_SET_NEW )
+
+
+class JournalTimezonesBulkUpdateForm(forms.Form):
+    """Form for bulk updating journal entry timezones."""
+
+    timezone = forms.CharField(
+        max_length=63,
+        widget=forms.HiddenInput(),
+    )
+
+    def clean_timezone(self):
+        timezone = self.cleaned_data.get('timezone')
+        if not timezone:
+            raise forms.ValidationError('Timezone is required.')
+        try:
+            pytz.timezone(timezone)
+        except pytz.exceptions.UnknownTimeZoneError:
+            raise forms.ValidationError('Invalid timezone.')
+        return timezone
