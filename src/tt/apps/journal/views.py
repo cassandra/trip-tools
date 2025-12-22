@@ -117,8 +117,10 @@ class JournalCreateView( LoginRequiredMixin, TripViewMixin, ModalView ):
         form = JournalForm(request.POST)
 
         if form.is_valid():
-            journal = form.save(commit=False)
+            journal = form.save( commit = False )
             journal.trip = trip
+            if trip.reference_image:
+                journal.reference_image = trip.reference_image
             journal.visibility = JournalVisibility.PRIVATE
             journal.modified_by = request.user
             journal.save()
