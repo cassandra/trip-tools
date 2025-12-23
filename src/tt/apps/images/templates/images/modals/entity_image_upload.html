@@ -60,7 +60,7 @@ Subclasses must define these blocks:
       {% if max_files == 1 %}
         • Single image only
       {% else %}
-        • Multiple files allowed (max {{ max_files }})
+        • Multiple files allowed
       {% endif %}
     </p>
     <input type="file"
@@ -75,6 +75,7 @@ Subclasses must define these blocks:
     <div class="progress-header">
       <h3 class="progress-title">Uploading</h3>
       <span class="progress-count" id="{{ upload_zone_id }}-progress-count">0 of 0 files</span>
+      <button type="button" class="btn btn-sm btn-outline-danger btn-cancel-upload" style="display: none;">Cancel</button>
     </div>
     <div id="{{ upload_zone_id }}-file-progress-list"></div>
   </div>
@@ -128,8 +129,8 @@ $(document).ready(function() {
         uploadedGridSelector: '#{{ upload_zone_id }}-uploaded-grid',
         uploadedCountSelector: '#{{ upload_zone_id }}-uploaded-count',
         {% endif %}
-        uploadEndpoint: '{{ upload_url }}',
-        maxFiles: {{ max_files|default:50 }}{% if max_files == 1 %},
+        uploadEndpoint: '{{ upload_url }}'{% if max_files == 1 %},
+        maxFiles: 1,
         onComplete: function(results) {
             // Single-image mode: refresh page on successful upload
             if (results.length > 0 && results[0].status === 'success') {

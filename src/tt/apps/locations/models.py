@@ -162,7 +162,6 @@ class Location( GeoPointModelMixin, SyncableModel ):
             models.UniqueConstraint(
                 fields = ['trip', 'gmm_id'],
                 name = 'unique_trip_gmm_id',
-                condition = models.Q( gmm_id__isnull = False ),
             ),
         ]
 

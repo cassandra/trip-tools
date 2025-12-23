@@ -16,7 +16,7 @@
  *     uploadedGridSelector: '#my-grid',           // Optional: uploaded images display
  *     uploadedCountSelector: '#my-uploaded',      // Optional: total uploaded count
  *     uploadEndpoint: '/custom/upload/',          // Optional: defaults to current URL
- *     maxFiles: 10,                               // Optional: defaults to 50
+ *     maxFiles: 10,                               // Optional: defaults to no limit
  *     onSuccess: function(result) { ... },        // Optional: per-file success callback
  *     onError: function(error) { ... },           // Optional: per-file error callback
  *     onComplete: function(allResults) { ... }    // Optional: all files done callback
@@ -135,7 +135,7 @@
         uploadedGridSelector: null,
         uploadedCountSelector: null,
         uploadEndpoint: null,  // null = use current URL
-        maxFiles: 50,
+        maxFiles: null,  // null = no limit
         onSuccess: null,  // Callback: function(results) { }
         onError: null,    // Callback: function(error) { }
         onComplete: null  // Callback: function(allResults) { }
@@ -167,6 +167,9 @@
         var currentUploadIndex = 0;
         var isUploading = false;
         var uploadSessionUuid = null;
+        var currentXhr = null;       // Reference to current AJAX request for abort
+        var currentTimeoutId = null; // Reference to current timeout for cleanup
+        var isCancelled = false;     // Flag to stop queue processing
 
         // DOM element cache
         var $uploadZone;
@@ -273,8 +276,8 @@
         function handleFiles(files) {
             var fileArray = Array.from(files);
 
-            // Validate file count
-            if (fileArray.length > settings.maxFiles) {
+            // Validate file count (only if maxFiles is set)
+            if (settings.maxFiles && fileArray.length > settings.maxFiles) {
                 alert('Too many files selected. Maximum ' + settings.maxFiles + ' files allowed per batch.');
                 return;
             }
@@ -305,12 +308,14 @@
             completedCount = 0;
             currentUploadIndex = 0;
             isUploading = false;
+            isCancelled = false;  // Reset cancel flag for new batch
 
             // Show progress section if available
             if ($progressSection && $progressSection.length > 0) {
-                $progressSection.addClass('active');
+                $progressSection.show();
             }
             updateProgressCount();
+            showCancelButton();
 
             // Create progress items for each file
             if ($fileProgressList && $fileProgressList.length > 0) {
@@ -384,9 +389,15 @@
          * Upload next file in queue (sequential processing)
          */
         function uploadNextFile() {
+            // Check if cancelled
+            if (isCancelled) {
+                return;
+            }
+
             // Check if all files are processed
             if (currentUploadIndex >= uploadQueue.length) {
                 isUploading = false;
+                hideCancelButton();
 
                 // Call onComplete callback if provided
                 if (settings.onComplete && typeof settings.onComplete === 'function') {
@@ -425,8 +436,8 @@
             // Mark as uploading
             updateFileStatus(fileItem.id, 'uploading', 'Uploading...', 0);
 
-            // Track XHR for timeout handling
-            var timeoutId = setTimeout(function() {
+            // Track timeout for cleanup on cancel
+            currentTimeoutId = setTimeout(function() {
                 console.error('Upload timeout for file:', fileItem.file.name);
                 handleSingleFileError(fileItem, 'Upload timed out after ' + (UPLOAD_TIMEOUT_MS / 1000) + ' seconds');
             }, UPLOAD_TIMEOUT_MS);
@@ -434,8 +445,8 @@
             // Determine upload endpoint
             var uploadUrl = settings.uploadEndpoint || window.location.pathname;
 
-            // Use jQuery AJAX for file upload
-            $.ajax({
+            // Use jQuery AJAX for file upload - store reference for abort
+            currentXhr = $.ajax({
                 url: uploadUrl,
                 type: 'POST',
                 data: formData,
@@ -457,11 +468,22 @@
                     return xhr;
                 },
                 success: function(data) {
-                    clearTimeout(timeoutId);
+                    clearTimeout(currentTimeoutId);
+                    currentTimeoutId = null;
+                    currentXhr = null;
                     handleSingleFileResponse(fileItem, data, index);
                 },
                 error: function(xhr, textStatus, errorThrown) {
-                    clearTimeout(timeoutId);
+                    clearTimeout(currentTimeoutId);
+                    currentTimeoutId = null;
+                    currentXhr = null;
+
+                    // Check if this was a user-initiated abort (cancel)
+                    if (textStatus === 'abort' && isCancelled) {
+                        // Already handled by cancelAllUploads, don't double-process
+                        return;
+                    }
+
                     var errorMsg = buildErrorMessage(xhr, textStatus, errorThrown);
                     handleSingleFileError(fileItem, errorMsg);
                 }
@@ -615,6 +637,8 @@
                     iconHtml = '<span style="color: var(--success-color);">&#10003;</span>';
                 } else if (status === 'error') {
                     iconHtml = '<span style="color: var(--error-color);">!</span>';
+                } else if (status === 'cancelled') {
+                    iconHtml = '<span style="color: var(--muted-color);">&#8709;</span>';
                 }
 
                 $statusTarget.html(iconHtml + ' ' + statusText);
@@ -706,6 +730,78 @@
         }
 
         /**
+         * Show the cancel button in progress header
+         */
+        function showCancelButton() {
+            if (!$progressSection || $progressSection.length === 0) return;
+
+            var $cancelBtn = $progressSection.find('.btn-cancel-upload');
+            if ($cancelBtn.length === 0) return;
+
+            // Bind click handler (use off/on to prevent duplicate handlers)
+            $cancelBtn.off('click', cancelAllUploads).on('click', cancelAllUploads);
+            $cancelBtn.show();
+        }
+
+        /**
+         * Hide the cancel button
+         */
+        function hideCancelButton() {
+            if (!$progressSection || $progressSection.length === 0) return;
+            $progressSection.find('.btn-cancel-upload').hide();
+        }
+
+        /**
+         * Cancel all uploads - abort current and mark remaining as cancelled
+         */
+        function cancelAllUploads() {
+            isCancelled = true;
+
+            // Abort current upload if in progress
+            if (currentXhr) {
+                currentXhr.abort();
+                currentXhr = null;
+            }
+
+            // Clear current timeout
+            if (currentTimeoutId) {
+                clearTimeout(currentTimeoutId);
+                currentTimeoutId = null;
+            }
+
+            // Mark all remaining queued files as cancelled
+            for (var i = currentUploadIndex; i < uploadQueue.length; i++) {
+                var fileItem = uploadQueue[i];
+                if (fileItem.status === 'queued' || fileItem.status === 'uploading') {
+                    uploadQueue[i].status = 'cancelled';
+                    updateFileStatus(fileItem.id, 'cancelled', 'Cancelled', null, 'Upload cancelled by user');
+                }
+            }
+
+            // Update counts
+            completedCount = uploadQueue.length;  // All files are "done" (completed or cancelled)
+            updateProgressCount();
+
+            // Hide cancel button since we're done
+            hideCancelButton();
+
+            // Mark upload as complete
+            isUploading = false;
+
+            // Call onComplete callback if provided
+            if (settings.onComplete && typeof settings.onComplete === 'function') {
+                var allResults = uploadQueue.map(function(item) {
+                    return {
+                        file: item.file,
+                        status: item.status,
+                        result: item.result
+                    };
+                });
+                settings.onComplete(allResults);
+            }
+        }
+
+        /**
          * Format file size
          */
         function formatFileSize(bytes) {
@@ -728,9 +824,8 @@
 
         // Return public API
         return {
-            // No public methods needed currently, but we could add:
-            // reset: function() { ... },
-            // addFiles: function(files) { handleFiles(files); }
+            cancel: cancelAllUploads,
+            isUploading: function() { return isUploading; }
         };
     }
 

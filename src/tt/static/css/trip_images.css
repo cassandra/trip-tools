@@ -140,11 +140,6 @@
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  display: none;
-}
-
-.upload-progress-section.active {
-  display: block;
 }
 
 .progress-header {
@@ -313,6 +308,38 @@
 .progress-details.success,
 .tt-progress-details.success {
   color: var(--success-color);
+}
+
+/* ========================================
+   Cancelled Status
+   ======================================== */
+
+.file-progress-item.cancelled,
+.tt-file-progress-item.cancelled {
+  background: rgba(108, 117, 125, 0.02);
+  border-color: var(--muted-color);
+}
+
+.file-status.cancelled,
+.tt-file-status.cancelled {
+  color: var(--muted-color);
+}
+
+.progress-details.cancelled,
+.tt-progress-details.cancelled {
+  color: var(--muted-color);
+}
+
+/* ========================================
+   Cancel Upload Button
+   ======================================== */
+
+.btn-cancel-upload {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* ========================================
