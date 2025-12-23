@@ -35,10 +35,11 @@
   </div>
 
   <!-- Upload Progress Section -->
-  <div class="upload-progress-section" id="{{ TtConst.IMAGES_PROGRESS_SECTION_ID }}">
+  <div class="upload-progress-section" id="{{ TtConst.IMAGES_PROGRESS_SECTION_ID }}" style="display: none;">
     <div class="progress-header">
       <h3 class="progress-title">Uploading</h3>
       <span class="progress-count" id="{{ TtConst.IMAGES_PROGRESS_COUNT_ID }}">0 of 0 files</span>
+      <button type="button" class="btn btn-sm btn-outline-danger btn-cancel-upload" style="display: none;">Cancel</button>
     </div>
     <div id="{{ TtConst.IMAGES_FILE_PROGRESS_LIST_ID }}"></div>
   </div>
@@ -77,8 +78,7 @@ $(document).ready(function() {
         progressCountSelector: '#{{ TtConst.IMAGES_PROGRESS_COUNT_ID }}',
         fileProgressListSelector: '#{{ TtConst.IMAGES_FILE_PROGRESS_LIST_ID }}',
         uploadedGridSelector: '#{{ TtConst.IMAGES_UPLOADED_GRID_ID }}',
-        uploadedCountSelector: '#{{ TtConst.IMAGES_UPLOADED_COUNT_ID }}',
-        maxFiles: 50
+        uploadedCountSelector: '#{{ TtConst.IMAGES_UPLOADED_COUNT_ID }}'
     });
 });
 </script>
