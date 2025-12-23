@@ -1010,7 +1010,7 @@
 
             // Load selected note's stored text into description
             var noteText = newItem.getAttribute( 'data-tt-note-text' ) || '';
-            TT.DOM.setTextWithLineBreaks( gmmDescriptionValue, noteText );
+            TTDom.setTextWithLineBreaks( gmmDescriptionValue, noteText );
 
             // Update description owner to new note
             gmmDescriptionValue.setAttribute( TT_DESCRIPTION_OWNER_ATTR, String( noteIndex ) );
@@ -1397,7 +1397,7 @@
             // Write flattened notes to GMM description for native storage sync
             if ( gmmDescriptionValue && locationNotes.length > 0 ) {
                 var flattenedDescription = flattenNotesToDescription( locationNotes );
-                TT.DOM.setTextWithLineBreaks( gmmDescriptionValue, flattenedDescription );
+                TTDom.setTextWithLineBreaks( gmmDescriptionValue, flattenedDescription );
             }
 
             updateLocationOnServer( location.uuid, updates );

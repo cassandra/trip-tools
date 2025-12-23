@@ -337,24 +337,71 @@ var TTGmmAdapter = TTSiteAdapter.create({
 
         /**
          * Find location by title across all layers.
+         * When multiple locations have the same title, uses font-weight as a
+         * tiebreaker (GMM bolds the selected item in the sidebar).
          * @param {string} title - Location title.
          * @returns {Object|null} { location, layer } or null.
          */
         findLocationByTitle: function( title ) {
             var self = this;
             var layers = this.getLayers();
+            var matches = [];
 
+            // Collect all matching locations
             for ( var i = 0; i < layers.length; i++ ) {
                 var layer = layers[i];
                 var locations = this.getLocationsInLayer( layer );
-                var location = locations.find( function( loc ) {
-                    return loc.title === title;
+
+                locations.forEach( function( location ) {
+                    if ( location.title === title ) {
+                        matches.push({ location: location, layer: layer });
+                    }
                 });
-                if ( location ) {
-                    return { location: location, layer: layer };
-                }
             }
-            return null;
+
+            if ( matches.length === 0 ) {
+                return null;
+            }
+
+            // Single match - no ambiguity
+            if ( matches.length === 1 ) {
+                return matches[0];
+            }
+
+            // Multiple matches - use bold font-weight as tiebreaker
+            var boldMatches = matches.filter( function( match ) {
+                return self._isLocationBold( match.location.node );
+            });
+
+            if ( boldMatches.length === 1 ) {
+                self.log( 'Resolved duplicate title "' + title + '" via bold style' );
+                return boldMatches[0];
+            }
+
+            // Fall back to first match
+            self.log( 'Could not resolve duplicate title "' + title + '", using first match' );
+            return matches[0];
+        },
+
+        /**
+         * Check if a location's title has bold font-weight via computed styles.
+         * GMM bolds the selected location in the sidebar.
+         * @private
+         * @param {Element} locationNode - The location item node (div[fl_id]).
+         * @returns {boolean} True if font-weight is bold (700+).
+         */
+        _isLocationBold: function( locationNode ) {
+            var titleContainer = locationNode.childNodes[1];
+            var titleNode = titleContainer ? titleContainer.firstChild : null;
+
+            if ( !titleNode ) {
+                return false;
+            }
+
+            var style = window.getComputedStyle( titleNode );
+            var weight = parseInt( style.fontWeight, 10 );
+            // font-weight 700+ is bold (includes "bold" keyword which computes to 700)
+            return weight >= 700;
         },
 
         /**
