@@ -41,7 +41,7 @@ class JournalPublishingService:
         )
         travelog = PublishingService.publish_journal(
             journal = journal,
-            user = user
+            user = user,
         )
         cls._apply_visibility_changes(
             journal = journal,
@@ -62,11 +62,15 @@ class JournalPublishingService:
         """
         updated_count = 0
         for entry in journal.entries.all():
-            should_include = str(entry.uuid) in selected_entry_uuids
+            should_include = str( entry.uuid ) in selected_entry_uuids
             if entry.include_in_publish != should_include:
                 entry.include_in_publish = should_include
-                entry.save(update_fields=['include_in_publish'])
+                entry.save( update_fields = ['include_in_publish'] )
                 updated_count += 1
+                continue
+
+            continue
+
         return updated_count
 
     @classmethod
@@ -91,14 +95,16 @@ class JournalPublishingService:
         journal.modified_by = user
         journal.save()
         return
-    
+
 
 class JournalRestoreService:
     """Service for restoring journal working copy from a published travelog version."""
 
     @staticmethod
     @transaction.atomic
-    def restore_from_version( journal: Journal, travelog: Travelog, user: User ) -> int:
+    def restore_from_version( journal   : Journal,
+                              travelog  : Travelog,
+                              user      : User     ) -> int:
         """
         Restore journal working copy from a previous published version (travelog).
 
@@ -135,6 +141,7 @@ class JournalRestoreService:
                 modified_by = user,
             )
             entries_to_create.append( new_entry )
+            continue
 
         JournalEntry.objects.bulk_create( entries_to_create )
 

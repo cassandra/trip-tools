@@ -1,171 +1,171 @@
 # /conform Command
 
-Automated code quality conformance - reviews and fixes Python files to match project coding standards with test safety verification.
+Apply project formatting conventions to Python code using a specialized formatting agent.
 
 ## Usage
 ```
-/conform <target>
+/conform <target> [--check]
 ```
 
 Where `<target>` can be:
-- A Python filename (e.g., `history_table_manager.py`)
-- A class name (e.g., `HistoryTableManager`)
-- A relative path (e.g., `tt/apps/common/history_table_manager.py`)
-- A module path (e.g., `tt.apps.common.history_table_manager`)
+- A Python filename: `services.py`
+- A class name: `JournalPublishingService`
+- A relative path: `tt/apps/journal/services.py`
+
+Options:
+- `--check`: Report violations without making changes
 
 ## Examples
 ```
-/conform HistoryTableManager
-/conform history_table_manager.py
-/conform hi/apps/entity/managers.py
-/conform hi.apps.entity.managers
+/conform services.py
+/conform JournalPublishingService
+/conform tt/apps/journal/services.py --check
 ```
 
-## What It Does
+## Process
 
-This command automates the process of bringing Python code into conformance with project coding standards while ensuring test coverage and safety:
+### Step 1: Locate Target
+Find the target file using the provided identifier.
 
-1. **Verifies test coverage** - Ensures tests exist or creates them
-2. **Runs initial tests** - Establishes baseline that tests pass
-3. **Applies automated fixes** - Corrects coding standard violations
-4. **Validates changes** - Ensures tests still pass after modifications
-5. **Runs final linting** - Confirms no new issues introduced
+### Step 2: Read Formatting Rules
+Read the formatting rules from: `docs/dev/shared/formatting-rules.md`
 
-## Process Flow
-
-### Phase 1: Test Verification
-- Locate the target Python file
-- Search for associated test file(s)
-- If no tests exist:
-  - Launch test-engineer agent to create comprehensive tests
-  - Verify new tests pass
-- If tests exist:
-  - Run tests to ensure they pass before changes
-
-### Phase 2: Analysis
-- Launch code-quality agent for comprehensive review
-- Identify all coding standard violations
-- Categorize issues by severity and type
-- Create fix plan
-
-### Phase 3: Automated Fixes
-- Apply fixes for clear violations:
-  - Remove obvious comments and docstrings
-  - Fix alignment in method parameters, dataclasses, enums
-  - Add missing explicit control flow statements
-  - Organize imports properly
-  - Preserve deliberate style choices (e.g., spaces in parentheses)
-
-### Phase 4: Validation
-- Run tests again to ensure no functional changes
-- Run `make lint` to verify no new issues
-- Provide summary of changes made
-- Flag any issues that require manual review
-
-## Quality Gates
-
-The command will STOP if:
-- No test file exists AND test creation fails
-- Initial tests fail (won't modify code with failing tests)
-- Tests fail after modifications (will revert changes)
-- Linting introduces new errors (will attempt to fix or revert)
-
-## Sub-Agent Coordination
-
-### Phase 1 Agent: test-engineer (if needed)
-- **Role**: Create comprehensive test coverage
-- **Input**: Target file and class/module structure
-- **Output**: Test file with appropriate coverage
-- **Validation**: Tests must pass before proceeding
-
-### Phase 2 Agent: code-quality
-- **Role**: Analyze file and identify all violations
-- **Input**: Full file path and content
-- **Output**: Detailed list of violations with line numbers
-
-### Supporting Operations:
-- **Bash tool**: Run tests and linting
-- **MultiEdit tool**: Apply batched fixes efficiently
-- **Read tool**: Verify changes
-
-## Expected Output
+### Step 3: Launch Formatting Agent
+Launch a `code-quality` sub-agent with this specific prompt:
 
 ```
-Conforming history_table_manager.py to project standards...
+You are a specialized code formatting agent. Your ONLY task is to apply formatting
+rules to Python code. Do NOT change any logic, variable names, or functionality.
 
-Step 1: Verifying test coverage
-✓ Found test file: tests/test_history_table_manager.py
-✓ Running tests... All 15 tests pass
+FORMATTING RULES:
+[Include full contents of docs/dev/shared/formatting-rules.md]
 
-Step 2: Analyzing code quality
-Found 12 violations:
-- 5 alignment issues
-- 4 obvious comments
-- 2 missing explicit returns
-- 1 import organization issue
+TARGET FILE: [path]
+MODE: [check|fix]
 
-Step 3: Applying automated fixes
-✓ Fixed method parameter alignment (lines 81-86)
-✓ Fixed dataclass alignment (lines 54-58)
-✓ Fixed enum alignment (lines 39-50)
-✓ Removed obvious docstrings (lines 37, 188-190, 194-196)
-✓ Removed redundant comments (lines 56, 117, 132, 139, 152)
-✓ Added explicit returns (lines 93, 186)
-✓ Reorganized imports
+INSTRUCTIONS:
+1. Read the target file carefully
+2. Compare against each formatting rule
+3. If MODE is "check":
+   - List each violation with line number and rule violated
+   - Show the current code and what it should be
+   - Do NOT modify the file
+4. If MODE is "fix":
+   - Apply all formatting fixes
+   - Use the Edit tool to make changes
+   - Report each change made
 
-Step 4: Validation
-✓ Tests still pass (15/15)
-✓ make lint: No violations
+CRITICAL CONSTRAINTS:
+- ONLY change formatting, NEVER change logic
+- NEVER rename variables or functions
+- NEVER remove or add functionality
+- NEVER change string content (only quote style)
+- Preserve all comments (only formatting, not removal)
+- When uncertain, leave code unchanged
 
-Successfully conformed history_table_manager.py to project standards.
-12 issues fixed automatically, all tests still passing.
+Output format for check mode:
+  Line 45: Rule 1 (Paren Spacing)
+    Current:  result = calculate(x, y)
+    Should be: result = calculate( x, y )
+
+Output format for fix mode:
+  Fixed Line 45: Added paren spacing in calculate() call
+  Fixed Line 67-72: Aligned method signature parameters
+  ...
+  Summary: Applied 8 formatting fixes
+```
+
+### Step 4: Verify (fix mode only)
+After fixes are applied:
+1. Run `python -m py_compile <file>` to verify syntax
+2. Run `make lint` to check for issues
+3. If either fails, report the problem
+
+## Implementation
+
+When this command is invoked:
+
+1. **Parse arguments** to get target and mode (check vs fix)
+
+2. **Find the file**:
+   ```
+   Use Glob to find: **/<target>.py or **/<target>
+   If multiple matches, ask user to clarify
+   ```
+
+3. **Read the formatting rules**:
+   ```
+   Read: docs/dev/shared/formatting-rules.md
+   ```
+
+4. **Read the target file**:
+   ```
+   Read the full contents of the target file
+   ```
+
+5. **Launch the formatting agent**:
+   ```
+   Use Task tool with subagent_type="code-quality"
+   Include the formatting rules and target file content in the prompt
+   Specify check or fix mode
+   ```
+
+6. **Report results**:
+   - Check mode: Display list of violations
+   - Fix mode: Display changes made and verification results
+
+## Example Output
+
+### Check Mode
+```
+Checking formatting in src/tt/apps/journal/services.py...
+
+Found 5 formatting violations:
+
+  Line 65: Rule 1 (Paren Spacing)
+    Current:  should_include = str(entry.uuid) in selected_entry_uuids
+    Should be: should_include = str( entry.uuid ) in selected_entry_uuids
+
+  Line 68: Rule 1 (Paren Spacing) + Rule 2 (Kwarg Spacing)
+    Current:  entry.save(update_fields=['include_in_publish'])
+    Should be: entry.save( update_fields = ['include_in_publish'] )
+
+  Line 88: Rule 1 (Paren Spacing) - EXCEPTION APPLIES
+    Note: Single string argument, no change needed
+
+Summary: 5 violations found (1 has exception, 4 need fixing)
+```
+
+### Fix Mode
+```
+Applying formatting to src/tt/apps/journal/services.py...
+
+  Fixed Line 65: Added paren spacing in str() call
+  Fixed Line 68: Added paren spacing and kwarg spacing in save() call
+  Skipped Line 88: Single string argument exception applies
+
+Verification:
+  ✓ Syntax check passed
+  ✓ Lint check passed
+
+Summary: Applied 2 formatting fixes
 ```
 
 ## Error Handling
 
-- **No test file found**:
-  - Automatically creates tests via test-engineer agent
-  - If test creation fails, aborts the cleanup
-
-- **Tests fail before changes**:
-  - Aborts with message to fix tests first
-  - Suggests using `/fixtests` command
-
-- **Tests fail after changes**:
-  - Automatically reverts all changes
-  - Reports which changes caused test failures
-  - Suggests manual review
-
-- **Lint failures after fixes**:
-  - Attempts secondary fixes
-  - If still failing, reverts and reports
-
-## Safety Features
-
-1. **Test-First Approach**: Won't modify code without passing tests
-2. **Incremental Changes**: Applies fixes in logical batches
-3. **Automatic Rollback**: Reverts if tests fail after changes
-4. **Change Validation**: Each change verified against tests
-5. **Audit Trail**: Lists every change made with line numbers
-
-## Important Notes
-
-- **Preserves functionality** - Changes only syntax/style, never logic
-- **Respects project preferences** - Maintains deliberate PEP8 deviations
-- **Comments philosophy** - Removes only obviously redundant comments
-- **Variable assignments** - Maintains named variables over inlining
-- **Test coverage** - Ensures or creates tests before any modifications
-
-## Limitations
-
-- Works only with Python files in the project
-- Cannot fix complex architectural issues
-- Requires ability to run tests (proper environment setup)
-- May not handle all edge cases in test discovery
-- Does not modify third-party or system files
+- **File not found**: Report error and suggest using Glob to find
+- **Syntax error in file**: Report error, do not attempt formatting
+- **Multiple matches**: Ask user to specify full path
+- **Verification fails**: Report what failed, suggest manual review
 
 ## Related Commands
-- `/fixtests` - Fix failing tests before running conform
-- `/review` - Code review without automatic fixes
-- `/commit` - Commit changes after conformance
-- `/test` - Run tests for a specific module
+- `/review` - Full code review (not just formatting)
+- `/commit` - Commit after formatting changes
+- `/fixtests` - Fix tests if formatting broke something
+
+## Notes
+
+- This command focuses ONLY on formatting
+- It will not fix logical issues, remove comments, or refactor code
+- The formatting rules are defined in `docs/dev/shared/formatting-rules.md`
+- Update that file to change formatting conventions

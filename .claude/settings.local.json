@@ -64,7 +64,8 @@
       "Bash(make test-e2e-webapp-extension-none:*)",
       "WebFetch(domain:bugzilla.mozilla.org)",
       "Bash(exiftool:*)",
-      "WebFetch(domain:forum.vivaldi.net)"
+      "WebFetch(domain:forum.vivaldi.net)",
+      "Skill(conform)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,8 @@
 # Coding Standards
 
+This document covers coding conventions and guidelines. For detailed formatting rules
+with examples and exceptions, see [Formatting Rules](formatting-rules.md).
+
 ## Code Conventions Checklist
 
 Checklists for writing and reviewing code.
@@ -67,6 +70,8 @@ Checklists for writing and reviewing code.
 - [ ] No inline comments that describe what the code is doing (vs why).
 - [ ] No comments that refer to the past, future or current work in progress.
 
+---
+
 ## Code Conventions Details
 
 ### No "magic" strings
@@ -84,40 +89,6 @@ Any string used multiple times but only in client/javascript should be constants
 - Some allowed, but not required exceptions:
   - The `request` parameter when appearing in a Django view class.
   - Single parameter methods where the method name or parameter name makes its type unambiguous.
-
-### Method Parameter Formatting
-
-For readability, besides adding type hints to method parameters, we adhere to the following formatting conventions:
-- For methods with a single parameter, or parameters of native types, they can appear in one line with the method name.
-- If more than one parameter and app-defined types, then use a multiple line declaration.
-- For methods with three or more parameters, we use one line per parameter and align the type names.
-
-**Good Examples**:
-
-```
-    def set_entity( self, entity_id : int ) -> EntityPath:
-
-    def set_entity_order( self, entity_id : int, rank : int ) -> EntityPath:
-
-    def set_entity_path( self,
-                         entity_id     : int,
-                         location      : Location,
-                         svg_path_str  : str        ) -> EntityPath:
-```
-
-**Bad Examples**:
-
-```
-    def set_entity_type( self, entity_id : int, entity_type : EntityType ) -> EntityPath:
-
-    def set_entity_path( self,
-                         entity_id : int,
-                         location : Location,
-                         svg_path_str: str ) -> EntityPath:
-
-    def set_entity_path( self, entity_id : int,
-                         location : Location, svg_path_str: str ) -> EntityPath:
-```
 
 ### Variable Assignment vs Inlining
 
@@ -147,111 +118,23 @@ Benefits of variable assignment:
 - Improves readability by breaking complex expressions
 - Allows reuse without recalculation
 
-### Explicit Booleans
+---
 
-We prefer to wrap all expression that evaluate to a boolean in `bool()` to make it explicit what type we are expecting:
-
-**Good**
-```
-   my_variable = bool( len(my_list) > 4 )
-```
-
-**Bad***
-```
-   my_variable = len(my_list) == 4
-```
-
-### Complex Boolean Expressions
-
-- For boolean clauses and conditionals where there are multiple clauses, we prefer to explicitly enclose each clause with parentheses in order to make the intention clear.
-- We do not rely on the user having a deep understanding of the compiler's ordeer of precedence.
-- We use one line per clause unless the combined clauses are very short and obvious.
-- Single boolean typed variables or methods that return a boolean do not need paretheses.
-
-**Good**:
-```
-    if is_editing and location_view:
-        pass
-                
-    if (( hass_state.domain == HassApi.SWITCH_DOMAIN )
-          and ( HassApi.LIGHT_DOMAIN in prefixes_seen )):
-        pass
-                
-    if ( HassApi.BINARY_SENSOR_DOMAIN in domain_set
-         and device_class_set.intersection( HassApi.OPEN_CLOSE_DEVICE_CLASS_SET )):
-        pass
-
-   
-```
-
-**Bad**:
-```
-    if hass_state.domain == HassApi.SWITCH_DOMAIN and HassApi.LIGHT_DOMAIN == 'foo':
-        pass
-```
-
-### Control Flow Statements
-- Always include explicit `continue` statements in loops
-- Always include explicit `return` statements in functions
-- This improves code readability and makes control flow intentions explicit
-
-Example:
-```python
-def process_items(items):
-    results = []
-    for item in items:
-        if not item.valid:
-            continue  # Explicit continue for invalid items
-        
-        if item.needs_processing:
-            result = process(item)
-            results.append(result)
-            continue  # Explicit continue after processing
-        
-        # Handle non-processing case
-        results.append(item.default_value)
-        continue  # Explicit continue at end of loop
-    
-    return results  # Explicit return at end of function
-```
-
-### Operator Spacing
-- Use spaces around assignment operators and most other operators in expressions
-- Examples: `x = y + z`, `result += value`, `if count == 0`
-- Exception: Don't add spaces in function keyword arguments (`func(x=y)`) or type annotations
-
-### Parentheses Spacing (Deliberate PEP8 Deviation)
-- **We prefer spaces inside parentheses for enhanced readability**
-- This is a deliberate deviation from PEP8 standards (E201, E202)
-- Examples:
-  - Good: `if ( condition ):`
-  - Good: `my_function( param1, param2 )`
-  - Good: `result = calculate( x + y )`
-- This applies to all parentheses: function calls, conditionals, expressions
-- Rationale: Extra spacing improves readability by visually separating content from delimiters
-
-### Boolean Expressions
-When assigning or returning boolean values, wrap expressions in `bool()` to make intent explicit:
-
-```python
-# Good - explicit boolean conversion
-is_active = bool(user.last_login)
-in_modal_context = bool(request.POST.get('context') == 'modal')
-
-# Avoid - implicit boolean conversion
-is_active = user.last_login
-in_modal_context = request.POST.get('context') == 'modal'
-```
-
-### Linting: Flake8 Configurations
+## Linting: Flake8 Configurations
 
 The project uses two different flake8 configurations:
-- Development Configuration (`src/.flake8`) : Our preferred style for daily development work, with specific whitespace deviations from PEP8 for enhanced readability:
+
+- **Development Configuration** (`src/.flake8`): Our preferred style for daily development work, with specific whitespace deviations from PEP8 for enhanced readability:
   - **E201, E202**: We use spaces inside parentheses for better visual separation
   - **E221**: We align operators and values in multi-line declarations
   - **E251**: We use spaces around keyword parameters for consistency
   - **Note**: These are deliberate choices for improved code readability, not oversights
-- CI Configuration (`src/.flake8-ci`): GitHub Actions enforces these standards and blocks PR merging if violations exist.
+
+- **CI Configuration** (`src/.flake8-ci`): GitHub Actions enforces these standards and blocks PR merging if violations exist.
+
+See [Formatting Rules](formatting-rules.md) for the complete specification of our formatting conventions.
+
+---
 
 ## Commenting Guidelines
 
@@ -271,7 +154,7 @@ The project uses two different flake8 configurations:
   - Explain what better naming could clarify
 
   - When in doubt, ask: "Can I change the code to make this comment unnecessary?"
-  
+
 ### Special Cases
 
 #### TRACE Pattern (Accepted)
@@ -386,11 +269,12 @@ The project uses two different flake8 configurations:
    - Exception: Very brief one-line hints at extension points (see "Future extension points" in good comments)
    - Commented code creates confusion about whether it should be active
 
+---
+
 ## Related Documentation
+
+- Formatting rules: [Formatting Rules](formatting-rules.md)
 - Testing standards: [Testing Guidelines](../testing/testing-guidelines.md)
 - Backend patterns: [Backend Guidelines](../backend/backend-guidelines.md)
 - Frontend standards: [Frontend Guidelines](../frontend/frontend-guidelines.md)
 - Workflow and commits: [Workflow Guidelines](../workflow/workflow-guidelines.md)
-
-
-
