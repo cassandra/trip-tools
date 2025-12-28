@@ -29,6 +29,7 @@ This project has extensive custom commands for workflow automation. Use them pro
 - **`/cleanup branch`** - Post-merge branch cleanup
 
 ### Specialized Commands
+- **`/catchup [files]`** - Sync AI understanding with user-made code changes
 - **`/debug "issue"`** - AI-assisted debugging and troubleshooting
 - **`/refactor Class`** - Expert refactoring planning
 - **`/release 1.2.3`** - Complete release process automation
