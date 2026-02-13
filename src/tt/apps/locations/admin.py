@@ -83,7 +83,7 @@ class LocationAdmin(admin.ModelAdmin):
     )
 
     list_filter = ('desirability', 'advanced_booking', 'subcategory__category')
-    search_fields = ['title', 'user__email', 'trip__title']
+    search_fields = ['title', 'trip__title']
     readonly_fields = ( 'trip', 'created_datetime', 'modified_datetime')
     inlines = [LocationNoteInline, ContactInfoInline]
 
