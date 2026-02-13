@@ -30,9 +30,9 @@
       <div class="col-xl-3 col-md-4 col-sm-6 col-12 mb-4">
         <a href="{% travelog_url 'travelog_day' journal.uuid date=toc_entry.entry.date version=travelog_page.get_version_param %}" class="text-decoration-none">
           <div class="card card-hover h-100{% if toc_entry.entry.is_special_entry %} special{% endif %}">
-            {% if toc_entry.entry.reference_image and toc_entry.entry.reference_image.thumbnail_image %}
+            {% if toc_entry.entry.reference_image and toc_entry.entry.reference_image.web_image %}
             <div class="entry-card-image">
-              <img src="{{ toc_entry.entry.reference_image.thumbnail_image.url }}" alt="{{ toc_entry.entry.title }}">
+              <img src="{{ toc_entry.entry.reference_image.web_image.url }}" alt="{{ toc_entry.entry.title }}">
             </div>
             {% else %}
             <div class="entry-card-image placeholder">

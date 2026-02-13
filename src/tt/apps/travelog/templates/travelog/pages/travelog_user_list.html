@@ -31,9 +31,9 @@
       <div class="col-12 col-sm-6 col-md-4 col-xl-3 mb-4">
         <a href="{% travelog_url 'travelog_toc' item.journal.uuid %}" class="text-decoration-none">
           <div class="card card-hover h-100">
-            {% if item.display_image and item.display_image.thumbnail_image %}
+            {% if item.display_image and item.display_image.web_image %}
             <div class="entry-card-image">
-              <img src="{{ item.display_image.thumbnail_image.url }}" alt="{{ item.journal.title }}">
+              <img src="{{ item.display_image.web_image.url }}" alt="{{ item.journal.title }}">
             </div>
             {% else %}
             <div class="entry-card-image placeholder">
