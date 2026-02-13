@@ -24,9 +24,9 @@
       <div class="col-12 col-sm-6 col-lg-4 mb-4">
         <a href="{% travelog_url 'travelog_image_browse' journal.uuid version=travelog_page.get_version_param image_uuid=img.metadata.uuid %}" class="text-decoration-none">
           <div class="card card-hover h-100">
-            {% if img.trip_image and img.trip_image.thumbnail_image %}
+            {% if img.trip_image and img.trip_image.web_image %}
             <div class="gallery-card-image">
-              <img src="{{ img.trip_image.thumbnail_image.url }}" alt="{{ img.metadata.caption|default:'Image' }}">
+              <img src="{{ img.trip_image.web_image.url }}" alt="{{ img.metadata.caption|default:'Image' }}">
             </div>
             {% else %}
             <div class="gallery-card-image placeholder">
