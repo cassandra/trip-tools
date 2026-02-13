@@ -1038,6 +1038,11 @@ function handleSaveLocation( data ) {
                 locationData.contact_info = data.contact_info;
             }
 
+            // Include location notes if available
+            if ( data.location_notes && data.location_notes.length > 0 ) {
+                locationData.location_notes = data.location_notes;
+            }
+
             return TTApi.createLocation( locationData );
         })
         .then( function( location ) {

@@ -34,7 +34,7 @@ class LocationNoteSerializer( serializers.Serializer ):
     """
     text = serializers.CharField()
     source_label = serializers.CharField( required = False, allow_blank = True )
-    source_url = serializers.URLField( required = False, allow_blank = True )
+    source_url = serializers.URLField( max_length = 2048, required = False, allow_blank = True )
 
     def to_representation( self, instance: LocationNote ) -> Dict[str, Any]:
         return {

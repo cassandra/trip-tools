@@ -180,7 +180,7 @@ class LocationNote(models.Model):
 
     text = models.TextField()
     source_label = models.CharField( max_length = 200, blank = True )
-    source_url = models.URLField( blank = True )
+    source_url = models.URLField( max_length = 2048, blank = True )
     sort_order = models.PositiveIntegerField( default = 0 )
 
     created_datetime = models.DateTimeField( auto_now_add = True )

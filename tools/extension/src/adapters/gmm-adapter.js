@@ -573,6 +573,15 @@ var TTGmmAdapter = TTSiteAdapter.create({
         },
 
         /**
+         * Get the current location description/notes text from the info window.
+         * @returns {string} Description text, or empty string if not found.
+         */
+        getDescription: function() {
+            var descNode = this.getElement( 'NOTES_DIV' );
+            return descNode ? ( descNode.textContent || '' ).trim() : '';
+        },
+
+        /**
          * Check if location info window is in edit mode.
          * @returns {boolean}
          */

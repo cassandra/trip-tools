@@ -1226,6 +1226,14 @@
                             locationData.contact_info = contactInfo;
                         }
 
+                        // Extract description/notes from the open info dialog
+                        var description = TTGmmAdapter.getDescription();
+                        if ( description ) {
+                            locationData.location_notes = [
+                                { text: description, source_label: '', source_url: '' }
+                            ];
+                        }
+
                         // Map subcategory from layer name and icon
                         var mapping = mapToSubcategory( gmmLoc.layer_title, gmmLoc.icon_code, categories );
                         if ( mapping ) {

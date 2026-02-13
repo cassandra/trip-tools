@@ -53,7 +53,8 @@ class LocationService:
             desirability = validated_data.pop( F.DESIRABILITY, None )
             advanced_booking = validated_data.pop( F.ADVANCED_BOOKING, None )
 
-            # Extract contact_info before creating location
+            # Extract nested data before creating location
+            notes_data = validated_data.pop( F.LOCATION_NOTES, None )
             contact_info_data = validated_data.pop( F.CONTACT_INFO, None )
 
             location = Location.objects.create(
@@ -63,6 +64,10 @@ class LocationService:
                 advanced_booking = advanced_booking,
                 **validated_data,
             )
+
+            # Create location notes if provided
+            if notes_data:
+                cls._replace_location_notes( location, notes_data )
 
             # Create contact info records if provided
             if contact_info_data:
